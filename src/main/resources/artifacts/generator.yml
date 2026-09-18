@@ -1,0 +1,310 @@
+template: m.miscellanea.template_artifact
+
+# Primary types when no element is specified (dowsing magic.(rarity=...),
+# /magic artifact roll, fillchest random). Affinity group id or list of type ids.
+# Empty = every enabled type. Explicit types (magic.(primary=bloodmagic)) are unchanged.
+random_pool: planar_four
+
+rarities:
+  common:
+    name: Common
+    color: "#7d9b6a"
+    weight: 65
+    elements: 1-1
+    aura_cap: "0-25"
+  uncommon:
+    name: Uncommon
+    color: "#5aa0c8"
+    weight: 20
+    elements: 1-2
+    aura_cap: "26-45"
+  rare:
+    name: Rare
+    color: "#5b6fd4"
+    weight: 10
+    elements: 1-2
+    aura_cap: "46-65"
+  epic:
+    name: Epic
+    color: "#9b4dc4"
+    weight: 4
+    elements: 1-3
+    aura_cap: "66-90"
+  legendary:
+    name: Legendary
+    color: "#d4a017"
+    weight: 1
+    elements: 1-4
+    aura_cap: "91-150"
+
+affinity:
+  groups:
+    planar_four:
+      - oseni
+      - seithr
+      - cerrith
+      - mitlan
+    death_arts:
+      - necromancy
+      - shadowmancy
+      - bloodmagic
+    with_arcanum:
+      - arcanum
+      - oseni
+      - seithr
+      - cerrith
+      - mitlan
+      - necromancy
+      - shadowmancy
+      - bloodmagic
+      - spirit
+      - illusion
+    veil:
+      - illusion
+      - cerrith
+    animus:
+      - spirit
+      - seithr
+      - cerrith
+  exclude:
+    - never:
+        - oseni
+        - seithr
+        - cerrith
+        - mitlan
+      with:
+        - necromancy
+        - shadowmancy
+        - bloodmagic
+
+types:
+  cerrith:
+    disable: false
+    weight: 22
+    naming-scheme: cerrith
+    model-scheme: cerrith
+    aura_cap:
+      common: "0-25"
+      uncommon: "26-45"
+      rare: "46-65"
+      epic: "66-90"
+      legendary: "91-150"
+    secondary_cap:
+      common: "0-18"
+      uncommon: "18-32"
+      rare: "32-48"
+      epic: "48-70"
+      legendary: "70-110"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  seithr:
+    disable: false
+    weight: 18
+    naming-scheme: seithr
+    model-scheme: seithr
+    aura_cap:
+      common: "0-25"
+      uncommon: "26-45"
+      rare: "46-65"
+      epic: "66-90"
+      legendary: "91-150"
+    secondary_cap:
+      common: "0-18"
+      uncommon: "18-32"
+      rare: "32-48"
+      epic: "48-70"
+      legendary: "70-110"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  oseni:
+    disable: false
+    weight: 18
+    naming-scheme: oseni
+    model-scheme: oseni
+    aura_cap:
+      common: "0-25"
+      uncommon: "26-45"
+      rare: "46-65"
+      epic: "66-90"
+      legendary: "91-150"
+    secondary_cap:
+      common: "0-18"
+      uncommon: "18-32"
+      rare: "32-48"
+      epic: "48-70"
+      legendary: "70-110"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  mitlan:
+    disable: false
+    weight: 14
+    naming-scheme: mitlan
+    model-scheme: mitlan
+    aura_cap:
+      common: "0-25"
+      uncommon: "26-45"
+      rare: "46-65"
+      epic: "66-90"
+      legendary: "91-150"
+    secondary_cap:
+      common: "0-18"
+      uncommon: "18-32"
+      rare: "32-48"
+      epic: "48-70"
+      legendary: "70-110"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  necromancy:
+    disable: false
+    weight: 6
+    naming-scheme: necromancy
+    model-scheme: necromancy
+    aura_cap:
+      common: "3-10"
+      uncommon: "10-18"
+      rare: "18-30"
+      epic: "30-48"
+      legendary: "48-70"
+    secondary_cap:
+      common: "2-5"
+      uncommon: "4-8"
+      rare: "6-12"
+      epic: "10-16"
+      legendary: "12-22"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  shadowmancy:
+    disable: false
+    weight: 4
+    naming-scheme: shadowmancy
+    model-scheme: shadowmancy
+    aura_cap:
+      common: "2-7"
+      uncommon: "7-14"
+      rare: "14-24"
+      epic: "24-40"
+      legendary: "40-60"
+    secondary_cap:
+      common: "1-3"
+      uncommon: "2-5"
+      rare: "3-6"
+      epic: "4-7"
+      legendary: "5-10"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  bloodmagic:
+    disable: false
+    weight: 8
+    naming-scheme: bloodmagic
+    model-scheme: bloodmagic
+    aura_cap:
+      common: "4-12"
+      uncommon: "12-22"
+      rare: "22-36"
+      epic: "36-55"
+      legendary: "55-80"
+    secondary_cap:
+      common: "2-6"
+      uncommon: "5-10"
+      rare: "8-14"
+      epic: "12-20"
+      legendary: "16-28"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  arcanum:
+    disable: false
+    weight: 1
+    naming-scheme: arcanum
+    model-scheme: arcanum
+    aura_cap:
+      common: "1-2"
+      uncommon: "2-4"
+      rare: "4-8"
+      epic: "8-14"
+      legendary: "14-24"
+    secondary_cap:
+      common: "1-1"
+      uncommon: "1-2"
+      rare: "1-2"
+      epic: "1-3"
+      legendary: "1-3"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  spirit:
+    disable: false
+    weight: 5
+    naming-scheme: spirit
+    model-scheme: spirit
+    aura_cap:
+      common: "2-6"
+      uncommon: "6-12"
+      rare: "12-22"
+      epic: "22-36"
+      legendary: "36-55"
+    secondary_cap:
+      common: "1-3"
+      uncommon: "2-4"
+      rare: "3-5"
+      epic: "4-6"
+      legendary: "5-8"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}
+  illusion:
+    disable: false
+    weight: 4
+    naming-scheme: illusion
+    model-scheme: illusion
+    aura_cap:
+      common: "2-7"
+      uncommon: "7-14"
+      rare: "14-24"
+      epic: "24-40"
+      legendary: "40-60"
+    secondary_cap:
+      common: "1-3"
+      uncommon: "2-5"
+      rare: "3-6"
+      epic: "4-7"
+      legendary: "5-10"
+    rarities:
+      common: {}
+      uncommon: {}
+      rare: {}
+      epic: {}
+      legendary: {}

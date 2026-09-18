@@ -1,0 +1,345 @@
+reload:
+
+  success: "#55ff55[Magic] Configs reloaded."
+
+  failed: "#ff5555[Magic] Reload failed - check console."
+
+cast_mode:
+
+  switched: "#55ff55Casting mode set to {mode}."
+
+open:
+
+  players_only: "#ff5555Only players can open the Resonance GUI."
+
+  no_character: "#ff5555You need an active character to view resonance."
+
+  no_permission: "#ff5555You do not have permission to use /resonance."
+
+admin:
+
+  no_permission: "#ff5555You do not have permission to use this command."
+
+  usage: "#aaaaaaUsage: /magic rune keybind <trigger> #555555| #aaaaaa/magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
+
+rune:
+
+  usage: "#aaaaaaUsage: /magic rune keybind <trigger>"
+
+  players_only: "#ff5555Only players can rebind a held rune."
+
+  no_permission: "#ff5555You do not have permission to rebind runes."
+
+  not_a_rune: "#ff5555Hold a rune to rebind its abilities."
+
+  no_abilities: "#ff5555That rune has no abilities to rebind."
+
+  unknown_trigger: "#ff5555Unknown trigger."
+
+  failed: "#ff5555Could not rebind that rune."
+
+  success: "#55ff55Rebound all abilities on this rune to {trigger}."
+
+fillchest:
+
+  usage: "#aaaaaaUsage: /magic fillchest <element|random|all>"
+
+  players_only: "#ff5555Only players can fill chests."
+
+  unknown: "#ff5555Unknown artifact element. Use a type id, random, or all."
+
+  armed: "#55ff55Right-click a chest within 30s to wipe it and fill artifacts."
+
+  done: "#55ff55Filled {count} chest slots."
+
+  expired: "#ff5555Fillchest click expired. Run the command again."
+
+cast:
+
+  # Rift: the weapon fumbled. Mana and cooldown are already spent.
+  whiff: "§7*Whiff*"
+
+  whiff_sub: "#aaaaaa§oRift {rift}%"
+  
+  whiff_sub_staffs: "#aaaaaa§oToo many staffs"
+
+  # Refusal: the weapon never started. Nothing is spent, and it is never a whiff.
+  refuse_title: "§7*Refused*"
+
+  refuse_sub: "#aaaaaa§oThis spell is beyond you"
+
+  refuse_sub_spell: "#aaaaaa§oThis spell is beyond you"
+
+  refuse_sub_weapon: "#aaaaaa§oThis weapon cannot carry that spell"
+
+  refuse_sub_foreign: "#aaaaaa§oThis weapon holds no {element}"
+
+  refuse_chat: "#aaaaaaThis spell needs {element} {need}. You carry {have}."
+
+  refuse_chat_spell: "#aaaaaaThis spell needs {element} {need}. You carry {have}."
+
+  refuse_chat_weapon: "#aaaaaaThe weapon holds {element} {have}. This spell needs {need}."
+
+  refuse_chat_foreign: "#aaaaaaThis weapon was never attuned to {element}. Apply a {element} charge at a station."
+
+  # Damaged: a config revision left the weapon holding runes it can no longer seat.
+  broken_title: "§7*Damaged*"
+
+  broken_sub: "#aaaaaa§oThis weapon will not answer"
+
+  broken_chat: "#ff5555This weapon is damaged. Right-click an empty station to reclaim its runes."
+
+resonance:
+
+  admin:
+
+    usage: "#aaaaaaUsage: /magic resonance get <player> #555555| #aaaaaa/magic resonance set <player> <element|all> <amount> #555555| #aaaaaa/magic resonance add <player> <element|all> <delta> #555555| #aaaaaa/magic resonance reset <player> [element|all]"
+
+    no_character: "#ff5555{player} has no loaded character."
+
+    unknown_element: "#ff5555Unknown element. Use an element id or all."
+
+    invalid_amount: "#ff5555Amount must be a number."
+
+    get_header: "#aaaaaaResonance for {player} ({character})"
+
+    get_line: "#aaaaaa  {element} {value}/{max}"
+
+    set_ok: "#55ff55Set {player} {element} resonance (requested {value})."
+
+    add_ok: "#55ff55Added {delta} {element} resonance for {player}."
+
+    reset_ok: "#55ff55Reset {player} {element} resonance."
+
+    locked: "#ff5555{player} lacks {permission} ({element})."
+
+    locked_skipped: "#ff5555Skipped locked elements for {player}: {elements}"
+
+artifact:
+
+  usage: "#aaaaaaUsage: /magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact path #555555| #aaaaaa/magic artifact setfill"
+
+  path:
+
+    usage: "#aaaaaaUsage: /magic artifact path <magic.artifact|magic.(...)>"
+
+    invalid: "#ff5555Could not parse that artifact path. Check console."
+
+    spec: "#aaaaaaPath spec: primary {primary} rarity {rarity} extras {extras}"
+
+  roll:
+
+    usage: "#aaaaaaUsage: /magic artifact roll [element|random] [rarity|roll]"
+
+    unknown_element: "#ff5555Unknown artifact element."
+
+    unknown_rarity: "#ff5555Unknown artifact rarity."
+
+    empty_types: "#ff5555No artifact types are loaded."
+
+    empty_rarities: "#ff5555No artifact rarities are loaded."
+
+    no_bracket: "#ff5555{element} has no {rarity} bracket."
+
+    disabled: "#ff5555{element} artifacts are disabled."
+
+    header: "{color}{rarity}#aaaaaa {element} cap {cap}"
+
+    secondary: "#555555  {element} cap {cap}"
+
+  give:
+
+    usage: "#aaaaaaUsage: /magic artifact give <player> [element|random] [rarity|roll]"
+
+    unknown_player: "#ff5555Player {player} is not online."
+
+    failed: "#ff5555Could not build that artifact. Check the template path."
+
+    ok: "#55ff55Gave artifact to {player}."
+
+  create:
+
+    usage: "#aaaaaaUsage: /magic artifact create"
+
+    players_only: "#ff5555Only players can open the artifact editor."
+
+    need_primary: "#ff5555Set a primary element before confirming."
+
+    failed: "#ff5555Could not build that artifact. Check the template path."
+
+    ok: "#55ff55Gave artifact to {player}."
+
+  setfill:
+
+    usage: "#aaaaaaUsage: /magic artifact setfill <element> <amount>"
+
+    players_only: "#ff5555Only players can set artifact fill."
+
+    no_item: "#ff5555Hold an artifact in your main hand."
+
+    no_id: "#ff5555That item has no artifact id."
+
+    unknown_element: "#ff5555Unknown artifact element."
+
+    no_cap: "#ff5555That artifact has no cap for {element}."
+
+    invalid_amount: "#ff5555Fill amount must be a number."
+
+    ok: "#55ff55Set {element} fill to {fill}."
+
+meditation:
+
+  no_artifacts: "#aaaaaa§oCan't meditate here, no artifacts"
+
+  nothing: "#aaaaaa§oNothing to gain from meditating here"
+
+  complete: "#aaaaaa§oMeditation complete at this site"
+
+  tired: "#aaaaaa§oYou are too tired to meditate now"
+
+  stop: "#aaaaaa§oYou stop meditating"
+
+charge:
+
+  imprint:
+
+    done: "#aaaaaa§oThe charge takes on the shrine's elements"
+
+    no_elements: "#aaaaaa§oThis shrine holds nothing for the charge"
+
+shrine:
+
+  full: "#aaaaaa§oThere is no aura to be gathered from this shrine"
+
+  fill:
+
+    usage: "#aaaaaaUsage: /magic shrine fill <element> <amount>"
+
+    players_only: "#ff5555Only players can fill a shrine."
+
+    unknown_element: "#ff5555Unknown artifact element."
+
+    invalid_amount: "#ff5555Fill amount must be a number greater than 0."
+
+    no_pedestal: "#ff5555No pedestal shrine is in range."
+
+    no_artifact: "#ff5555That shrine has no artifact on it."
+
+    no_cap: "#ff5555That artifact has no cap for {element}."
+
+    already_full: "#ff5555That artifact already has {element} at or above {amount}."
+
+    started: "#55ff55Filling {element} toward {amount}."
+
+sacrifice:
+
+  dread: "#aaaaaa§oYou are filled with dread"
+
+  near: "#aaaaaa§oThe end feels near"
+
+  subside: "#aaaaaa§oThe feeling subsides"
+
+  place:
+    ready: "#aaaaaa§oThe shrine awaits your offering"
+    weak: "#aaaaaa§oThe shrine is too weak"
+
+  fail:
+    no_dagger: "#aaaaaa§oYou need the sacrificial dagger in hand"
+    no_target: "#aaaaaa§oNo offering is in reach"
+    no_score: "#aaaaaa§oNothing here reacts to those words"
+    min_score: "#aaaaaa§oThe shrine is too weak to hear you"
+    active: "#aaaaaa§oA rite is already underway"
+    full: "#aaaaaa§oThat vessel can hold no more"
+
+gear:
+
+  station:
+
+    occupied: "#aaaaaa§oThis station already holds a weapon"
+
+    empty: "#aaaaaa§oThere is nothing on this station"
+
+    gone: "#ff5555That station is no longer valid."
+
+  craft:
+
+    lacking: "#ff5555You lack the materials for those parts."
+
+    invalid: "#ff5555That combination cannot be prepared."
+
+    prepared: "#aaaaaa§oThe weapon rests on the station"
+
+  charge:
+
+    not_charge: "#ff5555That is not an enchanted charge."
+
+    blank: "#aaaaaa§oThe charge holds no aura yet"
+
+    warn: "#ff5555This charge is beyond your resonance:"
+
+    warn_line: "#aaaaaa{element}: need {need}, you have {have}"
+
+    warn_again: "#aaaaaaRight-click again to commit anyway"
+
+    applied: "#aaaaaa§oThe charge breaks open above the station"
+
+  orbs:
+
+    start: "#aaaaaaStrike the pale orbs. You need {target}. The rust ones tear the weapon"
+
+    progress: "#aaaaaa{hits}/{target} caught  #ff5555{rift} rift  #aaaaaa{seconds}s"
+
+    complete: "#aaaaaa§oThe weapon settles at {band}, holding {percent}% of the charge"
+
+    failed: "#ff5555The charge scatters. Nothing takes hold."
+
+    rift: "#ff5555The weapon is left with {rift}% rift."
+
+    summary_title: "{color:label_accent}Imbued resonance"
+
+    summary_line_prefix: "{color:label_muted}  "
+
+    summary_unattuned: "{color:label_muted}None yet"
+
+    summary_rift: "{color:corruption}Rift {color:label_muted}{rift}%"
+
+    summary_hint_resonance: "{color:label_muted}Apply another enchanted charge to raise resonance on this weapon."
+
+    summary_hint_resonance_and_clean: "{color:label_muted}Apply another enchanted charge to raise resonance or clean rift from this weapon."
+
+    busy: "#aaaaaa§oThis station is already mid-attunement"
+
+  eject:
+
+    unattuned: "#aaaaaa§oThe weapon is inert. Shift-left-click the station to take the materials back"
+
+  abort:
+
+    done: "#aaaaaa§oThe craft comes apart. The charge, if any, is spent"
+
+    not_yours: "#ff5555Someone else is attuning this weapon."
+
+  broken:
+
+    charge: "#ff5555This weapon is damaged. Reclaim its runes before charging it again."
+
+  reclaim:
+
+    none: "#aaaaaa§oThe weapon holds no loose runes"
+
+    done: "#aaaaaa§oYou work {count} loose rune(s) free of the weapon"
+
+    still_broken: "#ff5555The weapon is still missing parts: {missing}. Ask staff to restore them."
+
+    repaired: "#aaaaaa§oThe weapon holds together again"
+
+  refresh:
+
+    players_only: "#ff5555Only players can refresh a weapon."
+
+    not_gear: "#ff5555Hold a crafted mage weapon in your main hand."
+
+    failed: "#ff5555Could not refresh that weapon. Check console."
+
+    ok: "#55ff55Weapon refreshed against the live gear config."
+

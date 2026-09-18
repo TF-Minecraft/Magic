@@ -1,0 +1,75 @@
+# Station orb minigame.
+#
+# Applying a charge to a prepared weapon starts a run instead of writing straight away.
+# Good hits build capture, bad hits add permanent Rift, and the weapon is written when
+# the window closes. The charge is spent up front, so a disconnect ends the run with
+# whatever was captured.
+#
+# Difficulty keys off the charge ITEM tier (1-4), not the displayed resonance band, so
+# a low tier charge is the forgiving game.
+
+# Hitscan. Radius is the cylinder around the aim ray an orb must fall inside.
+hit_radius: 0.5
+click_range: 12
+
+# Orbit around the station block centre.
+orbit_radius: 2.4
+orbit_height: 1.1
+orbit_bob: 0.25
+orbit_period_ticks: 90
+
+# Fade-in from the station out to the ring, and how long an orb stays hittable.
+intro_ticks: 10
+lifetime_ticks: 70
+spawn_interval_ticks: 14
+
+# Default window, overridden per tier below.
+window_ticks: 200
+
+# Capture lost per good orb that expires unhit, as a fraction of the run.
+miss_penalty: 0.08
+
+good:
+  dust: [120, 220, 255]
+  particle: END_ROD
+
+bad:
+  dust: [220, 90, 40]
+  particle: SMOKE
+
+rift:
+  # Added per bad orb hit.
+  per_bad: 5
+  cap: 100
+  # Removed once when a later charge completes. Never applied on the first charge.
+  per_recharge: 10
+
+# live: max orbs in the air at once
+# good_ratio: chance a spawned orb is good
+# speed: angular speed multiplier
+# good_target: good hits needed for a full capture
+tiers:
+  1:
+    live: 4
+    good_ratio: 0.75
+    speed: 0.8
+    window_ticks: 220
+    good_target: 4
+  2:
+    live: 5
+    good_ratio: 0.65
+    speed: 1.0
+    window_ticks: 200
+    good_target: 5
+  3:
+    live: 6
+    good_ratio: 0.55
+    speed: 1.15
+    window_ticks: 180
+    good_target: 6
+  4:
+    live: 8
+    good_ratio: 0.45
+    speed: 1.3
+    window_ticks: 160
+    good_target: 8

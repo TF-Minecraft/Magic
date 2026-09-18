@@ -1,0 +1,689 @@
+info:
+  namespace: tfmc_magic
+items:
+  arcanum_amulet_178:
+    display_name: "arcanum_amulet_178"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_amulet_178
+  arcanum_book_22:
+    display_name: "arcanum_book_22"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_book_22
+  arcanum_book_29:
+    display_name: "arcanum_book_29"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_book_29
+  arcanum_book_30:
+    display_name: "arcanum_book_30"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_book_30
+  arcanum_book_42:
+    display_name: "arcanum_book_42"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_book_42
+  arcanum_bracelet_155:
+    display_name: "arcanum_bracelet_155"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_bracelet_155
+  arcanum_gem_140:
+    display_name: "arcanum_gem_140"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_gem_140
+  arcanum_gem_141:
+    display_name: "arcanum_gem_141"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_gem_141
+  arcanum_gem_162:
+    display_name: "arcanum_gem_162"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_gem_162
+  arcanum_gem_180:
+    display_name: "arcanum_gem_180"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_gem_180
+  arcanum_gem_181:
+    display_name: "arcanum_gem_181"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_gem_181
+  arcanum_orb_3:
+    display_name: "arcanum_orb_3"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_orb_3
+  arcanum_orb_4:
+    display_name: "arcanum_orb_4"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_orb_4
+  arcanum_orb_7:
+    display_name: "arcanum_orb_7"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_orb_7
+  arcanum_orb_8:
+    display_name: "arcanum_orb_8"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_orb_8
+  arcanum_ring_150:
+    display_name: "arcanum_ring_150"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_ring_150
+  arcanum_ring_170:
+    display_name: "arcanum_ring_170"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_ring_170
+  arcanum_ring_175:
+    display_name: "arcanum_ring_175"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/arcanum_ring_175
+  bloodmagic_book_27:
+    display_name: "bloodmagic_book_27"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/bloodmagic_book_27
+  bloodmagic_eye_orb_18:
+    display_name: "bloodmagic_eye_orb_18"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/bloodmagic_eye_orb_18
+  bloodmagic_eye_orb_19:
+    display_name: "bloodmagic_eye_orb_19"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/bloodmagic_eye_orb_19
+  cerrith_amulet_158:
+    display_name: "cerrith_amulet_158"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_amulet_158
+  cerrith_book_23:
+    display_name: "cerrith_book_23"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_book_23
+  cerrith_book_43:
+    display_name: "cerrith_book_43"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_book_43
+  cerrith_book_56:
+    display_name: "cerrith_book_56"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_book_56
+  cerrith_bracelet_154:
+    display_name: "cerrith_bracelet_154"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_bracelet_154
+  cerrith_brooch_14:
+    display_name: "cerrith_brooch_14"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_brooch_14
+  cerrith_brooch_16:
+    display_name: "cerrith_brooch_16"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_brooch_16
+  cerrith_gem_165:
+    display_name: "cerrith_gem_165"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_gem_165
+  cerrith_gem_185:
+    display_name: "cerrith_gem_185"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_gem_185
+  cerrith_jar_116:
+    display_name: "cerrith_jar_116"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_jar_116
+  cerrith_orb_1:
+    display_name: "cerrith_orb_1"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_orb_1
+  cerrith_ring_149:
+    display_name: "cerrith_ring_149"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_ring_149
+  cerrith_ring_174:
+    display_name: "cerrith_ring_174"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/cerrith_ring_174
+  illusion_book_59:
+    display_name: "illusion_book_59"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/illusion_book_59
+  manuscript_47:
+    display_name: "manuscript_47"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/manuscript_47
+  manuscript_48:
+    display_name: "manuscript_48"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/manuscript_48
+  manuscript_49:
+    display_name: "manuscript_49"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/manuscript_49
+  manuscript_50:
+    display_name: "manuscript_50"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/manuscript_50
+  manuscript_51:
+    display_name: "manuscript_51"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/manuscript_51
+  mitlan_book_41:
+    display_name: "mitlan_book_41"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/mitlan_book_41
+  mitlan_book_55:
+    display_name: "mitlan_book_55"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/mitlan_book_55
+  necromancy_book_28:
+    display_name: "necromancy_book_28"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_book_28
+  necromancy_book_45:
+    display_name: "necromancy_book_45"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_book_45
+  necromancy_jar_117:
+    display_name: "necromancy_jar_117"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_jar_117
+  necromancy_necklace_196:
+    display_name: "necromancy_necklace_196"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_necklace_196
+  necromancy_orb_12:
+    display_name: "necromancy_orb_12"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_orb_12
+  necromancy_skull_142:
+    display_name: "necromancy_skull_142"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/necromancy_skull_142
+  oseni_amulet_156:
+    display_name: "oseni_amulet_156"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_amulet_156
+  oseni_amulet_159:
+    display_name: "oseni_amulet_159"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_amulet_159
+  oseni_amulet_177:
+    display_name: "oseni_amulet_177"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_amulet_177
+  oseni_amulet_195:
+    display_name: "oseni_amulet_195"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_amulet_195
+  oseni_book_20:
+    display_name: "oseni_book_20"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_book_20
+  oseni_book_35:
+    display_name: "oseni_book_35"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_book_35
+  oseni_book_40:
+    display_name: "oseni_book_40"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_book_40
+  oseni_bracelet_151:
+    display_name: "oseni_bracelet_151"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_bracelet_151
+  oseni_bracelet_152:
+    display_name: "oseni_bracelet_152"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_bracelet_152
+  oseni_brooch_13:
+    display_name: "oseni_brooch_13"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_brooch_13
+  oseni_brooch_15:
+    display_name: "oseni_brooch_15"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_brooch_15
+  oseni_gem_164:
+    display_name: "oseni_gem_164"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_gem_164
+  oseni_jar_113:
+    display_name: "oseni_jar_113"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_jar_113
+  oseni_necklace_197:
+    display_name: "oseni_necklace_197"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_necklace_197
+  oseni_orb_0:
+    display_name: "oseni_orb_0"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_orb_0
+  oseni_orb_11:
+    display_name: "oseni_orb_11"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_orb_11
+  oseni_ring_147:
+    display_name: "oseni_ring_147"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_ring_147
+  oseni_ring_166:
+    display_name: "oseni_ring_166"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_ring_166
+  oseni_ring_167:
+    display_name: "oseni_ring_167"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_ring_167
+  oseni_ring_171:
+    display_name: "oseni_ring_171"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_ring_171
+  oseni_ring_172:
+    display_name: "oseni_ring_172"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/oseni_ring_172
+  seithr_amulet_157:
+    display_name: "seithr_amulet_157"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_amulet_157
+  seithr_book_21:
+    display_name: "seithr_book_21"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_book_21
+  seithr_book_24:
+    display_name: "seithr_book_24"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_book_24
+  seithr_book_26:
+    display_name: "seithr_book_26"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_book_26
+  seithr_book_44:
+    display_name: "seithr_book_44"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_book_44
+  seithr_book_46:
+    display_name: "seithr_book_46"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_book_46
+  seithr_bracelet_153:
+    display_name: "seithr_bracelet_153"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_bracelet_153
+  seithr_gem_163:
+    display_name: "seithr_gem_163"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_gem_163
+  seithr_necklace_198:
+    display_name: "seithr_necklace_198"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_necklace_198
+  seithr_orb_10:
+    display_name: "seithr_orb_10"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_orb_10
+  seithr_orb_2:
+    display_name: "seithr_orb_2"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_orb_2
+  seithr_orb_5:
+    display_name: "seithr_orb_5"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_orb_5
+  seithr_orb_9:
+    display_name: "seithr_orb_9"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_orb_9
+  seithr_ring_148:
+    display_name: "seithr_ring_148"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_ring_148
+  seithr_ring_168:
+    display_name: "seithr_ring_168"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_ring_168
+  seithr_ring_173:
+    display_name: "seithr_ring_173"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/seithr_ring_173
+  shadowmancy_book_25:
+    display_name: "shadowmancy_book_25"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shadowmancy_book_25
+  shadowmancy_book_39:
+    display_name: "shadowmancy_book_39"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shadowmancy_book_39
+  shadowmancy_book_57:
+    display_name: "shadowmancy_book_57"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shadowmancy_book_57
+  shadowmancy_jar_114:
+    display_name: "shadowmancy_jar_114"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shadowmancy_jar_114
+  shadowmancy_jar_115:
+    display_name: "shadowmancy_jar_115"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shadowmancy_jar_115
+  shared_book_37:
+    display_name: "shared_book_37"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shared_book_37
+  shared_brooch_17:
+    display_name: "shared_brooch_17"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shared_brooch_17
+  shared_brooch_6:
+    display_name: "shared_brooch_6"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/shared_brooch_6
+  spirit_amulet_176:
+    display_name: "spirit_amulet_176"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/spirit_amulet_176
+  spirit_book_36:
+    display_name: "spirit_book_36"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/spirit_book_36
+  spirit_book_38:
+    display_name: "spirit_book_38"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/spirit_book_38
+  spirit_jar_106:
+    display_name: "spirit_jar_106"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/spirit_jar_106
+  spirit_necklace_199:
+    display_name: "spirit_necklace_199"
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+      - item/artifacts/spirit_necklace_199

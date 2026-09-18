@@ -1,0 +1,377 @@
+# Pedestal shrine scan. Radius is Chebyshev (4 = 9x9x9 cube, center skipped).
+# Typical shrine is a dressed floor plus foliage, not a packed cube. Family max_count
+# is sized for that, so a larger radius only gives more room to build, not a higher bar.
+# Score is per element. Lava is shared by oseni and seithr; water by cerrith and mitlan.
+# scenery_charge: false on an element turns off block-tick fill for that school.
+# Admin /magic shrine fill still works. Jar does not overwrite a live copy of this file.
+radius: 4
+min_score: 0.15
+full_charge_seconds: 15
+min_families: 2
+
+# Shrine VFX. Volume also sets hear distance (16 * volume blocks). Keep at least 1.
+# Elements only list diffs from default.
+fx:
+  default:
+    ambient_sound: BLOCK_AMETHYST_BLOCK_CHIME
+    ambient_volume: 1.0
+    ambient_pitch: 1.4
+    ambient_every_ticks: 24
+    start_sound: BLOCK_AMETHYST_BLOCK_RESONATE
+    start_volume: 1.0
+    start_pitch: 1.2
+    complete_sound: BLOCK_ENCHANTMENT_TABLE_USE
+    complete_volume: 1.15
+    complete_pitch: 1.15
+    complete_sound_2: BLOCK_AMETHYST_BLOCK_RESONATE
+    complete_volume_2: 1.0
+    complete_pitch_2: 1.3
+    trail_particle: ENCHANT
+    emitter_particle: ENCHANT
+    burst_particle: FIREWORK
+  cerrith:
+    ambient_sound: BLOCK_GRASS_BREAK
+    ambient_pitch: 1.55
+    start_sound: BLOCK_CHERRY_LEAVES_BREAK
+    complete_sound_2: BLOCK_GRASS_BREAK
+    emitter_particle: SPORE_BLOSSOM_AIR
+  oseni:
+    ambient_sound: BLOCK_LAVA_POP
+    ambient_pitch: 1.1
+    start_sound: BLOCK_CAMPFIRE_CRACKLE
+    complete_sound: BLOCK_FIRE_EXTINGUISH
+    complete_pitch: 1.15
+    complete_sound_2: BLOCK_LAVA_POP
+    emitter_particle: FLAME
+    burst_particle: LAVA
+  seithr:
+    ambient_sound: BLOCK_SNOW_BREAK
+    ambient_pitch: 1.5
+    start_sound: BLOCK_POWDER_SNOW_BREAK
+    complete_sound_2: BLOCK_POWDER_SNOW_BREAK
+    complete_pitch_2: 1.35
+    emitter_particle: SNOWFLAKE
+  mitlan:
+    ambient_sound: BLOCK_POINTED_DRIPSTONE_DRIP_WATER
+    ambient_pitch: 1.2
+    start_sound: ITEM_BOTTLE_FILL
+    complete_sound: ITEM_BUCKET_FILL
+    complete_pitch: 1.25
+    emitter_particle: DRIPPING_WATER
+    burst_particle: BUBBLE_POP
+  arcanum:
+    emitter_particle: WITCH
+  spirit:
+    ambient_pitch: 1.7
+    start_pitch: 1.45
+    emitter_particle: SOUL
+    burst_particle: END_ROD
+  illusion:
+    ambient_sound: BLOCK_CHORUS_FLOWER_GROW
+    start_sound: BLOCK_CHORUS_FLOWER_DEATH
+    complete_sound_2: ENTITY_ILLUSIONER_MIRROR_MOVE
+    complete_pitch_2: 1.2
+    emitter_particle: REVERSE_PORTAL
+    burst_particle: PORTAL
+  necromancy:
+    ambient_sound: BLOCK_SCULK_SPREAD
+    ambient_pitch: 0.85
+    start_sound: BLOCK_SCULK_CHARGE
+    complete_sound: BLOCK_SCULK_CATALYST_BLOOM
+    complete_pitch: 0.9
+    emitter_particle: SCULK_SOUL
+    burst_particle: SOUL
+  shadowmancy:
+    ambient_sound: BLOCK_SCULK_CHARGE
+    ambient_pitch: 0.7
+    start_sound: BLOCK_CANDLE_EXTINGUISH
+    complete_sound: BLOCK_CANDLE_EXTINGUISH
+    complete_pitch: 0.75
+    complete_sound_2: BLOCK_SCULK_SPREAD
+    emitter_particle: SMOKE
+    burst_particle: SQUID_INK
+  bloodmagic:
+    ambient_sound: BLOCK_HONEY_BLOCK_SLIDE
+    ambient_pitch: 0.85
+    start_sound: BLOCK_HONEY_BLOCK_PLACE
+    complete_sound: BLOCK_WART_BLOCK_HIT
+    complete_pitch: 0.9
+    emitter_particle: DRIPPING_HONEY
+    burst_particle: FALLING_HONEY
+
+elements:
+  cerrith:
+    families:
+      floor:
+        max_count: 12
+        weight: 1.0
+        blocks: [GRASS_BLOCK, MOSS_BLOCK, PODZOL, ROOTED_DIRT]
+      water:
+        max_count: 4
+        weight: 1.2
+        blocks: [WATER, BUBBLE_COLUMN]
+      grass:
+        max_count: 10
+        weight: 1.0
+        blocks: [SHORT_GRASS, TALL_GRASS, FERN, LARGE_FERN, MOSS_CARPET]
+      grove:
+        max_count: 10
+        weight: 1.0
+        tags: [leaves, saplings]
+        blocks: [AZALEA, FLOWERING_AZALEA, AZALEA_LEAVES, FLOWERING_AZALEA_LEAVES]
+      flowers:
+        max_count: 8
+        weight: 0.9
+        tags: [small_flowers, tall_flowers]
+        blocks: [SPORE_BLOSSOM, PINK_PETALS, CAVE_VINES, CAVE_VINES_PLANT, WILDFLOWERS, LEAF_LITTER]
+      crops:
+        max_count: 8
+        weight: 0.9
+        tags: [crops]
+        blocks: [SUGAR_CANE, PUMPKIN, MELON, ATTACHED_PUMPKIN_STEM, ATTACHED_MELON_STEM]
+      bushes:
+        max_count: 6
+        weight: 1.0
+        blocks: [SWEET_BERRY_BUSH, BUSH, DEAD_BUSH]
+      moss:
+        max_count: 8
+        weight: 0.8
+        blocks: [MOSSY_COBBLESTONE, MOSSY_STONE_BRICKS]
+      firefly:
+        max_count: 1
+        weight: 6.0
+        blocks: [FIREFLY_BUSH]
+
+  oseni:
+    families:
+      lava:
+        max_count: 6
+        weight: 1.4
+        blocks: [LAVA]
+      hearth:
+        max_count: 10
+        weight: 1.1
+        blocks: [MAGMA_BLOCK, NETHERRACK, BASALT, SMOOTH_BASALT, BLACKSTONE, CAMPFIRE, FURNACE, BLAST_FURNACE, SMOKER]
+      metal:
+        max_count: 8
+        weight: 0.9
+        blocks: [COPPER_BLOCK, RAW_COPPER_BLOCK, CUT_COPPER, COAL_BLOCK, COAL_ORE, DEEPSLATE_COAL_ORE]
+      kiln:
+        max_count: 10
+        weight: 0.8
+        blocks:
+          - ORANGE_TERRACOTTA
+          - RED_TERRACOTTA
+          - TERRACOTTA
+          - ORANGE_GLAZED_TERRACOTTA
+          - RED_GLAZED_TERRACOTTA
+          - NETHER_BRICKS
+          - RED_NETHER_BRICKS
+
+  seithr:
+    families:
+      lava:
+        max_count: 6
+        weight: 1.2
+        blocks: [LAVA]
+      ice:
+        max_count: 14
+        weight: 1.2
+        tags: [ice]
+        blocks: [SNOW, SNOW_BLOCK, POWDER_SNOW]
+      pale:
+        max_count: 10
+        weight: 0.9
+        blocks: [CALCITE, QUARTZ_BLOCK, QUARTZ_PILLAR, SMOOTH_QUARTZ, WHITE_CONCRETE, WHITE_WOOL]
+
+  mitlan:
+    families:
+      water:
+        max_count: 8
+        weight: 1.3
+        blocks: [WATER, BUBBLE_COLUMN]
+      sea:
+        max_count: 12
+        weight: 1.0
+        blocks:
+          - KELP
+          - KELP_PLANT
+          - SEAGRASS
+          - TALL_SEAGRASS
+          - PRISMARINE
+          - PRISMARINE_BRICKS
+          - DARK_PRISMARINE
+          - SEA_LANTERN
+          - CONDUIT
+      silt:
+        max_count: 10
+        weight: 0.9
+        blocks: [MUD, MUDDY_MANGROVE_ROOTS, PACKED_MUD, CLAY, WET_SPONGE]
+      dead_reef:
+        max_count: 10
+        weight: 1.1
+        blocks:
+          - DEAD_TUBE_CORAL_BLOCK
+          - DEAD_BRAIN_CORAL_BLOCK
+          - DEAD_BUBBLE_CORAL_BLOCK
+          - DEAD_FIRE_CORAL_BLOCK
+          - DEAD_HORN_CORAL_BLOCK
+          - DEAD_TUBE_CORAL
+          - DEAD_BRAIN_CORAL
+          - DEAD_BUBBLE_CORAL
+          - DEAD_FIRE_CORAL
+          - DEAD_HORN_CORAL
+          - DEAD_TUBE_CORAL_FAN
+          - DEAD_BRAIN_CORAL_FAN
+          - DEAD_BUBBLE_CORAL_FAN
+          - DEAD_FIRE_CORAL_FAN
+          - DEAD_HORN_CORAL_FAN
+
+  arcanum:
+    scenery_charge: false
+    families:
+      study:
+        max_count: 16
+        weight: 1.1
+        blocks: [BOOKSHELF, CHISELED_BOOKSHELF, LECTERN, ENCHANTING_TABLE]
+      amethyst:
+        max_count: 10
+        weight: 1.0
+        blocks:
+          - AMETHYST_BLOCK
+          - BUDDING_AMETHYST
+          - AMETHYST_CLUSTER
+          - SMALL_AMETHYST_BUD
+          - MEDIUM_AMETHYST_BUD
+          - LARGE_AMETHYST_BUD
+      ley:
+        max_count: 6
+        weight: 1.2
+        blocks: [ENDER_CHEST, END_ROD, LODESTONE, CRYING_OBSIDIAN, RESPAWN_ANCHOR, BREWING_STAND]
+
+  spirit:
+    scenery_charge: false
+    families:
+      soul_light:
+        max_count: 8
+        weight: 1.2
+        blocks: [SOUL_LANTERN, SOUL_TORCH, SOUL_WALL_TORCH, SOUL_CAMPFIRE]
+      soul_ground:
+        max_count: 6
+        weight: 0.6
+        blocks: [SOUL_SAND, SOUL_SOIL]
+      cherry:
+        max_count: 12
+        weight: 0.9
+        blocks: [CHERRY_LEAVES, CHERRY_LOG, CHERRY_WOOD, STRIPPED_CHERRY_LOG, CHERRY_SAPLING, PINK_PETALS]
+      pale_light:
+        max_count: 8
+        weight: 1.0
+        blocks: [SEA_LANTERN, OCHRE_FROGLIGHT, VERDANT_FROGLIGHT, PEARLESCENT_FROGLIGHT, QUARTZ_PILLAR]
+
+  illusion:
+    scenery_charge: false
+    families:
+      glass:
+        max_count: 16
+        weight: 1.0
+        blocks: [GLASS, GLASS_PANE, TINTED_GLASS, WHITE_STAINED_GLASS, BLACK_STAINED_GLASS, WHITE_STAINED_GLASS_PANE]
+      chorus:
+        max_count: 10
+        weight: 1.1
+        blocks: [CHORUS_PLANT, CHORUS_FLOWER, PURPUR_BLOCK, PURPUR_PILLAR]
+      glaze:
+        max_count: 12
+        weight: 0.9
+        blocks:
+          - WHITE_GLAZED_TERRACOTTA
+          - LIGHT_BLUE_GLAZED_TERRACOTTA
+          - MAGENTA_GLAZED_TERRACOTTA
+          - PINK_GLAZED_TERRACOTTA
+          - PURPLE_GLAZED_TERRACOTTA
+          - CYAN_GLAZED_TERRACOTTA
+      lichen:
+        max_count: 8
+        weight: 0.7
+        blocks: [GLOW_LICHEN]
+
+  necromancy:
+    scenery_charge: false
+    families:
+      grave:
+        max_count: 10
+        weight: 1.1
+        blocks: [SOUL_SAND, SOUL_SOIL]
+      marrow:
+        max_count: 8
+        weight: 1.2
+        blocks: [BONE_BLOCK, SKELETON_SKULL, WITHER_SKELETON_SKULL, WITHER_ROSE]
+      sculk:
+        max_count: 8
+        weight: 0.7
+        blocks: [SCULK, SCULK_CATALYST, SCULK_SENSOR, SCULK_SHRIEKER, CALIBRATED_SCULK_SENSOR]
+      web:
+        max_count: 8
+        weight: 0.8
+        blocks: [COBWEB, DEEPSLATE_TILES, DEEPSLATE_TILE_SLAB, DEEPSLATE_BRICKS]
+
+  shadowmancy:
+    scenery_charge: false
+    families:
+      heavy:
+        max_count: 12
+        weight: 1.1
+        blocks: [BLACKSTONE, POLISHED_BLACKSTONE, POLISHED_BLACKSTONE_BRICKS, OBSIDIAN, CRYING_OBSIDIAN]
+      dusk_wood:
+        max_count: 12
+        weight: 0.9
+        blocks:
+          - DARK_OAK_LOG
+          - DARK_OAK_WOOD
+          - DARK_OAK_LEAVES
+          - DARK_OAK_PLANKS
+          - MANGROVE_LOG
+          - MANGROVE_WOOD
+          - MANGROVE_ROOTS
+      veil:
+        max_count: 8
+        weight: 0.6
+        blocks: [SCULK_VEIN, TINTED_GLASS, BLACK_CANDLE, BLACK_CANDLE_CAKE, BLACK_WOOL, BLACK_CONCRETE]
+      wart:
+        max_count: 8
+        weight: 0.8
+        blocks: [NETHER_WART_BLOCK, WARPED_WART_BLOCK, WARPED_NYLIUM]
+
+  bloodmagic:
+    families:
+      redstone:
+        max_count: 4
+        weight: 0.5
+        blocks: [REDSTONE_BLOCK, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, REDSTONE_WIRE]
+      nether:
+        max-count: 10
+        weight: 1.0
+        blocks: [CRIMSON_NYLIUM, NETHERRACK, NETHER_BRICKS, CRIMSON_HYPHAE, CRACKED_NETHER_BRICKS, NETHER_BRICK_STAIRS, NETHER_BRICK_SLAB, NETHER_BRICK_FENCE, CHISELED_NETHER_BRICKS, RED_NETHER_BRICKS, RED_NETHER_BRICK_STAIRS, RED_NETHER_BRICK_SLAB, RED_NETHER_BRICK_WALL, CRIMSON_STEM]
+      nether_decor:
+        max-count: 10
+        weight: 1.0
+        blocks: [WEEPING_VINES, CRIMSON_FUNGUS, CRIMSON_ROOTS]
+      wart:
+        max_count: 8
+        weight: 1.0
+        blocks: [NETHER_WART, NETHER_WART_BLOCK]
+      crimson:
+        max_count: 12
+        weight: 1.1
+        blocks:
+          - CRIMSON_NYLIUM
+          - CRIMSON_FUNGUS
+          - CRIMSON_ROOTS
+          - WEEPING_VINES
+          - WEEPING_VINES_PLANT
+          - CRIMSON_STEM
+          - CRIMSON_HYPHAE
+      cloth:
+        max_count: 8
+        weight: 0.7
+        blocks: [RED_WOOL, RED_CONCRETE, RED_CANDLE, CAMPFIRE]

@@ -1,0 +1,669 @@
+oseni:
+  orb:
+    - Kilnheart
+    - Clinker
+    - Brand-Seed
+    - Cinderbead
+    - Hearthknot
+    - Slagpearl
+    - Coal-Tear
+    - Bellows-Eye
+    - Ash-Pip
+    - Forge-Dew
+  brooch:
+    - Forge-Brooch
+    - Kiln Pin
+    - Ashen Fibula
+    - Hearth Pin
+  book:
+    - Soot Canticle
+    - Kiln Psalter
+    - Brand Ordinances
+    - Cinder Ledger
+    - Hearth Hours
+    - Slag Hymnal
+    - Ash Ordinary
+    - Bellows Primer
+    - Ember Gloss
+    - Furnace Rubric
+  ring:
+    - Brand-Ring
+    - Bellows Hoop
+    - Kiln Band
+    - Cinder Ring
+    - Coal-Band
+  bracelet:
+    - Slag Torque
+    - Cinder Clasp
+    - Hearth Bangle
+  amulet:
+    - Hearth Pendant
+    - Ashen Amulet
+    - Cinder Latch
+    - Coal-Link
+  necklace:
+    - Forge Cord
+    - Brand Necklace
+  gem:
+    - Fire-Chip
+    - Kiln Splinter
+    - Clinker Facet
+    - Brand-Glass
+    - Slag Spark
+    - Hearth Glint
+    - Ash Crystal
+    - Forge Fleck
+  jar:
+    - Cinder Phial
+    - Kiln Crock
+    - Ash Pot
+    - Brand Vial
+    - Slag Flask
+    - Hearth Pot
+    - Soot Bottle
+    - Forge Crock
+  manuscript:
+    - A Primer On Oseni
+    - Notes On The Kiln
+    - A Study On The Hearth
+    - Notes On Brand And Cinder
+    - A Primer On The Furnace
+    - Study Of Slag And Soot
+    - Notes On The Bellows
+    - A Study On Ember
+    - Primer Of The Ash
+    - Notes On The Forge
+
+cerrith:
+  orb:
+    - Sunpip
+    - Grove-Seed
+    - Leafheart
+    - Verdant Bead
+    - Canopy Knot
+    - Pollen Tear
+    - Root-Pearl
+    - Dawn Pip
+    - Moss-Eye
+    - Thorn-Dew
+  brooch:
+    - Verdant Brooch
+    - Leaf Pin
+    - Moss Fibula
+    - Sun Pin
+  book:
+    - Leaf-Canticle
+    - Grove Psalter
+    - Sun Ordinary
+    - Root Gloss
+    - Canopy Hours
+    - Pollen Primer
+    - Thorn Rubric
+    - Moss Hymnal
+    - Verdant Ledger
+    - Dawn Offices
+  ring:
+    - Canopy Ring
+    - Thorn Hoop
+    - Leaf Band
+  bracelet:
+    - Root Torque
+    - Grove Clasp
+  amulet:
+    - Dawn Link
+    - Pollen Latch
+    - Sun Pendant
+  jar:
+    - Grove Phial
+    - Sap Crock
+    - Pollen Pot
+    - Leaf Vial
+    - Moss Flask
+    - Root Pot
+    - Dew Bottle
+    - Canopy Crock
+  gem:
+    - Sun-Chip
+    - Leaf Splinter
+    - Grove Facet
+    - Moss-Glass
+    - Pollen Spark
+    - Root Glint
+    - Thorn Crystal
+    - Canopy Fleck
+  manuscript:
+    - A Primer On Cerrith
+    - Notes On The Grove
+    - A Study On Order
+    - Notes On Leaf And Root
+    - A Primer On Charm
+    - Study Of The Canopy
+    - Notes On Healing
+    - A Study On Dawn
+    - Primer Of The Thorn
+    - Notes On The Sun Ordinary
+
+seithr:
+  orb:
+    - Rimebead
+    - Pale Knot
+    - Frost-Pip
+    - Winter Tear
+    - Hoarfrost Eye
+    - Ice-Seed
+    - Stillglass
+    - Snow-Pearl
+    - Brine-Pip
+    - Cold Dew
+  book:
+    - Rime Hours
+    - Pale Ordinary
+    - Winter Gloss
+    - Hoar Primer
+    - Ice Rubric
+    - Still Hymnal
+    - Frost Ledger
+    - Snow Canticle
+    - Brine Psalter
+    - Cold Offices
+  ring:
+    - Winter Ring
+    - Frost Hoop
+    - Ice Band
+  bracelet:
+    - Ice Torque
+    - Rime Clasp
+  amulet:
+    - Cold Link
+    - Brine Latch
+    - Pale Pendant
+  necklace:
+    - Snow Cord
+    - Hoar Necklace
+  gem:
+    - Rime-Chip
+    - Ice Splinter
+    - Pale Facet
+    - Frost-Glass
+    - Hoar Spark
+    - Snow Glint
+    - Winter Crystal
+    - Brine Fleck
+  manuscript:
+    - A Primer On Seithr
+    - Notes On Rime
+    - A Study On Inverted Heat
+    - Notes On Hoar And Ice
+    - A Primer On Winter
+    - Study Of Stillglass
+    - Notes On The Pale
+    - A Study On Frost
+    - Primer Of The Cold
+    - Notes On Snow Offices
+  brooch:
+    - Still Brooch
+    - Pale Pin
+    - Snow Fibula
+    - Hoar Pin
+
+mitlan:
+  orb:
+    - Tidebead
+    - Current-Knot
+    - Deep Pip
+    - Brine Tear
+    - Undertow Eye
+    - Shoal-Seed
+    - Azure Pearl
+    - Wake-Pip
+    - Eddy Dew
+    - Leeward Bead
+  book:
+    - Tide Hours
+    - Deep Ordinary
+    - Current Gloss
+    - Shoal Primer
+    - Wake Rubric
+    - Brine Hymnal
+    - Eddy Ledger
+    - Azure Canticle
+    - Leeward Psalter
+    - Undertow Offices
+  ring:
+    - Eddy Ring
+    - Deep Hoop
+    - Tide Band
+  bracelet:
+    - Shoal Torque
+    - Tide Clasp
+  amulet:
+    - Undertow Link
+    - Azure Latch
+    - Wake Pendant
+  necklace:
+    - Brine Cord
+    - Current Necklace
+  manuscript:
+    - A Study On Mitlan
+    - A Primer On Mitlan
+    - Notes On The Deep
+    - Notes On The Current
+    - A Primer On The Tide
+    - Study Of The Undertow
+    - Notes On The Shoal
+    - A Study On The Wake
+    - Primer Of Brine
+    - Notes On Eddy And Azure
+  brooch:
+    - Leeward Brooch
+    - Current Pin
+    - Brine Fibula
+    - Wake Pin
+
+arcanum:
+  orb:
+    - Cipherbead
+    - Ley-Knot
+    - Sigil Pip
+    - Occult Tear
+    - Glyph-Eye
+    - Uncounted Bead
+    - Ward-Seed
+    - Hex-Pearl
+    - Mute Dew
+    - Axiom Pip
+  book:
+    - Cipher Hours
+    - Ley Ordinary
+    - Sigil Gloss
+    - Glyph Primer
+    - Ward Rubric
+    - Hex Hymnal
+    - Axiom Ledger
+    - Mute Canticle
+    - Occult Psalter
+    - Uncounted Offices
+  ring:
+    - Axiom Ring
+    - Sigil Hoop
+    - Ley Band
+  bracelet:
+    - Glyph Torque
+    - Cipher Clasp
+  amulet:
+    - Ley Link
+    - Mute Latch
+    - Ward Pendant
+  gem:
+    - Cipher-Chip
+    - Ley Splinter
+    - Sigil Facet
+    - Glyph-Glass
+    - Ward Spark
+    - Hex Glint
+    - Axiom Crystal
+    - Mute Fleck
+  manuscript:
+    - A Primer On Arcanum
+    - Notes On The Source
+    - A Study On The Ley
+    - Notes On Sigil And Glyph
+    - A Primer On Wards
+    - Study Of The Axiom
+    - Notes On The Cipher
+    - A Study On The Occult
+    - Primer Of The Hex
+    - Notes On The Uncounted
+  brooch:
+    - Occult Brooch
+    - Ley Pin
+    - Hex Fibula
+    - Ward Pin
+
+bloodmagic:
+  orb:
+    - Vitae-Bead
+    - Pulse-Knot
+    - Crimson Pip
+    - Sanguine Tear
+    - Heart-Dew
+    - Vein-Seed
+    - Clot-Pearl
+    - Warm Pip
+    - Offering Bead
+    - Quiet Pulse
+  brooch:
+    - Quiet Brooch
+    - Pulse Pin
+    - Clot Fibula
+    - Heart Pin
+  eye_orb:
+    - Watching Vitae
+    - Lidless Pulse
+    - Sanguine Stare
+    - Vein-Eye
+    - Offering Gaze
+    - Warm Iris
+    - Clot-Look
+    - "Heart's Witness"
+  book:
+    - Vitae Hours
+    - Pulse Ordinary
+    - Vein Gloss
+    - Offering Primer
+    - Clot Rubric
+    - Sanguine Hymnal
+    - Heart Ledger
+    - Warm Canticle
+    - Quiet Psalter
+    - Crimson Offices
+  ring:
+    - Warm Ring
+    - Vein Hoop
+    - Pulse Band
+  bracelet:
+    - Heart Torque
+    - Vitae Clasp
+  amulet:
+    - Crimson Link
+    - Sanguine Latch
+    - Offering Pendant
+  necklace:
+    - Vein Cord
+    - Pulse Necklace
+  gem:
+    - Vitae-Chip
+    - Pulse Splinter
+    - Vein Facet
+    - Heart-Glass
+    - Offering Spark
+    - Clot Glint
+    - Warm Crystal
+    - Sanguine Fleck
+  manuscript:
+    - A Primer On Bloodmagic
+    - Notes On Vitae
+    - A Study On The Pulse
+    - Notes On Vein And Heart
+    - A Primer On The Offering
+    - Study Of The Clot
+    - Notes On Sanguine Work
+    - A Study On Warm Blood
+    - Primer Of The Quiet Pulse
+    - Notes On Crimson Offices
+
+necromancy:
+  orb:
+    - Wake-Bead
+    - Bone-Knot
+    - Ash Pip
+    - Grave Tear
+    - Still-Pearl
+    - Marrow-Seed
+    - Wight Dew
+    - Dirge Pip
+    - Barrow Bead
+    - Quiet Ash
+  brooch:
+    - Wight Brooch
+    - Bone Pin
+    - Dirge Fibula
+    - Marrow Pin
+  eye_orb:
+    - Lidless Wake
+    - Grave Stare
+    - Ash Iris
+    - Barrow Gaze
+    - "Wight's Look"
+    - Marrow Witness
+    - Dirge-Eye
+    - Still Watch
+  skull:
+    - Barrow Pate
+    - Quiet Calva
+    - Ash Crown
+    - Wake-Jaw
+    - Marrow Bowl
+    - Dirge-Head
+    - Grave Visor
+    - "Wight's Cup"
+  jar:
+    - Ash Phial
+    - Marrow Crock
+    - Grave Pot
+    - Wake Vial
+    - Dirge Flask
+    - Barrow Pot
+    - Quiet Bottle
+    - Wight Crock
+  book:
+    - Wake Hours
+    - Grave Ordinary
+    - Ash Gloss
+    - Marrow Primer
+    - Dirge Rubric
+    - Barrow Hymnal
+    - Quiet Ledger
+    - Wight Canticle
+    - Still Psalter
+    - Bone Offices
+  ring:
+    - Barrow Ring
+    - Ash Hoop
+    - Bone Band
+  necklace:
+    - Grave Cord
+    - Dirge Necklace
+    - Wake Chain
+  manuscript:
+    - A Primer On Necromancy
+    - Notes On The Wake
+    - A Study On The Grave
+    - Notes On Marrow And Bone
+    - A Primer On The Dirge
+    - Study Of The Barrow
+    - Notes On Ash And Still
+    - A Study On The Wight
+    - Primer Of Quiet Ash
+    - Notes On Bone Offices
+
+shadowmancy:
+  orb:
+    - Veilbead
+    - Dusk-Knot
+    - Shade Pip
+    - Umbral Tear
+    - Gloom-Eye
+    - Night-Seed
+    - Mute Pearl
+    - Penumbra Pip
+    - Soft Dark
+    - Threshold Dew
+  eye_orb:
+    - Lidless Dusk
+    - Veil Stare
+    - Shade Iris
+    - Umbral Gaze
+    - Gloom Witness
+    - Night Look
+    - Penumbra Watch
+    - Threshold Eye
+  book:
+    - Veil Hours
+    - Dusk Ordinary
+    - Shade Gloss
+    - Umbral Primer
+    - Gloom Rubric
+    - Night Hymnal
+    - Mute Ledger
+    - Penumbra Canticle
+    - Soft Psalter
+    - Threshold Offices
+  jar:
+    - Veil Phial
+    - Dusk Crock
+    - Shade Pot
+    - Umbral Vial
+    - Gloom Flask
+    - Night Pot
+    - Mute Bottle
+    - Penumbra Crock
+  ring:
+    - Mute Ring
+    - Shade Hoop
+    - Dusk Band
+  amulet:
+    - Threshold Link
+    - Penumbra Latch
+    - Veil Pendant
+  necklace:
+    - Night Cord
+    - Gloom Necklace
+  manuscript:
+    - A Primer On Shadowmancy
+    - Notes On The Veil
+    - A Study On Dusk
+    - Notes On Shade And Gloom
+    - A Primer On The Night
+    - Study Of Penumbra
+    - Notes On The Threshold
+    - A Study On The Umbral
+    - Primer Of Soft Dark
+    - Notes On Mute Hours
+  brooch:
+    - Soft Brooch
+    - Dusk Pin
+    - Night Fibula
+    - Gloom Pin
+
+spirit:
+  orb:
+    - Breath-Bead
+    - Wake-Knot
+    - Quiet Pip
+    - Pale Tear
+    - Hush-Eye
+    - Drift-Seed
+    - Thin Pearl
+    - Exhale Pip
+    - Still Breath
+    - Liminal Dew
+  book:
+    - Breath Hours
+    - Quiet Ordinary
+    - Wake Gloss
+    - Hush Primer
+    - Drift Rubric
+    - Pale Hymnal
+    - Thin Ledger
+    - Exhale Canticle
+    - Still Psalter
+    - Liminal Offices
+  jar:
+    - Breath Phial
+    - Quiet Crock
+    - Wake Pot
+    - Hush Vial
+    - Drift Flask
+    - Pale Pot
+    - Thin Bottle
+    - Exhale Crock
+  ring:
+    - Thin Ring
+    - Wake Hoop
+    - Breath Band
+  amulet:
+    - Liminal Link
+    - Exhale Latch
+    - Hush Pendant
+  necklace:
+    - Quiet Cord
+    - Drift Necklace
+  gem:
+    - Breath-Chip
+    - Quiet Splinter
+    - Wake Facet
+    - Hush-Glass
+    - Drift Spark
+    - Pale Glint
+    - Thin Crystal
+    - Exhale Fleck
+  manuscript:
+    - A Primer On Spirit
+    - Notes On Breath
+    - A Study On The Hush
+    - Notes On Drift And Wake
+    - A Primer On The Thin
+    - Study Of The Liminal
+    - Notes On Still Breath
+    - A Study On The Exhale
+    - Primer Of Pale Quiet
+    - Notes On Liminal Offices
+  brooch:
+    - Still Brooch
+    - Quiet Pin
+    - Pale Fibula
+    - Hush Pin
+
+illusion:
+  orb:
+    - Mirror-Bead
+    - False Knot
+    - Glint Pip
+    - Trick Tear
+    - Doubled Eye
+    - Mirage-Seed
+    - Slip Pearl
+    - Afterimage Pip
+    - Soft Lie
+    - Folded Dew
+  book:
+    - Mirror Hours
+    - False Ordinary
+    - Glint Gloss
+    - Trick Primer
+    - Doubled Rubric
+    - Mirage Hymnal
+    - Slip Ledger
+    - Afterimage Canticle
+    - Soft Psalter
+    - Folded Offices
+  jar:
+    - Mirror Phial
+    - False Crock
+    - Glint Pot
+    - Trick Vial
+    - Doubled Flask
+    - Mirage Pot
+    - Slip Bottle
+    - Afterimage Crock
+  ring:
+    - Slip Ring
+    - Glint Hoop
+    - Mirror Band
+  bracelet:
+    - Trick Torque
+    - Mirror Clasp
+  amulet:
+    - Folded Link
+    - Afterimage Latch
+    - Mirage Pendant
+  necklace:
+    - False Cord
+    - Glint Necklace
+  manuscript:
+    - A Primer On Illusion
+    - Notes On The Mirror
+    - A Study On The Glint
+    - Notes On Trick And Mirage
+    - A Primer On The Fold
+    - Study Of Afterimage
+    - Notes On The Slip
+    - A Study On Doubled Sight
+    - Primer Of Soft Lie
+    - Notes On Folded Offices
+  brooch:
+    - Soft Brooch
+    - False Pin
+    - Mirage Fibula
+    - Trick Pin

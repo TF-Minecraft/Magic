@@ -1,0 +1,261 @@
+oseni:
+  models:
+    - orb(ia.tfmc_magic:oseni_orb_0) all
+    - orb(ia.tfmc_magic:oseni_orb_11) epic-legendary
+    - brooch(ia.tfmc_magic:oseni_brooch_13) all
+    - brooch(ia.tfmc_magic:oseni_brooch_15) all
+    - book(ia.tfmc_magic:oseni_book_20) all
+    - book(ia.tfmc_magic:oseni_book_35) all
+    - book(ia.tfmc_magic:oseni_book_40) all
+    - ring(ia.tfmc_magic:oseni_ring_147) all
+    - ring(ia.tfmc_magic:oseni_ring_166) all
+    - ring(ia.tfmc_magic:oseni_ring_167) all
+    - ring(ia.tfmc_magic:oseni_ring_171) all
+    - ring(ia.tfmc_magic:oseni_ring_172) all
+    - bracelet(ia.tfmc_magic:oseni_bracelet_151) all
+    - bracelet(ia.tfmc_magic:oseni_bracelet_152) all
+    - amulet(ia.tfmc_magic:oseni_amulet_156) all
+    - amulet(ia.tfmc_magic:oseni_amulet_159) all
+    - amulet(ia.tfmc_magic:oseni_amulet_177) all
+    - amulet(ia.tfmc_magic:oseni_amulet_195) legendary
+    - necklace(ia.tfmc_magic:oseni_necklace_197) all
+    - gem(ia.tfmc_magic:oseni_gem_164) all
+    - jar(ia.tfmc_magic:oseni_jar_113) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+cerrith:
+  models:
+    - orb(ia.tfmc_magic:cerrith_orb_1) all
+    - brooch(ia.tfmc_magic:cerrith_brooch_14) rare-legendary
+    - brooch(ia.tfmc_magic:cerrith_brooch_16) rare-legendary
+    - book(ia.tfmc_magic:cerrith_book_23) all
+    - book(ia.tfmc_magic:cerrith_book_43) all
+    - book(ia.tfmc_magic:cerrith_book_56) epic-legendary
+    - ring(ia.tfmc_magic:cerrith_ring_149) all
+    - ring(ia.tfmc_magic:cerrith_ring_174) epic-legendary
+    - bracelet(ia.tfmc_magic:cerrith_bracelet_154) all
+    - amulet(ia.tfmc_magic:cerrith_amulet_158) all
+    - jar(ia.tfmc_magic:cerrith_jar_116) all
+    - gem(ia.tfmc_magic:cerrith_gem_165) all
+    - gem(ia.tfmc_magic:cerrith_gem_185) epic-legendary
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+seithr:
+  models:
+    - orb(ia.tfmc_magic:seithr_orb_2) all
+    - orb(ia.tfmc_magic:seithr_orb_10) all
+    - orb(ia.tfmc_magic:seithr_orb_5) epic-legendary
+    - orb(ia.tfmc_magic:seithr_orb_9) epic-legendary
+    - book(ia.tfmc_magic:seithr_book_21) all
+    - book(ia.tfmc_magic:seithr_book_24) all
+    - book(ia.tfmc_magic:seithr_book_26) all
+    - book(ia.tfmc_magic:seithr_book_46) all
+    - book(ia.tfmc_magic:seithr_book_44) all
+    - ring(ia.tfmc_magic:seithr_ring_148) all
+    - ring(ia.tfmc_magic:seithr_ring_168) all
+    - ring(ia.tfmc_magic:seithr_ring_173) epic-legendary
+    - bracelet(ia.tfmc_magic:seithr_bracelet_153) all
+    - amulet(ia.tfmc_magic:seithr_amulet_157) all
+    - necklace(ia.tfmc_magic:seithr_necklace_198) all
+    - gem(ia.tfmc_magic:seithr_gem_163) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+mitlan:
+  models:
+    - orb(ia.tfmc_magic:seithr_orb_10) all
+    - orb(ia.tfmc_magic:seithr_orb_9) epic-legendary
+    - book(ia.tfmc_magic:seithr_book_21) all
+    - book(ia.tfmc_magic:mitlan_book_41) all
+    - book(ia.tfmc_magic:mitlan_book_55) epic-legendary
+    - ring(ia.tfmc_magic:seithr_ring_148) all
+    - ring(ia.tfmc_magic:seithr_ring_168) all
+    - ring(ia.tfmc_magic:seithr_ring_173) epic-legendary
+    - bracelet(ia.tfmc_magic:seithr_bracelet_153) all
+    - amulet(ia.tfmc_magic:seithr_amulet_157) all
+    - necklace(ia.tfmc_magic:seithr_necklace_198) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+arcanum:
+  models:
+    - orb(ia.tfmc_magic:seithr_orb_2) all
+    - orb(ia.tfmc_magic:arcanum_orb_3) all
+    - orb(ia.tfmc_magic:arcanum_orb_4) all
+    - orb(ia.tfmc_magic:arcanum_orb_7) all
+    - orb(ia.tfmc_magic:arcanum_orb_8) all
+    - orb(ia.tfmc_magic:oseni_orb_11) legendary
+    - book(ia.tfmc_magic:arcanum_book_22) all
+    - book(ia.tfmc_magic:arcanum_book_42) all
+    - book(ia.tfmc_magic:arcanum_book_29) epic-legendary
+    - book(ia.tfmc_magic:arcanum_book_30) epic-legendary
+    - ring(ia.tfmc_magic:arcanum_ring_150) all
+    - ring(ia.tfmc_magic:arcanum_ring_170) all
+    - ring(ia.tfmc_magic:arcanum_ring_175) all
+    - bracelet(ia.tfmc_magic:oseni_bracelet_151) all
+    - bracelet(ia.tfmc_magic:arcanum_bracelet_155) all
+    - amulet(ia.tfmc_magic:oseni_amulet_159) all
+    - amulet(ia.tfmc_magic:oseni_amulet_177) all
+    - amulet(ia.tfmc_magic:arcanum_amulet_178) epic-legendary
+    - gem(ia.tfmc_magic:arcanum_gem_181) all
+    - gem(ia.tfmc_magic:arcanum_gem_180) all
+    - gem(ia.tfmc_magic:arcanum_gem_141) all
+    - gem(ia.tfmc_magic:arcanum_gem_162) all
+    - gem(ia.tfmc_magic:arcanum_gem_140) legendary
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+bloodmagic:
+  models:
+    - orb(ia.tfmc_magic:oseni_orb_0) all
+    - brooch(ia.tfmc_magic:oseni_brooch_13) all
+    - brooch(ia.tfmc_magic:oseni_brooch_15) all
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_18) all
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_19) legendary
+    - book(ia.tfmc_magic:oseni_book_20) all
+    - book(ia.tfmc_magic:oseni_book_35) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - book(ia.tfmc_magic:bloodmagic_book_27) legendary
+    - ring(ia.tfmc_magic:oseni_ring_147) all
+    - ring(ia.tfmc_magic:oseni_ring_172) all
+    - bracelet(ia.tfmc_magic:oseni_bracelet_152) all
+    - amulet(ia.tfmc_magic:oseni_amulet_156) all
+    - amulet(ia.tfmc_magic:oseni_amulet_159) all
+    - amulet(ia.tfmc_magic:oseni_amulet_195) legendary
+    - necklace(ia.tfmc_magic:oseni_necklace_197) all
+    - gem(ia.tfmc_magic:oseni_gem_164) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+necromancy:
+  models:
+    - orb(ia.tfmc_magic:necromancy_orb_12) all
+    - brooch(ia.tfmc_magic:oseni_brooch_15) all
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_18) all
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_19) all
+    - skull(ia.tfmc_magic:necromancy_skull_142) all
+    - jar(ia.tfmc_magic:necromancy_jar_117) all
+    - book(ia.tfmc_magic:seithr_book_24) all
+    - book(ia.tfmc_magic:cerrith_book_23) all
+    - book(ia.tfmc_magic:seithr_book_26) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - book(ia.tfmc_magic:seithr_book_44) all
+    - book(ia.tfmc_magic:necromancy_book_45) all
+    - book(ia.tfmc_magic:necromancy_book_28) epic-legendary
+    - ring(ia.tfmc_magic:oseni_ring_166) all
+    - ring(ia.tfmc_magic:oseni_ring_171) all
+    - necklace(ia.tfmc_magic:necromancy_necklace_196) epic-legendary
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+shadowmancy:
+  models:
+    - orb(ia.tfmc_magic:necromancy_orb_12) all
+    - orb(ia.tfmc_magic:arcanum_orb_3) all
+    - orb(ia.tfmc_magic:arcanum_orb_4) epic-legendary
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_18) all
+    - eye_orb(ia.tfmc_magic:bloodmagic_eye_orb_19) all
+    - book(ia.tfmc_magic:cerrith_book_23) all
+    - book(ia.tfmc_magic:shadowmancy_book_25) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - book(ia.tfmc_magic:shadowmancy_book_39) all
+    - book(ia.tfmc_magic:necromancy_book_45) all
+    - book(ia.tfmc_magic:shadowmancy_book_57) epic-legendary
+    - jar(ia.tfmc_magic:shadowmancy_jar_115) all
+    - jar(ia.tfmc_magic:shadowmancy_jar_114) all
+    - ring(ia.tfmc_magic:seithr_ring_148) all
+    - amulet(ia.tfmc_magic:oseni_amulet_195) all
+    - necklace(ia.tfmc_magic:necromancy_necklace_196) epic-legendary
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+spirit:
+  models:
+    - orb(ia.tfmc_magic:seithr_orb_9) all
+    - book(ia.tfmc_magic:spirit_book_36) all
+    - book(ia.tfmc_magic:spirit_book_38) all
+    - book(ia.tfmc_magic:mitlan_book_41) all
+    - jar(ia.tfmc_magic:spirit_jar_106) all
+    - ring(ia.tfmc_magic:seithr_ring_173) all
+    - amulet(ia.tfmc_magic:seithr_amulet_157) all
+    - amulet(ia.tfmc_magic:spirit_amulet_176) all
+    - amulet(ia.tfmc_magic:arcanum_amulet_178) epic-legendary
+    - necklace(ia.tfmc_magic:spirit_necklace_199) all
+    - gem(ia.tfmc_magic:seithr_gem_163) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all
+
+illusion:
+  models:
+    - orb(ia.tfmc_magic:seithr_orb_2) all
+    - orb(ia.tfmc_magic:arcanum_orb_4) epic-legendary
+    - book(ia.tfmc_magic:seithr_book_26) all
+    - book(ia.tfmc_magic:shadowmancy_book_39) all
+    - book(ia.tfmc_magic:seithr_book_46) all
+    - book(ia.tfmc_magic:illusion_book_59) epic-legendary
+    - jar(ia.tfmc_magic:spirit_jar_106) all
+    - ring(ia.tfmc_magic:seithr_ring_173) all
+    - bracelet(ia.tfmc_magic:arcanum_bracelet_155) all
+    - amulet(ia.tfmc_magic:oseni_amulet_159) all
+    - necklace(ia.tfmc_magic:seithr_necklace_198) all
+    - brooch(ia.tfmc_magic:shared_brooch_6) all
+    - brooch(ia.tfmc_magic:shared_brooch_17) all
+    - book(ia.tfmc_magic:shared_book_37) common-uncommon
+    - manuscript(ia.tfmc_magic:manuscript_47) all
+    - manuscript(ia.tfmc_magic:manuscript_48) all
+    - manuscript(ia.tfmc_magic:manuscript_49) all
+    - manuscript(ia.tfmc_magic:manuscript_50) all
+    - manuscript(ia.tfmc_magic:manuscript_51) all

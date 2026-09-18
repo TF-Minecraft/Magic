@@ -1,0 +1,51 @@
+main: net.tfminecraft.magic.Magic
+api-version: '1.19'
+name: Magic
+version: 0.1.0
+author: Drefvelin
+depend: [TLibs, ItemsAdder, TFMCCore, InteractibleFurniture]
+softdepend: [RPCharacters, MMOItems, MythicLib, MMOCore]
+
+commands:
+  resonance:
+    description: Open your resonance profile
+    usage: /resonance
+    aliases: [res]
+    permission: magic.use
+  magic:
+    description: Magic plugin commands
+    usage: /magic <rune|reload|open|resonance|artifact|fillchest|shrine|refresh>
+
+permissions:
+  magic.use:
+    description: Allows using /resonance
+    default: true
+  magic.rune.keybind:
+    description: Allows /magic rune keybind on a held rune
+    default: true
+  magic.admin:
+    description: Allows /magic admin commands (reload, open)
+    default: op
+    children:
+      magic.admin.reload: true
+  magic.admin.reload:
+    description: Legacy permission alias for magic.admin
+    default: op
+  magic.spirit:
+    description: Allows Spirit resonance
+    default: false
+  magic.arcanum:
+    description: Allows Arcanum resonance
+    default: false
+  magic.illusion:
+    description: Allows Illusion resonance
+    default: false
+  magic.shadowmancy:
+    description: Allows Shadowmancy resonance
+    default: false
+  magic.necromancy:
+    description: Allows Necromancy resonance
+    default: false
+  magic.bloodmagic:
+    description: Allows Bloodmagic resonance
+    default: false

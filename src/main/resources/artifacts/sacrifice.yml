@@ -1,0 +1,86 @@
+# Sacrifice rites. Element ids under elements: are the schools that use this path.
+# Jar does not overwrite an existing live copy. Copy this file by hand after first deploy.
+# scenery_charge: false means those schools do not fill from shrine block ticks.
+# enabled: false on an element keeps it listed (and scenery-gated) but rites will not start.
+
+enabled: true
+scenery_charge: false
+
+charge_seconds: 10
+victim_range: 4
+match: starts_with
+case_insensitive: true
+hide_incantation: false
+
+require_min_score: true
+# Pedestal scenery maxAura for that school must reach this (same units as artifact aura).
+min_scenery_aura: 50
+# Place hint: silent at or below this, too-weak until min_scenery_aura.
+hint_min_aura: 20
+require_dagger_in_hand: true
+require_rpcharacters: true
+# RPCharacters channel id that can start a rite (CharacterChatEvent).
+rp_channel: rp
+one_rite_per_caster: true
+refuse_new_words_while_active: true
+
+pedestal_id: pedestal
+pedestal_slot: "*"
+
+# TLibs item path (v.golden_sword, ia.namespace:id, m.type.id, magic....).
+dagger: m.lore_weapons.bloodmagic_dagger
+
+# Charge 0-1 at kill. below is exclusive. death.min is inclusive (full bar).
+# Lore stages: pain = healable, screams = permanent, soul = death.
+tiers:
+  none:
+    below: 0.20
+  wound:
+    min: 0.20
+    below: 0.40
+    aura_fraction: 0.20
+    injury: healing
+  maim:
+    min: 0.40
+    below: 1.0
+    aura_fraction: 0.55
+    injury: permanent
+  death:
+    min: 1.0
+    aura_fraction: 1.0
+    injury: none
+    permadeath: true
+
+elements:
+  bloodmagic:
+    words:
+      - "Lorin Vekar Drakun Talis"
+    lore:
+      pain: "Filled with the pain of {character}"
+      screams: "Filled with the screams of {character}"
+      soul: "Filled with the soul of {character}"
+  necromancy:
+    enabled: false
+    words:
+      - "Vorthas Luneth... Taro Vekran"
+    lore:
+      pain: "Filled with the pain of {character}"
+      screams: "Filled with the screams of {character}"
+      soul: "Filled with the soul of {character}"
+  shadowmancy:
+    enabled: false
+    words:
+      - "Need to do"
+    lore:
+      pain: "Filled with the pain of {character}"
+      screams: "Filled with the screams of {character}"
+      soul: "Filled with the soul of {character}"
+
+fx:
+  surge_tiers: [wound, maim, death]
+  surge_sound: BLOCK_SCULK_SHRIEKER_SHRIEK
+  surge_volume: 0.85
+  surge_pitch: 0.7
+  boom_sound: ENTITY_WARDEN_SONIC_BOOM
+  boom_volume: 0.45
+  boom_pitch: 0.85

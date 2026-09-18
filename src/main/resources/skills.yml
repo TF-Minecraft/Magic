@@ -1,0 +1,99 @@
+# skill id -> element + tier (MythicLib / MMOItems). Jar does not overwrite a live copy.
+#
+# The id is the MythicLib skill handler id, lowercase, which is what an MMOItems
+# ability reports. Flat or nested both work:
+#
+# arcanum_bolt: arcanum
+#
+# arcanum_bolt:
+#   element: arcanum
+#   tier: 1
+#
+# element: which weapon imbue and player resonance gate the cast, and which alignment
+# band the weapon contributes. A skill with no binding is never gated.
+#
+# tier: 1-4 (Minor / Lesser / Greater / Ascendant). The weapon must hold that element
+# at this band, and the caster's resonance must meet the same band. Omitted tier is 1.
+
+#Cerrith
+Healing_Orb:
+  element: Cerrith
+  tier: 1
+
+Shielding_Orb:
+  element: Cerrith
+  tier: 1
+
+Hand_Cure:
+  element: Cerrith
+  tier: 2
+
+Blessing_Of_Swiftness:
+  element: Cerrith
+  tier: 2
+
+Cerrith_Glyph:
+  element: Cerrith
+  tier: 3
+
+Restoration:
+  element: Cerrith
+  tier: 3
+
+Blessing_Of_Healing:
+  element: Cerrith
+  tier: 4
+
+Mana_Transfer:
+  element: Cerrith
+  tier: 4
+
+#Oseni
+Fire_Shard:
+  element: Oseni
+  tier: 1
+
+Fire_Breath:
+  element: Oseni
+  tier: 2
+
+Oseni_Glyph:
+  element: Oseni
+  tier: 3
+
+Fire_Rain:
+  element: Oseni
+  tier: 4
+
+#Seithr
+Silencing_Shard:
+  element: Seithr
+  tier: 1
+
+Ice_Shard:
+  element: Seithr
+  tier: 1
+
+Ice_Shield:
+  element: Seithr
+  tier: 2
+
+Ice_Wave:
+  element: Seithr
+  tier: 2
+
+Seithr_Glyph:
+  element: Seithr
+  tier: 3
+
+Cold_Embrace:
+  element: Seithr
+  tier: 3
+
+Frostveil:
+  element: Seithr
+  tier: 4
+
+Frozen_Tomb:
+  element: Seithr
+  tier: 4

@@ -1,0 +1,132 @@
+debug: false
+# When true, aura events are appended to plugins/Magic/logs/aura.log
+logging: true
+# When true, plugins/Magic/logs/aura.log is deleted on every plugin start/reload
+wipe-log: true
+default_cast_mode: flow
+default_resonance: 0.0
+
+resonance:
+  decay_per_hour: -0.02
+
+equilibrium:
+  default: 0.0
+  min: -100.0
+  max: 100.0
+  passive_corrupt_per_hour: 0.05
+  corrupt_compound_strength: 1.25
+  tranquility_decay_per_hour: 0.03
+  surge:
+    0:   { mana: 0, damage: 0, cooldown: 0 }
+    15:  { mana: -0.05, damage: 0.10, cooldown: -0.10 }
+    60:  { mana: -0.10, damage: 0.15, cooldown: -0.15 }
+    100: { mana: -0.05, damage: 0.10, cooldown: -0.10 }
+  tranquility:
+    0:   { mana: 0, damage: 0, cooldown: 0 }
+    100: { mana: -0.20, damage: 0.25, cooldown: -0.05 }
+
+# Global tick cycle (one runnable for the whole plugin).
+# interval_ticks: 20 = one second elapsed per tick.
+# seconds_per_hour: real seconds that count as one in-game hour for per-hour rates
+# (resonance decay, equilibrium, artifact muffle). 3600 is real time. 1 is test speed.
+tick:
+  interval_ticks: 20
+  seconds_per_hour: 3600
+
+artifacts:
+  glint: true
+  # Hard ceiling per element. Rarity aura_cap ranges in generator.yml cannot exceed this.
+  aura_cap: 150
+
+# MMOItems type ids (item-types.yml). Held items of these types can be rebound.
+runes:
+  types:
+    - GEM_STONE
+  keybinds:
+    - CAST
+    - RIGHT_CLICK
+    - LEFT_CLICK
+    - SHIFT_RIGHT_CLICK
+    - SHIFT_LEFT_CLICK
+
+meditation:
+  pedestal: pedestal
+  # IF pedestal slot id, or * to use every slot (left/right on the jar template).
+  pedestal_slot: "*"
+  cardinal_offset: 4
+  diagonal_offset: 3
+  start_orb_range: 2.5
+  orb_hit_radius: 0.5
+  orb_click_range: 12
+  mental_cost_per_hit: 1
+  surge_lock_seconds: 10
+  max_live_orbs: 8
+  spawn_interval_ticks: 40
+  orbit_period_ticks: 80
+  orbit_radius: 2.4
+  flow_equilibrium_min: 0.02
+  flow_equilibrium_max: 0.06
+  surge_equilibrium_min: 0.02
+  surge_equilibrium_max: 0.10
+  resonance_per_hit: 4.0
+
+# A mage weapon refuses a spell whose element it demands more of than you carry, and
+# refusing costs nothing. The title fires every time; this throttles the chat line that
+# spells out what you are short of, per player, weapon and element.
+cast:
+  refuse_chat_seconds: 30
+
+# Drift from spending mana on a CAST/API skill. 40 mana -> 0.04 (mana / mana_divisor).
+# Surge adds corruption (negative equilibrium). Flow adds tranquility (positive).
+cast_drift:
+  mana_divisor: 1000
+  min: 0.01
+
+attunement:
+  display_furniture: artifact_display
+  users:
+    ttl_days: 7
+    # yield: divide (sessionCap = usableFill / n, orbGain = min(resonance_per_hit / n, remaining))
+  # Muffle 0-1. Scales with tick.seconds_per_hour (3600 = real time).
+  # Off: 1/24 per hour (full muffle in 24h). Recover: 1/168 per hour (clear in 7d).
+  # Accepted: player inv, pedestal, artifact_display, item frames.
+  # Chests and other containers raise muffle. No chat.
+  muffled:
+    recover_per_hour: 0.00595238095
+    off_per_hour: 0.04166666667
+
+gear:
+  station: iaf(tfmc:magic_crafting_station)
+  output-slot: 16
+  confirm_seconds: 5
+
+  # When false, rune socket colours use only the archetype suffix (e.g. "Minor Rune")
+  # without the band prefix (Common / Rare / Epic / Legendary). Band still gates attunement.
+  socket_rarity_prefix: true
+
+  # One-sided bonus for holding a weapon attuned to the element of the spell you cast.
+  # Keyed by the weapon's tier band in that element. A weapon with no attunement in an
+  # element contributes nothing; there is no penalty side, because a weapon that cannot
+  # carry the element refuses the cast outright.
+  #
+  # Decimals, combined multiplicatively with resonance and drift. Negative cooldown is
+  # a shorter cooldown. This is the power creep knob, so it ships disabled.
+  alignment:
+    enabled: false
+    1:
+      mana: 0.00
+      damage: 0.03
+      cooldown: -0.03
+    2:
+      mana: 0.00
+      damage: 0.05
+      cooldown: -0.05
+    3:
+      mana: 0.00
+      damage: 0.08
+      cooldown: -0.08
+    4:
+      mana: 0.00
+      damage: 0.10
+      cooldown: -0.10
+

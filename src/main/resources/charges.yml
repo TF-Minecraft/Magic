@@ -1,0 +1,43 @@
+# Enchanted Charges. Jar does not overwrite a live copy of this file.
+#
+# A charge is a crafting consumable, not an artifact. It is crafted elsewhere (one
+# separate item per tier), imprinted with every element a shrine scores when placed on
+# a pedestal, then filled by the normal shrine, sacrifice or admin paths.
+#
+# tier      -> roman numeral shown to the player (I, II, III, IV)
+# item      -> TLibs item path used to recognise the charge
+# aura_cap  -> how much aura the charge can hold PER element it imprints
+#
+# The shrine's own ceiling still applies, so a weak shrine cannot fill a high tier
+# charge. That is the "shrine power needed per tier" gate and needs no extra config.
+
+tiers:
+  1:
+    item: m.materials.enchanted_charge_1
+    aura_cap: 40
+  2:
+    item: m.materials.enchanted_charge_2
+    aura_cap: 75
+  3:
+    item: m.materials.enchanted_charge_3
+    aura_cap: 110
+  4:
+    item: m.materials.enchanted_charge_4
+    aura_cap: 150
+
+# Displayed tier band per element, keyed by aura gathered.
+# A charge showing "Cerrith II" gathered at least the `2` threshold of cerrith aura.
+# Below the first threshold the element shows "-", so an imprinted but empty charge
+# still lists which elements it took on.
+#
+# `default` applies to any element without its own block. Add an element id as a
+# sibling key to override it, for example:
+#   cerrith:
+#     1: 15
+#     2: 45
+bands:
+  default:
+    1: 10
+    2: 40
+    3: 75
+    4: 110

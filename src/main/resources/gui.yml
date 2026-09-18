@@ -1,0 +1,115 @@
+# GUI configuration for the Resonance screen.
+# Layout slots are fixed here for authoring; GridLayout reads them in Batch 2.
+# Chat messages remain in messages.yml.
+
+title: "{color:title}Resonance"
+
+slots:
+  character_head: 4
+  cast_mode_left: 12
+  cast_mode_right: 14
+  element_row: 4
+  element_center: true
+
+items:
+  filler: vanilla.PURPLE_STAINED_GLASS_PANE
+  filler_border: vanilla.BLACK_STAINED_GLASS_PANE
+  cast_mode_selected: vanilla.LIME_STAINED_GLASS_PANE
+  cast_mode_unselected: vanilla.GRAY_STAINED_GLASS_PANE
+
+cast_modes:
+  left:
+    id: surge
+    icon: v.BLAZE_POWDER
+    name: "{color:mode_surge}Surge"
+    lore:
+      - "{color:label_muted}Power now. Corruption later."
+  right:
+    id: flow
+    icon: v.AMETHYST_SHARD
+    name: "{color:mode_flow}Flow"
+    lore:
+      - "{color:label_muted}Slow start. Stronger at depth."
+
+colors:
+  title: "#c9a0ff"
+  label_muted: "#8b7fa8"
+  label_body: "#d4c8e8"
+  label_accent: "#e8d4ff"
+  mode_surge: "#e85d4a"
+  mode_flow: "#5bc4d4"
+  corruption: "#c45749"
+  tranquility: "#6ec9a0"
+  resonance_low: "#575150"
+  resonance_high: "#82d461"
+  drift_sign: "#ff5555"
+  drift_suffix: "#ffaa00"
+  stat_mana: "#5b9bd4"
+  stat_damage: "#c45c4a"
+  stat_cooldown: "#7dba6e"
+
+resonance:
+  bar_segments: 20
+  bar_char: "|"
+  bar_bracket_color: "§7"
+  bar_empty_color: "{color:resonance_low}"
+  lore: "{bar} {color:label_body}{current}/{max}"
+  drift_lore: "{color:drift_sign}{sign}{rate}{color:drift_suffix}/h"
+
+equilibrium:
+  min: -100
+  max: 100
+  bar_segments: 20
+  bar_char: "|"
+  bar_bracket_color: "§7"
+  bar_neutral_color: "§7"
+  bar_corruption_color: "{color:corruption}"
+  bar_tranquility_color: "{color:tranquility}"
+  corruption_lore: "{color:corruption}Corruption {bar} {value}"
+  tranquility_lore: "{color:tranquility}Tranquility {bar} {value}"
+  neutral_lore: "{color:label_muted}Balance {bar} {value}"
+  drift_lore: "{color:drift_sign}{sign}{rate}{color:drift_suffix}/h"
+
+focus_lore: "{color:label_muted}Mental points {color:label_body}{current}/{max}"
+
+modifiers:
+  at_resonance: "{color:label_muted}At {value} Resonance"
+  at_corruption: "{color:label_muted}At {value} Corruption"
+  at_tranquility: "{color:label_muted}At {value} Tranquility"
+
+artifact_create:
+  title: "{color:title}Create artifact"
+  slots:
+    preview: 4
+    cap_minus: 12
+    cap_plus: 14
+    confirm: 48
+    cancel: 50
+    rarities: [10, 11, 13, 15, 16]
+  items:
+    cap_minus:
+      id: cap_minus
+      icon: vanilla.GRAY_STAINED_GLASS_PANE
+      name: "{color:label_muted}Lower cap"
+      lore:
+        - "{color:label_body}Click -1"
+        - "{color:label_muted}Shift click -5"
+    cap_plus:
+      id: cap_plus
+      icon: vanilla.GRAY_STAINED_GLASS_PANE
+      name: "{color:label_accent}Raise cap"
+      lore:
+        - "{color:label_body}Click +1"
+        - "{color:label_muted}Shift click +5"
+    confirm:
+      id: confirm
+      icon: vanilla.LIME_STAINED_GLASS_PANE
+      name: "{color:resonance_high}Confirm"
+      lore:
+        - "{color:label_muted}Give this artifact to yourself."
+    cancel:
+      id: cancel
+      icon: vanilla.RED_STAINED_GLASS_PANE
+      name: "{color:corruption}Cancel"
+      lore:
+        - "{color:label_muted}Close without giving an item."

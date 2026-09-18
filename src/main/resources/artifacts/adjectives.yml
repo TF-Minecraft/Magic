@@ -1,0 +1,189 @@
+chance:
+  common: 1.0
+  uncommon: 1.0
+  rare: 0.5
+  epic: 0.25
+  legendary: 0.15
+
+global:
+  common:
+    - Faded
+    - Hollow
+    - Dormant
+  uncommon:
+    - Faint
+    - Waning
+    - Veiled
+  rare:
+    - Steady
+    - Keen
+  epic:
+    - Vivid
+    - Prime
+  legendary:
+    - True
+    - Unbound
+    - Ancient
+
+by_element:
+  arcanum:
+    common:
+      - Rusted
+      - Blank
+      - Sealed
+    uncommon:
+      - Relic
+      - Tarnished
+    rare:
+      - Lucid
+      - Unsealed
+    epic:
+      - Living
+      - Prime
+    legendary:
+      - Primordial
+      - Absolute
+  oseni:
+    common:
+      - Emberless
+      - Cold
+    uncommon:
+      - Kindling
+      - Smoldering
+    rare:
+      - Searing
+      - Molten
+    epic:
+      - Incandescent
+      - Blazing
+    legendary:
+      - Primordial
+      - Solar
+  cerrith:
+    common:
+      - Wilted
+      - Autumn
+    uncommon:
+      - Budding
+      - Vernal
+    rare:
+      - Verdant
+      - Sylvan
+    epic:
+      - Canopy
+      - Primeval
+    legendary:
+      - Mythic
+      - Eldest
+  seithr:
+    common:
+      - Windless
+      - Becalmed
+    uncommon:
+      - Stirring
+      - Restless
+    rare:
+      - Howling
+      - Aerial
+    epic:
+      - Tempestuous
+      - Roaring
+    legendary:
+      - Empyrean
+      - Unbound
+  mitlan:
+    common:
+      - Brackish
+      - Ebbing
+    uncommon:
+      - Tidal
+      - Briny
+    rare:
+      - Surging
+      - Pelagic
+    epic:
+      - Abyssal
+      - Flooding
+    legendary:
+      - Primordial
+      - Oceanic
+  bloodmagic:
+    common:
+      - Dry
+      - Clotted
+    uncommon:
+      - Sanguine
+      - Warm
+    rare:
+      - Vital
+      - Crimson
+    epic:
+      - Living
+      - Prime
+    legendary:
+      - Primordial
+      - Sovereign
+  necromancy:
+    common:
+      - Quiet
+      - Funereal
+    uncommon:
+      - Somber
+      - Stirring
+    rare:
+      - Sepulchral
+      - Dire
+    epic:
+      - Dread
+      - Sovereign
+    legendary:
+      - Primordial
+      - Absolute
+  shadowmancy:
+    common:
+      - Grey
+      - Pallid
+    uncommon:
+      - Umbral
+      - Dimming
+    rare:
+      - Tenebrous
+      - Deep
+    epic:
+      - Stygian
+      - Prime
+    legendary:
+      - Absolute
+      - Unbound
+  illusion:
+    common:
+      - Paper
+      - Flimsy
+    uncommon:
+      - Phantom
+      - Thin
+    rare:
+      - Glamoured
+      - Deceptive
+    epic:
+      - Oneiric
+      - Perfect
+    legendary:
+      - Absolute
+      - Unbound
+  spirit:
+    common:
+      - Faint
+      - Thin
+    uncommon:
+      - Ethereal
+      - Whispering
+    rare:
+      - Numinous
+      - Lucid
+    epic:
+      - Living
+      - Transcendent
+    legendary:
+      - Primordial
+      - Absolute
