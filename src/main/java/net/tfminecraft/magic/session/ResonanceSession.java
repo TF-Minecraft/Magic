@@ -17,6 +17,7 @@ public final class ResonanceSession {
     private String castModeId;
     private double equilibrium;
     private final Map<String, Double> resonance = new HashMap<>();
+    private long modifierRevision;
 
     public ResonanceSession() {
         this.castModeId = normalizeCastModeId(Cache.defaultCastMode);
@@ -35,9 +36,18 @@ public final class ResonanceSession {
         return equilibrium;
     }
 
+    public long modifierRevision() {
+        return modifierRevision;
+    }
+
     public void setEquilibrium(double value) {
-        this.equilibrium = MagicNumbers.round(
+        double next = MagicNumbers.round(
                 MagicNumbers.clamp(value, GuiCache.equilibriumMin, GuiCache.equilibriumMax), 2);
+        if (next == this.equilibrium) {
+            return;
+        }
+        this.equilibrium = next;
+        bumpModifiers();
     }
 
     public double getResonance(String elementId) {
@@ -55,11 +65,18 @@ public final class ResonanceSession {
             return;
         }
         double target = MagicNumbers.round(MagicNumbers.clamp(value, 0.0, element.getMaxResonance()), 2);
+        double previous = amount(element.getId());
         if (target <= EPSILON) {
-            resonance.remove(element.getId());
+            if (resonance.remove(element.getId()) != null) {
+                bumpModifiers();
+            }
+            return;
+        }
+        if (previous == target) {
             return;
         }
         resonance.put(element.getId(), target);
+        bumpModifiers();
     }
 
     public void addResonance(String elementId, double delta) {
@@ -70,15 +87,18 @@ public final class ResonanceSession {
     }
 
     public void setResonanceMap(Map<String, Double> next) {
+        boolean hadValues = !resonance.isEmpty();
         resonance.clear();
-        if (next == null) {
-            return;
-        }
-        for (Map.Entry<String, Double> entry : next.entrySet()) {
-            if (entry.getKey() == null || entry.getValue() == null) {
-                continue;
+        if (next != null) {
+            for (Map.Entry<String, Double> entry : next.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    continue;
+                }
+                setResonance(entry.getKey(), entry.getValue());
             }
-            setResonance(entry.getKey(), entry.getValue());
+        }
+        if (hadValues && resonance.isEmpty()) {
+            bumpModifiers();
         }
     }
 
@@ -91,6 +111,10 @@ public final class ResonanceSession {
             copy.put(entry.getKey(), entry.getValue());
         }
         return copy;
+    }
+
+    private void bumpModifiers() {
+        modifierRevision++;
     }
 
     private double amount(String elementId) {

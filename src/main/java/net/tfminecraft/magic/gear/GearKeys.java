@@ -36,10 +36,6 @@ public final class GearKeys {
         return new NamespacedKey(Magic.plugin, "gear_archetype_revision");
     }
 
-    public static NamespacedKey majorityTier() {
-        return new NamespacedKey(Magic.plugin, "majority_tier");
-    }
-
     public static NamespacedKey broken() {
         return new NamespacedKey(Magic.plugin, "gear_broken");
     }

@@ -45,10 +45,9 @@ Run after each release or before merging core GUI work. Check off each item when
 
 ## Cast mode toggle (Batch 6)
 
-- [ ] Default cast mode from `config.yml` selected on first open (glint + green bold Selected lore)
-- [ ] Unselected cast mode shows Click to Select
-- [ ] Click Flow: right glints, left does not; head lore shows `Casting: Flow`; chat + chime feedback
-- [ ] Click Surge: switches back; chat + chime feedback
+- [ ] Default cast mode from `config.yml` selected on first open (glint + Selected lore)
+- [ ] Click Flow: right glints, left does not; head lore shows `Casting: Flow`
+- [ ] Click Surge: switches back
 - [ ] Close and reopen GUI: session mode retained
 - [ ] Relog with active character: cast mode restored from profile
 
@@ -73,6 +72,20 @@ Run after each release or before merging core GUI work. Check off each item when
 - [ ] At 0 resonance / 0 equilibrium, that skill's mana check and spend are +20% cost, damage param -20%, cooldown +20% (matches element Now lore)
 - [ ] Unbound skills are unchanged
 - [ ] Without MythicLib or MMOCore, Magic still enables and skips apply (console note once)
+
+## Spell modifier apply timing
+
+- [ ] Character load / switch applies modifiers immediately
+- [ ] Skill cast that shifts equilibrium applies modifiers immediately
+- [ ] Admin resonance change applies modifiers immediately
+- [ ] Meditation orb hit applies modifiers on the next Magic tick (not a full online rebuild)
+- [ ] Passive resonance / equilibrium decay only re-registers MythicLib modifiers when the sampled values change
+- [ ] Hotbar swap, F-key swap, inventory click/drag, drop, and pickup of a held mage weapon apply alignment immediately when alignment is enabled
+- [ ] Completing an orb run while that weapon is held updates alignment; completing it on the station item in the table does not rebuild if the held weapon is unchanged
+- [ ] `/magic refresh` on the held weapon resyncs alignment
+- [ ] `/magic reload` rebuilds online modifiers once
+- [ ] Quit / disable clears applied modifiers
+- [ ] Spark: idle decay no longer nests a full `SpellModifierApplyService.syncOnline` under `MagicTickService.tick`
 
 ## Artifact generator (Batches 1-6)
 

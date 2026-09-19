@@ -3,15 +3,9 @@
 core:
   slot: 10
   name: Core
-handle:
+form:
   slot: 11
-  name: Handle
-tome:
+  name: Form
+focus:
   slot: 12
-  name: Tome
-tome2:
-  slot: 13
-  name: Tome2
-tome3:
-  slot: 14
-  name: Tome3
+  name: Focus

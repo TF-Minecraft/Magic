@@ -28,7 +28,6 @@ import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.gear.GearItemBuilder;
 import net.tfminecraft.magic.gear.GearProvenance;
 import net.tfminecraft.magic.gear.GearStationStore;
-import net.tfminecraft.magic.gear.WeaponAttunementChat;
 import net.tfminecraft.magic.gear.WeaponLore;
 import net.tfminecraft.magic.gear.WeaponRequirement;
 import net.tfminecraft.magic.gear.WeaponRift;
@@ -68,31 +67,6 @@ public final class GearOrbService implements Listener {
 
     public static boolean isActive(Location station) {
         return station != null && SESSIONS.containsKey(GearStationStore.key(station));
-    }
-
-    public static UUID sessionOwner(Location station) {
-        if (station == null) {
-            return null;
-        }
-        GearOrbSession session = SESSIONS.get(GearStationStore.key(station));
-        return session == null ? null : session.getPlayerId();
-    }
-
-    /**
-     * Stops the run without writing captured aura or rift. The charge stays spent.
-     */
-    public static void abort(Location station) {
-        if (station == null) {
-            return;
-        }
-        GearOrbSession session = SESSIONS.remove(GearStationStore.key(station));
-        if (session != null) {
-            session.end();
-        }
-        GearStationStore.Occupancy occupancy = GearStationStore.get(station);
-        if (occupancy != null) {
-            occupancy.setOrbSessionActive(false);
-        }
     }
 
     /**
@@ -176,6 +150,10 @@ public final class GearOrbService implements Listener {
             weapon = WeaponLore.updateItem(weapon);
         }
         GearStationStore.update(session.getStation(), weapon);
+        if (player != null && player.isOnline() && Magic.plugin != null) {
+            Magic.plugin.syncSpellModifiers(
+                    player, Magic.plugin.getResonanceGuiManager().getSessionManager().get(player));
+        }
 
         if (!announce) {
             return;
@@ -192,7 +170,9 @@ public final class GearOrbService implements Listener {
                     "percent", String.valueOf((int) Math.round(session.capturedFraction() * 100)),
                     "band", TierBands.numeral(capturedBand)));
         }
-        WeaponAttunementChat.sendPostChargeSummary(player, weapon);
+        if (session.riftDelta() > 0) {
+            player.sendMessage(Messages.get("gear.orbs.rift", "rift", String.valueOf(newRift)));
+        }
     }
 
     @EventHandler
@@ -212,9 +192,6 @@ public final class GearOrbService implements Listener {
     }
 
     private static void tryHit(Player player) {
-        if (player.isSneaking()) {
-            return;
-        }
         GearOrbSession session = sessionOf(player.getUniqueId());
         if (session == null || !session.claimSwing(tickCount) || !session.canHit(tickCount)) {
             return;

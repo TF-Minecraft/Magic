@@ -1,527 +1,72 @@
 # PoC parts. Fran tunes socket counts, items, and costs.
 # Ceiling is 4 empty sockets on the finished weapon; extras are dropped at craft.
-# part-limit: extra part categories a core unlocks (mandatory once that core is chosen).
-# stats: MMOItems ids with doubles, same shape as cost — attack_damage(4).
-# model-scheme: scheme id, optional weight like iron(10). Looked up in model-schemes.yml.
 
-iron_staff_core:
-  name: "#d8d8d8Iron Magical Core"
+timber_core:
+  name: "§7Timber Core"
   part-type: core
-  tier: 1
-  type:
-    - staff
-  item: m.materials.iron_core
-  model-scheme: iron
-  cost:
-    - v.iron_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-  sockets: {}
-  lore:
-    - "§7A basic magical core with one rune slot"
-
-steel_staff_core:
-  name: "#7f7d80Steel Magical Core"
-  part-type: core
-  tier: 2
-  type:
-    - staff
-  item: m.materials.steel_core
-  model-scheme: steel
-  cost:
-    - m.materials.steel_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-  sockets: {}
-  lore:
-    - "§7A more advanced magical core with two rune slots"
-
-abyssalite_staff_core:
-  name: "#3b4e60Abyssalite Magical Core"
-  part-type: core
-  tier: 3
-  type:
-    - staff
-  item: m.materials.abyssalite_core
-  model-scheme: abyssalite
-  cost:
-    - m.materials.abyssalite_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-    - tome2
-  sockets: {}
-  lore:
-    - "§7An incredible magical core with three rune slots"
-
-mythril_staff_core:
-  name: "#9be1f3Mythril Magical Core"
-  part-type: core
-  tier: 4
-  type:
-    - staff
-  item: m.materials.mythril_core
-  model-scheme: mythril
-  cost:
-    - m.materials.mythril_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-    - tome2
-    - tome3
-  sockets: {}
-  lore:
-    - "§7An insanely powerful magical core with four rune slots"
-
-iron_wand_core:
-  name: "#d8d8d8Iron Magical Core"
-  part-type: core
-  tier: 1
-  type:
-    - wand
-  item: m.materials.iron_core
-  model-scheme: iron
-  cost:
-    - v.iron_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-  stats:
-    - attack_damage(4)
-    - attack_speed(1.2)
-    - mana_cost(2)
-  sockets: {}
-  lore:
-    - "§7A basic magical core with one rune slot and a simple way of mana channeling"
-
-steel_wand_core:
-  name: "#7f7d80Steel Magical Core"
-  part-type: core
-  tier: 2
-  type:
-    - wand
-  item: m.materials.steel_core
-  model-scheme: steel
-  cost:
-    - m.materials.steel_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-  sockets: {}
-  lore:
-    - "§7An improved magical core with one rune slot and a better way of mana channeling"
-
-abyssalite_wand_core:
-  name: "#3b4e60Abyssalite Magical Core"
-  part-type: core
-  tier: 3
-  type:
-    - wand
-  item: m.materials.abyssalite_core
-  model-scheme: abyssalite
-  cost:
-    - m.materials.abyssalite_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-  sockets: {}
-  lore:
-    - "§7A good magical core with two rune slots and an advanced way of mana channeling"
-
-mythril_wand_core:
-  name: "#9be1f3Mythril Magical Core"
-  part-type: core
-  tier: 4
-  type:
-    - wand
-  item: m.materials.mythril_core
-  model-scheme: mythril
-  cost:
-    - m.materials.mythril_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-  stats:
-    - attack_damage(6)
-    - attack_speed(1.2)
-    - mana_cost(1)
-  sockets: {}
-  lore:
-    - "§7A great magical core with two rune slots and a powerful way of mana channeling"
-
-iron_sword_core:
-  name: "#d8d8d8Iron Magical Core"
-  part-type: core
-  tier: 1
-  type:
-    - sword
-  item: m.materials.iron_core
-  model-scheme: iron
-  cost:
-    - v.iron_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-  sockets: {}
-  lore:
-    - "§7A basic magical core with one rune slot and a simple balde edge"
-
-steel_sword_core:
-  name: "#7f7d80Steel Magical Core"
-  part-type: core
-  tier: 2
-  type:
-    - sword
-  item: m.materials.steel_core
-  model-scheme: steel
-  cost:
-    - m.materials.steel_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-  sockets: {}
-  lore:
-    - "§7An improved magical core with one rune slot and a better blade egde"
-
-abyssalite_sword_core:
-  name: "#3b4e60Abyssalite Magical Core"
-  part-type: core
-  tier: 3
-  type:
-    - sword
-  item: m.materials.abyssalite_core
-  model-scheme: abyssalite
-  cost:
-    - m.materials.abyssalite_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-  sockets: {}
-  lore:
-    - "§7A good magical core with two rune slots and an advanced blade edge"
-
-mythril_sword_core:
-  name: "#9be1f3Mythril Magical Core"
-  part-type: core
-  tier: 4
-  type:
-    - sword
-  item: m.materials.mythril_core
-  model-scheme: mythril
-  cost:
-    - m.materials.mythril_ingot(4)
-    - m.currency.enchanted_dust(4)
-  part-limit:
-    - handle
-    - tome
-  sockets: {}
-  lore:
-    - "§7A great magical core with two rune slots and a powerful blade edge"
-
-oak_handle:
-  name: "§dOak Magical Handle"
-  part-type: handle
-  tier: 1
   type:
     - staff
     - wand
     - sword
+  item: v.oak_log
+  cost:
+    - v.oak_log(2)
+  sockets: {}
+  lore:
+    - "§8The spine of the piece"
+
+oak_shaft:
+  name: "§7Oak Shaft"
+  part-type: form
+  type:
+    - staff
   item: v.stick
   cost:
-    - v.stick(2)
-    - m.currency.enchanted_dust(2)
+    - v.stick(4)
   sockets:
-    minor_rune: 1
+    projectile: 1
+    support: 1
   lore:
-    - "§7A simple handle capable of channeling minor runes"
+    - "§8Staff form: projectile and support"
 
-basic_handle:
-  name: "§dBasic Magical Handle"
-  part-type: handle
-  tier: 2
+steel_blade:
+  name: "§7Steel Blade"
+  part-type: form
   type:
-    - staff
-    - wand
     - sword
-  item: m.materials.basic_handle
+  item: v.iron_ingot
   cost:
-    - v.stick(2)
-    - m.currency.enchanted_dust(4)
+    - v.iron_ingot(3)
   sockets:
-    lesser_rune: 1
+    support: 1
+    spell: 1
   lore:
-     - "§7A better handle capable of channeling lesser runes"
+    - "§8Sword form: support and spell"
 
-petty_handle:
-  name: "§dPetty Magical Handle"
-  part-type: handle
-  tier: 3
+amber_focus:
+  name: "§7Amber Focus"
+  part-type: focus
   type:
     - staff
+  item: v.glowstone_dust
+  cost:
+    - v.glowstone_dust(2)
+  sockets:
+    minor_spell: 1
+    major_spell: 1
+  lore:
+    - "§8Staff focus: two spell sockets"
+
+glass_focus:
+  name: "§7Glass Focus"
+  part-type: focus
+  type:
     - wand
-    - sword
-  item: m.materials.petty_handle
+  item: v.glass
   cost:
-    - v.stick(2)
-    - m.currency.enchanted_dust(6)
+    - v.glass(2)
   sockets:
-    greater_rune: 1
+    minor_spell: 1
+    major_spell: 1
   lore:
-    - "§7An advanced handle capable of channeling greater runes"
-
-heavy_handle:
-  name: "§dHeavy Magical Handle"
-  part-type: handle
-  tier: 4
-  type:
-    - staff
-    - wand
-    - sword
-  item: m.materials.heavy_handle
-  cost:
-    - v.stick(2)
-    - m.currency.enchanted_dust(8)
-  sockets:
-    ascendant_rune: 1
-  lore:
-    - "§7An amazing handle capable of channeling ascendant runes"
-
-normal_oak_tome:
-  name: "§dSimple Tome"
-  part-type: tome
-  tier: 1
-  type:
-    - staff
-    - wand
-    - sword
-  item: v.book
-  cost:
-    - v.book(2)
-  lore:
-    - "§7A mundane book with no effect"
-
-oak_tome:
-  name: "§dSimple Magical Tome"
-  part-type: tome
-  tier: 1
-  type:
-    - staff
-    - wand
-    - sword
-  item: v.book
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(2)
-  sockets:
-    minor_rune: 1
-  lore:
-    - "§7A simple tome capable of channeling minor runes"
-
-basic_tome:
-  name: "§dBasic Magical Tome"
-  part-type: tome
-  tier: 2
-  type:
-    - staff
-    - wand
-    - sword
-  item: m.materials.basic_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(4)
-  sockets:
-    lesser_rune: 1
-  lore:
-    - "§7A better tome capable of channeling lesser runes"
-
-petty_tome:
-  name: "§dPetty Magical Tome"
-  part-type: tome
-  tier: 3
-  type:
-    - staff
-    - wand
-    - sword
-  item: m.materials.petty_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(6)
-  sockets:
-    greater_rune: 1
-  lore:
-    - "§7An advanced tome capable of channeling greater runes"
-
-heavy_tome:
-  name: "§dHeavy Magical Tome"
-  part-type: tome
-  tier: 4
-  type:
-    - staff
-    - wand
-    - sword
-  item: m.materials.heavy_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(8)
-  sockets:
-    ascendant_rune: 1
-  lore:
-    - "§7An amazing tome capable of channeling ascendant runes"
-
-normal_oak_tome2:
-  name: "§dSimple Tome"
-  part-type: tome2
-  tier: 1
-  type:
-    - staff
-    - wand
-    - sword
-  item: v.book
-  cost:
-    - v.book(2)
-  lore:
-    - "§7A mundane book with no effect"
-
-oak_tome2:
-  name: "§dSimple Magical Tome"
-  part-type: tome2
-  tier: 1
-  type:
-    - staff
-  item: v.book
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(2)
-  sockets:
-    minor_rune: 1
-  lore:
-    - "§7A simple tome capable of channeling minor runes"
-
-basic_tome2:
-  name: "§dBasic Magical Tome"
-  part-type: tome2
-  tier: 2
-  type:
-    - staff
-  item: m.materials.basic_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(4)
-  sockets:
-    lesser_rune: 1
-  lore:
-    - "§7A better tome capable of channeling lesser runes"
-
-petty_tome2:
-  name: "§dPetty Magical Tome"
-  part-type: tome2
-  tier: 3
-  type:
-    - staff
-  item: m.materials.petty_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(6)
-  sockets:
-    greater_rune: 1
-  lore:
-    - "§7An advanced tome capable of channeling greater runes"
-
-heavy_tome2:
-  name: "§dHeavy Magical Tome"
-  part-type: tome2
-  tier: 4
-  type:
-    - staff
-  item: m.materials.heavy_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(8)
-  sockets:
-    ascendant_rune: 1
-  lore:
-    - "§7An amazing tome capable of channeling ascendant runes"
-
-normal_oak_tome3:
-  name: "§dSimple Tome"
-  part-type: tome3
-  tier: 1
-  type:
-    - staff
-    - wand
-    - sword
-  item: v.book
-  cost:
-    - v.book(2)
-  lore:
-    - "§7A mundane book with no effect"
-
-oak_tome3:
-  name: "§dSimple Magical Tome"
-  part-type: tome3
-  tier: 1
-  type:
-    - staff
-  item: v.book
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(2)
-  sockets:
-    minor_rune: 1
-  lore:
-    - "§7A simple tome capable of channeling minor runes"
-
-basic_tome3:
-  name: "§dBasic Magical Tome"
-  part-type: tome3
-  tier: 2
-  type:
-    - staff
-  item: m.materials.basic_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(4)
-  sockets:
-    lesser_rune: 1
-  lore:
-    - "§7A better tome capable of channeling lesser runes"
-
-petty_tom32:
-  name: "§dPetty Magical Tome"
-  part-type: tome3
-  tier: 3
-  type:
-    - staff
-  item: m.materials.petty_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(6)
-  sockets:
-    greater_rune: 1
-  lore:
-    - "§7An advanced tome capable of channeling greater runes"
-
-heavy_tome3:
-  name: "§dHeavy Magical Tome"
-  part-type: tome3
-  tier: 4
-  type:
-    - staff
-  item: m.materials.heavy_tome
-  cost:
-    - v.book(2)
-    - m.currency.enchanted_dust(8)
-  sockets:
-    ascendant_rune: 1
-  lore:
-    - "§7An amazing tome capable of channeling ascendant runes"
-
-
+    - "§8Wand focus: two spell sockets"

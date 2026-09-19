@@ -149,7 +149,7 @@ public class Magic extends JavaPlugin {
         MagicTickService.register(frameCareTicker);
         getServer().getPluginManager().registerEvents(frameCareTicker, this);
         if (isMmoStackPresent()) {
-            MagicTickService.register(ctx -> SpellModifierApplyService.syncOnline(
+            MagicTickService.register(ctx -> SpellModifierApplyService.syncChangedOnline(
                     resonanceGuiManager.getSessionManager()));
         }
         MagicTickService.start();
@@ -300,7 +300,6 @@ public class Magic extends JavaPlugin {
             "gear/parts.yml",
             "gear/socket-colours.yml",
             "gear/orbs.yml",
-            "gear/model-schemes.yml",
             "elements/elements.yml",
             "artifacts/generator.yml",
             "artifacts/model-schemes.yml",

@@ -9,13 +9,15 @@
     <version>0.1.0</version>
 
     <properties>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <tfmc.refs>D:/Documents/TFMC/ReferenceLibs</tfmc.refs>
-        <tfmc.builds>D:/Documents/TFMC/Builds/Magic</tfmc.builds>
-        <tfmc.tlibs>D:/Documents/TFMC/Builds/TLibs</tfmc.tlibs>
-        <tfmc.tfmccore>D:/Documents/TFMC/Builds/TFMCCore</tfmc.tfmccore>
-        <tfmc.if>D:/Documents/TFMC/Builds/InteractibleFurniture</tfmc.if>
+        <tfmc.refs>D:/Dokumenter/My Plugins/Reference Libs</tfmc.refs>
+        <tfmc.builds>D:/Dokumenter/My Plugins/TFMC/Magic</tfmc.builds>
+        <tfmc.tlibs>D:/Dokumenter/My Plugins/TFMC/TLibs</tfmc.tlibs>
+        <tfmc.rpcharacters>${project.basedir}/../rpcharacters/target/rpcharacters-1.1.6.jar</tfmc.rpcharacters>
+        <tfmc.tfmccore>D:/Dokumenter/My Plugins/TFMC/TFMCCore/TFMCCore.jar</tfmc.tfmccore>
+        <tfmc.if>D:/Dokumenter/My Plugins/TFMC/InteractibleFurniture</tfmc.if>
     </properties>
 
     <dependencies>
@@ -85,42 +87,26 @@
             <artifactId>RPCharacters</artifactId>
             <version>1.1.6</version>
             <scope>system</scope>
-            <systemPath>${tfmc.refs}/rpcharacters-1.1.6.jar</systemPath>
+            <systemPath>${tfmc.rpcharacters}</systemPath>
         </dependency>
         <dependency>
             <groupId>local</groupId>
             <artifactId>TFMCCore</artifactId>
             <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${tfmc.tfmccore}/TFMCCore.jar</systemPath>
+            <systemPath>${tfmc.tfmccore}</systemPath>
         </dependency>
         <dependency>
             <groupId>local</groupId>
             <artifactId>InteractibleFurniture</artifactId>
             <version>0.1.3</version>
             <scope>system</scope>
-            <systemPath>${tfmc.if}/interactiblefurniture-0.1.3-BETA.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
-            <scope>test</scope>
+            <systemPath>${project.basedir}/../interactiblefurniture/target/interactiblefurniture-0.1.3-BETA.jar</systemPath>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.2</version>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>

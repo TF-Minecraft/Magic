@@ -53,7 +53,8 @@ public final class ArtifactLore {
             double fill = artifact.getFill(element.getId());
             double shown = ArtifactCareStore.usableFill(fill, cap, muffle);
             block.add(MagicText.format(
-                    element.getColoredName()
+                    element.getColor()
+                            + element.getName()
                             + " {color:label_muted}"
                             + formatAmount(shown)
                             + " / "

@@ -8,6 +8,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import net.tfminecraft.magic.charge.TierBands;
+import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.util.MagicText;
 
 public final class WeaponLore {
@@ -25,7 +28,6 @@ public final class WeaponLore {
         if (!GearProvenance.isGear(stack)) {
             return;
         }
-        GearProvenance.applyMajority(stack, GearProvenance.resolveParts(stack));
         WeaponRequirement requirement = WeaponRequirement.fromItem(stack);
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
@@ -34,12 +36,21 @@ public final class WeaponLore {
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore = stripBlock(lore);
         List<String> block = new ArrayList<>();
-        int majority = GearProvenance.majorityOf(stack);
-        if (majority > 0) {
-            block.add(MagicText.format("{color:label_muted}Tier "
-                    + MajorityTierResolver.toRoman(majority)));
+        if (!requirement.hasStored()) {
+            block.add(MagicText.format("{color:label_muted}Unattuned"));
+            block.add(MagicText.format("{color:label_muted}Apply a charged charge at the station"));
+        } else {
+            block.add(MagicText.format("{color:label_muted}Resonance"));
+            for (ElementDef element : ElementRegistry.getAll()) {
+                double fill = requirement.aura().getFill(element.getId());
+                if (requirement.aura().getCap(element.getId()) <= 0 && fill <= 0) {
+                    continue;
+                }
+                String numeral = TierBands.numeralFor(element.getId(), fill);
+                block.add(MagicText.format(element.getColor() + element.getName()
+                        + " {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
+            }
         }
-        WeaponResonanceDisplay.appendLoreResonanceBlock(block, requirement);
         int rift = WeaponRift.get(stack);
         if (rift > 0) {
             block.add(MagicText.format("{color:corruption}Rift {color:label_muted}" + rift + "%"));
@@ -74,7 +85,7 @@ public final class WeaponLore {
         }
         for (int i = 0; i < lore.size(); i++) {
             String p = plain(lore.get(i)).toLowerCase(Locale.ROOT);
-            if ("resonance".equals(p) || "unattuned".equals(p) || p.startsWith("tier ")) {
+            if ("resonance".equals(p) || "unattuned".equals(p)) {
                 return new ArrayList<>(lore.subList(0, i));
             }
         }

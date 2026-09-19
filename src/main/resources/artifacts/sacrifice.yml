@@ -54,7 +54,7 @@ tiers:
 elements:
   bloodmagic:
     words:
-      - "Lorin Vekar Drakun Talis"
+      - "by blood i claim this"
     lore:
       pain: "Filled with the pain of {character}"
       screams: "Filled with the screams of {character}"
@@ -62,7 +62,7 @@ elements:
   necromancy:
     enabled: false
     words:
-      - "Vorthas Luneth... Taro Vekran"
+      - "by bone i claim this"
     lore:
       pain: "Filled with the pain of {character}"
       screams: "Filled with the screams of {character}"
@@ -70,7 +70,7 @@ elements:
   shadowmancy:
     enabled: false
     words:
-      - "Need to do"
+      - "by shadow i claim this"
     lore:
       pain: "Filled with the pain of {character}"
       screams: "Filled with the screams of {character}"

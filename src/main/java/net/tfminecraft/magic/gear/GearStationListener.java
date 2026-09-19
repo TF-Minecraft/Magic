@@ -1,7 +1,6 @@
 package net.tfminecraft.magic.gear;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -33,10 +32,6 @@ public final class GearStationListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            tryAbort(event);
-            return;
-        }
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
@@ -154,49 +149,5 @@ public final class GearStationListener implements Listener {
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         drop.getWorld().dropItem(drop, item);
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
-    }
-
-    private static void tryAbort(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) {
-            return;
-        }
-        if (!event.getPlayer().isSneaking()) {
-            return;
-        }
-        Block block = event.getClickedBlock();
-        if (block == null) {
-            return;
-        }
-        try {
-            if (!TLibs.getBlockAPI().getChecker().checkBlock(block, GearCache.station)) {
-                return;
-            }
-        } catch (Exception ex) {
-            return;
-        }
-        event.setCancelled(true);
-        Player player = event.getPlayer();
-        Location location = block.getLocation();
-        GearStationStore.Occupancy occupancy = GearStationStore.get(location);
-        if (occupancy == null) {
-            return;
-        }
-        if (GearStationStore.isAttuned(occupancy.getItem())) {
-            return;
-        }
-        UUID owner = GearOrbService.sessionOwner(location);
-        if (owner != null && !owner.equals(player.getUniqueId())) {
-            player.sendMessage(Messages.get("gear.abort.not_yours"));
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
-        }
-        GearOrbService.abort(location);
-        ItemStack weapon = GearStationStore.takeForAbort(location);
-        if (weapon == null) {
-            return;
-        }
-        GearCosts.refund(player, GearProvenance.resolveParts(weapon), location);
-        player.sendMessage(Messages.get("gear.abort.done"));
-        player.playSound(location, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.4f);
     }
 }

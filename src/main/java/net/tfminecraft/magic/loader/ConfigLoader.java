@@ -3,15 +3,12 @@ package net.tfminecraft.magic.loader;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Locale;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import me.Plugins.TLibs.Interface.LoaderInterface;
-import io.lumine.mythic.lib.skill.trigger.TriggerType;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.Magic;
@@ -111,39 +108,7 @@ public final class ConfigLoader implements LoaderInterface {
         loadMeditation(config.getConfigurationSection("meditation"));
         loadAttunement(config.getConfigurationSection("attunement"));
         loadGear(config.getConfigurationSection("gear"));
-        loadRuneTypes(config);
-        loadRuneKeybinds(config);
         return true;
-    }
-
-    private static void loadRuneTypes(FileConfiguration config) {
-        Cache.runeTypes.clear();
-        for (String type : config.getStringList("runes.types")) {
-            if (type != null && !type.isBlank()) {
-                Cache.runeTypes.add(type.trim().toLowerCase());
-            }
-        }
-    }
-
-    private static void loadRuneKeybinds(FileConfiguration config) {
-        Cache.runeKeybinds.clear();
-        for (String raw : config.getStringList("runes.keybinds")) {
-            if (raw == null || raw.isBlank()) {
-                continue;
-            }
-            String id = raw.trim().toUpperCase(Locale.ROOT);
-            TriggerType trigger;
-            try {
-                trigger = TriggerType.valueOf(id);
-            } catch (IllegalArgumentException | NullPointerException ex) {
-                trigger = null;
-            }
-            if (trigger == null) {
-                Magic.plugin.getLogger().warning("[Magic] Unknown rune keybind '" + raw + "'");
-                continue;
-            }
-            Cache.runeKeybinds.add(trigger);
-        }
     }
 
     private static void loadGear(ConfigurationSection section) {
@@ -160,8 +125,6 @@ public final class ConfigLoader implements LoaderInterface {
         }
         long confirm = section.getLong("confirm_seconds", 5L);
         net.tfminecraft.magic.gear.GearCache.confirmMillis = Math.max(1L, confirm) * 1000L;
-        net.tfminecraft.magic.gear.GearCache.socketRarityPrefix =
-                section.getBoolean("socket_rarity_prefix", true);
         loadAlignment(section.getConfigurationSection("alignment"));
     }
 

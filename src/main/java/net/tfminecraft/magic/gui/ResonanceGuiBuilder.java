@@ -65,7 +65,7 @@ public final class ResonanceGuiBuilder {
                 buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
 
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (element.getSlot() >= 0 && element.isUnlocked(player)) {
+            if (element.getSlot() >= 0) {
                 inventory.setItem(element.getSlot(), buildElementItem(element, session));
             }
         }
@@ -162,10 +162,8 @@ public final class ResonanceGuiBuilder {
             lore.addAll(ModifierLore.linesForFlow(session));
         }
         if (selected) {
-            lore.add(GuiText.format("{color:resonance_high}§lSelected"));
+            lore.add(GuiText.text("label_accent", "Selected"));
             meta.addEnchant(Enchantment.UNBREAKING, 1, true);
-        } else {
-            lore.add(GuiText.text("label_muted", "Click to Select"));
         }
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_ENCHANTS);
@@ -179,7 +177,7 @@ public final class ResonanceGuiBuilder {
         if (meta == null) {
             return item;
         }
-        meta.setDisplayName(element.getColoredName());
+        meta.setDisplayName(GuiText.format(element.getName()));
         List<String> lore = new ArrayList<>();
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
         lore.add(ResonanceBar.formatLore(element, resonance));

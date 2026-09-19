@@ -1,11 +1,5 @@
 package net.tfminecraft.magic;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import io.lumine.mythic.lib.skill.trigger.TriggerType;
-
 /**
  * Runtime flags from config.yml.
  */
@@ -31,9 +25,6 @@ public final class Cache {
     public static double castDriftMin = 0.01;
     /** Seconds between repeat chat lines explaining why a weapon refused a spell. */
     public static long refuseChatMillis = 30000L;
-
-    public static Set<String> runeTypes = new HashSet<>();
-    public static Set<TriggerType> runeKeybinds = new LinkedHashSet<>();
 
     public static double tickIntervalSeconds() {
         return Math.max(1L, tickIntervalTicks) / 20.0;

@@ -19,9 +19,10 @@ import net.tfminecraft.magic.Magic;
 /**
  * Brings a crafted weapon back in line with the live gear config.
  *
- * Socket colours and part stats are rewritten from the stamped parts. Runes already in
- * the weapon are merged into the new layout; any that no longer fit are held by
- * {@link GearBrokenMarker} instead of being dropped.
+ * Parts carry no stats today, only cost and socket counts, so this rewrites the socket
+ * layout rather than rebuilding the whole item. Runes already in the weapon are merged
+ * into the new layout; any that no longer fit are held by {@link GearBrokenMarker}
+ * instead of being dropped.
  */
 public final class GearRefresher {
 
@@ -53,12 +54,6 @@ public final class GearRefresher {
         }
 
         if (!force && !GearProvenance.isOutdated(stack)) {
-            int live = MajorityTierResolver.resolve(GearProvenance.resolveParts(stack));
-            if (live > 0 && GearProvenance.majorityOf(stack) != live) {
-                ItemStack clone = stack.clone();
-                GearProvenance.applyMajority(clone, GearProvenance.resolveParts(clone));
-                return WeaponLore.updateItem(clone);
-            }
             return null;
         }
 
@@ -80,7 +75,6 @@ public final class GearRefresher {
         WeaponRequirement.fromItem(stack).persist(rebuilt);
         WeaponRift.copy(stack, rebuilt);
         GearProvenance.syncRevisions(rebuilt);
-        GearProvenance.applyMajority(rebuilt, GearProvenance.resolveParts(rebuilt));
         rebuilt.setAmount(stack.getAmount());
 
         if (!orphaned.isEmpty()) {
@@ -98,7 +92,7 @@ public final class GearRefresher {
 
     /**
      * Writes the target socket colours while carrying existing runes across. Unlike
-     * {@code GearItemBuilder} craft, which builds fresh socket data at craft time,
+     * {@code GearItemBuilder.applySockets}, which builds fresh socket data at craft time,
      * this puts every gem it can back into a matching empty socket first.
      */
     private static ItemStack rewrite(ItemStack stack, List<String> colours, List<GemstoneData> orphaned) {
@@ -120,13 +114,8 @@ public final class GearRefresher {
                 orphaned.add(gem);
             }
             mmo.setData(ItemStats.GEM_SOCKETS, next);
-            GearStatApplicator.apply(mmo, GearProvenance.resolveParts(stack));
             ItemStack built = mmo.newBuilder().build();
-            if (built == null || built.getType().isAir()) {
-                return null;
-            }
-            GearType type = GearProvenance.archetypeOf(stack);
-            return GearModelResolver.apply(built, type, GearProvenance.resolveParts(stack));
+            return built == null || built.getType().isAir() ? null : built;
         } catch (Exception ex) {
             Magic.plugin.getLogger().warning("[Magic] Gear refresh failed: " + ex.getMessage());
             return null;
@@ -150,12 +139,6 @@ public final class GearRefresher {
         if (archetypeRevision != null) {
             toMeta.getPersistentDataContainer().set(
                     GearKeys.archetypeRevision(), PersistentDataType.INTEGER, archetypeRevision);
-        }
-        Integer majority = fromMeta.getPersistentDataContainer().get(
-                GearKeys.majorityTier(), PersistentDataType.INTEGER);
-        if (majority != null) {
-            toMeta.getPersistentDataContainer().set(
-                    GearKeys.majorityTier(), PersistentDataType.INTEGER, majority);
         }
         Byte locked = fromMeta.getPersistentDataContainer().get(
                 GearKeys.socketsLocked(), PersistentDataType.BYTE);

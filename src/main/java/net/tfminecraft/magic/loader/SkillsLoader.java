@@ -33,7 +33,6 @@ public final class SkillsLoader {
                 continue;
             }
             String elementId;
-            int tier = SkillElementRegistry.DEFAULT_TIER;
             if (config.isConfigurationSection(skillId)) {
                 ConfigurationSection section = config.getConfigurationSection(skillId);
                 if (section == null) {
@@ -41,15 +40,6 @@ public final class SkillsLoader {
                     continue;
                 }
                 elementId = section.getString("element");
-                if (section.contains("tier")) {
-                    int raw = section.getInt("tier", SkillElementRegistry.DEFAULT_TIER);
-                    int clamped = SkillElementRegistry.clampTier(raw);
-                    if (raw != clamped) {
-                        Magic.plugin.getLogger().warning("[Magic] skills.yml: tier " + raw
-                                + " for skill '" + skillId + "' clamped to " + clamped);
-                    }
-                    tier = clamped;
-                }
             } else {
                 elementId = config.getString(skillId);
             }
@@ -64,7 +54,7 @@ public final class SkillsLoader {
                 skipped++;
                 continue;
             }
-            SkillElementRegistry.register(skillId, normalized, tier);
+            SkillElementRegistry.register(skillId, normalized);
         }
         Magic.plugin.getLogger().info("[Magic] Loaded " + SkillElementRegistry.size()
                 + " skill binding(s)" + (skipped > 0 ? " (" + skipped + " skipped)" : "") + ".");

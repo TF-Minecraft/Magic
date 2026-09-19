@@ -154,7 +154,7 @@ public final class ArtifactCreateGuiBuilder {
         if (meta == null) {
             return item;
         }
-        meta.setDisplayName(element.getColoredName());
+        meta.setDisplayName(GuiText.format(element.getName()));
         ElementRole role = session != null ? session.roleOf(element.getId()) : ElementRole.OFF;
         List<String> lore = new ArrayList<>();
         if (role != ElementRole.OFF) {

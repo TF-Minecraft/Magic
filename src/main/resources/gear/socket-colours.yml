@@ -1,7 +1,6 @@
 # Resonance band -> TLibs colour prefix.
-# Colour string = prefix + " " + archetype slot suffix (when config gear.socket_rarity_prefix is true).
+# Colour string = prefix + " " + archetype slot suffix.
 # Must match tlibs socket-tier-groups keys exactly.
-# Set gear.socket_rarity_prefix: false in config.yml to write suffix only (no Common/Rare/Epic/Legendary).
 
 prefix:
   default: Common
@@ -12,11 +11,8 @@ prefix:
 
 # Socket slot id -> player-facing name in the assembly GUI.
 labels:
-  minor_rune: Minor Rune
-  lesser_rune: Lesser Rune
-  greater_rune: Greater Rune
-  asecandt_rune: Ascendant Rune
-  minor_armor_rune: Minor Armor Rune
-  lesser_armor_rune: Lesser Armor Rune
-  greater_armor_rune: Greater Armor Rune
-  asecandt_armor_rune: Ascendant Armor Rune
+  projectile: Projectile
+  support: Support
+  minor_spell: Minor Spell
+  major_spell: Major Spell
+  spell: Spell

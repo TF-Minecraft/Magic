@@ -38,17 +38,6 @@ artifacts:
   # Hard ceiling per element. Rarity aura_cap ranges in generator.yml cannot exceed this.
   aura_cap: 150
 
-# MMOItems type ids (item-types.yml). Held items of these types can be rebound.
-runes:
-  types:
-    - GEM_STONE
-  keybinds:
-    - CAST
-    - RIGHT_CLICK
-    - LEFT_CLICK
-    - SHIFT_RIGHT_CLICK
-    - SHIFT_LEFT_CLICK
-
 meditation:
   pedestal: pedestal
   # IF pedestal slot id, or * to use every slot (left/right on the jar template).
@@ -96,13 +85,9 @@ attunement:
     off_per_hour: 0.04166666667
 
 gear:
-  station: iaf(tfmc:magic_crafting_station)
+  station: iaf(tfmc:weapon_station)
   output-slot: 16
   confirm_seconds: 5
-
-  # When false, rune socket colours use only the archetype suffix (e.g. "Minor Rune")
-  # without the band prefix (Common / Rare / Epic / Legendary). Band still gates attunement.
-  socket_rarity_prefix: true
 
   # One-sided bonus for holding a weapon attuned to the element of the spell you cast.
   # Keyed by the weapon's tier band in that element. A weapon with no attunement in an

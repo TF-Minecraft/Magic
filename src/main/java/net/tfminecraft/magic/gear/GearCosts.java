@@ -4,12 +4,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import me.Plugins.TLibs.TLibs;
-import net.tfminecraft.magic.util.ItemRef;
 
 public final class GearCosts {
 
@@ -80,31 +78,6 @@ public final class GearCosts {
                 int remove = Math.min(item.getAmount(), toRemove);
                 item.setAmount(item.getAmount() - remove);
                 toRemove -= remove;
-            }
-        }
-        player.updateInventory();
-    }
-
-    public static void refund(Player player, Collection<PartDef> parts, Location drop) {
-        if (player == null) {
-            return;
-        }
-        Location at = drop == null ? player.getLocation() : drop.clone().add(0.5, 1.0, 0.5);
-        for (Map.Entry<String, Integer> entry : total(parts).entrySet()) {
-            int remaining = entry.getValue();
-            while (remaining > 0) {
-                ItemStack stack = ItemRef.build(entry.getKey());
-                if (stack == null || stack.getType().isAir()) {
-                    break;
-                }
-                int give = Math.min(remaining, Math.max(1, stack.getMaxStackSize()));
-                stack.setAmount(give);
-                remaining -= give;
-                for (ItemStack leftover : player.getInventory().addItem(stack).values()) {
-                    if (leftover != null && !leftover.getType().isAir() && at.getWorld() != null) {
-                        at.getWorld().dropItem(at, leftover);
-                    }
-                }
             }
         }
         player.updateInventory();

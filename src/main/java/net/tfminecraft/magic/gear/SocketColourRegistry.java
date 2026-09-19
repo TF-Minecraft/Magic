@@ -45,11 +45,7 @@ public final class SocketColourRegistry {
         if (suffix == null || suffix.isBlank()) {
             return "";
         }
-        String trimmed = suffix.trim();
-        if (!GearCache.socketRarityPrefix) {
-            return trimmed;
-        }
-        return prefix(band) + " " + trimmed;
+        return prefix(band) + " " + suffix.trim();
     }
 
     public static Map<Integer, String> prefixes() {

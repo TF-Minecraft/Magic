@@ -39,10 +39,17 @@ public final class SpellModifiers {
      * element refuses the cast outright.
      */
     public static ModifierTriple alignment(ItemStack weapon, String elementId) {
-        if (weapon == null || !GearCache.alignmentEnabled || resolve(elementId) == null) {
+        if (weapon == null) {
             return ModifierTriple.ZERO;
         }
-        double fill = WeaponRequirement.fromItem(weapon).aura().getFill(elementId);
+        return alignment(WeaponRequirement.fromItem(weapon), elementId);
+    }
+
+    public static ModifierTriple alignment(WeaponRequirement requirement, String elementId) {
+        if (requirement == null || !GearCache.alignmentEnabled || resolve(elementId) == null) {
+            return ModifierTriple.ZERO;
+        }
+        double fill = requirement.aura().getFill(elementId);
         if (fill <= 0) {
             return ModifierTriple.ZERO;
         }

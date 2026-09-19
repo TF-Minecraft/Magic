@@ -274,9 +274,6 @@ ever black.
       fill, Rift integer, and socket colours from the **captured** band on first charge
 
 **Test:** A perfect run yields the charge's full tier; a poor run yields a lower band.
-After the orb window closes, chat shows the run outcome line, then a formatted summary of
-imbued resonance on the weapon, current rift when above zero, and a hint to apply another
-charge (mention cleaning rift only when rift remains on the weapon).
 
 ### Batch 3.4 - Difficulty by tier
 
@@ -295,13 +292,8 @@ otherwise offhand. Anything that is not mage gear casts exactly as it does today
 non-mage holding a bound skill is never touched.
 
 An element the weapon never took a charge in reads as a requirement of nothing, and
-that **refuses**. A Cerrith staff cannot fire Oseni spells at all.
-
-Each skill in `skills.yml` has a **tier** (1-4). The weapon's imbued band in that
-element must be at least that tier, and the caster's resonance band must meet the
-same floor. A Cerrith IV staff in a Cerrith I mage's hands can still fire Cerrith I
-spells; III/IV refuse as "this spell is beyond you". The staff no longer sets a global
-player floor for every spell on it.
+that **refuses**. A Cerrith staff cannot fire Oseni spells at all. A staff holding
+Oseni IV and Cerrith I refuses only the element the caster is short on.
 
 ### Batch 4.1 - Remove min_resonance
 
@@ -324,7 +316,6 @@ player floor for every spell on it.
 
 **Test:** A weapon needing Oseni IV and Cerrith I lets Cerrith spells through and
 refuses Oseni ones. Mana is unchanged after a refusal. Spamming does not flood chat.
-A Cerrith IV staff does not block a tier 1 Cerrith spell for a Cerrith I caster.
 
 ### Batch 4.3 - Rift
 

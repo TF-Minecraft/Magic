@@ -52,7 +52,7 @@ public final class ChargeLore {
                 String numeral = TierBands.numeralFor(element.getId(), charge.getFill(element.getId()));
                 // An imprinted element below the first band still lists, so the player can
                 // see which elements the charge took on before it has gathered anything.
-                block.add(MagicText.format(element.getColoredName()
+                block.add(MagicText.format(element.getColor() + element.getName()
                         + " {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
             }
         }

@@ -5,8 +5,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import net.tfminecraft.magic.model.ElementDef;
-import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
 
 public final class AttunementCaptureService {
@@ -22,10 +20,6 @@ public final class AttunementCaptureService {
             String elementId,
             double gain) {
         if (session == null || elementId == null || elementId.isBlank() || gain <= EPSILON) {
-            return;
-        }
-        ElementDef element = ElementRegistry.getById(elementId.toLowerCase(java.util.Locale.ROOT));
-        if (element != null && !element.isUnlocked(meditator)) {
             return;
         }
         double before = session.getResonance(elementId);

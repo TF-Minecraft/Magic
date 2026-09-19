@@ -98,17 +98,6 @@ public final class GearStationStore {
         return item;
     }
 
-    /** Clears the station even if the weapon is unattuned or mid-orb. Does not return the staff. */
-    public static ItemStack takeForAbort(Location location) {
-        Occupancy occupancy = get(location);
-        if (occupancy == null) {
-            return null;
-        }
-        ItemStack item = occupancy.getItem();
-        clear(location, true);
-        return item;
-    }
-
     /** An unattuned weapon never leaves the station, so band 0 gear cannot exist in the world. */
     public static boolean isAttuned(ItemStack item) {
         return item != null && WeaponRequirement.fromItem(item).highestBand() > 0;

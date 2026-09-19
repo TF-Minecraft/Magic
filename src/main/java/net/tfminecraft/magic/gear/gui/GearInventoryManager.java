@@ -27,7 +27,6 @@ import net.tfminecraft.magic.gear.GearStationStore;
 import net.tfminecraft.magic.gear.GearType;
 import net.tfminecraft.magic.gear.PartDef;
 import net.tfminecraft.magic.gear.PartRegistry;
-import net.tfminecraft.magic.gear.PartSlots;
 import net.tfminecraft.magic.gear.PartTypeDef;
 import net.tfminecraft.magic.gear.PartTypeRegistry;
 import net.tfminecraft.magic.gear.SocketLayout;
@@ -43,21 +42,14 @@ public final class GearInventoryManager implements Listener {
             inv.setItem(i, filler);
         }
         GearType type = TypeSelectionManager.get(player);
-        ArchetypeDef archetype = ArchetypeRegistry.get(type);
-        PartDef core = selectedOrFirst(player, PartSlots.CORE, type);
-        List<String> open = PartSlots.open(archetype, core);
         inv.setItem(0, typeButton(type));
         Collection<PartDef> parts = collectParts(player, type);
-        for (String categoryId : open) {
-            PartTypeDef category = PartTypeRegistry.get(categoryId);
-            if (category == null) {
-                continue;
-            }
+        for (PartTypeDef category : PartTypeRegistry.getAll()) {
             int slot = category.getSlot();
             if (slot <= 0 || slot >= inv.getSize()) {
                 continue;
             }
-            PartDef part = selectedOrFirst(player, categoryId, type);
+            PartDef part = selectedOrFirst(player, category.getId(), type);
             if (part == null) {
                 inv.setItem(slot, barrier("No part"));
             } else {
@@ -72,11 +64,11 @@ public final class GearInventoryManager implements Listener {
         Inventory inv = Bukkit.createInventory(new TypeSelectionHolder(), 9, "§6Select Archetype");
         int slot = 0;
         for (GearType type : GearType.values()) {
-            ArchetypeDef def = ArchetypeRegistry.get(type);
-            ItemStack item = archetypeIcon(type, def);
+            ItemStack item = new ItemStack(type.getIcon());
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName("§e" + type.getDisplayName());
+                ArchetypeDef def = ArchetypeRegistry.get(type);
                 List<String> lore = new ArrayList<>();
                 lore.add("§7Click to choose");
                 if (def != null && def.isMelee()) {
@@ -99,12 +91,6 @@ public final class GearInventoryManager implements Listener {
 
     public void openPartSelection(Player player, String categoryId) {
         GearType type = TypeSelectionManager.get(player);
-        ArchetypeDef archetype = ArchetypeRegistry.get(type);
-        PartDef core = selectedOrFirst(player, PartSlots.CORE, type);
-        if (!PartSlots.contains(PartSlots.open(archetype, core), categoryId)) {
-            openAssembly(player);
-            return;
-        }
         List<PartDef> options = PartRegistry.matching(categoryId, type);
         int size = Math.max(9, Math.min(54, ((options.size() + 8) / 9) * 9));
         Inventory inv = Bukkit.createInventory(
@@ -132,9 +118,17 @@ public final class GearInventoryManager implements Listener {
         if (archetype == null) {
             return parts;
         }
-        PartDef core = selectedOrFirst(player, PartSlots.CORE, type);
-        for (String category : PartSlots.open(archetype, core)) {
+        for (String category : archetype.getRequired()) {
             PartDef part = selectedOrFirst(player, category, type);
+            if (part != null) {
+                parts.add(part);
+            }
+        }
+        for (PartTypeDef category : PartTypeRegistry.getAll()) {
+            if (archetype.getRequired().contains(category.getId())) {
+                continue;
+            }
+            PartDef part = selectedOrFirst(player, category.getId(), type);
             if (part != null) {
                 parts.add(part);
             }
@@ -152,18 +146,6 @@ public final class GearInventoryManager implements Listener {
             }
         }
         return PartRegistry.firstMatching(categoryId, type);
-    }
-
-    private void pruneClosedSelections(Player player) {
-        GearType type = TypeSelectionManager.get(player);
-        List<String> open = PartSlots.open(
-                ArchetypeRegistry.get(type),
-                selectedOrFirst(player, PartSlots.CORE, type));
-        for (String category : SelectedPartsManager.categories(player)) {
-            if (!PartSlots.contains(open, category)) {
-                SelectedPartsManager.remove(player, category);
-            }
-        }
     }
 
     @EventHandler
@@ -191,11 +173,6 @@ public final class GearInventoryManager implements Listener {
             }
             String category = PartTypeRegistry.idForSlot(event.getSlot());
             if (category != null) {
-                GearType type = TypeSelectionManager.get(player);
-                PartDef core = selectedOrFirst(player, PartSlots.CORE, type);
-                if (!PartSlots.contains(PartSlots.open(ArchetypeRegistry.get(type), core), category)) {
-                    return;
-                }
                 openPartSelection(player, category);
                 clickSound(player);
             }
@@ -242,9 +219,6 @@ public final class GearInventoryManager implements Listener {
                 return;
             }
             SelectedPartsManager.set(player, holder.getCategoryId(), partId);
-            if (PartSlots.CORE.equalsIgnoreCase(holder.getCategoryId())) {
-                pruneClosedSelections(player);
-            }
             openAssembly(player);
             clickSound(player);
         }
@@ -319,15 +293,8 @@ public final class GearInventoryManager implements Listener {
         return item;
     }
 
-    private static ItemStack archetypeIcon(GearType type, ArchetypeDef def) {
-        if (def == null) {
-            return new ItemStack(type.getIcon());
-        }
-        return ItemRef.buildOrFallback(def.getIcon(), type.getIcon());
-    }
-
     private static ItemStack typeButton(GearType type) {
-        ItemStack item = archetypeIcon(type, ArchetypeRegistry.get(type));
+        ItemStack item = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName("§6Archetype: §e" + type.getDisplayName());
@@ -352,7 +319,9 @@ public final class GearInventoryManager implements Listener {
             }
         }
         if (part.hasCost()) {
-            CostFormatter.appendInput(lore, part.getCost());
+            lore.add("");
+            lore.add("§aCost");
+            lore.addAll(CostFormatter.getCostsFormatted(part.getCost()));
         }
         if (picker) {
             lore.add("§eClick to select");

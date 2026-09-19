@@ -215,10 +215,10 @@ public final class ArtifactItemBuilder {
     private static String buildDisplayName(ArtifactTypeDef type, String baseName) {
         String rolledName = baseName != null && !baseName.isBlank() ? baseName : type.getElementId();
         ElementDef element = ElementRegistry.getById(type.getElementId());
-        if (element != null) {
-            return element.colorText(rolledName);
-        }
-        return MagicText.format("#ffffff" + rolledName);
+        String elementColor = element != null && element.getColor() != null && !element.getColor().isBlank()
+                ? element.getColor()
+                : "#ffffff";
+        return MagicText.format(elementColor + rolledName);
     }
 
     private static void applyName(MMOItem mmo, String displayName) {

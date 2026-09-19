@@ -37,43 +37,7 @@ public final class GearProvenance {
         meta.getPersistentDataContainer().set(
                 GearKeys.archetypeRevision(), PersistentDataType.INTEGER,
                 archetype == null ? 1 : archetype.getRevision());
-        writeMajority(meta, parts);
         stack.setItemMeta(meta);
-    }
-
-    public static int majorityOf(ItemStack stack) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return 0;
-        }
-        ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return 0;
-        }
-        Integer stored = meta.getPersistentDataContainer().get(
-                GearKeys.majorityTier(), PersistentDataType.INTEGER);
-        return stored == null ? 0 : stored;
-    }
-
-    public static void applyMajority(ItemStack stack, Collection<PartDef> parts) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return;
-        }
-        ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
-        writeMajority(meta, parts);
-        stack.setItemMeta(meta);
-    }
-
-    private static void writeMajority(ItemMeta meta, Collection<PartDef> parts) {
-        int majority = MajorityTierResolver.resolve(parts);
-        if (majority > 0) {
-            meta.getPersistentDataContainer().set(
-                    GearKeys.majorityTier(), PersistentDataType.INTEGER, majority);
-        } else {
-            meta.getPersistentDataContainer().remove(GearKeys.majorityTier());
-        }
     }
 
     /** Stamped part ids that no longer exist in the live registry. */
