@@ -201,6 +201,8 @@ public final class SacrificeConfigLoader {
                 (float) fx.getDouble("boom_pitch", 0.85)));
     }
 
+    // Existing configuration accepts legacy enum names and aliases; registry keys are not equivalent.
+    @SuppressWarnings("deprecation")
     private static Sound parseSound(String raw, Logger log) {
         if (raw == null || raw.isBlank()) {
             return null;

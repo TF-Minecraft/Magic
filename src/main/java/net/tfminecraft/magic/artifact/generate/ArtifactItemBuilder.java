@@ -1,5 +1,7 @@
 package net.tfminecraft.magic.artifact.generate;
 
+import net.tfminecraft.magic.util.LegacyModelData;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -229,7 +231,7 @@ public final class ArtifactItemBuilder {
             itemName.setString(displayName);
         }
         mmo.replaceData(ItemStats.NAME, itemName);
-        StatHistory hist = StatHistory.from(mmo, ItemStats.NAME);
+        StatHistory hist = mmo.computeStatHistory(ItemStats.NAME);
         if (hist != null) {
             NameData original = (NameData) hist.getOriginalData();
             original.setString(displayName);
@@ -267,7 +269,7 @@ public final class ArtifactItemBuilder {
         if (parts.length >= 3) {
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.setCustomModelData(Integer.parseInt(parts[2]));
+                LegacyModelData.set(meta, Integer.parseInt(parts[2]));
                 stack.setItemMeta(meta);
             }
         }
