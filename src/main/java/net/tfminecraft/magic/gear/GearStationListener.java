@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
-import me.Plugins.TLibs.TLibs;
+import net.tfminecraft.tlibs.TLibs;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.gear.gui.GearInventoryManager;

@@ -8,7 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import net.tfminecraft.RPCharacters.chat.CharacterChatEvent;
+import net.tfminecraft.rpcharacters.chat.CharacterChatEvent;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRiteService;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeWordMatcher;

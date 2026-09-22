@@ -15,7 +15,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.attunement.AttunementCaptureService;
 import net.tfminecraft.magic.profile.MagicProfileService;

@@ -12,8 +12,8 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
-import net.tfminecraft.furniture.Furniture;
-import net.tfminecraft.furniture.PlacedSlot;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.PlacedSlot;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.aura.AuraVessel;
 import net.tfminecraft.magic.artifact.aura.AuraVessels;
