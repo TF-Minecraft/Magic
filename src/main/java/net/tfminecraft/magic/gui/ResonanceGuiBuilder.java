@@ -34,6 +34,8 @@ public final class ResonanceGuiBuilder {
 
     private ResonanceGuiBuilder() {}
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static Inventory build(Player player, ResonanceGuiHolder holder, ResonanceSession session) {
         String title = GuiText.format(GuiCache.title);
         Inventory inventory = Bukkit.createInventory(holder, GridLayout.SIZE, title);
@@ -148,6 +150,8 @@ public final class ResonanceGuiBuilder {
         return modeId.substring(0, 1).toUpperCase(Locale.ROOT) + modeId.substring(1).toLowerCase(Locale.ROOT);
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildCastModeItem(CastModeDef mode, boolean selected, ResonanceSession session) {
         ItemStack item = ItemRef.buildOrFallback(mode.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
@@ -171,6 +175,8 @@ public final class ResonanceGuiBuilder {
         return item;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildElementItem(ElementDef element, ResonanceSession session) {
         ItemStack item = ItemRef.buildOrFallback(element.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();

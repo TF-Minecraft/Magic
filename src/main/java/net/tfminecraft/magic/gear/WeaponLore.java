@@ -24,6 +24,8 @@ public final class WeaponLore {
         return stack;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static void apply(ItemStack stack) {
         if (!GearProvenance.isGear(stack)) {
             return;
@@ -92,6 +94,8 @@ public final class WeaponLore {
         return lore;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static String plain(String line) {
         if (line == null || line.isEmpty()) {
             return "";

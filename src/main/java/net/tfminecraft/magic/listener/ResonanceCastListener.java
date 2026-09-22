@@ -116,6 +116,8 @@ public final class ResonanceCastListener implements Listener {
     }
 
     /** @return true when the weapon will not carry this element for this caster */
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static boolean refuse(Player player, ItemStack weapon, String elementId) {
         double required = WeaponRequirement.fromItem(weapon).aura().getFill(elementId);
         ResonanceSession session = Magic.plugin.getResonanceGuiManager().getSessionManager().get(player);
@@ -151,6 +153,8 @@ public final class ResonanceCastListener implements Listener {
      * A damaged weapon refuses everything, so nothing is spent here either. Shares the
      * refusal rate limiter so a player holding one is told once, not once per cast.
      */
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static void broken(Player player, ItemStack weapon, String elementId) {
         player.sendTitle(
                 Messages.get("cast.broken_title"),
@@ -162,6 +166,8 @@ public final class ResonanceCastListener implements Listener {
         }
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static void whiff(Player player, int rift) {
         player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, SoundCategory.PLAYERS, 1.0f, 1.0f);
         player.sendTitle(
@@ -170,6 +176,8 @@ public final class ResonanceCastListener implements Listener {
                 0, 20, 10);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static void staffOverloadWhiff(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, SoundCategory.PLAYERS, 1.0f, 1.0f);
         player.sendTitle(

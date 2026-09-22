@@ -35,6 +35,8 @@ import net.tfminecraft.magic.util.ItemRef;
 
 public final class GearInventoryManager implements Listener {
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public void openAssembly(Player player) {
         Inventory inv = Bukkit.createInventory(new AssemblyHolder(), 27, "§6Mage Assembly");
         ItemStack filler = pane();
@@ -60,6 +62,8 @@ public final class GearInventoryManager implements Listener {
         player.openInventory(inv);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public void openTypeSelection(Player player) {
         Inventory inv = Bukkit.createInventory(new TypeSelectionHolder(), 9, "§6Select Archetype");
         int slot = 0;
@@ -89,6 +93,8 @@ public final class GearInventoryManager implements Listener {
         player.openInventory(inv);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public void openPartSelection(Player player, String categoryId) {
         GearType type = TypeSelectionManager.get(player);
         List<PartDef> options = PartRegistry.matching(categoryId, type);
@@ -148,6 +154,8 @@ public final class GearInventoryManager implements Listener {
         return PartRegistry.firstMatching(categoryId, type);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) {
@@ -273,6 +281,8 @@ public final class GearInventoryManager implements Listener {
         return SocketLayout.prettyId(categoryId);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack pane() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
@@ -283,6 +293,8 @@ public final class GearInventoryManager implements Listener {
         return item;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack barrier(String name) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
@@ -293,6 +305,8 @@ public final class GearInventoryManager implements Listener {
         return item;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack typeButton(GearType type) {
         ItemStack item = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = item.getItemMeta();
@@ -304,6 +318,8 @@ public final class GearInventoryManager implements Listener {
         return item;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack partIcon(PartDef part, boolean picker) {
         ItemStack item = ItemRef.buildOrFallback(part.getItemPath(), Material.PAPER);
         ItemMeta meta = item.getItemMeta();

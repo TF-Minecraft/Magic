@@ -31,6 +31,8 @@ public final class ChargeLore {
         return stack;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static void apply(ItemStack stack) {
         Charge charge = Charge.fromItem(stack);
         if (charge == null) {
@@ -109,6 +111,8 @@ public final class ChargeLore {
         return -1;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static String plain(String line) {
         if (line == null || line.isEmpty()) {
             return "";

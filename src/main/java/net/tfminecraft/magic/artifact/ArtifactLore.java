@@ -30,6 +30,8 @@ public final class ArtifactLore {
 
     private ArtifactLore() {}
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static void apply(ItemStack stack) {
         Artifact artifact = Artifact.fromItem(stack);
         if (artifact == null) {
@@ -82,6 +84,8 @@ public final class ArtifactLore {
         writeAttuneIndex(stack, loreStart + attuneOffset, attuneLines.size());
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static void refreshAttune(ItemStack stack) {
         if (!ArtifactIds.hasKey(stack)) {
             return;
@@ -176,6 +180,8 @@ public final class ArtifactLore {
     /**
      * Rebuild aura from visible lore when nested PDC was dropped (pickup / furniture meta).
      */
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static Artifact readAura(ItemStack stack) {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
@@ -426,6 +432,8 @@ public final class ArtifactLore {
         return false;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static String plain(String line) {
         if (line == null || line.isEmpty()) {
             return "";

@@ -260,6 +260,8 @@ public final class ArtifactItemBuilder {
         return stack;
     }
 
+    // This path mutates the existing ItemStack; replacing it would change aliases held by callers.
+    @SuppressWarnings("deprecation")
     private static ItemStack applyVanillaModel(ItemStack stack, String path) {
         String[] parts = path.split("\\.");
         if (parts.length < 2) {

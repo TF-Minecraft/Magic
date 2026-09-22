@@ -34,6 +34,8 @@ public final class AttunementCaptureService {
                 AuraLog.n(session.getResonance(elementId)));
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static String displayNameOf(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return "";
