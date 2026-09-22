@@ -335,6 +335,8 @@ public final class GearOrbSession {
                 1.0f, good ? 1.3f : 0.8f);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private void actionBar(Player player) {
         int remaining = (int) Math.max(0, (tier.windowTicks() - ticks) / 20);
         String message = Messages.get(

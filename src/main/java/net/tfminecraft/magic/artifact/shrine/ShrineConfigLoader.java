@@ -149,6 +149,8 @@ public final class ShrineConfigLoader {
                 parseParticle(section.getString("burst_particle"), parent.getBurstParticle(), log));
     }
 
+    // Existing configuration accepts legacy enum names and aliases; registry keys are not equivalent.
+    @SuppressWarnings("deprecation")
     private static Sound parseSound(String raw, Sound fallback, Logger log) {
         if (raw == null || raw.isBlank()) {
             return fallback;
