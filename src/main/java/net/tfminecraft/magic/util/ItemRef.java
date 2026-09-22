@@ -52,6 +52,8 @@ public final class ItemRef {
         return item;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     public static void applyBlankDisplay(ItemStack item) {
         if (item == null) {
             return;

@@ -152,6 +152,8 @@ public final class GearItemBuilder {
         to.setItemMeta(toMeta);
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack decoratePreview(
             ItemStack stack, GearType type, Collection<PartDef> parts) {
         ItemMeta meta = stack.getItemMeta();
@@ -181,6 +183,8 @@ public final class GearItemBuilder {
         return stack;
     }
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     private static ItemStack barrier(String reason) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();

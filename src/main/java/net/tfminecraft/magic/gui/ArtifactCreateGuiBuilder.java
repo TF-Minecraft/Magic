@@ -35,6 +35,8 @@ public final class ArtifactCreateGuiBuilder {
 
     private ArtifactCreateGuiBuilder() {}
 
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
     public static Inventory build(ArtifactCreateGuiHolder holder, ArtifactCreateSession session) {
         Inventory inventory = Bukkit.createInventory(
                 holder, GridLayout.SIZE, GuiText.format(ArtifactCreateCache.title));
@@ -99,6 +101,8 @@ public final class ArtifactCreateGuiBuilder {
         return reserved;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildPreview(ArtifactCreateSession session) {
         if (session != null) {
             ArtifactRoll roll = session.toRoll();
@@ -123,6 +127,8 @@ public final class ArtifactCreateGuiBuilder {
         return item;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildRarityItem(ArtifactRarityDef rarity, boolean selected) {
         String iconRef = selected ? GuiCache.castModeSelected : GuiCache.castModeUnselected;
         Material fallback = selected ? Material.LIME_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE;
@@ -148,6 +154,8 @@ public final class ArtifactCreateGuiBuilder {
         return item;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildElementItem(ElementDef element, ArtifactCreateSession session) {
         ItemStack item = ItemRef.buildOrFallback(element.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
@@ -179,6 +187,8 @@ public final class ArtifactCreateGuiBuilder {
         return item;
     }
 
+    // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
+    @SuppressWarnings({"deprecation"})
     private static ItemStack buildButton(CastModeDef def) {
         ItemStack item = ItemRef.buildOrFallback(def.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();

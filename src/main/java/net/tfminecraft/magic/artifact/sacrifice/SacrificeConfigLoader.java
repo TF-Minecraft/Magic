@@ -202,7 +202,7 @@ public final class SacrificeConfigLoader {
     }
 
     // Existing configuration accepts legacy enum names and aliases; registry keys are not equivalent.
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "removal"})
     private static Sound parseSound(String raw, Logger log) {
         if (raw == null || raw.isBlank()) {
             return null;
