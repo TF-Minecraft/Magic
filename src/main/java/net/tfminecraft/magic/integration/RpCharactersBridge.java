@@ -3,14 +3,14 @@ package net.tfminecraft.magic.integration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import net.tfminecraft.RPCharacters.Managers.PlayerManager;
-import net.tfminecraft.RPCharacters.Objects.PlayerData;
-import net.tfminecraft.RPCharacters.Objects.RPCharacter;
-import net.tfminecraft.RPCharacters.RPCharacters;
-import net.tfminecraft.RPCharacters.identity.DisplayIdentityService;
-import net.tfminecraft.RPCharacters.mail.CharacterMailTarget;
-import net.tfminecraft.RPCharacters.permadeath.PermadeathService;
-import net.tfminecraft.RPCharacters.permadeath.PermakillCause;
+import net.tfminecraft.rpcharacters.managers.PlayerManager;
+import net.tfminecraft.rpcharacters.objects.PlayerData;
+import net.tfminecraft.rpcharacters.objects.RPCharacter;
+import net.tfminecraft.rpcharacters.RPCharacters;
+import net.tfminecraft.rpcharacters.identity.DisplayIdentityService;
+import net.tfminecraft.rpcharacters.mail.CharacterMailTarget;
+import net.tfminecraft.rpcharacters.permadeath.PermadeathService;
+import net.tfminecraft.rpcharacters.permadeath.PermakillCause;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeTierDef;
 

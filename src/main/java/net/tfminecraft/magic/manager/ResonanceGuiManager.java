@@ -8,7 +8,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 
-import net.tfminecraft.RPCharacters.Objects.RPCharacter;
+import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.gui.ResonanceGuiBuilder;

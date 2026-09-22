@@ -7,7 +7,7 @@ import java.nio.file.Files;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import me.Plugins.TLibs.TLibs;
+import net.tfminecraft.tlibs.TLibs;
 import net.tfminecraft.magic.command.MagicCommand;
 import net.tfminecraft.magic.command.ResonanceCommand;
 import net.tfminecraft.magic.integration.RpCharactersBridge;

@@ -14,8 +14,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import net.tfminecraft.RPCharacters.Objects.RPCharacter;
-import net.tfminecraft.RPCharacters.api.CharacterSkull;
+import net.tfminecraft.rpcharacters.objects.RPCharacter;
+import net.tfminecraft.rpcharacters.api.CharacterSkull;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.model.CastModeDef;

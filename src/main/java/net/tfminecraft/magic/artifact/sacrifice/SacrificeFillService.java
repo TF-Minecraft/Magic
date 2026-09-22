@@ -5,9 +5,9 @@ import java.util.UUID;
 
 import org.bukkit.inventory.ItemStack;
 
-import net.tfminecraft.InteractibleFurniture;
-import net.tfminecraft.furniture.Furniture;
-import net.tfminecraft.furniture.PlacedSlot;
+import net.tfminecraft.interactiblefurniture.InteractibleFurniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.PlacedSlot;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.artifact.aura.AuraVessel;
 import net.tfminecraft.magic.artifact.aura.AuraVessels;

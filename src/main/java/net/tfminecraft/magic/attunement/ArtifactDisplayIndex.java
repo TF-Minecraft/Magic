@@ -9,9 +9,9 @@ import org.bukkit.Chunk;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import net.tfminecraft.InteractibleFurniture;
-import net.tfminecraft.furniture.Furniture;
-import net.tfminecraft.furniture.PlacedSlot;
+import net.tfminecraft.interactiblefurniture.InteractibleFurniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.PlacedSlot;
 import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.shrine.ShrineChargeService;
 import net.tfminecraft.magic.meditation.MeditationCache;

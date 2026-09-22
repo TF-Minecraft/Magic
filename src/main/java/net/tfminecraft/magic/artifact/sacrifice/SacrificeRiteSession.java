@@ -2,7 +2,7 @@ package net.tfminecraft.magic.artifact.sacrifice;
 
 import java.util.UUID;
 
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.artifact.shrine.ShrineScore;
 
 public final class SacrificeRiteSession {

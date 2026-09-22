@@ -3,7 +3,7 @@ package net.tfminecraft.magic.artifact.path;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-import me.Plugins.TLibs.Objects.API.SubAPI.ItemPathHandler;
+import net.tfminecraft.tlibs.objects.api.subapi.ItemPathHandler;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.Artifact;
 import net.tfminecraft.magic.artifact.generate.ArtifactItemBuilder;

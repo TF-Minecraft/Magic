@@ -9,7 +9,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.shrine.ShrineChargeFx;
 

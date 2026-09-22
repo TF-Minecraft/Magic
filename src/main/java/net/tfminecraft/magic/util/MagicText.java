@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import org.bukkit.Color;
 
-import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
+import net.tfminecraft.tlibs.objects.api.subapi.StringFormatter;
 import net.tfminecraft.magic.GuiCache;
 
 /**

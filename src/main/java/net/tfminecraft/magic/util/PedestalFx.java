@@ -2,7 +2,7 @@ package net.tfminecraft.magic.util;
 
 import org.bukkit.Location;
 
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 
 /**
  * Pedestal artifact sit point: origin is the block under the barrier.

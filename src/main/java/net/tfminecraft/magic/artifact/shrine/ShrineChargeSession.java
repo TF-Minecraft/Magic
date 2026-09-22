@@ -2,7 +2,7 @@ package net.tfminecraft.magic.artifact.shrine;
 
 import java.util.UUID;
 
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 
 public final class ShrineChargeSession {
 

@@ -14,10 +14,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
-import net.tfminecraft.events.FurnitureBreakEvent;
-import net.tfminecraft.events.FurnitureSlotItemAddEvent;
-import net.tfminecraft.events.FurnitureSlotItemTakeEvent;
-import net.tfminecraft.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.events.FurnitureBreakEvent;
+import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemAddEvent;
+import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemTakeEvent;
+import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.aura.AuraVessels;
 import net.tfminecraft.magic.artifact.ArtifactCarePlaces;
