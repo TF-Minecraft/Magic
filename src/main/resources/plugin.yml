@@ -1,7 +1,7 @@
 main: net.tfminecraft.magic.Magic
 api-version: '1.19'
 name: Magic
-version: 0.1.0
+version: ${project.version}
 author: Drefvelin
 depend: [TLibs, ItemsAdder, TFMCCore, InteractibleFurniture]
 softdepend: [RPCharacters, MMOItems, MythicLib, MMOCore]
