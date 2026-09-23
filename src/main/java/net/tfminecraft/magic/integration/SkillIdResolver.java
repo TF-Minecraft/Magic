@@ -35,7 +35,7 @@ public final class SkillIdResolver {
         }
 
         if (cast instanceof CastableSkill castable) {
-            RegisteredSkill registered = castable.getSkill().getSkill();
+            SkillHandler<?> registered = castable.getSkill().getSkill();
             if (registered != null && registered.getName() != null && !registered.getName().isBlank()) {
                 return registered.getName();
             }

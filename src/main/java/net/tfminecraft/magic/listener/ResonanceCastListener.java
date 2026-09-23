@@ -10,9 +10,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import io.lumine.mythic.lib.api.event.skill.PlayerCastSkillEvent;
+import io.lumine.mythic.lib.api.item.NBTItem;
 import io.lumine.mythic.lib.skill.Skill;
 import net.Indyuce.mmoitems.api.interaction.util.DurabilityItem;
 import net.tfminecraft.magic.Cache;
@@ -108,8 +110,13 @@ public final class ResonanceCastListener implements Listener {
     }
 
     private static void wearWeapon(Player player, HeldSlot slot, ItemStack weapon) {
-        DurabilityItem durability = new DurabilityItem(player, weapon);
-        if (!durability.isValid()) {
+        NBTItem nbt = NBTItem.get(weapon);
+        if (nbt.getInteger("MMOITEMS_MAX_DURABILITY") <= 0) {
+            return;
+        }
+        DurabilityItem durability = DurabilityItem.from(player, nbt,
+                slot == HeldSlot.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
+        if (durability == null) {
             return;
         }
         GearHand.setHeld(player, slot, durability.decreaseDurability(1).toItem());
