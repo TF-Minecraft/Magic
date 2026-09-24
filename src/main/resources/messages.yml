@@ -261,11 +261,29 @@ gear:
 
     rift: "#ff5555The weapon is left with {rift}% rift."
 
+    summary_title: "{color:label_accent}Imbued resonance"
+
+    summary_line_prefix: "{color:label_muted}  "
+
+    summary_unattuned: "{color:label_muted}None yet"
+
+    summary_rift: "{color:corruption}Rift {color:label_muted}{rift}%"
+
+    summary_hint_resonance: "{color:label_muted}Apply another enchanted charge to raise resonance on this weapon."
+
+    summary_hint_resonance_and_clean: "{color:label_muted}Apply another enchanted charge to raise resonance or clean rift from this weapon."
+
     busy: "#aaaaaa§oThis station is already mid-attunement"
 
   eject:
 
-    unattuned: "#aaaaaa§oThe weapon is inert. It holds no element yet"
+    unattuned: "#aaaaaa§oThe weapon is inert. Shift-left-click the station to take the materials back"
+
+  abort:
+
+    done: "#aaaaaa§oThe craft comes apart. The charge, if any, is spent"
+
+    not_yours: "#ff5555Someone else is attuning this weapon."
 
   broken:
 

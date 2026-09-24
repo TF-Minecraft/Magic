@@ -14,6 +14,7 @@ public final class ArchetypeDef {
     private final GearType type;
     private final String name;
     private final String template;
+    private final String icon;
     private final boolean melee;
     private final List<String> required;
     private final Map<String, String> slots;
@@ -23,12 +24,14 @@ public final class ArchetypeDef {
             GearType type,
             String name,
             String template,
+            String icon,
             boolean melee,
             List<String> required,
             Map<String, String> slots) {
         this.type = type;
         this.name = name == null || name.isBlank() ? type.getDisplayName() : name;
         this.template = template == null ? "" : template.trim();
+        this.icon = icon == null ? "" : icon.trim();
         this.melee = melee;
         this.required = List.copyOf(required == null ? List.of() : required);
         Map<String, String> copy = new LinkedHashMap<>();
@@ -53,6 +56,10 @@ public final class ArchetypeDef {
 
     public String getTemplate() {
         return template;
+    }
+
+    public String getIcon() {
+        return icon;
     }
 
     public boolean isMelee() {

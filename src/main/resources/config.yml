@@ -99,6 +99,10 @@ gear:
   output-slot: 16
   confirm_seconds: 5
 
+  # When false, rune socket colours use only the archetype suffix (e.g. "Minor Rune")
+  # without the band prefix (Common / Rare / Epic / Legendary). Band still gates attunement.
+  socket_rarity_prefix: true
+
   # One-sided bonus for holding a weapon attuned to the element of the spell you cast.
   # Keyed by the weapon's tier band in that element. A weapon with no attunement in an
   # element contributes nothing; there is no penalty side, because a weapon that cannot

@@ -1,11 +1,15 @@
 package net.tfminecraft.magic.gear;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -15,6 +19,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import dev.lone.itemsadder.api.Events.FurnitureBreakEvent;
 import net.tfminecraft.tlibs.TLibs;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.charge.ChargeIds;
@@ -24,14 +29,54 @@ import net.tfminecraft.magic.gear.gui.OpenStationManager;
 
 public final class GearStationListener implements Listener {
 
+    /** ItemsAdder breaks furniture two ticks after the swing, so an abort swing needs cover. */
+    private static final long ABORT_BREAK_GUARD_MILLIS = 1000L;
+
     private final GearInventoryManager inventory = new GearInventoryManager();
+    private final Map<String, Long> recentAborts = new HashMap<>();
 
     public GearInventoryManager inventory() {
         return inventory;
     }
 
+    /**
+     * Left-clicks at the station (orb hits, aborts) are swings, and ItemsAdder breaks
+     * furniture on a swing. A station holding a weapon or running orbs must survive them.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFurnitureBreak(FurnitureBreakEvent event) {
+        if (!isStationFurniture(event.getNamespacedID())) {
+            return;
+        }
+        Entity entity = event.getBukkitEntity();
+        if (entity == null) {
+            return;
+        }
+        Location location = entity.getLocation().getBlock().getLocation();
+        Long aborted = recentAborts.get(GearStationStore.key(location));
+        boolean justAborted = aborted != null
+                && System.currentTimeMillis() - aborted < ABORT_BREAK_GUARD_MILLIS;
+        if (justAborted || GearStationStore.isOccupied(location) || GearOrbService.isActive(location)) {
+            event.setCancelled(true);
+        }
+    }
+
+    private static boolean isStationFurniture(String namespacedId) {
+        String station = GearCache.station == null ? "" : GearCache.station.trim();
+        int open = station.indexOf('(');
+        int close = station.indexOf(')', open + 1);
+        if (namespacedId == null || !station.toLowerCase().startsWith("iaf(") || close <= open) {
+            return false;
+        }
+        return station.substring(open + 1, close).equalsIgnoreCase(namespacedId);
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            tryAbort(event);
+            return;
+        }
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
@@ -149,5 +194,51 @@ public final class GearStationListener implements Listener {
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         drop.getWorld().dropItem(drop, item);
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
+    }
+
+    private void tryAbort(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+        if (!event.getPlayer().isSneaking()) {
+            return;
+        }
+        Block block = event.getClickedBlock();
+        if (block == null) {
+            return;
+        }
+        try {
+            if (!TLibs.getBlockAPI().getChecker().checkBlock(block, GearCache.station)) {
+                return;
+            }
+        } catch (Exception ex) {
+            return;
+        }
+        event.setCancelled(true);
+        Player player = event.getPlayer();
+        Location location = block.getLocation();
+        GearStationStore.Occupancy occupancy = GearStationStore.get(location);
+        if (occupancy == null) {
+            return;
+        }
+        if (GearStationStore.isAttuned(occupancy.getItem())) {
+            return;
+        }
+        UUID owner = GearOrbService.sessionOwner(location);
+        if (owner != null && !owner.equals(player.getUniqueId())) {
+            player.sendMessage(Messages.get("gear.abort.not_yours"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+        GearOrbService.abort(location);
+        ItemStack weapon = GearStationStore.takeForAbort(location);
+        if (weapon == null) {
+            return;
+        }
+        recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
+        recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
+        GearCosts.refund(player, GearProvenance.resolveParts(weapon), location);
+        player.sendMessage(Messages.get("gear.abort.done"));
+        player.playSound(location, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.4f);
     }
 }

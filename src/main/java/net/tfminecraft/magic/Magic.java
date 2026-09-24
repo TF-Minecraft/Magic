@@ -300,6 +300,7 @@ public class Magic extends JavaPlugin {
             "gear/parts.yml",
             "gear/socket-colours.yml",
             "gear/orbs.yml",
+            "gear/model-schemes.yml",
             "elements/elements.yml",
             "artifacts/generator.yml",
             "artifacts/model-schemes.yml",

@@ -3,7 +3,6 @@ package net.tfminecraft.magic.gear;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -44,11 +43,13 @@ public final class GearItemBuilder {
         if (archetype == null || GearProvenance.socketsLocked(stack)) {
             return stack;
         }
-        List<String> colours = SocketLayout.colours(archetype, GearProvenance.resolveParts(stack), band);
-        ItemStack rewritten = applySockets(stack, colours);
+        List<PartDef> parts = GearProvenance.resolveParts(stack);
+        List<String> colours = SocketLayout.colours(archetype, parts, band);
+        ItemStack rewritten = applyMmoData(stack, colours, parts);
         if (rewritten == null) {
             return stack;
         }
+        rewritten = GearModelResolver.apply(rewritten, type, parts);
         copyGearPdc(stack, rewritten);
         GearProvenance.lockSockets(rewritten);
         WeaponRequirement.fromItem(stack).persist(rewritten);
@@ -77,19 +78,29 @@ public final class GearItemBuilder {
             return decoratePreview(base, type, parts);
         }
         List<String> colours = SocketLayout.colours(archetype, parts, band);
-        ItemStack withSockets = applySockets(base, colours);
-        if (withSockets == null) {
-            withSockets = base;
+        ItemStack withMmo = applyMmoData(base, colours, parts);
+        if (withMmo == null) {
+            withMmo = base;
         }
-        GearProvenance.stamp(withSockets, type, parts);
-        return WeaponLore.updateItem(withSockets);
+        withMmo = GearModelResolver.apply(withMmo, type, parts);
+        GearProvenance.stamp(withMmo, type, parts);
+        return WeaponLore.updateItem(withMmo);
     }
 
     private static boolean requiredPresent(ArchetypeDef archetype, Collection<PartDef> parts) {
         if (archetype.getRequired().isEmpty()) {
             return parts != null && !parts.isEmpty();
         }
-        for (String required : archetype.getRequired()) {
+        PartDef core = null;
+        if (parts != null) {
+            for (PartDef part : parts) {
+                if (part != null && PartSlots.CORE.equalsIgnoreCase(part.getPartType())) {
+                    core = part;
+                    break;
+                }
+            }
+        }
+        for (String required : PartSlots.open(archetype, core)) {
             boolean found = false;
             if (parts != null) {
                 for (PartDef part : parts) {
@@ -106,17 +117,20 @@ public final class GearItemBuilder {
         return true;
     }
 
-    private static ItemStack applySockets(ItemStack stack, List<String> colours) {
-        if (stack == null || colours == null || colours.isEmpty() || !mmoItemsPresent()) {
+    private static ItemStack applyMmoData(ItemStack stack, List<String> colours, Collection<PartDef> parts) {
+        if (stack == null || !mmoItemsPresent()) {
             return stack;
         }
         try {
             LiveMMOItem mmo = new LiveMMOItem(NBTItem.get(stack));
-            mmo.setData(ItemStats.GEM_SOCKETS, new GemSocketsData(new ArrayList<>(colours)));
+            if (colours != null && !colours.isEmpty()) {
+                mmo.setData(ItemStats.GEM_SOCKETS, new GemSocketsData(new ArrayList<>(colours)));
+            }
+            GearStatApplicator.apply(mmo, parts);
             ItemStack built = mmo.newBuilder().build();
             return built == null || built.getType().isAir() ? stack : built;
         } catch (Exception ex) {
-            Magic.plugin.getLogger().warning("[Magic] Failed to write GEM_SOCKETS: " + ex.getMessage());
+            Magic.plugin.getLogger().warning("[Magic] Failed to write gear MMO data: " + ex.getMessage());
             return stack;
         }
     }
@@ -149,6 +163,14 @@ public final class GearItemBuilder {
                     org.bukkit.persistence.PersistentDataType.INTEGER,
                     archetypeRevision);
         }
+        Integer majority = fromMeta.getPersistentDataContainer().get(
+                GearKeys.majorityTier(), org.bukkit.persistence.PersistentDataType.INTEGER);
+        if (majority != null) {
+            toMeta.getPersistentDataContainer().set(
+                    GearKeys.majorityTier(),
+                    org.bukkit.persistence.PersistentDataType.INTEGER,
+                    majority);
+        }
         to.setItemMeta(toMeta);
     }
 
@@ -162,14 +184,13 @@ public final class GearItemBuilder {
         }
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("");
+        int majority = MajorityTierResolver.resolve(parts);
+        if (majority > 0) {
+            lore.add("§eTier " + MajorityTierResolver.toRoman(majority));
+        }
         lore.add("§6Sockets");
         lore.addAll(SocketLayout.previewLines(ArchetypeRegistry.get(type), parts));
-        Map<String, Integer> costs = GearCosts.total(parts);
-        if (!costs.isEmpty()) {
-            lore.add("");
-            lore.add("§aCost");
-            lore.addAll(CostFormatter.getCostsFormatted(costs));
-        }
+        CostFormatter.appendInput(lore, GearCosts.total(parts));
         lore.add("");
         lore.add("§eClick to prepare on the station");
         if (!mmoItemsPresent()) {
