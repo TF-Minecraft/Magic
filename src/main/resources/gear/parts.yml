@@ -171,7 +171,7 @@ iron_sword_core:
     - handle
   sockets: {}
   lore:
-    - "§7A basic magical core with one rune slot and a simple balde edge"
+    - "§7A basic magical core with one rune slot and a simple blade edge"
 
 steel_sword_core:
   name: "#7f7d80Steel Magical Core"
@@ -188,7 +188,7 @@ steel_sword_core:
     - handle
   sockets: {}
   lore:
-    - "§7An improved magical core with one rune slot and a better blade egde"
+    - "§7An improved magical core with one rune slot and a better blade edge"
 
 abyssalite_sword_core:
   name: "#3b4e60Abyssalite Magical Core"
@@ -494,7 +494,7 @@ basic_tome3:
   lore:
     - "§7A better tome capable of channeling lesser runes"
 
-petty_tom32:
+petty_tome3:
   name: "§dPetty Magical Tome"
   part-type: tome3
   tier: 3

@@ -18,7 +18,7 @@ staff:
     minor_rune: "Minor Rune"
     lesser_rune: "Lesser Rune"
     greater_rune: "Greater Rune"
-    ascendant_rune: "Ascedant Rune"
+    ascendant_rune: "Ascendant Rune"
 
 wand:
   name: Wand
@@ -33,7 +33,7 @@ wand:
     minor_rune: "Minor Rune"
     lesser_rune: "Lesser Rune"
     greater_rune: "Greater Rune"
-    ascendant_rune: "Ascedant Rune"
+    ascendant_rune: "Ascendant Rune"
 
 sword:
   name: Sword
@@ -48,4 +48,4 @@ sword:
     minor_rune: "Minor Rune"
     lesser_rune: "Lesser Rune"
     greater_rune: "Greater Rune"
-    ascendant_rune: "Ascedant Rune"
+    ascendant_rune: "Ascendant Rune"

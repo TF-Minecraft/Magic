@@ -317,7 +317,7 @@ gear:
 
     done: "#aaaaaa§oThe craft comes apart. The charge, if any, is spent"
 
-    not_yours: "#ff5555Someone else is attuning this weapon."
+    not_yours: "#ff5555Only the player who prepared this craft can take it apart."
 
   broken:
 

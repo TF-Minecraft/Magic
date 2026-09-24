@@ -3,6 +3,7 @@ package net.tfminecraft.magic.gear;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,10 +32,27 @@ public final class GearStationStore {
         private ItemStack item;
         private UUID displayId;
         private boolean orbSessionActive;
+        private final UUID owner;
+        private final Map<String, Integer> charged;
 
-        Occupancy(ItemStack item, UUID displayId) {
+        Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged) {
             this.item = item;
             this.displayId = displayId;
+            this.owner = owner;
+            this.charged = charged == null ? null : Map.copyOf(charged);
+        }
+
+        /** Player who prepared the craft. Null for stations saved before owners were recorded. */
+        public UUID getOwner() {
+            return owner;
+        }
+
+        /**
+         * Materials taken when the craft was prepared, empty when costs were bypassed.
+         * Null for stations saved before charges were recorded.
+         */
+        public Map<String, Integer> getCharged() {
+            return charged;
         }
 
         public ItemStack getItem() {
@@ -73,13 +91,13 @@ public final class GearStationStore {
         return location == null ? null : OCCUPIED.get(key(location));
     }
 
-    public static Occupancy occupy(Location location, ItemStack item) {
+    public static Occupancy occupy(Location location, ItemStack item, UUID owner, Map<String, Integer> charged) {
         if (location == null || item == null) {
             return null;
         }
         clear(location, false);
         UUID displayId = spawnDisplay(location, item);
-        Occupancy occupancy = new Occupancy(item, displayId);
+        Occupancy occupancy = new Occupancy(item, displayId, owner, charged);
         OCCUPIED.put(key(location), occupancy);
         save();
         return occupancy;
@@ -163,7 +181,28 @@ public final class GearStationStore {
                 continue;
             }
             UUID displayId = spawnDisplay(location, item);
-            OCCUPIED.put(key(location), new Occupancy(item, displayId));
+            UUID owner = null;
+            String rawOwner = section.getString("owner");
+            if (rawOwner != null && !rawOwner.isBlank()) {
+                try {
+                    owner = UUID.fromString(rawOwner);
+                } catch (IllegalArgumentException ignored) {
+                    owner = null;
+                }
+            }
+            Map<String, Integer> charged = null;
+            ConfigurationSection chargedSection = section.getConfigurationSection("charged");
+            if (chargedSection != null) {
+                charged = new LinkedHashMap<>();
+                for (String index : chargedSection.getKeys(false)) {
+                    String path = chargedSection.getString(index + ".path");
+                    int amount = chargedSection.getInt(index + ".amount");
+                    if (path != null && !path.isBlank() && amount > 0) {
+                        charged.merge(path, amount, Integer::sum);
+                    }
+                }
+            }
+            OCCUPIED.put(key(location), new Occupancy(item, displayId, owner, charged));
         }
     }
 
@@ -182,6 +221,18 @@ public final class GearStationStore {
             config.set(path + ".y", location.getBlockY());
             config.set(path + ".z", location.getBlockZ());
             config.set(path + ".item", occupancy.getItem());
+            if (occupancy.getOwner() != null) {
+                config.set(path + ".owner", occupancy.getOwner().toString());
+            }
+            if (occupancy.getCharged() != null) {
+                config.createSection(path + ".charged");
+                int chargedIndex = 0;
+                for (Map.Entry<String, Integer> cost : occupancy.getCharged().entrySet()) {
+                    String costPath = path + ".charged." + chargedIndex++;
+                    config.set(costPath + ".path", cost.getKey());
+                    config.set(costPath + ".amount", cost.getValue());
+                }
+            }
         }
         try {
             File file = file();

@@ -32,7 +32,6 @@ public final class GearModelResolver {
         }
         Map<String, Integer> votes = new LinkedHashMap<>();
         String coreScheme = "";
-        String firstScheme = "";
         for (PartDef part : parts) {
             if (part == null || !part.hasModelScheme()) {
                 continue;
@@ -42,9 +41,6 @@ public final class GearModelResolver {
                 continue;
             }
             votes.merge(id, part.getSchemeWeight(), Integer::sum);
-            if (firstScheme.isEmpty()) {
-                firstScheme = id;
-            }
             if (PartSlots.CORE.equalsIgnoreCase(part.getPartType())) {
                 coreScheme = id;
             }
@@ -65,12 +61,9 @@ public final class GearModelResolver {
                 tie = true;
             }
         }
-        if (tie) {
-            if (!coreScheme.isEmpty() && votes.getOrDefault(coreScheme, 0) == best) {
-                bestId = coreScheme;
-            } else if (!firstScheme.isEmpty()) {
-                bestId = firstScheme;
-            }
+        // bestId is already the first scheme seen among the tied leaders; the core wins a tie it is in.
+        if (tie && !coreScheme.isEmpty() && votes.getOrDefault(coreScheme, 0) == best) {
+            bestId = coreScheme;
         }
         return GearModelSchemeRegistry.get(bestId);
     }

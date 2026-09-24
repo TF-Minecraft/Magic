@@ -224,8 +224,8 @@ public final class GearStationListener implements Listener {
         if (GearStationStore.isAttuned(occupancy.getItem())) {
             return;
         }
-        UUID owner = GearOrbService.sessionOwner(location);
-        if (owner != null && !owner.equals(player.getUniqueId())) {
+        UUID owner = occupancy.getOwner() != null ? occupancy.getOwner() : GearOrbService.sessionOwner(location);
+        if (owner != null && !owner.equals(player.getUniqueId()) && !player.hasPermission("magic.admin")) {
             player.sendMessage(Messages.get("gear.abort.not_yours"));
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
@@ -237,7 +237,10 @@ public final class GearStationListener implements Listener {
         }
         recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
         recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
-        GearCosts.refund(player, GearProvenance.resolveParts(weapon), location);
+        Map<String, Integer> charged = occupancy.getCharged() != null
+                ? occupancy.getCharged()
+                : GearCosts.total(GearProvenance.resolveParts(weapon));
+        GearCosts.refund(player, charged, location);
         player.sendMessage(Messages.get("gear.abort.done"));
         player.playSound(location, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.4f);
     }

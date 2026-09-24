@@ -3,6 +3,7 @@ package net.tfminecraft.magic.gear.gui;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -287,8 +288,9 @@ public final class GearInventoryManager implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
+        Map<String, Integer> charged = GearCosts.bypasses(player) ? Map.of() : GearCosts.total(parts);
         GearCosts.take(player, parts);
-        GearStationStore.occupy(station, prepared);
+        GearStationStore.occupy(station, prepared, player.getUniqueId(), charged);
         OpenStationManager.clear(player);
         player.closeInventory();
         player.sendMessage(Messages.get("gear.craft.prepared"));
