@@ -39,7 +39,6 @@ public final class ChargeLore {
         if (charge == null) {
             return;
         }
-        ElementVisibility.stripCharge(charge);
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
             return;

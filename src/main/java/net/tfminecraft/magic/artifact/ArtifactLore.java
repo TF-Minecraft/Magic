@@ -38,7 +38,6 @@ public final class ArtifactLore {
         if (artifact == null) {
             return;
         }
-        ElementVisibility.stripArtifact(artifact, primaryId(stack, artifact));
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
             return;
@@ -271,7 +270,7 @@ public final class ArtifactLore {
         ElementDef best = null;
         int bestLen = 0;
         for (ElementDef element : ElementRegistry.getAll()) {
-            String name = plain(element.getName()).toLowerCase(Locale.ROOT);
+            String name = loreName(element);
             if (name.isEmpty() || !lower.startsWith(name)) {
                 continue;
             }
@@ -425,12 +424,21 @@ public final class ArtifactLore {
         }
         String before = p.substring(0, slash).trim().toLowerCase(Locale.ROOT);
         for (ElementDef element : ElementRegistry.getAll()) {
-            String name = plain(element.getName()).toLowerCase(Locale.ROOT);
+            String name = loreName(element);
             if (!name.isEmpty() && before.startsWith(name)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** Same label {@link MagicText#elementName} writes, so a blank name still matches its id. */
+    private static String loreName(ElementDef element) {
+        String name = plain(element.getName()).toLowerCase(Locale.ROOT);
+        if (!name.isEmpty()) {
+            return name;
+        }
+        return element.getId() == null ? "" : element.getId().toLowerCase(Locale.ROOT);
     }
 
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.

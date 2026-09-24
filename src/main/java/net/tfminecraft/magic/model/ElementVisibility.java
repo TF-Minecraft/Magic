@@ -1,12 +1,7 @@
 package net.tfminecraft.magic.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
-import net.tfminecraft.magic.artifact.aura.AuraData;
-import net.tfminecraft.magic.artifact.aura.AuraVessel;
 import net.tfminecraft.magic.artifact.config.ArtifactTypeDef;
 import net.tfminecraft.magic.artifact.config.ArtifactTypeRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeElementDef;
@@ -70,43 +65,6 @@ public final class ElementVisibility {
             return true;
         }
         return primaryId != null && !primaryId.isBlank() && primaryId.equalsIgnoreCase(elementId);
-    }
-
-    public static void stripCharge(AuraVessel vessel) {
-        if (vessel == null) {
-            return;
-        }
-        for (String elementId : copyIds(vessel.getCappedElementIds())) {
-            if (!shownOnCharge(elementId)) {
-                vessel.setCap(elementId, 0);
-            }
-        }
-    }
-
-    public static void stripCharge(AuraData data) {
-        if (data == null) {
-            return;
-        }
-        for (String elementId : copyIds(data.getCappedElementIds())) {
-            if (!shownOnCharge(elementId)) {
-                data.setCap(elementId, 0);
-            }
-        }
-    }
-
-    public static void stripArtifact(AuraVessel vessel, String primaryId) {
-        if (vessel == null) {
-            return;
-        }
-        for (String elementId : copyIds(vessel.getCappedElementIds())) {
-            if (!shownOnArtifact(elementId, primaryId)) {
-                vessel.setCap(elementId, 0);
-            }
-        }
-    }
-
-    private static List<String> copyIds(Set<String> ids) {
-        return new ArrayList<>(ids);
     }
 
     private static ArtifactTypeDef typeOf(String elementId) {

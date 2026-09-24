@@ -32,7 +32,6 @@ public final class WeaponLore {
             return;
         }
         WeaponRequirement requirement = WeaponRequirement.fromItem(stack);
-        ElementVisibility.stripCharge(requirement.aura());
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
             return;

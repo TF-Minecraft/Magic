@@ -248,6 +248,14 @@ public final class ArtifactCreateSession {
         primaryId = next;
         if (next != null) {
             clampCapsToRarity();
+            if (next.equals(primaryId)) {
+                for (String elementId : new ArrayList<>(caps.keySet())) {
+                    if (!elementId.equals(next)
+                            && !ElementVisibility.shownOnArtifact(elementId, next)) {
+                        setCap(elementId, 0);
+                    }
+                }
+            }
         }
         clearPreviewLock();
     }
