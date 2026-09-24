@@ -2,6 +2,7 @@ package net.tfminecraft.magic.loader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -89,6 +90,7 @@ public final class ConfigLoader implements LoaderInterface {
             long seconds = cast.getLong("refuse_chat_seconds", 30L);
             Cache.refuseChatMillis = Math.max(0L, seconds) * 1000L;
         }
+        loadCastTriggers(config.getStringList("runes.keybinds"));
 
         ConfigurationSection artifacts = config.getConfigurationSection("artifacts");
         if (artifacts != null) {
@@ -109,6 +111,15 @@ public final class ConfigLoader implements LoaderInterface {
         loadAttunement(config.getConfigurationSection("attunement"));
         loadGear(config.getConfigurationSection("gear"));
         return true;
+    }
+
+    private static void loadCastTriggers(List<String> keybinds) {
+        Cache.setCastTriggers(keybinds);
+        if (Cache.castTriggers.isEmpty()) {
+            Magic.plugin.getLogger().info("[Magic] No rune keybinds configured; cast checks use CAST and API.");
+            return;
+        }
+        Magic.plugin.getLogger().info("[Magic] Cast triggers: CAST, API, " + String.join(", ", Cache.castTriggers));
     }
 
     private static void loadGear(ConfigurationSection section) {

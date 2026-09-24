@@ -1,5 +1,10 @@
 package net.tfminecraft.magic;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+
 /**
  * Runtime flags from config.yml.
  */
@@ -25,6 +30,11 @@ public final class Cache {
     public static double castDriftMin = 0.01;
     /** Seconds between repeat chat lines explaining why a weapon refused a spell. */
     public static long refuseChatMillis = 30000L;
+    /**
+     * Extra MythicLib triggers treated as a cast, from {@code runes.keybinds}.
+     * Names are uppercase. {@code CAST} and {@code API} are always included in the check.
+     */
+    public static volatile Set<String> castTriggers = Set.of();
 
     public static double tickIntervalSeconds() {
         return Math.max(1L, tickIntervalTicks) / 20.0;
@@ -33,6 +43,20 @@ public final class Cache {
     public static double tickHours() {
         double scale = secondsPerHour > 0 ? secondsPerHour : 3600.0;
         return tickIntervalSeconds() / scale;
+    }
+
+    /** Replaces the configured cast triggers. Blank entries are dropped. */
+    public static void setCastTriggers(Iterable<String> names) {
+        LinkedHashSet<String> next = new LinkedHashSet<>();
+        if (names != null) {
+            for (String name : names) {
+                if (name == null || name.isBlank()) {
+                    continue;
+                }
+                next.add(name.trim().toUpperCase(Locale.ROOT));
+            }
+        }
+        castTriggers = Collections.unmodifiableSet(next);
     }
 
     private Cache() {}

@@ -25,6 +25,16 @@ equilibrium:
     0:   { mana: 0, damage: 0, cooldown: 0 }
     100: { mana: -0.20, damage: 0.25, cooldown: -0.05 }
 
+# MythicLib triggers the cast listener treats as a spell, besides CAST and API.
+# These match the keybinds a rune can be set to. A weapon still has to be attuned
+# to the spell's element.
+runes:
+  keybinds:
+    - RIGHT_CLICK
+    - LEFT_CLICK
+    - SHIFT_RIGHT_CLICK
+    - SHIFT_LEFT_CLICK
+
 # Global tick cycle (one runnable for the whole plugin).
 # interval_ticks: 20 = one second elapsed per tick.
 # seconds_per_hour: real seconds that count as one in-game hour for per-hour rates
@@ -65,7 +75,7 @@ meditation:
 cast:
   refuse_chat_seconds: 30
 
-# Drift from spending mana on a CAST/API skill. 40 mana -> 0.04 (mana / mana_divisor).
+# Drift from spending mana on a gated cast. 40 mana -> 0.04 (mana / mana_divisor).
 # Surge adds corruption (negative equilibrium). Flow adds tranquility (positive).
 cast_drift:
   mana_divisor: 1000
