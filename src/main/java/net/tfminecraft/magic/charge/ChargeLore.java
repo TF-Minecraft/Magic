@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.util.MagicText;
 
@@ -54,8 +55,8 @@ public final class ChargeLore {
                 String numeral = TierBands.numeralFor(element.getId(), charge.getFill(element.getId()));
                 // An imprinted element below the first band still lists, so the player can
                 // see which elements the charge took on before it has gathered anything.
-                block.add(MagicText.format(element.getColor() + element.getName()
-                        + " {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
+                block.add(MagicText.elementName(element)
+                        + MagicText.format(" {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
             }
         }
         block.set(0, BEGIN + block.get(0));
@@ -71,7 +72,7 @@ public final class ChargeLore {
         String primary = charge.primaryElementId();
         List<ElementDef> listed = new ArrayList<>();
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (charge.getCap(element.getId()) > 0) {
+            if (charge.getCap(element.getId()) > 0 && ElementVisibility.shownOnCharge(element.getId())) {
                 listed.add(element);
             }
         }

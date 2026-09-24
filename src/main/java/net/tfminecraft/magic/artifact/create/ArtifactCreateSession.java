@@ -18,6 +18,7 @@ import net.tfminecraft.magic.artifact.config.CapRange;
 import net.tfminecraft.magic.artifact.generate.ArtifactAuraSlot;
 import net.tfminecraft.magic.artifact.generate.ArtifactItemBuilder;
 import net.tfminecraft.magic.artifact.generate.ArtifactRoll;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.util.MagicNumbers;
 
 public final class ArtifactCreateSession {
@@ -121,6 +122,10 @@ public final class ArtifactCreateSession {
         }
         ElementRole role = roleOf(elementId);
         if (role == ElementRole.OFF) {
+            if (primaryId != null && !primaryId.isBlank()
+                    && !ElementVisibility.shownOnArtifact(elementId, primaryId)) {
+                return false;
+            }
             if (!ArtifactAffinityRegistry.compatibleWith(caps.keySet(), elementId)) {
                 return false;
             }
@@ -179,6 +184,9 @@ public final class ArtifactCreateSession {
         slots.add(new ArtifactAuraSlot(primaryId, getCap(primaryId)));
         for (Map.Entry<String, Double> entry : caps.entrySet()) {
             if (primaryId.equals(entry.getKey()) || entry.getValue() == null || entry.getValue() <= 0) {
+                continue;
+            }
+            if (!ElementVisibility.shownOnArtifact(entry.getKey(), primaryId)) {
                 continue;
             }
             slots.add(new ArtifactAuraSlot(entry.getKey(), entry.getValue()));
@@ -240,6 +248,14 @@ public final class ArtifactCreateSession {
         primaryId = next;
         if (next != null) {
             clampCapsToRarity();
+            if (next.equals(primaryId)) {
+                for (String elementId : new ArrayList<>(caps.keySet())) {
+                    if (!elementId.equals(next)
+                            && !ElementVisibility.shownOnArtifact(elementId, next)) {
+                        setCap(elementId, 0);
+                    }
+                }
+            }
         }
         clearPreviewLock();
     }

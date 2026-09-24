@@ -1,4 +1,5 @@
 # Magic element catalog. Each element has a fixed GUI slot (0-53).
+# color is one "#rrggbb", or a list of hex stops for a gradient across the name.
 # Row 2: Spirit (20), Arcanum (22), Illusion (24)
 # Row 3 (third from bottom): Cerrith, Seithr, Oseni, Mitlan
 # Row 4 (second from bottom): Shadowmancy, Necromancy, Bloodmagic

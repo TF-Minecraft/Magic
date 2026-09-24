@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.util.MagicText;
 
@@ -44,13 +45,16 @@ public final class WeaponLore {
         } else {
             block.add(MagicText.format("{color:label_muted}Resonance"));
             for (ElementDef element : ElementRegistry.getAll()) {
+                if (!ElementVisibility.shownOnCharge(element.getId())) {
+                    continue;
+                }
                 double fill = requirement.aura().getFill(element.getId());
                 if (requirement.aura().getCap(element.getId()) <= 0 && fill <= 0) {
                     continue;
                 }
                 String numeral = TierBands.numeralFor(element.getId(), fill);
-                block.add(MagicText.format(element.getColor() + element.getName()
-                        + " {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
+                block.add(MagicText.elementName(element)
+                        + MagicText.format(" {color:label_muted}" + (numeral.isEmpty() ? "-" : numeral)));
             }
         }
         int rift = WeaponRift.get(stack);

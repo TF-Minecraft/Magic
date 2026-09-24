@@ -17,6 +17,7 @@ import net.tfminecraft.magic.artifact.sacrifice.SacrificeImprint;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeImprintStore;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.util.MagicNumbers;
 import net.tfminecraft.magic.util.MagicText;
@@ -54,13 +55,12 @@ public final class ArtifactLore {
             double cap = artifact.getCap(element.getId());
             double fill = artifact.getFill(element.getId());
             double shown = ArtifactCareStore.usableFill(fill, cap, muffle);
-            block.add(MagicText.format(
-                    element.getColor()
-                            + element.getName()
-                            + " {color:label_muted}"
-                            + formatAmount(shown)
-                            + " / "
-                            + formatAmount(cap)));
+            block.add(MagicText.elementName(element)
+                    + MagicText.format(
+                            " {color:label_muted}"
+                                    + formatAmount(shown)
+                                    + " / "
+                                    + formatAmount(cap)));
         }
         int attuneOffset = block.size();
         List<String> attuneLines = buildAttuneLines(stack, artifact);
@@ -270,8 +270,8 @@ public final class ArtifactLore {
         ElementDef best = null;
         int bestLen = 0;
         for (ElementDef element : ElementRegistry.getAll()) {
-            String name = plain(element.getName()).toLowerCase(Locale.ROOT);
-            if (name.isEmpty() || !lower.startsWith(name)) {
+            String name = loreName(element);
+            if (!auraLabel(lower, name)) {
                 continue;
             }
             if (name.length() > bestLen) {
@@ -424,12 +424,48 @@ public final class ArtifactLore {
         }
         String before = p.substring(0, slash).trim().toLowerCase(Locale.ROOT);
         for (ElementDef element : ElementRegistry.getAll()) {
-            String name = plain(element.getName()).toLowerCase(Locale.ROOT);
-            if (!name.isEmpty() && before.startsWith(name)) {
+            String name = loreName(element);
+            if (auraLabel(before, name)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * True when {@code before} is the element label followed only by its amount.
+     * A short id such as {@code fire} must not match {@code fire resistance 5}.
+     */
+    private static boolean auraLabel(String before, String name) {
+        if (before == null || name == null || name.isEmpty() || !before.startsWith(name)) {
+            return false;
+        }
+        String rest = before.substring(name.length()).trim();
+        if (rest.isEmpty()) {
+            return false;
+        }
+        boolean digit = false;
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (Character.isDigit(c)) {
+                digit = true;
+                continue;
+            }
+            if (c == '.' && digit) {
+                continue;
+            }
+            return false;
+        }
+        return digit;
+    }
+
+    /** Same label {@link MagicText#elementName} writes, so a blank name still matches its id. */
+    private static String loreName(ElementDef element) {
+        String name = plain(element.getName()).toLowerCase(Locale.ROOT);
+        if (!name.isEmpty()) {
+            return name;
+        }
+        return element.getId() == null ? "" : element.getId().toLowerCase(Locale.ROOT);
     }
 
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.
@@ -455,7 +491,8 @@ public final class ArtifactLore {
         String primary = primaryId(stack, artifact);
         List<ElementDef> listed = new ArrayList<>();
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (artifact.getCap(element.getId()) > 0) {
+            if (artifact.getCap(element.getId()) > 0
+                    && ElementVisibility.shownOnArtifact(element.getId(), primary)) {
                 listed.add(element);
             }
         }

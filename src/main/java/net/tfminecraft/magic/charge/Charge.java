@@ -14,6 +14,7 @@ import net.tfminecraft.magic.artifact.aura.AuraVessel;
 import net.tfminecraft.magic.artifact.aura.VesselKind;
 import net.tfminecraft.magic.artifact.shrine.ShrineScore;
 import net.tfminecraft.magic.artifact.shrine.ShrineElementScore;
+import net.tfminecraft.magic.model.ElementVisibility;
 
 /**
  * Crafting consumable that gathers aura at a shrine and is spent at the mage station.
@@ -87,7 +88,7 @@ public final class Charge implements AuraVessel {
     }
 
     /**
-     * Takes on every element the shrine scores, capped at this charge's tier.
+     * Takes on every playable element the shrine scores, capped at this charge's tier.
      *
      * @return true when at least one element was imprinted
      */
@@ -105,6 +106,9 @@ public final class Charge implements AuraVessel {
         for (Map.Entry<String, ShrineElementScore> entry : score.getByElement().entrySet()) {
             ShrineElementScore elementScore = entry.getValue();
             if (elementScore == null || elementScore.getMaxAura() <= 0) {
+                continue;
+            }
+            if (!ElementVisibility.shownOnCharge(entry.getKey())) {
                 continue;
             }
             setCap(entry.getKey(), cap);
@@ -128,6 +132,9 @@ public final class Charge implements AuraVessel {
     public boolean imprintElement(ItemStack stack, String elementId) {
         double cap = tierCap();
         if (stack == null || elementId == null || elementId.isBlank() || cap <= 0) {
+            return false;
+        }
+        if (!ElementVisibility.shownOnCharge(elementId)) {
             return false;
         }
         setCap(elementId, cap);
