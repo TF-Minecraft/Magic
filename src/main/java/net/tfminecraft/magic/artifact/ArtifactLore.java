@@ -271,7 +271,7 @@ public final class ArtifactLore {
         int bestLen = 0;
         for (ElementDef element : ElementRegistry.getAll()) {
             String name = loreName(element);
-            if (name.isEmpty() || !lower.startsWith(name)) {
+            if (!auraLabel(lower, name)) {
                 continue;
             }
             if (name.length() > bestLen) {
@@ -425,11 +425,38 @@ public final class ArtifactLore {
         String before = p.substring(0, slash).trim().toLowerCase(Locale.ROOT);
         for (ElementDef element : ElementRegistry.getAll()) {
             String name = loreName(element);
-            if (!name.isEmpty() && before.startsWith(name)) {
+            if (auraLabel(before, name)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * True when {@code before} is the element label followed only by its amount.
+     * A short id such as {@code fire} must not match {@code fire resistance 5}.
+     */
+    private static boolean auraLabel(String before, String name) {
+        if (before == null || name == null || name.isEmpty() || !before.startsWith(name)) {
+            return false;
+        }
+        String rest = before.substring(name.length()).trim();
+        if (rest.isEmpty()) {
+            return false;
+        }
+        boolean digit = false;
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (Character.isDigit(c)) {
+                digit = true;
+                continue;
+            }
+            if (c == '.' && digit) {
+                continue;
+            }
+            return false;
+        }
+        return digit;
     }
 
     /** Same label {@link MagicText#elementName} writes, so a blank name still matches its id. */
