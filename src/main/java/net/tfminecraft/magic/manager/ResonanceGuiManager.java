@@ -1,6 +1,10 @@
 package net.tfminecraft.magic.manager;
 
+import java.util.Locale;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -85,8 +89,34 @@ public final class ResonanceGuiManager implements Listener {
         }
 
         if (!previousMode.equals(session.getCastModeId())) {
+            notifyCastModeChanged(player, session.getCastModeId());
             refreshGui(player, holder, session);
         }
+    }
+
+    private static void notifyCastModeChanged(Player player, String modeId) {
+        player.sendMessage(Messages.get("cast_mode.switched", "mode", castModeChatLabel(modeId)));
+        boolean flow = GuiCache.castModeRight.getId().equalsIgnoreCase(modeId);
+        player.playSound(
+                player.getLocation(),
+                Sound.BLOCK_AMETHYST_BLOCK_CHIME,
+                SoundCategory.PLAYERS,
+                0.85f,
+                flow ? 1.5f : 0.75f);
+    }
+
+    private static String castModeChatLabel(String modeId) {
+        if (modeId != null && modeId.equalsIgnoreCase(GuiCache.castModeRight.getId())) {
+            return "Flow";
+        }
+        if (modeId != null && modeId.equalsIgnoreCase(GuiCache.castModeLeft.getId())) {
+            return "Surge";
+        }
+        if (modeId == null || modeId.isBlank()) {
+            return "Surge";
+        }
+        return modeId.substring(0, 1).toUpperCase(Locale.ROOT)
+                + modeId.substring(1).toLowerCase(Locale.ROOT);
     }
 
     @EventHandler

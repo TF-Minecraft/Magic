@@ -15,6 +15,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import io.lumine.mythic.lib.skill.trigger.TriggerType;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
@@ -35,6 +36,7 @@ import net.tfminecraft.magic.artifact.generate.ArtifactRoller;
 import net.tfminecraft.magic.artifact.shrine.ShrineChargeService;
 import net.tfminecraft.magic.attunement.AuraLog;
 import net.tfminecraft.magic.gear.GearRefresher;
+import net.tfminecraft.magic.gear.RuneKeybind;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.registry.ElementRegistry;
@@ -48,13 +50,23 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!hasAdmin(sender)) {
-            sender.sendMessage(Messages.get("admin.no_permission"));
+        if (args.length == 0) {
+            if (hasAdmin(sender)) {
+                sender.sendMessage(Messages.get("admin.usage"));
+            } else if (hasRuneKeybind(sender)) {
+                sender.sendMessage(Messages.get("rune.usage"));
+            } else {
+                sender.sendMessage(Messages.get("admin.no_permission"));
+            }
             return true;
         }
 
-        if (args.length == 0) {
-            sender.sendMessage(Messages.get("admin.usage"));
+        if ("rune".equalsIgnoreCase(args[0])) {
+            return handleRune(sender, args);
+        }
+
+        if (!hasAdmin(sender)) {
+            sender.sendMessage(Messages.get("admin.no_permission"));
             return true;
         }
 
@@ -94,6 +106,38 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
 
         sender.sendMessage(Messages.get("admin.usage"));
+        return true;
+    }
+
+    private static boolean handleRune(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Messages.get("rune.players_only"));
+            return true;
+        }
+        if (!hasRuneKeybind(sender)) {
+            sender.sendMessage(Messages.get("rune.no_permission"));
+            return true;
+        }
+        if (args.length < 3 || !"keybind".equalsIgnoreCase(args[1])) {
+            sender.sendMessage(Messages.get("rune.usage"));
+            return true;
+        }
+        TriggerType trigger = resolveRuneKeybind(args[2]);
+        if (trigger == null) {
+            sender.sendMessage(Messages.get("rune.unknown_trigger"));
+            return true;
+        }
+        ItemStack held = player.getInventory().getItemInMainHand();
+        RuneKeybind.Outcome outcome = RuneKeybind.apply(held, trigger);
+        switch (outcome.result()) {
+            case NOT_RUNE -> sender.sendMessage(Messages.get("rune.not_a_rune"));
+            case NO_ABILITIES -> sender.sendMessage(Messages.get("rune.no_abilities"));
+            case FAILED -> sender.sendMessage(Messages.get("rune.failed"));
+            case OK -> {
+                player.getInventory().setItemInMainHand(outcome.item());
+                sender.sendMessage(Messages.get("rune.success", "trigger", trigger.name()));
+            }
+        }
         return true;
     }
 
@@ -198,7 +242,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if ("reset".equals(action)) {
             String elementArg = args.length >= 4 ? args[3] : "all";
-            if (!applyResonance(session, elementArg, Cache.defaultResonance, false, sender)) {
+            if (!applyResonance(target, session, elementArg, Cache.defaultResonance, false, sender)) {
                 return true;
             }
             persistResonance(target, session);
@@ -219,7 +263,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if ("set".equals(action)) {
-            if (!applyResonance(session, elementArg, amount, false, sender)) {
+            if (!applyResonance(target, session, elementArg, amount, false, sender)) {
                 return true;
             }
             persistResonance(target, session);
@@ -231,7 +275,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if ("add".equals(action)) {
-            if (!applyResonance(session, elementArg, amount, true, sender)) {
+            if (!applyResonance(target, session, elementArg, amount, true, sender)) {
                 return true;
             }
             persistResonance(target, session);
@@ -287,6 +331,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
     }
 
     private static boolean applyResonance(
+            Player target,
             ResonanceSession session,
             String elementArg,
             double amount,
@@ -297,20 +342,47 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return false;
         }
         if ("all".equalsIgnoreCase(elementArg)) {
+            List<String> skipped = new ArrayList<>();
+            int applied = 0;
             for (ElementDef element : ElementRegistry.getAll()) {
-                double next = add ? session.getResonance(element.getId()) + amount : amount;
+                double current = session.getResonance(element.getId());
+                double next = add ? current + amount : amount;
+                if (isGain(current, next) && !element.isUnlocked(target)) {
+                    skipped.add(element.getId());
+                    continue;
+                }
                 session.setResonance(element.getId(), next);
+                applied++;
             }
-            return true;
+            if (!skipped.isEmpty()) {
+                sender.sendMessage(Messages.get(
+                        "resonance.admin.locked_skipped",
+                        "player", target.getName(),
+                        "elements", String.join(", ", skipped)));
+            }
+            return applied > 0;
         }
         ElementDef element = ElementRegistry.getById(elementArg.toLowerCase(Locale.ROOT));
         if (element == null) {
             sender.sendMessage(Messages.get("resonance.admin.unknown_element"));
             return false;
         }
-        double next = add ? session.getResonance(element.getId()) + amount : amount;
+        double current = session.getResonance(element.getId());
+        double next = add ? current + amount : amount;
+        if (isGain(current, next) && !element.isUnlocked(target)) {
+            sender.sendMessage(Messages.get(
+                    "resonance.admin.locked",
+                    "player", target.getName(),
+                    "permission", element.getPermission(),
+                    "element", element.getId()));
+            return false;
+        }
         session.setResonance(element.getId(), next);
         return true;
+    }
+
+    private static boolean isGain(double current, double next) {
+        return next > current + 0.0001;
     }
 
     private static void persistResonance(Player target, ResonanceSession session) {
@@ -533,13 +605,63 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         return sender.hasPermission("magic.admin") || sender.hasPermission("magic.admin.reload");
     }
 
+    private static boolean hasRuneKeybind(CommandSender sender) {
+        return sender.hasPermission("magic.rune.keybind");
+    }
+
+    private static TriggerType resolveRuneKeybind(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String want = raw.trim().toUpperCase(Locale.ROOT);
+        for (TriggerType type : Cache.runeKeybinds) {
+            if (type != null && want.equals(type.name())) {
+                return type;
+            }
+        }
+        return null;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!hasAdmin(sender) || args.length == 0) {
+        if (args.length == 0) {
+            return Collections.emptyList();
+        }
+        boolean admin = hasAdmin(sender);
+        boolean rune = hasRuneKeybind(sender);
+        if (!admin && !rune) {
             return Collections.emptyList();
         }
         if (args.length == 1) {
-            return filterPrefix(SUBCOMMANDS, args[0]);
+            List<String> options = new ArrayList<>();
+            if (rune) {
+                options.add("rune");
+            }
+            if (admin) {
+                options.addAll(SUBCOMMANDS);
+            }
+            return filterPrefix(options, args[0]);
+        }
+        if ("rune".equalsIgnoreCase(args[0])) {
+            if (!rune) {
+                return Collections.emptyList();
+            }
+            if (args.length == 2) {
+                return filterPrefix(List.of("keybind"), args[1]);
+            }
+            if (args.length == 3 && "keybind".equalsIgnoreCase(args[1])) {
+                List<String> names = new ArrayList<>();
+                for (TriggerType type : Cache.runeKeybinds) {
+                    if (type != null && type.name() != null) {
+                        names.add(type.name());
+                    }
+                }
+                return filterPrefix(names, args[2]);
+            }
+            return Collections.emptyList();
+        }
+        if (!admin) {
+            return Collections.emptyList();
         }
         if ("fillchest".equalsIgnoreCase(args[0])) {
             if (args.length == 2) {

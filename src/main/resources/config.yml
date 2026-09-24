@@ -25,10 +25,12 @@ equilibrium:
     0:   { mana: 0, damage: 0, cooldown: 0 }
     100: { mana: -0.20, damage: 0.25, cooldown: -0.05 }
 
-# MythicLib triggers the cast listener treats as a spell, besides CAST and API.
-# These match the keybinds a rune can be set to. A weapon still has to be attuned
-# to the spell's element.
+# Runes: MMOItems type ids (item-types.yml) that /magic rune keybind can rebind.
+# keybinds: triggers a rune can be set to. The cast listener also treats them as a
+# spell, besides CAST and API. A weapon still has to be attuned to the spell's element.
 runes:
+  types:
+    - GEM_STONE
   keybinds:
     - RIGHT_CLICK
     - LEFT_CLICK
@@ -95,7 +97,7 @@ attunement:
     off_per_hour: 0.04166666667
 
 gear:
-  station: iaf(tfmc:weapon_station)
+  station: iaf(tfmc:magic_crafting_station)
   output-slot: 16
   confirm_seconds: 5
 

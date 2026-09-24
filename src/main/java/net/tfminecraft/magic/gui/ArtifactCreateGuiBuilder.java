@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import net.tfminecraft.magic.util.MagicText;
 import net.tfminecraft.magic.ArtifactCreateCache;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.artifact.create.ArtifactCreateSession;
@@ -162,7 +163,7 @@ public final class ArtifactCreateGuiBuilder {
         if (meta == null) {
             return item;
         }
-        meta.setDisplayName(GuiText.format(element.getName()));
+        meta.setDisplayName(MagicText.elementName(element));
         ElementRole role = session != null ? session.roleOf(element.getId()) : ElementRole.OFF;
         List<String> lore = new ArrayList<>();
         if (role != ElementRole.OFF) {

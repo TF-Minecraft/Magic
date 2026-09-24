@@ -4,6 +4,10 @@ reload:
 
   failed: "#ff5555[Magic] Reload failed - check console."
 
+cast_mode:
+
+  switched: "#55ff55Casting mode set to {mode}."
+
 open:
 
   players_only: "#ff5555Only players can open the Resonance GUI."
@@ -16,7 +20,25 @@ admin:
 
   no_permission: "#ff5555You do not have permission to use this command."
 
-  usage: "#aaaaaaUsage: /magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
+  usage: "#aaaaaaUsage: /magic rune keybind <trigger> #555555| #aaaaaa/magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
+
+rune:
+
+  usage: "#aaaaaaUsage: /magic rune keybind <trigger>"
+
+  players_only: "#ff5555Only players can rebind a held rune."
+
+  no_permission: "#ff5555You do not have permission to rebind runes."
+
+  not_a_rune: "#ff5555Hold a rune to rebind its abilities."
+
+  no_abilities: "#ff5555That rune has no abilities to rebind."
+
+  unknown_trigger: "#ff5555Unknown trigger."
+
+  failed: "#ff5555Could not rebind that rune."
+
+  success: "#55ff55Rebound all abilities on this rune to {trigger}."
 
 fillchest:
 
@@ -38,17 +60,25 @@ cast:
   whiff: "§7*Whiff*"
 
   whiff_sub: "#aaaaaa§oRift {rift}%"
-
+  
   whiff_sub_staffs: "#aaaaaa§oToo many staffs"
 
   # Refusal: the weapon never started. Nothing is spent, and it is never a whiff.
   refuse_title: "§7*Refused*"
 
-  refuse_sub: "#aaaaaa§oThis weapon is beyond you"
+  refuse_sub: "#aaaaaa§oThis spell is beyond you"
+
+  refuse_sub_spell: "#aaaaaa§oThis spell is beyond you"
+
+  refuse_sub_weapon: "#aaaaaa§oThis weapon cannot carry that spell"
 
   refuse_sub_foreign: "#aaaaaa§oThis weapon holds no {element}"
 
-  refuse_chat: "#aaaaaaThe weapon asks for {element} {need}. You carry {have}."
+  refuse_chat: "#aaaaaaThis spell needs {element} {need}. You carry {have}."
+
+  refuse_chat_spell: "#aaaaaaThis spell needs {element} {need}. You carry {have}."
+
+  refuse_chat_weapon: "#aaaaaaThe weapon holds {element} {have}. This spell needs {need}."
 
   refuse_chat_foreign: "#aaaaaaThis weapon was never attuned to {element}. Apply a {element} charge at a station."
 
@@ -80,6 +110,10 @@ resonance:
     add_ok: "#55ff55Added {delta} {element} resonance for {player}."
 
     reset_ok: "#55ff55Reset {player} {element} resonance."
+
+    locked: "#ff5555{player} lacks {permission} ({element})."
+
+    locked_skipped: "#ff5555Skipped locked elements for {player}: {elements}"
 
 artifact:
 

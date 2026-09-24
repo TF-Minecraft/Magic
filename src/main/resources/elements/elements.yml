@@ -5,102 +5,108 @@
 # Row 4 (second from bottom): Shadowmancy, Necromancy, Bloodmagic
 
 cerrith:
-  name: "#55ff55Cerrith"
+  name: Cerrith
   icon: m.cerrith_runes.rune_of_cerrith_glyph
-  color: "#55ff55"
+  color: "#466629"
   slot: 28
-  aura_decay_per_hour: -0.05
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 seithr:
-  name: "#ffffffSeithr"
+  name: Seithr
   icon: m.seithr_runes.rune_of_cold_embrace
-  color: "#ffffff"
+  color: "#15E5FF"
   slot: 30
-  aura_decay_per_hour: -0.05
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 oseni:
-  name: "#ffaa00Oseni"
+  name: Oseni
   icon: m.oseni_runes.rune_of_oseni_glyph
-  color: "#ffaa00"
+  color: "#e29a00"
   slot: 32
-  aura_decay_per_hour: -0.05
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 mitlan:
-  name: "#5555ffMitlan"
+  name: Mitlan
   icon: v.LAPIS_LAZULI
   color: "#5555ff"
   slot: 34
-  aura_decay_per_hour: -0.05
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 shadowmancy:
-  name: "#555555Shadowmancy"
+  name: Shadowmancy
   icon: v.INK_SAC
   color: "#555555"
   slot: 40
-  aura_decay_per_hour: -0.05
+  permission: magic.shadowmancy
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 necromancy:
-  name: "#00aaaaNecromancy"
+  name: Necromancy
   icon: v.WITHER_SKELETON_SKULL
   color: "#00aaaa"
   slot: 38
-  aura_decay_per_hour: -0.05
+  permission: magic.necromancy
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 arcanum:
-  name: "#aa00aaArcanum"
+  name: Arcanum
   icon: v.ENCHANTED_BOOK
   color: "#aa00aa"
   slot: 22
+  permission: magic.arcanum
   decay_per_hour: -0.035
-  aura_decay_per_hour: -0.05
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 spirit:
-  name: "#e8d5a3Spirit"
+  name: Spirit
   icon: v.FEATHER
   color: "#e8d5a3"
   slot: 20
-  aura_decay_per_hour: -0.05
+  permission: magic.spirit
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 illusion:
-  name: "#e070b0Illusion"
+  name: Illusion
   icon: v.ENDER_PEARL
   color: "#e070b0"
   slot: 24
-  aura_decay_per_hour: -0.05
+  permission: magic.illusion
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 bloodmagic:
-  name: "#aa0000Bloodmagic"
+  name: Bloodmagic
   icon: v.REDSTONE
   color: "#aa0000"
   slot: 42
-  aura_decay_per_hour: -0.05
+  permission: magic.bloodmagic
+  aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
