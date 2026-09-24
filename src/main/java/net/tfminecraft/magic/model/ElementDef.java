@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.modifier.KeyframeCurve;
@@ -23,6 +24,7 @@ public final class ElementDef {
     private final double maxResonance;
     private final Double decayPerHourOverride;
     private final double auraDecayPerHour;
+    private final String permission;
     private final KeyframeCurve resonance;
 
     public ElementDef(String id, ConfigurationSection config) {
@@ -31,6 +33,8 @@ public final class ElementDef {
         this.icon = config.getString("icon", "v.BARRIER");
         this.colors = readColors(config);
         this.slot = config.getInt("slot", -1);
+        String perm = config.getString("permission", "");
+        this.permission = perm == null || perm.isBlank() ? null : perm.trim();
         this.maxResonance = Math.max(1.0, config.getDouble("max_resonance", 100.0));
         this.decayPerHourOverride = config.contains("decay_per_hour")
                 ? config.getDouble("decay_per_hour")
@@ -79,6 +83,18 @@ public final class ElementDef {
 
     public int getSlot() {
         return slot;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+
+    /** Elements with a permission stay hidden and do not grow until the player holds it. */
+    public boolean isUnlocked(Player player) {
+        if (permission == null) {
+            return true;
+        }
+        return player != null && player.hasPermission(permission);
     }
 
     public KeyframeCurve getResonanceCurve() {

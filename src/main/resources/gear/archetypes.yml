@@ -1,39 +1,51 @@
 # Mage weapon archetypes. Templates are TLibs MMOItems paths Fran owns.
 # slots: id -> TLibs colour suffix. Prefix comes from socket-colours.yml.
 # Colour written = "{prefix} {suffix}", e.g. "Rare Staff Projectile Rune".
+# icon: ItemRef path for picker/assembly GUIs (v.MATERIAL, m.TYPE.ID, ia.namespace:id).
 
 staff:
   name: Staff
-  template: m.mage_staffs.mage_iron_staff
+  template: m.mage_staffs.mage_custom_staff
+  icon: v.STICK
   melee: false
   required:
     - core
-    - form
-    - focus
+    - handle
+    - tome
+    - tome2
+    - tome3
   slots:
-    projectile: "Staff Projectile Rune"
-    support: "Staff Support Rune"
-    minor_spell: "Staff Minor Spell Rune"
-    major_spell: "Staff Major Spell Rune"
+    minor_rune: "Minor Rune"
+    lesser_rune: "Lesser Rune"
+    greater_rune: "Greater Rune"
+    ascendant_rune: "Ascendant Rune"
 
 wand:
   name: Wand
-  template: m.magic.wand_template
+  template: m.mage_wands.mage_custom_wand
+  icon: v.BLAZE_ROD
   melee: false
   required:
     - core
-    - focus
+    - handle
+    - tome
   slots:
-    minor_spell: "Wand Minor Spell Rune"
-    major_spell: "Wand Major Spell Rune"
+    minor_rune: "Minor Rune"
+    lesser_rune: "Lesser Rune"
+    greater_rune: "Greater Rune"
+    ascendant_rune: "Ascendant Rune"
 
 sword:
   name: Sword
-  template: m.magic.sword_template
+  template: m.mage_swords.mage_custom_sword
+  icon: v.IRON_SWORD
   melee: true
   required:
     - core
-    - form
+    - handle
+    - tome
   slots:
-    support: "Sword Support Rune"
-    spell: "Sword Spell Rune"
+    minor_rune: "Minor Rune"
+    lesser_rune: "Lesser Rune"
+    greater_rune: "Greater Rune"
+    ascendant_rune: "Ascendant Rune"

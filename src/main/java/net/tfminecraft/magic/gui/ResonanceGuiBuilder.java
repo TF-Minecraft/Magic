@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.rpcharacters.api.CharacterSkull;
+import net.tfminecraft.magic.util.MagicText;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.model.CastModeDef;
@@ -66,7 +67,7 @@ public final class ResonanceGuiBuilder {
                 buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
 
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (element.getSlot() >= 0) {
+            if (element.getSlot() >= 0 && element.isUnlocked(player)) {
                 inventory.setItem(element.getSlot(), buildElementItem(element, session));
             }
         }
@@ -165,8 +166,10 @@ public final class ResonanceGuiBuilder {
             lore.addAll(ModifierLore.linesForFlow(session));
         }
         if (selected) {
-            lore.add(GuiText.text("label_accent", "Selected"));
+            lore.add(GuiText.format("{color:resonance_high}§lSelected"));
             meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+        } else {
+            lore.add(GuiText.text("label_muted", "Click to Select"));
         }
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_ENCHANTS);
@@ -182,7 +185,7 @@ public final class ResonanceGuiBuilder {
         if (meta == null) {
             return item;
         }
-        meta.setDisplayName(GuiText.format(element.getName()));
+        meta.setDisplayName(MagicText.elementName(element));
         List<String> lore = new ArrayList<>();
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
         lore.add(ResonanceBar.formatLore(element, resonance));

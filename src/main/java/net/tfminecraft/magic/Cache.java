@@ -1,9 +1,12 @@
 package net.tfminecraft.magic;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+
+import io.lumine.mythic.lib.skill.trigger.TriggerType;
 
 /**
  * Runtime flags from config.yml.
@@ -35,6 +38,9 @@ public final class Cache {
      * Names are uppercase. {@code CAST} and {@code API} are always included in the check.
      */
     public static volatile Set<String> castTriggers = Set.of();
+
+    public static Set<String> runeTypes = new HashSet<>();
+    public static Set<TriggerType> runeKeybinds = new LinkedHashSet<>();
 
     public static double tickIntervalSeconds() {
         return Math.max(1L, tickIntervalTicks) / 20.0;

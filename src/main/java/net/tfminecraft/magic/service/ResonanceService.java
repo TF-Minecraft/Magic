@@ -35,6 +35,9 @@ public final class ResonanceService {
             if (ratePerHour < 0.0 && current <= EPSILON) {
                 continue;
             }
+            if (ratePerHour > 0.0 && !element.isUnlocked(player)) {
+                continue;
+            }
             session.addResonance(element.getId(), ratePerHour * dtHours);
             dirty = true;
             if (Cache.debug) {

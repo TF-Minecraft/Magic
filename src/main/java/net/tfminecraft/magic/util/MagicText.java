@@ -41,12 +41,20 @@ public final class MagicText {
         if (element == null) {
             return "";
         }
-        String plain = visibleName(element);
+        return elementText(element, visibleName(element));
+    }
+
+    /** Any text in the element's colour, solid or gradient like {@link #elementName}. */
+    public static String elementText(ElementDef element, String plain) {
+        String text = plain != null ? plain : "";
+        if (element == null) {
+            return format(FALLBACK_COLOR + text);
+        }
         List<String> colors = element.getColors();
         if (colors.size() > 1) {
-            return StringFormatter.applyColourGradient(plain, colors);
+            return StringFormatter.applyColourGradient(text, colors);
         }
-        return format(element.getColor() + plain);
+        return format(element.getColor() + text);
     }
 
     private static String visibleName(ElementDef element) {

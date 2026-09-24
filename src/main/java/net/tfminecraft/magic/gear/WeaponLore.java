@@ -31,6 +31,7 @@ public final class WeaponLore {
         if (!GearProvenance.isGear(stack)) {
             return;
         }
+        GearProvenance.applyMajority(stack, GearProvenance.resolveParts(stack));
         WeaponRequirement requirement = WeaponRequirement.fromItem(stack);
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
@@ -39,6 +40,11 @@ public final class WeaponLore {
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore = stripBlock(lore);
         List<String> block = new ArrayList<>();
+        int majority = GearProvenance.majorityOf(stack);
+        if (majority > 0) {
+            block.add(MagicText.format("{color:label_muted}Tier "
+                    + MajorityTierResolver.toRoman(majority)));
+        }
         if (!requirement.hasStored()) {
             block.add(MagicText.format("{color:label_muted}Unattuned"));
             block.add(MagicText.format("{color:label_muted}Apply a charged charge at the station"));
@@ -91,7 +97,7 @@ public final class WeaponLore {
         }
         for (int i = 0; i < lore.size(); i++) {
             String p = plain(lore.get(i)).toLowerCase(Locale.ROOT);
-            if ("resonance".equals(p) || "unattuned".equals(p)) {
+            if ("resonance".equals(p) || "unattuned".equals(p) || p.startsWith("tier ")) {
                 return new ArrayList<>(lore.subList(0, i));
             }
         }

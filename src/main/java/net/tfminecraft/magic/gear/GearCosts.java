@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.tlibs.TLibs;
+import net.tfminecraft.magic.util.ItemRef;
 
 public final class GearCosts {
 
@@ -29,8 +31,12 @@ public final class GearCosts {
         return costs;
     }
 
+    public static boolean bypasses(Player player) {
+        return player != null && player.hasPermission("magic.bypass_crafting_cost");
+    }
+
     public static boolean has(Player player, Collection<PartDef> parts) {
-        if (player != null && player.hasPermission("magic.bypass_crafting_cost")) {
+        if (bypasses(player)) {
             return true;
         }
         Map<String, Integer> costs = total(parts);
@@ -59,7 +65,7 @@ public final class GearCosts {
     }
 
     public static void take(Player player, Collection<PartDef> parts) {
-        if (player == null || player.hasPermission("magic.bypass_crafting_cost")) {
+        if (player == null || bypasses(player)) {
             return;
         }
         for (Map.Entry<String, Integer> entry : total(parts).entrySet()) {
@@ -78,6 +84,31 @@ public final class GearCosts {
                 int remove = Math.min(item.getAmount(), toRemove);
                 item.setAmount(item.getAmount() - remove);
                 toRemove -= remove;
+            }
+        }
+        player.updateInventory();
+    }
+
+    public static void refund(Player player, Map<String, Integer> costs, Location drop) {
+        if (player == null || costs == null || costs.isEmpty()) {
+            return;
+        }
+        Location at = drop == null ? player.getLocation() : drop.clone().add(0.5, 1.0, 0.5);
+        for (Map.Entry<String, Integer> entry : costs.entrySet()) {
+            int remaining = entry.getValue();
+            while (remaining > 0) {
+                ItemStack stack = ItemRef.build(entry.getKey());
+                if (stack == null || stack.getType().isAir()) {
+                    break;
+                }
+                int give = Math.min(remaining, Math.max(1, stack.getMaxStackSize()));
+                stack.setAmount(give);
+                remaining -= give;
+                for (ItemStack leftover : player.getInventory().addItem(stack).values()) {
+                    if (leftover != null && !leftover.getType().isAir() && at.getWorld() != null) {
+                        at.getWorld().dropItem(at, leftover);
+                    }
+                }
             }
         }
         player.updateInventory();

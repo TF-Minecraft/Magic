@@ -20,6 +20,8 @@ import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.gear.orb.OrbCache;
 import net.tfminecraft.magic.gear.ArchetypeDef;
 import net.tfminecraft.magic.gear.ArchetypeRegistry;
+import net.tfminecraft.magic.gear.GearModelScheme;
+import net.tfminecraft.magic.gear.GearModelSchemeRegistry;
 import net.tfminecraft.magic.gear.GearType;
 import net.tfminecraft.magic.gear.PartDef;
 import net.tfminecraft.magic.gear.PartRegistry;
@@ -36,6 +38,7 @@ public final class GearLoader {
         ArchetypeRegistry.clear();
         PartTypeRegistry.clear();
         PartRegistry.clear();
+        GearModelSchemeRegistry.clear();
         SocketColourRegistry.clear();
         SocketLayout.clearLabels();
         if (folder == null || !folder.exists()) {
@@ -46,11 +49,13 @@ public final class GearLoader {
         ok &= loadPartTypes(new File(folder, "part-types.yml"));
         ok &= loadArchetypes(new File(folder, "archetypes.yml"));
         ok &= loadSocketColours(new File(folder, "socket-colours.yml"));
+        ok &= loadModelSchemes(new File(folder, "model-schemes.yml"));
         ok &= loadParts(new File(folder, "parts.yml"));
         ok &= loadOrbs(new File(folder, "orbs.yml"));
         Magic.plugin.getLogger().info("[Magic] Loaded " + ArchetypeRegistry.size()
                 + " archetype(s), " + PartTypeRegistry.size() + " part type(s), "
-                + PartRegistry.size() + " part(s). Socket colours: "
+                + PartRegistry.size() + " part(s), " + GearModelSchemeRegistry.size()
+                + " model scheme(s). Socket colours: "
                 + SocketColourRegistry.prefixes()
                 + ". Socket labels: " + SocketLayout.labels());
         return ok;
@@ -109,6 +114,7 @@ public final class GearLoader {
                     type,
                     section.getString("name", type.getDisplayName()),
                     section.getString("template", ""),
+                    section.getString("icon", ""),
                     section.getBoolean("melee", type == GearType.SWORD),
                     section.getStringList("required"),
                     slots);
@@ -225,6 +231,58 @@ public final class GearLoader {
         }
     }
 
+    private static boolean loadModelSchemes(File file) {
+        YamlConfiguration config = read(file, "gear/model-schemes.yml");
+        if (config == null) {
+            return false;
+        }
+        int skipped = 0;
+        for (String key : config.getKeys(false)) {
+            ConfigurationSection section = config.getConfigurationSection(key);
+            if (key == null || key.isBlank() || section == null) {
+                skipped++;
+                continue;
+            }
+            if (GearModelSchemeRegistry.contains(key)) {
+                Magic.plugin.getLogger().warning("[Magic] Duplicate model-scheme '" + key + "'");
+                skipped++;
+                continue;
+            }
+            Map<GearType, String> paths = new LinkedHashMap<>();
+            for (String line : section.getStringList("models")) {
+                if (line == null || line.isBlank()) {
+                    continue;
+                }
+                String trimmed = line.trim();
+                int open = trimmed.indexOf('(');
+                int close = trimmed.lastIndexOf(')');
+                if (open <= 0 || close <= open) {
+                    Magic.plugin.getLogger().warning("[Magic] Invalid model '" + line
+                            + "' in scheme '" + key + "'");
+                    continue;
+                }
+                GearType type = GearType.fromId(trimmed.substring(0, open).trim());
+                String path = trimmed.substring(open + 1, close).trim();
+                if (type == null || path.isEmpty()) {
+                    Magic.plugin.getLogger().warning("[Magic] Invalid model '" + line
+                            + "' in scheme '" + key + "'");
+                    continue;
+                }
+                paths.put(type, path);
+            }
+            if (paths.isEmpty()) {
+                Magic.plugin.getLogger().warning("[Magic] Model-scheme '" + key + "' has no models");
+                skipped++;
+                continue;
+            }
+            GearModelSchemeRegistry.register(new GearModelScheme(key, paths));
+        }
+        if (skipped > 0) {
+            Magic.plugin.getLogger().warning("[Magic] gear/model-schemes.yml skipped " + skipped);
+        }
+        return GearModelSchemeRegistry.size() > 0;
+    }
+
     private static boolean loadParts(File file) {
         YamlConfiguration config = read(file, "gear/parts.yml");
         if (config == null) {
@@ -262,19 +320,63 @@ public final class GearLoader {
                     sockets.put(slotId, socketSection.getInt(slotId, 0));
                 }
             }
+            List<String> partLimit = new ArrayList<>();
+            for (String raw : section.getStringList("part-limit")) {
+                if (raw == null || raw.isBlank()) {
+                    continue;
+                }
+                String category = raw.trim().toLowerCase(Locale.ROOT);
+                if (PartTypeRegistry.get(category) == null) {
+                    Magic.plugin.getLogger().warning("[Magic] parts.yml: unknown part-limit '"
+                            + raw + "' for '" + id + "'");
+                    continue;
+                }
+                if (!partLimit.contains(category)) {
+                    partLimit.add(category);
+                }
+            }
             List<String> lore = new ArrayList<>();
             for (String line : section.getStringList("lore")) {
                 lore.add(MagicText.format(line));
+            }
+            String schemeId = "";
+            int schemeWeight = 1;
+            String schemeRaw = section.getString("model-scheme", "");
+            if (schemeRaw != null && !schemeRaw.isBlank()) {
+                int start = schemeRaw.indexOf('(');
+                int end = schemeRaw.indexOf(')');
+                if (start > 0 && end > start) {
+                    schemeId = schemeRaw.substring(0, start).trim();
+                    try {
+                        schemeWeight = Integer.parseInt(schemeRaw.substring(start + 1, end).trim());
+                    } catch (NumberFormatException ignored) {
+                        schemeWeight = 1;
+                    }
+                } else {
+                    schemeId = schemeRaw.trim();
+                }
+                schemeId = schemeId.toLowerCase(Locale.ROOT);
+                if (!GearModelSchemeRegistry.contains(schemeId)) {
+                    Magic.plugin.getLogger().warning("[Magic] parts.yml: unknown model-scheme '"
+                            + schemeRaw + "' for '" + id + "'");
+                    schemeId = "";
+                    schemeWeight = 1;
+                }
             }
             PartDef def = new PartDef(
                     id,
                     MagicText.format(section.getString("name", id)),
                     partType,
+                    section.getInt("tier", 0),
                     types,
                     section.getString("item", "v.stone"),
                     parseCost(section.getStringList("cost")),
+                    partLimit,
+                    parseStats(section.getStringList("stats")),
                     sockets,
                     lore,
+                    schemeId,
+                    schemeWeight,
                     section.getBoolean("disabled", false));
             if (def.totalSocketCount() > 4) {
                 Magic.plugin.getLogger().warning("[Magic] part '" + id
@@ -312,5 +414,32 @@ public final class GearLoader {
             cost.put(entry.trim(), 1);
         }
         return cost;
+    }
+
+    private static Map<String, Double> parseStats(List<String> raw) {
+        Map<String, Double> stats = new LinkedHashMap<>();
+        if (raw == null) {
+            return stats;
+        }
+        for (String entry : raw) {
+            if (entry == null || entry.isBlank()) {
+                continue;
+            }
+            int start = entry.indexOf('(');
+            int end = entry.indexOf(')');
+            if (start <= 0 || end <= start) {
+                continue;
+            }
+            try {
+                String statId = entry.substring(0, start).trim().toLowerCase(Locale.ROOT);
+                if (statId.isEmpty()) {
+                    continue;
+                }
+                stats.put(statId, Double.parseDouble(entry.substring(start + 1, end)));
+            } catch (NumberFormatException ignored) {
+                // skip malformed values
+            }
+        }
+        return stats;
     }
 }

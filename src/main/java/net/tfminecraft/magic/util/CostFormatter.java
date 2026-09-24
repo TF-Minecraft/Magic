@@ -15,6 +15,15 @@ public final class CostFormatter {
 
     private CostFormatter() {}
 
+    public static void appendInput(List<String> lore, Map<String, Integer> costs) {
+        if (lore == null || costs == null || costs.isEmpty()) {
+            return;
+        }
+        lore.add("");
+        lore.add(StringFormatter.formatHex("#76de91§lInput:"));
+        lore.addAll(getCostsFormatted(costs));
+    }
+
     public static List<String> getCostsFormatted(Map<String, Integer> map) {
         List<String> result = new ArrayList<>();
         if (map == null || map.isEmpty()) {
