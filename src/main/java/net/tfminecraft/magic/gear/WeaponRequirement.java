@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import net.tfminecraft.magic.artifact.aura.AuraData;
 import net.tfminecraft.magic.charge.Charge;
 import net.tfminecraft.magic.charge.TierBands;
+import net.tfminecraft.magic.model.ElementVisibility;
 
 public final class WeaponRequirement {
 
@@ -64,6 +65,9 @@ public final class WeaponRequirement {
                 continue;
             }
             String elementId = entry.getKey();
+            if (!ElementVisibility.shownOnCharge(elementId)) {
+                continue;
+            }
             double next = Math.max(aura.getFill(elementId), incoming);
             if (aura.getCap(elementId) < next) {
                 aura.setCap(elementId, next);

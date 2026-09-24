@@ -1,12 +1,15 @@
 package net.tfminecraft.magic.util;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Color;
 
+import net.md_5.bungee.api.ChatColor;
 import net.tfminecraft.tlibs.objects.api.subapi.StringFormatter;
 import net.tfminecraft.magic.GuiCache;
+import net.tfminecraft.magic.model.ElementDef;
 
 /**
  * Formats all player-facing strings from config via TLibs {@link StringFormatter#formatHex}.
@@ -28,6 +31,36 @@ public final class MagicText {
 
     public static String text(String colorKey, String plain) {
         return format(color(colorKey) + (plain != null ? plain : ""));
+    }
+
+    /**
+     * Element name in its configured colour. A single stop is solid. Several stops
+     * run as a gradient. The name's own hex prefix is not repeated.
+     */
+    public static String elementName(ElementDef element) {
+        if (element == null) {
+            return "";
+        }
+        String plain = visibleName(element);
+        List<String> colors = element.getColors();
+        if (colors.size() > 1) {
+            return StringFormatter.applyColourGradient(plain, colors);
+        }
+        return format(element.getColor() + plain);
+    }
+
+    private static String visibleName(ElementDef element) {
+        String raw = element.getName();
+        if (raw == null || raw.isBlank()) {
+            raw = element.getId();
+        }
+        @SuppressWarnings("deprecation")
+        String stripped = ChatColor.stripColor(raw);
+        if (stripped == null) {
+            stripped = raw;
+        }
+        stripped = stripped.replaceAll("(?i)#[0-9a-f]{6}", "").trim();
+        return stripped.isEmpty() ? element.getId() : stripped;
     }
 
     /**

@@ -15,6 +15,7 @@ import net.tfminecraft.magic.artifact.config.ArtifactTypeDef;
 import net.tfminecraft.magic.artifact.config.ArtifactTypeRegistry;
 import net.tfminecraft.magic.artifact.config.CapRange;
 import net.tfminecraft.magic.artifact.path.ArtifactPathSpec;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.util.MagicNumbers;
 
 public final class ArtifactRoller {
@@ -66,6 +67,9 @@ public final class ArtifactRoller {
         for (String companionId : ArtifactAffinityRegistry.companions(type.getElementId())) {
             ArtifactTypeDef companion = findType(companionId);
             if (companion == null || !companion.isEnabled() || !companion.hasRarity(rarity.getId())) {
+                continue;
+            }
+            if (!ElementVisibility.shownOnArtifact(companion.getElementId(), type.getElementId())) {
                 continue;
             }
             pool.add(companion);
@@ -137,6 +141,9 @@ public final class ArtifactRoller {
             }
             ArtifactTypeDef companion = findType(extra.getKey());
             if (companion == null || !companion.isEnabled() || !companion.hasRarity(rarity.getId())) {
+                continue;
+            }
+            if (!ElementVisibility.shownOnArtifact(companion.getElementId(), type.getElementId())) {
                 continue;
             }
             if (!ArtifactAffinityRegistry.compatibleWith(slotIds(slots), companion.getElementId())) {

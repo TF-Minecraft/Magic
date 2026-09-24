@@ -141,9 +141,8 @@ public final class ShrineChargeService {
                     continue;
                 }
                 sawArtifact = true;
-                // Admin fill names the element outright, so a charge can take on one the
-                // shrine would never score. This is the only way to reach the elements
-                // that have scenery charging disabled.
+                // Admin fill names the element outright. Schools players cannot charge
+                // are refused here, the same as a shrine imprint.
                 if (artifact instanceof Charge charge && charge.getCap(id) <= 0
                         && charge.imprintElement(item, id)) {
                     charge.write(item);

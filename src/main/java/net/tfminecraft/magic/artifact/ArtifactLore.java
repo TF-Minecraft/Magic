@@ -17,6 +17,7 @@ import net.tfminecraft.magic.artifact.sacrifice.SacrificeImprint;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeImprintStore;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.model.ElementVisibility;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.util.MagicNumbers;
 import net.tfminecraft.magic.util.MagicText;
@@ -37,6 +38,7 @@ public final class ArtifactLore {
         if (artifact == null) {
             return;
         }
+        ElementVisibility.stripArtifact(artifact, primaryId(stack, artifact));
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) {
             return;
@@ -54,13 +56,12 @@ public final class ArtifactLore {
             double cap = artifact.getCap(element.getId());
             double fill = artifact.getFill(element.getId());
             double shown = ArtifactCareStore.usableFill(fill, cap, muffle);
-            block.add(MagicText.format(
-                    element.getColor()
-                            + element.getName()
-                            + " {color:label_muted}"
-                            + formatAmount(shown)
-                            + " / "
-                            + formatAmount(cap)));
+            block.add(MagicText.elementName(element)
+                    + MagicText.format(
+                            " {color:label_muted}"
+                                    + formatAmount(shown)
+                                    + " / "
+                                    + formatAmount(cap)));
         }
         int attuneOffset = block.size();
         List<String> attuneLines = buildAttuneLines(stack, artifact);
@@ -455,7 +456,8 @@ public final class ArtifactLore {
         String primary = primaryId(stack, artifact);
         List<ElementDef> listed = new ArrayList<>();
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (artifact.getCap(element.getId()) > 0) {
+            if (artifact.getCap(element.getId()) > 0
+                    && ElementVisibility.shownOnArtifact(element.getId(), primary)) {
                 listed.add(element);
             }
         }
