@@ -27,8 +27,7 @@ import net.tfminecraft.magic.util.GridLayout;
 import net.tfminecraft.magic.util.GuiText;
 import net.tfminecraft.magic.util.ItemRef;
 import net.tfminecraft.magic.util.ResonanceBar;
-import net.tfminecraft.tfmccore.TFMCCore;
-import net.tfminecraft.tfmccore.focus.FocusConfig;
+import net.tfminecraft.rpcharacters.RPCharacters;
 
 public final class ResonanceGuiBuilder {
 
@@ -129,10 +128,10 @@ public final class ResonanceGuiBuilder {
     private static String formatFocusLore(Player player) {
         int current = 0;
         int max = 0;
-        var focus = TFMCCore.getFocusService();
+        var focus = RPCharacters.getFocusService();
         if (focus != null) {
             current = focus.getPoints(player);
-            max = FocusConfig.max;
+            max = focus.getMax();
         }
         String line = GuiCache.focusLore
                 .replace("{current}", String.valueOf(current))

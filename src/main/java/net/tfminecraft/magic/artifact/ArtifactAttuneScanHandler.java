@@ -4,7 +4,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 
-import net.tfminecraft.tfmccore.itemscan.ItemScanHandler;
+import net.tfminecraft.tlibs.itemscan.ItemScanHandler;
 
 public final class ArtifactAttuneScanHandler implements ItemScanHandler {
 

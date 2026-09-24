@@ -3,8 +3,8 @@ api-version: '1.21.10'
 name: Magic
 version: ${project.version}
 author: Drefvelin
-depend: [TLibs, ItemsAdder, TFMCCore, InteractibleFurniture]
-softdepend: [RPCharacters, MMOItems, MythicLib, MMOCore]
+depend: [TLibs, ItemsAdder, RPCharacters, InteractibleFurniture]
+softdepend: [MMOItems, MythicLib, MMOCore]
 
 commands:
   resonance:
