@@ -1,22 +1,40 @@
 package net.tfminecraft.magic.integration;
 
+import java.util.Locale;
+
 import io.lumine.mythic.lib.skill.Skill;
 import io.lumine.mythic.lib.skill.handler.SkillHandler;
 import io.lumine.mythic.lib.skill.trigger.TriggerType;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.skill.CastableSkill;
 import net.Indyuce.mmocore.skill.RegisteredSkill;
+import net.tfminecraft.magic.Cache;
 
 public final class SkillIdResolver {
 
     private SkillIdResolver() {}
 
+    /**
+     * True for MMOCore casts and for every trigger named in {@code runes.keybinds}.
+     * Rune abilities report their keybind ({@code RIGHT_CLICK} and the rest), not {@code CAST}.
+     */
     public static boolean isActiveCast(Skill cast) {
         if (cast == null) {
             return false;
         }
         TriggerType trigger = cast.getTrigger();
-        return trigger == TriggerType.CAST || trigger == TriggerType.API;
+        if (trigger == null) {
+            return false;
+        }
+        if (trigger == TriggerType.CAST || trigger == TriggerType.API) {
+            return true;
+        }
+        String name = trigger.name();
+        if (name != null && Cache.castTriggers.contains(name.toUpperCase(Locale.ROOT))) {
+            return true;
+        }
+        String lower = trigger.getLowerCaseId();
+        return lower != null && Cache.castTriggers.contains(lower.toUpperCase(Locale.ROOT));
     }
 
     /**
