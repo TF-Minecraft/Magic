@@ -29,8 +29,8 @@ import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
-import net.tfminecraft.tfmccore.TFMCCore;
-import net.tfminecraft.tfmccore.focus.FocusService;
+import net.tfminecraft.rpcharacters.RPCharacters;
+import net.tfminecraft.rpcharacters.focus.FocusService;
 
 public final class MeditationService implements Listener {
 
@@ -220,7 +220,7 @@ public final class MeditationService implements Listener {
         if (orb == null) {
             return;
         }
-        FocusService focus = TFMCCore.getFocusService();
+        FocusService focus = RPCharacters.getFocusService();
         if (focus == null || !focus.trySpend(player, MeditationCache.mentalCostPerHit)) {
             if (session.claimTiredNotice()) {
                 player.sendMessage(Messages.get("meditation.tired"));

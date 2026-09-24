@@ -53,7 +53,7 @@ import net.tfminecraft.magic.service.EquilibriumService;
 import net.tfminecraft.magic.service.ResonanceService;
 import net.tfminecraft.magic.util.GridLayout;
 import net.tfminecraft.magic.util.RevisionTracker;
-import net.tfminecraft.tfmccore.itemscan.ItemScanService;
+import net.tfminecraft.tlibs.itemscan.ItemScanService;
 
 /**
  * Elemental resonance and casting modes. See docs/ for batch plan.
