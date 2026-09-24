@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import net.tfminecraft.tlibs.TLibs;
+import net.tfminecraft.magic.util.LegacyModelData;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.util.ItemRef;
 
@@ -98,6 +99,8 @@ public final class GearModelResolver {
         return stack;
     }
 
+    // This path mutates the existing ItemStack; replacing it would change aliases held by callers.
+    @SuppressWarnings("deprecation")
     private static ItemStack applyVanilla(ItemStack stack, String path) {
         String[] parts = path.split("\\.");
         if (parts.length < 2) {
@@ -112,7 +115,7 @@ public final class GearModelResolver {
         if (parts.length >= 3) {
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.setCustomModelData(Integer.parseInt(parts[2]));
+                LegacyModelData.set(meta, Integer.parseInt(parts[2]));
                 stack.setItemMeta(meta);
             }
         }

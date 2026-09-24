@@ -61,7 +61,7 @@ public final class GearStatApplicator {
             if (itemStat == null) {
                 continue;
             }
-            StatHistory hist = StatHistory.from(mmo, itemStat);
+            StatHistory hist = mmo.computeStatHistory(itemStat);
             if (hist != null) {
                 hist.clearExternalData();
                 Object og = hist.getOriginalData();
@@ -77,7 +77,6 @@ public final class GearStatApplicator {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static void applyDouble(MMOItem mmo, String statId, double value) {
         ItemStat<?, ?> itemStat = resolve(statId);
         if (itemStat == null) {
@@ -85,7 +84,7 @@ public final class GearStatApplicator {
         }
         DoubleData data = new DoubleData(value);
         mmo.setData(itemStat, data);
-        StatHistory hist = StatHistory.from(mmo, itemStat);
+        StatHistory hist = mmo.computeStatHistory(itemStat);
         if (hist != null) {
             hist.registerExternalData(data);
             mmo.setStatHistory(itemStat, hist);
