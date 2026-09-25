@@ -115,7 +115,7 @@ public final class GearOrbSession {
         expire();
         if (!isFinished() && ticks >= nextSpawnTick && livingOrbs().size() < tier.live()) {
             spawn();
-            nextSpawnTick = ticks + Math.max(1, (int) (OrbCache.spawnIntervalTicks / tier.speed()));
+            nextSpawnTick = ticks + OrbCache.spawnGap(tier.live(), tier.speed());
         }
         orbit();
         render();
