@@ -55,4 +55,9 @@ public final class GearKeys {
     public static NamespacedKey partPick() {
         return new NamespacedKey(Magic.plugin, "gear_part_id");
     }
+
+    /** Marks the ItemDisplay that shows the weapon resting on a gear station. */
+    public static NamespacedKey stationDisplay() {
+        return new NamespacedKey(Magic.plugin, "gear_station_display");
+    }
 }

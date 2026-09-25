@@ -16,11 +16,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import dev.lone.itemsadder.api.Events.FurnitureBreakEvent;
 import net.tfminecraft.tlibs.TLibs;
+import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.gear.gui.GearInventoryManager;
@@ -31,6 +33,9 @@ public final class GearStationListener implements Listener {
 
     /** ItemsAdder breaks furniture two ticks after the swing, so an abort swing needs cover. */
     private static final long ABORT_BREAK_GUARD_MILLIS = 1000L;
+
+    /** Reaches a frame in this station's block and not the center of a neighbouring block. */
+    private static final double STATION_REACH = 0.75;
 
     private final GearInventoryManager inventory = new GearInventoryManager();
     private final Map<String, Long> recentAborts = new HashMap<>();
@@ -52,13 +57,54 @@ public final class GearStationListener implements Listener {
         if (entity == null) {
             return;
         }
-        Location location = entity.getLocation().getBlock().getLocation();
-        Long aborted = recentAborts.get(GearStationStore.key(location));
-        boolean justAborted = aborted != null
-                && System.currentTimeMillis() - aborted < ABORT_BREAK_GUARD_MILLIS;
-        if (justAborted || GearStationStore.isOccupied(location) || GearOrbService.isActive(location)) {
+        Location at = entity.getLocation();
+        if (recentlyAbortedNear(at) || GearStationStore.occupiedWithin(at, STATION_REACH) != null) {
             event.setCancelled(true);
         }
+    }
+
+    /**
+     * A break that was not cancelled has removed the furniture. Drop that station's
+     * weapon instead of leaving the display in the air.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onFurnitureBroken(FurnitureBreakEvent event) {
+        if (!isStationFurniture(event.getNamespacedID())) {
+            return;
+        }
+        Entity entity = event.getBukkitEntity();
+        if (entity == null) {
+            return;
+        }
+        Location station = GearStationStore.occupiedWithin(entity.getLocation(), STATION_REACH);
+        if (station == null) {
+            return;
+        }
+        GearOrbService.abort(station);
+        ItemStack weapon = GearStationStore.takeForAbort(station);
+        if (weapon != null && station.getWorld() != null) {
+            station.getWorld().dropItem(station.clone().add(0.5, 1.0, 0.5), weapon);
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(station)
+                    + " lost its furniture. Dropped the weapon and removed its display.");
+        }
+    }
+
+    @EventHandler
+    public void onChunkLoad(ChunkLoadEvent event) {
+        GearStationStore.reconcile(event.getChunk());
+    }
+
+    private boolean recentlyAbortedNear(Location at) {
+        long now = System.currentTimeMillis();
+        recentAborts.entrySet().removeIf(entry -> now - entry.getValue() >= ABORT_BREAK_GUARD_MILLIS);
+        for (Map.Entry<String, Long> entry : recentAborts.entrySet()) {
+            Location station = GearStationStore.locationFromKey(entry.getKey());
+            if (station != null
+                    && GearStationStore.distanceSquaredToCenter(station, at) <= STATION_REACH * STATION_REACH) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isStationFurniture(String namespacedId) {
