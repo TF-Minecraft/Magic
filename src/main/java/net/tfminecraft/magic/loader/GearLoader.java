@@ -172,6 +172,7 @@ public final class GearLoader {
         OrbCache.introTicks = Math.max(0, config.getInt("intro_ticks", OrbCache.introTicks));
         OrbCache.lifetimeTicks = Math.max(1, config.getInt("lifetime_ticks", OrbCache.lifetimeTicks));
         OrbCache.spawnIntervalTicks = Math.max(1, config.getInt("spawn_interval_ticks", OrbCache.spawnIntervalTicks));
+        OrbCache.spawnBurstTicks = Math.max(1, config.getInt("spawn_burst_ticks", OrbCache.spawnBurstTicks));
         OrbCache.windowTicks = Math.max(20, config.getInt("window_ticks", OrbCache.windowTicks));
         OrbCache.missPenalty = Math.max(0.0, config.getDouble("miss_penalty", OrbCache.missPenalty));
 

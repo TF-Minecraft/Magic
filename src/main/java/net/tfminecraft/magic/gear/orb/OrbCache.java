@@ -23,7 +23,9 @@ public final class OrbCache {
     public static int introTicks = 10;
     public static int lifetimeTicks = 70;
     public static int spawnIntervalTicks = 14;
-    public static int windowTicks = 200;
+    /** Opening set, good and rift, must all have spawned by this tick. */
+    public static int spawnBurstTicks = 40;
+    public static int windowTicks = 260;
 
     public static double missPenalty = 0.08;
 
@@ -75,6 +77,19 @@ public final class OrbCache {
         public int goodTarget() {
             return goodTarget;
         }
+    }
+
+    /**
+     * Ticks between spawns so {@code live} orbs, good and rift, are all out by
+     * {@link #spawnBurstTicks}. A shorter configured interval is kept.
+     */
+    public static int spawnGap(int live, double speed) {
+        int count = Math.max(1, live);
+        int burst = Math.max(1, spawnBurstTicks);
+        int fitted = count <= 1 ? 1 : Math.max(1, (burst - 1) / (count - 1));
+        double pace = speed <= 0 ? 1.0 : speed;
+        int paced = Math.max(1, (int) (spawnIntervalTicks / pace));
+        return Math.min(paced, fitted);
     }
 
     public static void clearTiers() {
