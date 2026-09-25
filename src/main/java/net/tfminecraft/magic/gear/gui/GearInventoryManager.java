@@ -288,12 +288,16 @@ public final class GearInventoryManager implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
-        Map<String, Integer> charged = GearCosts.bypasses(player) ? Map.of() : GearCosts.total(parts);
+        boolean staffBypass = GearCosts.bypasses(player);
+        Map<String, Integer> charged = staffBypass ? Map.of() : GearCosts.total(parts);
         GearCosts.take(player, parts);
         GearStationStore.occupy(station, prepared, player.getUniqueId(), charged);
         OpenStationManager.clear(player);
         player.closeInventory();
         player.sendMessage(Messages.get("gear.craft.prepared"));
+        if (staffBypass) {
+            player.sendMessage(Messages.get("gear.craft.bypassed"));
+        }
         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1.2f);
     }
 

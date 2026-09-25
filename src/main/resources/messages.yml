@@ -269,6 +269,8 @@ gear:
 
     prepared: "#aaaaaa§oThe weapon rests on the station"
 
+    bypassed: "#ffaa00Materials were bypassed due to staff."
+
   charge:
 
     not_charge: "#ff5555That is not an enchanted charge."
