@@ -2,29 +2,38 @@ package net.tfminecraft.magic.gear;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Display.Billboard;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import net.tfminecraft.magic.Magic;
+import net.tfminecraft.tlibs.TLibs;
 
 public final class GearStationStore {
 
     private static final Map<String, Occupancy> OCCUPIED = new HashMap<>();
+    private static boolean loading;
 
     private GearStationStore() {}
 
@@ -143,8 +152,12 @@ public final class GearStationStore {
 
     public static void shutdown() {
         save();
-        for (Occupancy occupancy : OCCUPIED.values()) {
-            if (occupancy != null && occupancy.displayId != null) {
+        for (Map.Entry<String, Occupancy> entry : OCCUPIED.entrySet()) {
+            Location location = locationFromKey(entry.getKey());
+            Occupancy occupancy = entry.getValue();
+            if (location != null) {
+                removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
+            } else if (occupancy != null && occupancy.displayId != null) {
                 Entity entity = Bukkit.getEntity(occupancy.displayId);
                 if (entity != null) {
                     entity.remove();
@@ -160,50 +173,126 @@ public final class GearStationStore {
     }
 
     public static void load() {
-        OCCUPIED.clear();
-        File file = file();
-        if (!file.exists()) {
+        loading = true;
+        try {
+            OCCUPIED.clear();
+            File file = file();
+            if (!file.exists()) {
+                return;
+            }
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            ConfigurationSection root = config.getConfigurationSection("stations");
+            if (root == null) {
+                return;
+            }
+            boolean dropped = false;
+            for (String key : root.getKeys(false)) {
+                ConfigurationSection section = root.getConfigurationSection(key);
+                if (section == null) {
+                    continue;
+                }
+                Location location = locationOf(section);
+                ItemStack item = section.getItemStack("item");
+                if (location == null || item == null) {
+                    continue;
+                }
+                UUID savedDisplay = uuidOf(section.getString("display"));
+                UUID owner = uuidOf(section.getString("owner"));
+                Map<String, Integer> charged = readCharged(section);
+                location.getChunk().load();
+                if (furniture(location) == Furniture.ABSENT) {
+                    removeDisplays(location, null, savedDisplay);
+                    drop(location, item);
+                    dropped = true;
+                    Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location)
+                            + " has no furniture. Dropped the weapon and removed its display.");
+                    continue;
+                }
+                UUID displayId = ensureDisplay(location, item, savedDisplay);
+                OCCUPIED.put(key(location), new Occupancy(item, displayId, owner, charged));
+            }
+            if (dropped) {
+                save();
+            }
+        } finally {
+            loading = false;
+        }
+    }
+
+    /**
+     * When a chunk loads, a saved station with no furniture drops its weapon. A station
+     * that is still there keeps a single display, including one left behind in an
+     * unloaded chunk.
+     */
+    public static void reconcile(Chunk chunk) {
+        if (loading || chunk == null) {
             return;
         }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection root = config.getConfigurationSection("stations");
-        if (root == null) {
-            return;
-        }
-        for (String key : root.getKeys(false)) {
-            ConfigurationSection section = root.getConfigurationSection(key);
-            if (section == null) {
+        List<String> keys = new ArrayList<>();
+        for (String stationKey : OCCUPIED.keySet()) {
+            Location location = locationFromKey(stationKey);
+            if (location == null || location.getWorld() != chunk.getWorld()) {
                 continue;
             }
-            Location location = locationOf(section);
-            ItemStack item = section.getItemStack("item");
-            if (location == null || item == null) {
+            if ((location.getBlockX() >> 4) == chunk.getX() && (location.getBlockZ() >> 4) == chunk.getZ()) {
+                keys.add(stationKey);
+            }
+        }
+        boolean changed = false;
+        for (String stationKey : keys) {
+            Location location = locationFromKey(stationKey);
+            Occupancy occupancy = OCCUPIED.get(stationKey);
+            if (location == null || occupancy == null) {
                 continue;
             }
-            UUID displayId = spawnDisplay(location, item);
-            UUID owner = null;
-            String rawOwner = section.getString("owner");
-            if (rawOwner != null && !rawOwner.isBlank()) {
-                try {
-                    owner = UUID.fromString(rawOwner);
-                } catch (IllegalArgumentException ignored) {
-                    owner = null;
-                }
+            if (furniture(location) == Furniture.ABSENT) {
+                abandon(location);
+                continue;
             }
-            Map<String, Integer> charged = null;
-            ConfigurationSection chargedSection = section.getConfigurationSection("charged");
-            if (chargedSection != null) {
-                charged = new LinkedHashMap<>();
-                for (String index : chargedSection.getKeys(false)) {
-                    String path = chargedSection.getString(index + ".path");
-                    int amount = chargedSection.getInt(index + ".amount");
-                    if (path != null && !path.isBlank() && amount > 0) {
-                        charged.merge(path, amount, Integer::sum);
-                    }
-                }
+            UUID displayId = ensureDisplay(location, occupancy.getItem(), occupancy.displayId);
+            if (displayId != null && !displayId.equals(occupancy.displayId)) {
+                occupancy.displayId = displayId;
+                changed = true;
             }
-            OCCUPIED.put(key(location), new Occupancy(item, displayId, owner, charged));
         }
+        if (changed) {
+            save();
+        }
+    }
+
+    /**
+     * Occupied station whose block center is within {@code maxDistance} of {@code origin}.
+     * 0.75 reaches a frame in this block and stops short of the next block's center.
+     */
+    public static Location occupiedWithin(Location origin, double maxDistance) {
+        if (origin == null || origin.getWorld() == null || maxDistance < 0) {
+            return null;
+        }
+        double maxSquared = maxDistance * maxDistance;
+        Location best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (String stationKey : OCCUPIED.keySet()) {
+            Location location = locationFromKey(stationKey);
+            double distance = distanceSquaredToCenter(location, origin);
+            if (distance > maxSquared || distance >= bestDistance) {
+                continue;
+            }
+            bestDistance = distance;
+            best = location;
+        }
+        return best;
+    }
+
+    /** Squared distance from {@code at} to the center of {@code station}'s block. */
+    public static double distanceSquaredToCenter(Location station, Location at) {
+        if (station == null || at == null || station.getWorld() == null || at.getWorld() == null
+                || station.getWorld() != at.getWorld()) {
+            return Double.MAX_VALUE;
+        }
+        double dx = at.getX() - (station.getBlockX() + 0.5);
+        double dy = at.getY() - (station.getBlockY() + 0.5);
+        double dz = at.getZ() - (station.getBlockZ() + 0.5);
+        return (dx * dx) + (dy * dy) + (dz * dz);
     }
 
     public static void save() {
@@ -221,6 +310,9 @@ public final class GearStationStore {
             config.set(path + ".y", location.getBlockY());
             config.set(path + ".z", location.getBlockZ());
             config.set(path + ".item", occupancy.getItem());
+            if (occupancy.displayId != null) {
+                config.set(path + ".display", occupancy.displayId.toString());
+            }
             if (occupancy.getOwner() != null) {
                 config.set(path + ".owner", occupancy.getOwner().toString());
             }
@@ -245,15 +337,162 @@ public final class GearStationStore {
 
     private static void clear(Location location, boolean save) {
         Occupancy occupancy = OCCUPIED.remove(key(location));
-        if (occupancy != null && occupancy.displayId != null) {
-            Entity entity = Bukkit.getEntity(occupancy.displayId);
+        removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
+        if (save) {
+            save();
+        }
+    }
+
+    /** Drops the weapon and forgets the station. The display is removed first. */
+    private static void abandon(Location location) {
+        Occupancy occupancy = OCCUPIED.remove(key(location));
+        removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
+        if (occupancy != null && occupancy.getItem() != null) {
+            drop(location, occupancy.getItem());
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location)
+                    + " has no furniture. Dropped the weapon and removed its display.");
+        }
+        save();
+    }
+
+    private static UUID ensureDisplay(Location location, ItemStack item, UUID savedDisplay) {
+        World world = location.getWorld();
+        if (world == null) {
+            return null;
+        }
+        if (!world.isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4)) {
+            location.getChunk().load();
+        }
+        ItemDisplay existing = displayOrNull(savedDisplay);
+        if (existing == null) {
+            existing = findTagged(location);
+        }
+        if (existing != null) {
+            existing.setItemStack(item);
+            mark(existing, location);
+            removeDisplays(location, existing.getUniqueId(), null);
+            return existing.getUniqueId();
+        }
+        removeDisplays(location, null, savedDisplay);
+        return spawnDisplay(location, item);
+    }
+
+    private static ItemDisplay displayOrNull(UUID displayId) {
+        if (displayId == null) {
+            return null;
+        }
+        Entity entity = Bukkit.getEntity(displayId);
+        if (entity instanceof ItemDisplay display && display.isValid()) {
+            return display;
+        }
+        return null;
+    }
+
+    private static ItemDisplay findTagged(Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return null;
+        }
+        String stationKey = key(location);
+        for (Entity entity : world.getNearbyEntities(displayLocation(location), 0.5, 0.5, 0.5)) {
+            if (entity instanceof ItemDisplay display && stationKey.equals(markOf(display))) {
+                return display;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Removes this station's displays. A kept display is the one still in use.
+     * Untagged displays are removed only when the item is a mage weapon, so a
+     * furniture display sitting nearby is left alone.
+     */
+    private static void removeDisplays(Location location, UUID keep, UUID savedDisplay) {
+        if (location == null || location.getWorld() == null) {
+            return;
+        }
+        World world = location.getWorld();
+        try {
+            if (!world.isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4)) {
+                location.getChunk().load();
+            }
+        } catch (RuntimeException ex) {
+            Magic.plugin.getLogger().warning("[Magic] Could not load gear station chunk at "
+                    + key(location) + ": " + ex.getMessage());
+        }
+        String stationKey = key(location);
+        for (Entity entity : world.getNearbyEntities(displayLocation(location), 0.5, 0.5, 0.5)) {
+            if (!(entity instanceof ItemDisplay display)) {
+                continue;
+            }
+            if (keep != null && keep.equals(display.getUniqueId())) {
+                continue;
+            }
+            if (stationKey.equals(markOf(display)) || isGearDisplay(display)) {
+                display.remove();
+            }
+        }
+        if (savedDisplay != null && (keep == null || !keep.equals(savedDisplay))) {
+            Entity entity = Bukkit.getEntity(savedDisplay);
             if (entity != null) {
                 entity.remove();
             }
         }
-        if (save) {
-            save();
+    }
+
+    private static boolean isGearDisplay(ItemDisplay display) {
+        ItemStack stack = display.getItemStack();
+        if (stack == null || !stack.hasItemMeta()) {
+            return false;
         }
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        return meta.getPersistentDataContainer().has(GearKeys.archetype(), PersistentDataType.STRING)
+                || meta.getPersistentDataContainer().has(GearKeys.parts(), PersistentDataType.STRING);
+    }
+
+    private static String markOf(ItemDisplay display) {
+        return display.getPersistentDataContainer().get(GearKeys.stationDisplay(), PersistentDataType.STRING);
+    }
+
+    private static void mark(ItemDisplay display, Location location) {
+        display.getPersistentDataContainer().set(
+                GearKeys.stationDisplay(), PersistentDataType.STRING, key(location));
+    }
+
+    private static void drop(Location location, ItemStack item) {
+        if (location.getWorld() == null || item == null) {
+            return;
+        }
+        location.getWorld().dropItem(location.clone().add(0.5, 1.0, 0.5), item.clone());
+    }
+
+    private enum Furniture {
+        PRESENT,
+        ABSENT,
+        UNKNOWN
+    }
+
+    /**
+     * Present when the station furniture still occupies the block. Absent only when
+     * the barrier hitbox is gone, so a lookup miss on a still-standing station does
+     * not drop the weapon.
+     */
+    private static Furniture furniture(Location location) {
+        Block block = location.getBlock();
+        try {
+            if (TLibs.getBlockAPI().getChecker().checkBlock(block, GearCache.station)) {
+                return Furniture.PRESENT;
+            }
+        } catch (RuntimeException ex) {
+            return Furniture.UNKNOWN;
+        }
+        if (block.getType() != Material.BARRIER) {
+            return Furniture.ABSENT;
+        }
+        return Furniture.UNKNOWN;
     }
 
     private static UUID spawnDisplay(Location location, ItemStack item) {
@@ -261,12 +500,13 @@ public final class GearStationStore {
         if (world == null) {
             return null;
         }
-        Location at = location.clone().add(0.5, 1.15, 0.5);
+        Location at = displayLocation(location);
         ItemDisplay display = world.spawn(at, ItemDisplay.class, spawned -> {
             spawned.setItemStack(item);
             spawned.setBillboard(Billboard.CENTER);
             spawned.setPersistent(true);
             spawned.setInterpolationDuration(0);
+            mark(spawned, location);
             Transformation transform = spawned.getTransformation();
             spawned.setTransformation(new Transformation(
                     transform.getTranslation(),
@@ -275,6 +515,37 @@ public final class GearStationStore {
                     new AxisAngle4f()));
         });
         return display.getUniqueId();
+    }
+
+    private static Location displayLocation(Location location) {
+        return location.clone().add(0.5, 1.15, 0.5);
+    }
+
+    private static UUID uuidOf(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private static Map<String, Integer> readCharged(ConfigurationSection section) {
+        ConfigurationSection chargedSection = section.getConfigurationSection("charged");
+        if (chargedSection == null) {
+            return null;
+        }
+        Map<String, Integer> charged = new LinkedHashMap<>();
+        for (String index : chargedSection.getKeys(false)) {
+            String path = chargedSection.getString(index + ".path");
+            int amount = chargedSection.getInt(index + ".amount");
+            if (path != null && !path.isBlank() && amount > 0) {
+                charged.merge(path, amount, Integer::sum);
+            }
+        }
+        return charged;
     }
 
     private static File file() {
@@ -289,7 +560,7 @@ public final class GearStationStore {
                 + location.getBlockY() + "," + location.getBlockZ();
     }
 
-    private static Location locationFromKey(String key) {
+    public static Location locationFromKey(String key) {
         String[] bits = key.split(",");
         if (bits.length != 4) {
             return null;
