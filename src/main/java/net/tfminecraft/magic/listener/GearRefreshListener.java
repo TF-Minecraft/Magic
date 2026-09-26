@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Magic;
@@ -39,16 +40,18 @@ public final class GearRefreshListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        int rawSlot = event.getRawSlot();
+        // Keep the clicked inventory and its own slot index. The open view can change
+        // before next tick (a menu closes), so a raw view slot may no longer exist.
+        Inventory clicked = event.getClickedInventory();
+        int slot = event.getSlot();
         later(() -> {
             if (!player.isOnline()) {
                 return;
             }
-            if (rawSlot >= 0 && rawSlot < player.getOpenInventory().countSlots()) {
-                ItemStack rebuilt = GearRefresher.refreshIfOutdated(
-                        player.getOpenInventory().getItem(rawSlot), player);
+            if (clicked != null && slot >= 0 && slot < clicked.getSize()) {
+                ItemStack rebuilt = GearRefresher.refreshIfOutdated(clicked.getItem(slot), player);
                 if (rebuilt != null) {
-                    player.getOpenInventory().setItem(rawSlot, rebuilt);
+                    clicked.setItem(slot, rebuilt);
                 }
             }
             ItemStack cursor = GearRefresher.refreshIfOutdated(
