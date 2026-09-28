@@ -165,6 +165,7 @@ public final class GearLoader {
         }
         OrbCache.hitRadius = Math.max(0.1, config.getDouble("hit_radius", OrbCache.hitRadius));
         OrbCache.clickRange = Math.max(1.0, config.getDouble("click_range", OrbCache.clickRange));
+        OrbCache.maxRewindTicks = Math.max(0, config.getInt("max_rewind_ticks", OrbCache.maxRewindTicks));
         OrbCache.orbitRadius = Math.max(0.5, config.getDouble("orbit_radius", OrbCache.orbitRadius));
         OrbCache.orbitHeight = config.getDouble("orbit_height", OrbCache.orbitHeight);
         OrbCache.orbitBob = Math.max(0.0, config.getDouble("orbit_bob", OrbCache.orbitBob));

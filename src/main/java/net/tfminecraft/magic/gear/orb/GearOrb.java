@@ -2,6 +2,8 @@ package net.tfminecraft.magic.gear.orb;
 
 import org.bukkit.Location;
 
+import net.tfminecraft.magic.util.OrbTrail;
+
 /**
  * One virtual orb circling a crafting station. Particle only, no entity, so it is never
  * hit by anything but the plugin's own hitscan.
@@ -10,6 +12,7 @@ public final class GearOrb {
 
     private final Location anchor;
     private Location location;
+    private final OrbTrail trail = new OrbTrail();
     private final boolean good;
     private double angle;
     private final double radius;
@@ -54,6 +57,15 @@ public final class GearOrb {
 
     public void setLocation(Location location) {
         this.location = location.clone();
+        trail.push(this.location);
+    }
+
+    /**
+     * Where the orb was {@code ticksAgo} ticks back, for ping compensated hits, or null
+     * if it had not spawned yet.
+     */
+    public Location getLocation(int ticksAgo) {
+        return trail.ticksAgo(ticksAgo);
     }
 
     public boolean isGood() {

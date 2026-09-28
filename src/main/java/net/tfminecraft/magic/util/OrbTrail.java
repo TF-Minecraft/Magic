@@ -1,0 +1,66 @@
+package net.tfminecraft.magic.util;
+
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+
+/**
+ * Recent positions of a moving orb, one per tick, so a click can be judged against where
+ * the player actually saw it.
+ *
+ * <p>A player sees an orb about half their ping late and their click reaches us another
+ * half ping later, so by the time the swing lands the orb has moved on by roughly one
+ * round trip. Rewinding by the player's own ping keeps the game the same for everyone
+ * instead of widening the hit radius for all.
+ */
+public final class OrbTrail {
+
+    /** Ticks kept per orb. Also the hard ceiling on any configured rewind. */
+    public static final int CAPACITY = 20;
+
+    private final Location[] positions = new Location[CAPACITY];
+    private int head = -1;
+    private int size;
+
+    /** Records this tick's position. Call once per tick, after the orb has moved. */
+    public void push(Location location) {
+        head = (head + 1) % CAPACITY;
+        positions[head] = location.clone();
+        if (size < CAPACITY) {
+            size++;
+        }
+    }
+
+    /**
+     * Position {@code ticksAgo} ticks back, or null when the orb did not exist yet, so a
+     * late click is never matched to a frame the player could not have seen.
+     */
+    public Location ticksAgo(int ticksAgo) {
+        int back = Math.max(0, ticksAgo);
+        if (back >= size) {
+            return null;
+        }
+        return positions[Math.floorMod(head - back, CAPACITY)];
+    }
+
+    /**
+     * Ticks to rewind for this player's ping, as the two whole ticks either side of it so
+     * a ping between ticks is judged against both frames the player could have seen. A
+     * ping of exactly whole ticks also gets the newer frame. Zero ping gets {@code [0, 0]}
+     * and low ping {@code [0, 1]}, so their game is unchanged.
+     */
+    public static int[] rewindTicks(Player player, int maxTicks) {
+        int ping = player == null ? 0 : Math.max(0, player.getPing());
+        return rewindTicks(ping, maxTicks);
+    }
+
+    public static int[] rewindTicks(int pingMs, int maxTicks) {
+        int cap = Math.max(0, Math.min(maxTicks, CAPACITY - 1));
+        double ticks = Math.min(cap, Math.max(0, pingMs) / 50.0);
+        int low = (int) Math.floor(ticks);
+        int high = Math.min(cap, (int) Math.ceil(ticks));
+        if (low == high) {
+            low = Math.max(0, low - 1);
+        }
+        return new int[] {low, high};
+    }
+}

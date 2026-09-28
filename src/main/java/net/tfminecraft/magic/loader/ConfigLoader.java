@@ -248,6 +248,7 @@ public final class ConfigLoader implements LoaderInterface {
         MeditationCache.startOrbRange = section.getDouble("start_orb_range", MeditationCache.startOrbRange);
         MeditationCache.orbHitRadius = section.getDouble("orb_hit_radius", MeditationCache.orbHitRadius);
         MeditationCache.orbClickRange = section.getDouble("orb_click_range", MeditationCache.orbClickRange);
+        MeditationCache.maxRewindTicks = Math.max(0, section.getInt("max_rewind_ticks", MeditationCache.maxRewindTicks));
         MeditationCache.mentalCostPerHit = section.getInt("mental_cost_per_hit", MeditationCache.mentalCostPerHit);
         MeditationCache.surgeLockSeconds = section.getInt("surge_lock_seconds", MeditationCache.surgeLockSeconds);
         MeditationCache.maxLiveOrbs = section.getInt("max_live_orbs", MeditationCache.maxLiveOrbs);

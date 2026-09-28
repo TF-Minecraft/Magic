@@ -59,6 +59,9 @@ meditation:
   start_orb_range: 2.5
   orb_hit_radius: 0.5
   orb_click_range: 12
+  # A click is judged against where the orb was when the player saw it, rewound by
+  # their ping up to this many ticks (10 = 500 ms). 0 turns it off.
+  max_rewind_ticks: 10
   mental_cost_per_hit: 1
   surge_lock_seconds: 10
   max_live_orbs: 8

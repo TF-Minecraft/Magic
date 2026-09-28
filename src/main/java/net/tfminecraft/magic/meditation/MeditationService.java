@@ -29,6 +29,7 @@ import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
+import net.tfminecraft.magic.util.OrbTrail;
 import net.tfminecraft.rpcharacters.RPCharacters;
 import net.tfminecraft.rpcharacters.focus.FocusService;
 
@@ -250,25 +251,30 @@ public final class MeditationService implements Listener {
         double radiusSq = radius * radius;
         Vector origin = eye.toVector();
 
+        // Judge the click against where the orb was when this player saw it.
+        int[] rewind = OrbTrail.rewindTicks(player, MeditationCache.maxRewindTicks);
+
         MeditationOrb best = null;
         double bestT = range + 1;
         for (MeditationOrb orb : session.livingOrbs()) {
-            Location loc = orb.getLocation();
-            if (loc.getWorld() == null || !loc.getWorld().equals(world)) {
-                continue;
-            }
-            Vector oc = loc.toVector().subtract(origin);
-            double t = oc.dot(dir);
-            if (t < 0 || t > range) {
-                continue;
-            }
-            double distSq = oc.lengthSquared() - t * t;
-            if (distSq > radiusSq) {
-                continue;
-            }
-            if (t < bestT) {
-                bestT = t;
-                best = orb;
+            for (int ticksAgo : rewind) {
+                Location loc = orb.getLocation(ticksAgo);
+                if (loc == null || loc.getWorld() == null || !loc.getWorld().equals(world)) {
+                    continue;
+                }
+                Vector oc = loc.toVector().subtract(origin);
+                double t = oc.dot(dir);
+                if (t < 0 || t > range) {
+                    continue;
+                }
+                double distSq = oc.lengthSquared() - t * t;
+                if (distSq > radiusSq) {
+                    continue;
+                }
+                if (t < bestT) {
+                    bestT = t;
+                    best = orb;
+                }
             }
         }
         if (best == null) {

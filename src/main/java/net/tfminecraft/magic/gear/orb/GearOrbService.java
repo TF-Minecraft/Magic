@@ -32,6 +32,7 @@ import net.tfminecraft.magic.gear.WeaponAttunementChat;
 import net.tfminecraft.magic.gear.WeaponLore;
 import net.tfminecraft.magic.gear.WeaponRequirement;
 import net.tfminecraft.magic.gear.WeaponRift;
+import net.tfminecraft.magic.util.OrbTrail;
 
 /**
  * Drives the orb runs. One session per station, so two players cannot attune the same
@@ -251,24 +252,29 @@ public final class GearOrbService implements Listener {
         double range = OrbCache.clickRange;
         double radiusSq = OrbCache.hitRadius * OrbCache.hitRadius;
 
+        // Judge the click against where the orb was when this player saw it.
+        int[] rewind = OrbTrail.rewindTicks(player, OrbCache.maxRewindTicks);
+
         GearOrb best = null;
         double bestT = range + 1;
         for (GearOrb orb : session.livingOrbs()) {
-            Location loc = orb.getLocation();
-            if (loc.getWorld() == null || !loc.getWorld().equals(world)) {
-                continue;
-            }
-            Vector oc = loc.toVector().subtract(origin);
-            double t = oc.dot(dir);
-            if (t < 0 || t > range) {
-                continue;
-            }
-            if (oc.lengthSquared() - t * t > radiusSq) {
-                continue;
-            }
-            if (t < bestT) {
-                bestT = t;
-                best = orb;
+            for (int ticksAgo : rewind) {
+                Location loc = orb.getLocation(ticksAgo);
+                if (loc == null || loc.getWorld() == null || !loc.getWorld().equals(world)) {
+                    continue;
+                }
+                Vector oc = loc.toVector().subtract(origin);
+                double t = oc.dot(dir);
+                if (t < 0 || t > range) {
+                    continue;
+                }
+                if (oc.lengthSquared() - t * t > radiusSq) {
+                    continue;
+                }
+                if (t < bestT) {
+                    bestT = t;
+                    best = orb;
+                }
             }
         }
         if (best == null) {
