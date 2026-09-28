@@ -14,6 +14,8 @@ public final class OrbCache {
 
     public static double hitRadius = 0.5;
     public static double clickRange = 12.0;
+    /** Most ticks a click is rewound for the player's ping (10 = 500 ms). */
+    public static int maxRewindTicks = 10;
 
     public static double orbitRadius = 2.4;
     public static double orbitHeight = 1.1;

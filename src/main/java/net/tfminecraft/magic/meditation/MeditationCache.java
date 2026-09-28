@@ -9,6 +9,8 @@ public final class MeditationCache {
     public static double startOrbRange = 2.5;
     public static double orbHitRadius = 0.5;
     public static double orbClickRange = 12.0;
+    /** Most ticks a click is rewound for the player's ping (10 = 500 ms). */
+    public static int maxRewindTicks = 10;
     public static int mentalCostPerHit = 1;
     public static int surgeLockSeconds = 10;
     public static int maxLiveOrbs = 8;

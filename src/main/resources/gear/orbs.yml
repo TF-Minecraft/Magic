@@ -11,6 +11,9 @@
 # Hitscan. Radius is the cylinder around the aim ray an orb must fall inside.
 hit_radius: 0.5
 click_range: 12
+# A click is judged against where the orb was when the player saw it, rewound by
+# their ping up to this many ticks (10 = 500 ms). 0 turns it off.
+max_rewind_ticks: 10
 
 # Orbit around the station block centre.
 orbit_radius: 2.4

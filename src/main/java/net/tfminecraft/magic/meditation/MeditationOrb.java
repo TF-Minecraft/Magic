@@ -4,9 +4,12 @@ import java.util.UUID;
 
 import org.bukkit.Location;
 
+import net.tfminecraft.magic.util.OrbTrail;
+
 public final class MeditationOrb {
 
     private Location location;
+    private final OrbTrail trail = new OrbTrail();
     private final Location spawnLocation;
     private Location returnFrom;
     private final UUID sourceId;
@@ -64,6 +67,19 @@ public final class MeditationOrb {
 
     public void setLocation(Location location) {
         this.location = location.clone();
+        trail.push(this.location);
+    }
+
+    /**
+     * Where the orb was {@code ticksAgo} ticks back, for ping compensated hits. The
+     * starter follows the player's aim, so it is always judged where it is now.
+     */
+    public Location getLocation(int ticksAgo) {
+        if (starter) {
+            return location;
+        }
+        Location past = trail.ticksAgo(ticksAgo);
+        return past != null ? past : location;
     }
 
     public Location getSpawnLocation() {
