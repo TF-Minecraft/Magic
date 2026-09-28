@@ -44,8 +44,9 @@ public final class OrbTrail {
 
     /**
      * Ticks to rewind for this player's ping, as the two whole ticks either side of it so
-     * a ping between ticks is judged against both frames the player could have seen.
-     * Low ping players get {@code [0, 0]} or {@code [0, 1]}, so their game is unchanged.
+     * a ping between ticks is judged against both frames the player could have seen. A
+     * ping of exactly whole ticks also gets the newer frame. Zero ping gets {@code [0, 0]}
+     * and low ping {@code [0, 1]}, so their game is unchanged.
      */
     public static int[] rewindTicks(Player player, int maxTicks) {
         int ping = player == null ? 0 : Math.max(0, player.getPing());
@@ -57,6 +58,9 @@ public final class OrbTrail {
         double ticks = Math.min(cap, Math.max(0, pingMs) / 50.0);
         int low = (int) Math.floor(ticks);
         int high = Math.min(cap, (int) Math.ceil(ticks));
+        if (low == high) {
+            low = Math.max(0, low - 1);
+        }
         return new int[] {low, high};
     }
 }
