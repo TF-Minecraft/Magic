@@ -18,7 +18,9 @@ import org.bukkit.entity.Player;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.attunement.AttunementCaptureService;
+import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.profile.MagicProfileService;
+import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.util.MagicText;
 import net.tfminecraft.magic.util.PedestalFx;
@@ -47,9 +49,14 @@ public final class MeditationSession {
     private final Map<String, Double> attunedByArtifact = new HashMap<>();
     private boolean windingDown;
 
-    public MeditationSession(Player player, MeditationCircle circle, MeditationSitYield yield) {
+    public MeditationSession(
+            Player player,
+            MeditationCircle circle,
+            MeditationSitYield yield,
+            ResonanceSession resonance) {
         this.circle = circle;
         this.yield = yield != null ? yield : MeditationSitYield.empty();
+        closeCappedElements(player, resonance);
         spawnStarter(player);
     }
 
@@ -463,6 +470,9 @@ public final class MeditationSession {
             ResonanceSession session,
             MeditationOrb orb,
             MagicProfileService profiles) {
+        if (session == null) {
+            return;
+        }
         ThreadLocalRandom random = ThreadLocalRandom.current();
         double eqDelta;
         if (orb.isFlow()) {
@@ -475,26 +485,101 @@ public final class MeditationSession {
         UUID sourceId = orb.getSourceId();
         MeditationCache.ArtifactDef artifact = sourceId == null ? null : circle.artifactFor(sourceId);
         if (artifact == null) {
+            save(player, profiles);
             return;
         }
         Furniture furniture = furniture(sourceId);
         String artifactId = circle.artifactIdOn(furniture);
         if (artifactId == null) {
+            save(player, profiles);
             return;
         }
         double cap = yield.sessionCap(artifactId);
         double credit = attunedByArtifact.getOrDefault(artifactId, 0.0);
         int n = yield.users(artifactId);
         double remaining = Math.max(0.0, cap - credit);
-        double gain = Math.min(MeditationCache.resonancePerHit / n, remaining);
+        double offered = Math.min(MeditationCache.resonancePerHit / n, remaining);
+        double gain = MeditationCeiling.allowed(
+                session.getResonance(artifact.elementId),
+                circle.elementPower(artifact.elementId),
+                elementMax(artifact.elementId),
+                offered);
         if (gain <= 0) {
+            closeElement(artifact.elementId);
+            save(player, profiles);
             return;
         }
         attunedByArtifact.put(artifactId, credit + gain);
         AttunementCaptureService.credit(player, session, artifactId, artifact.elementId, gain);
+        if (MeditationCeiling.allowed(
+                session.getResonance(artifact.elementId),
+                circle.elementPower(artifact.elementId),
+                elementMax(artifact.elementId),
+                remaining) <= 0) {
+            closeElement(artifact.elementId);
+        }
+        save(player, profiles);
+    }
+
+    private static void save(Player player, MagicProfileService profiles) {
         if (profiles != null) {
             profiles.savePlayer(player);
         }
+    }
+
+    private void closeCappedElements(Player player, ResonanceSession session) {
+        if (session == null) {
+            return;
+        }
+        for (Furniture furniture : circle.getArtifactPedestals()) {
+            MeditationCache.ArtifactDef def = circle.artifactFor(furniture.getEntityId());
+            if (def == null || def.elementId == null) {
+                continue;
+            }
+            String artifactId = circle.artifactIdOn(furniture);
+            if (artifactId == null) {
+                continue;
+            }
+            double cap = yield.sessionCap(artifactId);
+            if (cap <= MeditationCeiling.EPSILON) {
+                continue;
+            }
+            ElementDef element = ElementRegistry.getById(def.elementId);
+            if (element != null && !element.isUnlocked(player)) {
+                attunedByArtifact.put(artifactId, cap);
+                continue;
+            }
+            double allowed = MeditationCeiling.allowed(
+                    session.getResonance(def.elementId),
+                    circle.elementPower(def.elementId),
+                    elementMax(def.elementId),
+                    cap);
+            if (allowed <= MeditationCeiling.EPSILON) {
+                attunedByArtifact.put(artifactId, cap);
+            }
+        }
+    }
+
+    private void closeElement(String elementId) {
+        if (elementId == null) {
+            return;
+        }
+        for (Furniture furniture : circle.getArtifactPedestals()) {
+            MeditationCache.ArtifactDef def = circle.artifactFor(furniture.getEntityId());
+            if (def == null || def.elementId == null || !elementId.equalsIgnoreCase(def.elementId)) {
+                continue;
+            }
+            String artifactId = circle.artifactIdOn(furniture);
+            if (artifactId == null) {
+                continue;
+            }
+            attunedByArtifact.put(artifactId, yield.sessionCap(artifactId));
+        }
+    }
+
+    private static double elementMax(String elementId) {
+        ElementDef element = ElementRegistry.getById(elementId);
+        return element != null ? element.getMaxResonance() : Double.MAX_VALUE;
     }
 
     private Furniture furniture(UUID furnitureId) {

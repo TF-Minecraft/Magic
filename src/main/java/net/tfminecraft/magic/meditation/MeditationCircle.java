@@ -13,6 +13,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -24,7 +25,9 @@ import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.artifact.ArtifactCareStore;
 import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.ArtifactLore;
+import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
+import net.tfminecraft.magic.session.ResonanceSession;
 
 public final class MeditationCircle {
 
@@ -93,6 +96,13 @@ public final class MeditationCircle {
     }
 
     public MeditationSitYield snapshotYield(long nowMs) {
+        return snapshotYield(nowMs, null);
+    }
+
+    /**
+     * @param extraCharacterId counted as a user when not already active, without writing the item
+     */
+    public MeditationSitYield snapshotYield(long nowMs, String extraCharacterId) {
         Map<String, Double> sessionCaps = new HashMap<>();
         Map<String, Integer> users = new HashMap<>();
         for (Furniture furniture : artifactPedestals) {
@@ -107,6 +117,9 @@ public final class MeditationCircle {
                 continue;
             }
             int n = Math.max(1, ArtifactCareStore.activeUserCount(item, nowMs));
+            if (countsAsExtraUser(item, extraCharacterId, nowMs)) {
+                n++;
+            }
             Artifact aura = Artifact.fromItem(item);
             double fill = aura != null ? aura.getFill(def.elementId) : 0.0;
             double cap = aura != null ? aura.getCap(def.elementId) : 0.0;
@@ -140,6 +153,66 @@ public final class MeditationCircle {
 
     public Map<String, Double> getPowerByElement() {
         return powerByElement;
+    }
+
+    /** Stored fill of one element across every artifact in the circle. */
+    public double elementPower(String elementId) {
+        if (elementId == null || elementId.isBlank()) {
+            return 0.0;
+        }
+        Double exact = powerByElement.get(elementId);
+        if (exact != null) {
+            return exact;
+        }
+        for (Map.Entry<String, Double> entry : powerByElement.entrySet()) {
+            if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(elementId)) {
+                return entry.getValue() != null ? entry.getValue() : 0.0;
+            }
+        }
+        return 0.0;
+    }
+
+    /**
+     * True when this sit can still raise at least one artifact's element.
+     * The character's resonance in that element must sit below the circle's stored total.
+     */
+    public boolean canGainResonance(Player player, ResonanceSession session, MeditationSitYield yield) {
+        if (session == null || yield == null) {
+            return false;
+        }
+        for (Furniture furniture : artifactPedestals) {
+            String artifactId = artifactIdOn(furniture);
+            MeditationCache.ArtifactDef def = artifactByFurniture.get(furniture.getEntityId());
+            if (artifactId == null || def == null || def.elementId == null) {
+                continue;
+            }
+            double cap = yield.sessionCap(artifactId);
+            if (cap <= MeditationCeiling.EPSILON) {
+                continue;
+            }
+            ElementDef element = ElementRegistry.getById(def.elementId);
+            if (element != null && !element.isUnlocked(player)) {
+                continue;
+            }
+            double elementMax = element != null ? element.getMaxResonance() : Double.MAX_VALUE;
+            double allowed = MeditationCeiling.allowed(
+                    session.getResonance(def.elementId),
+                    elementPower(def.elementId),
+                    elementMax,
+                    cap);
+            if (allowed > MeditationCeiling.EPSILON) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean countsAsExtraUser(ItemStack item, String characterId, long nowMs) {
+        if (item == null || characterId == null || characterId.isBlank()) {
+            return false;
+        }
+        Long until = ArtifactCareStore.readUsers(item).get(characterId.trim());
+        return until == null || until <= nowMs;
     }
 
     public double getTotalPower() {

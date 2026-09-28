@@ -165,12 +165,14 @@ public final class MeditationService implements Listener {
         }
         long nowMs = System.currentTimeMillis();
         String characterId = profileService != null ? profileService.characterId(player) : null;
-        MeditationSitYield yield = circle.stampAndSnapshot(characterId, nowMs);
-        if (!yield.hasAnyCap()) {
+        ResonanceSession resonance = sessionManager.getOrCreate(player);
+        MeditationSitYield preview = circle.snapshotYield(nowMs, characterId);
+        if (!preview.hasAnyCap() || !circle.canGainResonance(player, resonance, preview)) {
             notifySit(player, Messages.get("meditation.nothing"));
             return;
         }
-        sessions.put(player.getUniqueId(), new MeditationSession(player, circle, yield));
+        MeditationSitYield yield = circle.stampAndSnapshot(characterId, nowMs);
+        sessions.put(player.getUniqueId(), new MeditationSession(player, circle, yield, resonance));
     }
 
     private void notifySit(Player player, String message) {
