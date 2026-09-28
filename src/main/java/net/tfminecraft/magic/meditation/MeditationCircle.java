@@ -13,6 +13,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -95,6 +96,13 @@ public final class MeditationCircle {
     }
 
     public MeditationSitYield snapshotYield(long nowMs) {
+        return snapshotYield(nowMs, null);
+    }
+
+    /**
+     * @param extraCharacterId counted as a user when not already active, without writing the item
+     */
+    public MeditationSitYield snapshotYield(long nowMs, String extraCharacterId) {
         Map<String, Double> sessionCaps = new HashMap<>();
         Map<String, Integer> users = new HashMap<>();
         for (Furniture furniture : artifactPedestals) {
@@ -109,6 +117,9 @@ public final class MeditationCircle {
                 continue;
             }
             int n = Math.max(1, ArtifactCareStore.activeUserCount(item, nowMs));
+            if (countsAsExtraUser(item, extraCharacterId, nowMs)) {
+                n++;
+            }
             Artifact aura = Artifact.fromItem(item);
             double fill = aura != null ? aura.getFill(def.elementId) : 0.0;
             double cap = aura != null ? aura.getCap(def.elementId) : 0.0;
@@ -165,7 +176,7 @@ public final class MeditationCircle {
      * True when this sit can still raise at least one artifact's element.
      * The character's resonance in that element must sit below the circle's stored total.
      */
-    public boolean canGainResonance(ResonanceSession session, MeditationSitYield yield) {
+    public boolean canGainResonance(Player player, ResonanceSession session, MeditationSitYield yield) {
         if (session == null || yield == null) {
             return false;
         }
@@ -180,6 +191,9 @@ public final class MeditationCircle {
                 continue;
             }
             ElementDef element = ElementRegistry.getById(def.elementId);
+            if (element != null && !element.isUnlocked(player)) {
+                continue;
+            }
             double elementMax = element != null ? element.getMaxResonance() : Double.MAX_VALUE;
             double allowed = MeditationCeiling.allowed(
                     session.getResonance(def.elementId),
@@ -191,6 +205,14 @@ public final class MeditationCircle {
             }
         }
         return false;
+    }
+
+    private static boolean countsAsExtraUser(ItemStack item, String characterId, long nowMs) {
+        if (item == null || characterId == null || characterId.isBlank()) {
+            return false;
+        }
+        Long until = ArtifactCareStore.readUsers(item).get(characterId.trim());
+        return until == null || until <= nowMs;
     }
 
     public double getTotalPower() {

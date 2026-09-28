@@ -56,7 +56,7 @@ public final class MeditationSession {
             ResonanceSession resonance) {
         this.circle = circle;
         this.yield = yield != null ? yield : MeditationSitYield.empty();
-        closeCappedElements(resonance);
+        closeCappedElements(player, resonance);
         spawnStarter(player);
     }
 
@@ -527,7 +527,7 @@ public final class MeditationSession {
         }
     }
 
-    private void closeCappedElements(ResonanceSession session) {
+    private void closeCappedElements(Player player, ResonanceSession session) {
         if (session == null) {
             return;
         }
@@ -542,6 +542,11 @@ public final class MeditationSession {
             }
             double cap = yield.sessionCap(artifactId);
             if (cap <= MeditationCeiling.EPSILON) {
+                continue;
+            }
+            ElementDef element = ElementRegistry.getById(def.elementId);
+            if (element != null && !element.isUnlocked(player)) {
+                attunedByArtifact.put(artifactId, cap);
                 continue;
             }
             double allowed = MeditationCeiling.allowed(
