@@ -342,25 +342,12 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return false;
         }
         if ("all".equalsIgnoreCase(elementArg)) {
-            List<String> skipped = new ArrayList<>();
-            int applied = 0;
             for (ElementDef element : ElementRegistry.getAll()) {
                 double current = session.getResonance(element.getId());
                 double next = add ? current + amount : amount;
-                if (isGain(current, next) && !element.isUnlocked(target)) {
-                    skipped.add(element.getId());
-                    continue;
-                }
                 session.setResonance(element.getId(), next);
-                applied++;
             }
-            if (!skipped.isEmpty()) {
-                sender.sendMessage(Messages.get(
-                        "resonance.admin.locked_skipped",
-                        "player", target.getName(),
-                        "elements", String.join(", ", skipped)));
-            }
-            return applied > 0;
+            return true;
         }
         ElementDef element = ElementRegistry.getById(elementArg.toLowerCase(Locale.ROOT));
         if (element == null) {
@@ -369,20 +356,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         double current = session.getResonance(element.getId());
         double next = add ? current + amount : amount;
-        if (isGain(current, next) && !element.isUnlocked(target)) {
-            sender.sendMessage(Messages.get(
-                    "resonance.admin.locked",
-                    "player", target.getName(),
-                    "permission", element.getPermission(),
-                    "element", element.getId()));
-            return false;
-        }
         session.setResonance(element.getId(), next);
         return true;
-    }
-
-    private static boolean isGain(double current, double next) {
-        return next > current + 0.0001;
     }
 
     private static void persistResonance(Player target, ResonanceSession session) {
