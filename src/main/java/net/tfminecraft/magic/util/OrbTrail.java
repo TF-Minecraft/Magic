@@ -31,14 +31,14 @@ public final class OrbTrail {
     }
 
     /**
-     * Position {@code ticksAgo} ticks back, clamped to the oldest one kept, or null when
-     * nothing has been recorded yet.
+     * Position {@code ticksAgo} ticks back, or null when the orb did not exist yet, so a
+     * late click is never matched to a frame the player could not have seen.
      */
     public Location ticksAgo(int ticksAgo) {
-        if (size == 0) {
+        int back = Math.max(0, ticksAgo);
+        if (back >= size) {
             return null;
         }
-        int back = Math.max(0, Math.min(ticksAgo, size - 1));
         return positions[Math.floorMod(head - back, CAPACITY)];
     }
 

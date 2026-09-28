@@ -60,10 +60,12 @@ public final class GearOrb {
         trail.push(this.location);
     }
 
-    /** Where the orb was {@code ticksAgo} ticks back, for ping compensated hits. */
+    /**
+     * Where the orb was {@code ticksAgo} ticks back, for ping compensated hits, or null
+     * if it had not spawned yet.
+     */
     public Location getLocation(int ticksAgo) {
-        Location past = trail.ticksAgo(ticksAgo);
-        return past != null ? past : location;
+        return trail.ticksAgo(ticksAgo);
     }
 
     public boolean isGood() {

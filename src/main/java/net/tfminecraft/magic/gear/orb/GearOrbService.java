@@ -260,7 +260,7 @@ public final class GearOrbService implements Listener {
         for (GearOrb orb : session.livingOrbs()) {
             for (int ticksAgo : rewind) {
                 Location loc = orb.getLocation(ticksAgo);
-                if (loc.getWorld() == null || !loc.getWorld().equals(world)) {
+                if (loc == null || loc.getWorld() == null || !loc.getWorld().equals(world)) {
                     continue;
                 }
                 Vector oc = loc.toVector().subtract(origin);

@@ -71,15 +71,15 @@ public final class MeditationOrb {
     }
 
     /**
-     * Where the orb was {@code ticksAgo} ticks back, for ping compensated hits. The
-     * starter follows the player's aim, so it is always judged where it is now.
+     * Where the orb was {@code ticksAgo} ticks back, for ping compensated hits, or null
+     * if it had not spawned yet. The starter follows the player's aim, so it is always
+     * judged where it is now.
      */
     public Location getLocation(int ticksAgo) {
         if (starter) {
             return location;
         }
-        Location past = trail.ticksAgo(ticksAgo);
-        return past != null ? past : location;
+        return trail.ticksAgo(ticksAgo);
     }
 
     public Location getSpawnLocation() {
