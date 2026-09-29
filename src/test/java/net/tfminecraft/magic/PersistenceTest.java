@@ -159,13 +159,12 @@ class PersistenceTest {
     String original = "{invalid profile";
     Files.writeString(file, original);
     var store = new MagicProfileStore(folder.toFile());
-    var permissions = Files.getPosixFilePermissions(folder);
-    try {
-      Files.setPosixFilePermissions(
-          folder, java.nio.file.attribute.PosixFilePermissions.fromString("r-xr-xr-x"));
+    try (var files = mockStatic(Files.class, CALLS_REAL_METHODS)) {
+      files
+          .when(() -> Files.move(eq(file), any(Path.class)))
+          .thenThrow(new java.io.IOException("quarantine move unavailable"));
       assertNull(store.load("one"));
-    } finally {
-      Files.setPosixFilePermissions(folder, permissions);
+      files.verify(() -> Files.move(eq(file), any(Path.class)));
     }
     store.save(MagicProfile.fromDefaults("one", null));
     assertEquals(original, Files.readString(file));
