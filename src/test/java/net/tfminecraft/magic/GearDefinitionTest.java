@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.*;
 
 class GearDefinitionTest {
+  @BeforeEach
   @AfterEach
   void reset() {
     SocketLayout.clearLabels();

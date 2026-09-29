@@ -97,7 +97,10 @@ class SacrificeTargetingTest {
     var second = mock(PlacedSlot.class);
     when(second.getId()).thenReturn("alpha");
     when(second.getCurrentItem()).thenAnswer(i -> item);
-    when(furniture.getActiveSlots()).thenReturn(Map.of("main", slot, "alpha", second));
+    var ordered = new LinkedHashMap<String, PlacedSlot>();
+    ordered.put("main", slot);
+    ordered.put("alpha", second);
+    when(furniture.getActiveSlots()).thenReturn(ordered);
     var distant = server.addPlayer();
     distant.teleport(new Location(world, 3, 65, 0));
     var result = find();

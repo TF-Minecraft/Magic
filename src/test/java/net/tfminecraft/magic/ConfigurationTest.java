@@ -201,6 +201,23 @@ class ConfigurationTest {
   }
 
   @Test
+  void absentArtifactConfigPreservesBothDisabledAndPositiveAuraCaps() throws Exception {
+    var loader = new ConfigLoader();
+    var file = write("empty.yml", "{}").toFile();
+    double previous = Cache.artifactAuraCap;
+    try {
+      Cache.artifactAuraCap = 0;
+      assertTrue(loader.loadSafe(file));
+      assertEquals(0, Cache.artifactAuraCap);
+      Cache.artifactAuraCap = 25;
+      assertTrue(loader.loadSafe(file));
+      assertEquals(25, Cache.artifactAuraCap);
+    } finally {
+      Cache.artifactAuraCap = previous;
+    }
+  }
+
+  @Test
   void runtimeConfigValidatesBoundsAndSupportsLegacyFields() throws Exception {
     var loader = new ConfigLoader();
     assertTrue(
