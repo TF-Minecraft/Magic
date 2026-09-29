@@ -19,9 +19,6 @@ public final class WeaponRift {
             return 0;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return 0;
-        }
         Integer stored = meta.getPersistentDataContainer().get(GearKeys.rift(), PersistentDataType.INTEGER);
         return stored == null ? 0 : clamp(stored);
     }
@@ -31,9 +28,6 @@ public final class WeaponRift {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         int clamped = clamp(value);
         if (clamped <= 0) {
             meta.getPersistentDataContainer().remove(GearKeys.rift());

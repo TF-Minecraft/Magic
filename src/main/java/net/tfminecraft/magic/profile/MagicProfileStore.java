@@ -8,6 +8,9 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,6 +22,7 @@ public final class MagicProfileStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private final File folder;
+    private final Set<String> unreadableProfiles = new HashSet<>();
 
     public MagicProfileStore(File folder) {
         this.folder = folder;
@@ -51,15 +55,33 @@ public final class MagicProfileStore {
                 profile.setCharacterId(characterId);
             }
             profile.migrateClaims();
+            unreadableProfiles.remove(characterId);
             return profile;
         } catch (IOException | RuntimeException ex) {
             Magic.plugin.getLogger().severe("[Magic] Failed to load profile " + characterId + ": " + ex.getMessage());
+            unreadableProfiles.add(characterId);
+            if (file.isFile()) {
+                File rejected = new File(folder, file.getName() + ".rejected-" + UUID.randomUUID());
+                try {
+                    Files.move(file.toPath(), rejected.toPath());
+                    unreadableProfiles.remove(characterId);
+                    Magic.plugin.getLogger().warning("[Magic] Preserved unreadable profile at " + rejected.getName());
+                } catch (IOException preserveFailure) {
+                    Magic.plugin.getLogger().severe("[Magic] Could not preserve unreadable profile "
+                            + characterId + ": " + preserveFailure.getMessage());
+                }
+            }
             return null;
         }
     }
 
     public void save(MagicProfile profile) {
         if (profile == null || profile.getCharacterId() == null || profile.getCharacterId().isBlank()) {
+            return;
+        }
+        if (unreadableProfiles.contains(profile.getCharacterId())) {
+            Magic.plugin.getLogger().severe("[Magic] Refusing to overwrite unreadable profile "
+                    + profile.getCharacterId());
             return;
         }
         if (!folder.exists()) {

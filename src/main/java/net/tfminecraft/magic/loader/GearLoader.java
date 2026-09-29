@@ -241,7 +241,7 @@ public final class GearLoader {
         int skipped = 0;
         for (String key : config.getKeys(false)) {
             ConfigurationSection section = config.getConfigurationSection(key);
-            if (key == null || key.isBlank() || section == null) {
+            if (key.isBlank() || section == null) {
                 skipped++;
                 continue;
             }
@@ -252,7 +252,7 @@ public final class GearLoader {
             }
             Map<GearType, String> paths = new LinkedHashMap<>();
             for (String line : section.getStringList("models")) {
-                if (line == null || line.isBlank()) {
+                if (line.isBlank()) {
                     continue;
                 }
                 String trimmed = line.trim();
@@ -324,7 +324,7 @@ public final class GearLoader {
             }
             List<String> partLimit = new ArrayList<>();
             for (String raw : section.getStringList("part-limit")) {
-                if (raw == null || raw.isBlank()) {
+                if (raw.isBlank()) {
                     continue;
                 }
                 String category = raw.trim().toLowerCase(Locale.ROOT);
@@ -344,7 +344,7 @@ public final class GearLoader {
             String schemeId = "";
             int schemeWeight = 1;
             String schemeRaw = section.getString("model-scheme", "");
-            if (schemeRaw != null && !schemeRaw.isBlank()) {
+            if (!schemeRaw.isBlank()) {
                 int start = schemeRaw.indexOf('(');
                 int end = schemeRaw.indexOf(')');
                 if (start > 0 && end > start) {
@@ -365,6 +365,15 @@ public final class GearLoader {
                     schemeWeight = 1;
                 }
             }
+            Map<String, Integer> costs;
+            try {
+                costs = parseCost(section.getStringList("cost"));
+            } catch (IllegalArgumentException ex) {
+                Magic.plugin.getLogger().warning("[Magic] parts.yml: invalid cost for '" + id
+                        + "': " + ex.getMessage());
+                skipped++;
+                continue;
+            }
             PartDef def = new PartDef(
                     id,
                     MagicText.format(section.getString("name", id)),
@@ -372,7 +381,7 @@ public final class GearLoader {
                     section.getInt("tier", 0),
                     types,
                     section.getString("item", "v.stone"),
-                    parseCost(section.getStringList("cost")),
+                    costs,
                     partLimit,
                     parseStats(section.getStringList("stats")),
                     sockets,
@@ -407,7 +416,11 @@ public final class GearLoader {
             int end = entry.indexOf(')');
             if (start > 0 && end > start) {
                 try {
-                    cost.put(entry.substring(0, start).trim(), Integer.parseInt(entry.substring(start + 1, end)));
+                    int amount = Integer.parseInt(entry.substring(start + 1, end).trim());
+                    if (amount < 0) {
+                        throw new IllegalArgumentException("negative quantity in " + entry);
+                    }
+                    cost.put(entry.substring(0, start).trim(), amount);
                     continue;
                 } catch (NumberFormatException ignored) {
                     // fall through
@@ -437,7 +450,10 @@ public final class GearLoader {
                 if (statId.isEmpty()) {
                     continue;
                 }
-                stats.put(statId, Double.parseDouble(entry.substring(start + 1, end)));
+                double amount = Double.parseDouble(entry.substring(start + 1, end));
+                if (Double.isFinite(amount)) {
+                    stats.put(statId, amount);
+                }
             } catch (NumberFormatException ignored) {
                 // skip malformed values
             }

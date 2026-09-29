@@ -29,17 +29,13 @@ public final class SkillsLoader {
         }
         int skipped = 0;
         for (String skillId : config.getKeys(false)) {
-            if (skillId == null || skillId.isBlank()) {
+            if (skillId.isBlank()) {
                 continue;
             }
             String elementId;
             int tier = SkillElementRegistry.DEFAULT_TIER;
             if (config.isConfigurationSection(skillId)) {
                 ConfigurationSection section = config.getConfigurationSection(skillId);
-                if (section == null) {
-                    skipped++;
-                    continue;
-                }
                 elementId = section.getString("element");
                 if (section.contains("tier")) {
                     int raw = section.getInt("tier", SkillElementRegistry.DEFAULT_TIER);

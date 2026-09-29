@@ -82,7 +82,7 @@ public final class GearStationListener implements Listener {
         }
         GearOrbService.abort(station);
         ItemStack weapon = GearStationStore.takeForAbort(station);
-        if (weapon != null && station.getWorld() != null) {
+        if (weapon != null) {
             station.getWorld().dropItem(station.clone().add(0.5, 1.0, 0.5), weapon);
             Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(station)
                     + " lost its furniture. Dropped the weapon and removed its display.");
@@ -144,7 +144,7 @@ public final class GearStationListener implements Listener {
         Player player = event.getPlayer();
         Location location = block.getLocation();
         ItemStack hand = player.getInventory().getItemInMainHand();
-        boolean emptyHand = hand == null || hand.getType().isAir() || hand.getType() == Material.AIR;
+        boolean emptyHand = hand.getType().isAir();
 
         if (GearStationStore.isOccupied(location)) {
             if (emptyHand) {
@@ -204,9 +204,7 @@ public final class GearStationListener implements Listener {
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         for (ItemStack rune : runes) {
             for (ItemStack leftover : player.getInventory().addItem(rune).values()) {
-                if (leftover != null && !leftover.getType().isAir() && drop.getWorld() != null) {
-                    drop.getWorld().dropItem(drop, leftover);
-                }
+                drop.getWorld().dropItem(drop, leftover);
             }
         }
         player.updateInventory();

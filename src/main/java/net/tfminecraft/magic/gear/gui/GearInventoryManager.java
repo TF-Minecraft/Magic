@@ -80,24 +80,22 @@ public final class GearInventoryManager implements Listener {
             ArchetypeDef def = ArchetypeRegistry.get(type);
             ItemStack item = archetypeIcon(type, def);
             ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName("§e" + type.getDisplayName());
-                List<String> lore = new ArrayList<>();
-                lore.add("§7Click to choose");
-                if (def != null && def.isMelee()) {
-                    lore.add("§8Melee weapon");
-                }
-                meta.setLore(lore);
-                item.setItemMeta(meta);
+            meta.setDisplayName("§e" + type.getDisplayName());
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Click to choose");
+            if (def != null && def.isMelee()) {
+                lore.add("§8Melee weapon");
             }
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+
+
             inv.setItem(slot++, item);
         }
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta meta = back.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§eBack");
-            back.setItemMeta(meta);
-        }
+        meta.setDisplayName("§eBack");
+        back.setItemMeta(meta);
         inv.setItem(8, back);
         player.openInventory(inv);
     }
@@ -125,10 +123,8 @@ public final class GearInventoryManager implements Listener {
         }
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta meta = back.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§eBack");
-            back.setItemMeta(meta);
-        }
+        meta.setDisplayName("§eBack");
+        back.setItemMeta(meta);
         inv.setItem(size - 1, back);
         player.openInventory(inv);
     }
@@ -182,6 +178,7 @@ public final class GearInventoryManager implements Listener {
         }
         if (event.getInventory().getHolder() instanceof AssemblyHolder) {
             event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack current = event.getCurrentItem();
             if (current == null || current.getType() == Material.GRAY_STAINED_GLASS_PANE) {
                 return;
@@ -212,6 +209,7 @@ public final class GearInventoryManager implements Listener {
         }
         if (event.getInventory().getHolder() instanceof TypeSelectionHolder) {
             event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || !clicked.hasItemMeta()) {
                 return;
@@ -222,7 +220,7 @@ public final class GearInventoryManager implements Listener {
                 clickSound(player);
                 return;
             }
-            String clean = name == null ? "" : name.replace("§e", "").trim();
+            String clean = name.replace("§e", "").trim();
             for (GearType type : GearType.values()) {
                 if (type.getDisplayName().equalsIgnoreCase(clean)) {
                     TypeSelectionManager.set(player, type);
@@ -236,6 +234,7 @@ public final class GearInventoryManager implements Listener {
         }
         if (event.getInventory().getHolder() instanceof PartSelectionHolder holder) {
             event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || !clicked.hasItemMeta()) {
                 return;
@@ -261,7 +260,7 @@ public final class GearInventoryManager implements Listener {
 
     private void tryPrepare(Player player) {
         org.bukkit.Location station = OpenStationManager.get(player);
-        if (station == null) {
+        if (station == null || !isStationPresent(station)) {
             player.sendMessage(Messages.get("gear.station.gone"));
             return;
         }
@@ -301,13 +300,21 @@ public final class GearInventoryManager implements Listener {
         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1.2f);
     }
 
+    private static boolean isStationPresent(org.bukkit.Location station) {
+        try {
+            return net.tfminecraft.tlibs.TLibs.getBlockAPI().getChecker().checkBlock(station.getBlock(), GearCache.station);
+        } catch (RuntimeException ex) {
+            return false;
+        }
+    }
+
     private static void clickSound(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 1f);
     }
 
     private static String partTypeName(String categoryId) {
         PartTypeDef def = PartTypeRegistry.get(categoryId);
-        if (def != null && def.getName() != null && !def.getName().isBlank()) {
+        if (def != null) {
             return def.getName();
         }
         return SocketLayout.prettyId(categoryId);
@@ -318,10 +325,8 @@ public final class GearInventoryManager implements Listener {
     private static ItemStack pane() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§o");
-            item.setItemMeta(meta);
-        }
+        meta.setDisplayName("§o");
+        item.setItemMeta(meta);
         return item;
     }
 
@@ -330,10 +335,8 @@ public final class GearInventoryManager implements Listener {
     private static ItemStack barrier(String name) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§c" + name);
-            item.setItemMeta(meta);
-        }
+        meta.setDisplayName("§c" + name);
+        item.setItemMeta(meta);
         return item;
     }
 
@@ -349,11 +352,11 @@ public final class GearInventoryManager implements Listener {
     private static ItemStack typeButton(GearType type) {
         ItemStack item = archetypeIcon(type, ArchetypeRegistry.get(type));
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§6Archetype: §e" + type.getDisplayName());
-            meta.setLore(List.of("§7Click to change"));
-            item.setItemMeta(meta);
-        }
+        meta.setDisplayName("§6Archetype: §e" + type.getDisplayName());
+        meta.setLore(List.of("§7Click to change"));
+        item.setItemMeta(meta);
+
+
         return item;
     }
 
@@ -362,9 +365,6 @@ public final class GearInventoryManager implements Listener {
     private static ItemStack partIcon(PartDef part, boolean picker) {
         ItemStack item = ItemRef.buildOrFallback(part.getItemPath(), Material.PAPER);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         meta.setDisplayName(part.getName());
         List<String> lore = new ArrayList<>(part.getLore());
         if (!part.getSockets().isEmpty()) {

@@ -47,6 +47,7 @@ public final class MeditationSession {
     private boolean tiredNotified;
     private final List<MeditationOrb> orbs = new ArrayList<>();
     private final Map<String, Double> attunedByArtifact = new HashMap<>();
+    private final Map<UUID, Furniture> furnitureById = new HashMap<>();
     private boolean windingDown;
 
     public MeditationSession(
@@ -55,6 +56,9 @@ public final class MeditationSession {
             MeditationSitYield yield,
             ResonanceSession resonance) {
         this.circle = circle;
+        for (Furniture furniture : circle.getPedestals()) {
+            furnitureById.putIfAbsent(furniture.getEntityId(), furniture);
+        }
         this.yield = yield != null ? yield : MeditationSitYield.empty();
         closeCappedElements(player, resonance);
         spawnStarter(player);
@@ -133,7 +137,7 @@ public final class MeditationSession {
             return;
         }
         boolean nowLocked = locked();
-        if (surgeLockActive && !nowLocked && player != null) {
+        if (surgeLockActive && !nowLocked) {
             player.sendMessage(MagicText.format("{color:mode_flow}§oYou regain focus"));
         }
         surgeLockActive = nowLocked;
@@ -188,9 +192,7 @@ public final class MeditationSession {
                 despawnOrb(orb);
                 continue;
             }
-            if (!orb.isReturning()) {
-                orb.beginReturn();
-            }
+            orb.beginReturn();
         }
     }
 
@@ -221,9 +223,6 @@ public final class MeditationSession {
     }
 
     private static void spawnCompleteBurst(Location center, Particle particle, int count, double radius) {
-        if (center.getWorld() == null) {
-            return;
-        }
         center.getWorld().spawnParticle(particle, center, count, radius, 0.7, radius, 0.02);
     }
 
@@ -255,12 +254,9 @@ public final class MeditationSession {
     }
 
     private int liveOrbCountFrom(UUID furnitureId) {
-        if (furnitureId == null) {
-            return 0;
-        }
         int count = 0;
         for (MeditationOrb orb : orbs) {
-            if (orb.isConsumed() || orb.isStarter()) {
+            if (orb.isConsumed()) {
                 continue;
             }
             if (furnitureId.equals(orb.getSourceId())) {
@@ -307,7 +303,7 @@ public final class MeditationSession {
 
     private void expireOrbitOrbs() {
         for (MeditationOrb orb : orbs) {
-            if (orb.isStarter() || orb.isConsumed()) {
+            if (orb.isConsumed()) {
                 continue;
             }
             if (orb.tickLife()) {
@@ -324,9 +320,6 @@ public final class MeditationSession {
     private void keepStarterInFront(Player player) {
         Location loc = starterLocation(player);
         for (MeditationOrb orb : orbs) {
-            if (!orb.isStarter() || orb.isConsumed()) {
-                continue;
-            }
             orb.setLocation(loc);
         }
     }
@@ -337,9 +330,6 @@ public final class MeditationSession {
     }
 
     private void spawnOrbitOrb(ResonanceSession session, List<Furniture> eligible) {
-        if (eligible.isEmpty()) {
-            return;
-        }
         Furniture source = eligible.get(ThreadLocalRandom.current().nextInt(eligible.size()));
         Location spawn = PedestalFx.artifactPoint(source);
         if (spawn == null) {
@@ -382,12 +372,12 @@ public final class MeditationSession {
 
     private void tickReturns() {
         for (MeditationOrb orb : orbs) {
-            if (orb.isStarter() || orb.isConsumed() || !orb.isReturning()) {
+            if (orb.isConsumed() || !orb.isReturning()) {
                 continue;
             }
             Location from = orb.getReturnFrom();
             Location to = orb.getSpawnLocation();
-            World world = to.getWorld() != null ? to.getWorld() : (from.getWorld() != null ? from.getWorld() : null);
+            World world = to.getWorld() != null ? to.getWorld() : from.getWorld();
             if (world == null) {
                 despawnOrb(orb);
                 continue;
@@ -410,11 +400,8 @@ public final class MeditationSession {
         tickReturns();
         Location eye = player.getEyeLocation();
         World world = eye.getWorld();
-        if (world == null) {
-            return;
-        }
         for (MeditationOrb orb : orbs) {
-            if (orb.isStarter() || orb.isConsumed() || orb.isReturning()) {
+            if (orb.isConsumed() || orb.isReturning()) {
                 continue;
             }
             orb.setAngle(orb.getAngle() + orb.getAngleSpeed());
@@ -425,7 +412,7 @@ public final class MeditationSession {
                     eye.getX() + Math.cos(orb.getAngle()) * orb.getRadius(),
                     eye.getY() + orb.getHeightBias() + bob,
                     eye.getZ() + Math.sin(orb.getAngle()) * orb.getRadius());
-            if (orb.getIntroRemaining() > 0 && orb.getIntroMax() > 0) {
+            if (orb.getIntroRemaining() > 0) {
                 double t = 1.0 - (double) orb.getIntroRemaining() / orb.getIntroMax();
                 Location spawn = orb.getSpawnLocation();
                 orb.setLocation(new Location(
@@ -442,7 +429,7 @@ public final class MeditationSession {
 
     private void retintAllSurge() {
         for (MeditationOrb orb : orbs) {
-            if (orb.isStarter() || orb.isConsumed()) {
+            if (orb.isConsumed()) {
                 continue;
             }
             orb.setFlow(false);
@@ -533,9 +520,6 @@ public final class MeditationSession {
         }
         for (Furniture furniture : circle.getArtifactPedestals()) {
             MeditationCache.ArtifactDef def = circle.artifactFor(furniture.getEntityId());
-            if (def == null || def.elementId == null) {
-                continue;
-            }
             String artifactId = circle.artifactIdOn(furniture);
             if (artifactId == null) {
                 continue;
@@ -561,12 +545,9 @@ public final class MeditationSession {
     }
 
     private void closeElement(String elementId) {
-        if (elementId == null) {
-            return;
-        }
         for (Furniture furniture : circle.getArtifactPedestals()) {
             MeditationCache.ArtifactDef def = circle.artifactFor(furniture.getEntityId());
-            if (def == null || def.elementId == null || !elementId.equalsIgnoreCase(def.elementId)) {
+            if (!elementId.equalsIgnoreCase(def.elementId)) {
                 continue;
             }
             String artifactId = circle.artifactIdOn(furniture);
@@ -583,22 +564,11 @@ public final class MeditationSession {
     }
 
     private Furniture furniture(UUID furnitureId) {
-        if (furnitureId == null) {
-            return null;
-        }
-        for (Furniture candidate : circle.getPedestals()) {
-            if (furnitureId.equals(candidate.getEntityId())) {
-                return candidate;
-            }
-        }
-        return null;
+        return furnitureById.get(furnitureId);
     }
 
     private void playHitFx(Player player, MeditationOrb orb) {
         World world = player.getWorld();
-        if (world == null) {
-            return;
-        }
         boolean flowLook = orb.isFlow();
         Color dustColor = MagicText.bukkitColor(
                 GuiCache.color(flowLook ? "mode_flow" : "mode_surge", flowLook ? "#5bc4d4" : "#e85d4a"),
@@ -640,9 +610,6 @@ public final class MeditationSession {
             }
             Location loc = orb.getLocation();
             World world = loc.getWorld();
-            if (world == null) {
-                continue;
-            }
             boolean flowLook = orb.isStarter() || orb.isFlow();
             Color dustColor = orb.isStarter()
                     ? Color.WHITE

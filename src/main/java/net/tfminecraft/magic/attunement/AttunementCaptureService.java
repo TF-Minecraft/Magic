@@ -47,11 +47,11 @@ public final class AttunementCaptureService {
             return "";
         }
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
+        if (!meta.hasDisplayName()) {
             return "";
         }
         String raw = meta.getDisplayName();
-        if (raw == null || raw.isBlank()) {
+        if (raw.isBlank()) {
             return "";
         }
         return ChatColor.stripColor(raw);

@@ -150,7 +150,7 @@ public final class ArtifactConfigLoader {
             for (String kind : section.getKeys(false)) {
                 List<String> names = new ArrayList<>();
                 for (String name : section.getStringList(kind)) {
-                    if (name != null && !name.isBlank()) {
+                    if (!name.isBlank()) {
                         names.add(name.trim());
                     }
                 }
@@ -178,7 +178,7 @@ public final class ArtifactConfigLoader {
         boolean ok = true;
 
         String template = config.getString("template", "");
-        if (template == null || template.isBlank()) {
+        if (template.isBlank()) {
             log.severe("[Magic] artifacts/generator.yml needs a non-empty template");
             ok = false;
         } else {
@@ -217,14 +217,14 @@ public final class ArtifactConfigLoader {
             tokens.addAll(config.getStringList("random_pool"));
         } else {
             String one = config.getString("random_pool", "");
-            if (one != null && !one.isBlank()) {
+            if (!one.isBlank()) {
                 tokens.add(one.trim());
             }
         }
         LinkedHashSet<String> ids = new LinkedHashSet<>();
         boolean ok = true;
         for (String token : tokens) {
-            if (token == null || token.isBlank()) {
+            if (token.isBlank()) {
                 continue;
             }
             String key = token.trim();
@@ -279,14 +279,13 @@ public final class ArtifactConfigLoader {
             }
             CapRange elements = CapRange.parse(section.getString("elements", ""));
             if (elements == null || elements.getMin() > elements.getMax()
-                    || elements.getMin() < 1) {
+                    || elements.getMin() < 1 || elements.getMax() > Integer.MAX_VALUE) {
                 log.severe("[Magic] Rarity '" + key + "' has invalid elements range in " + fileName);
                 ok = false;
                 continue;
             }
             CapRange auraCap = CapRange.parse(section.getString("aura_cap", ""));
-            if (auraCap == null || auraCap.getMin() > auraCap.getMax() || auraCap.getMax() <= 0
-                    || auraCap.getMin() < 0) {
+            if (auraCap == null || auraCap.getMin() > auraCap.getMax() || auraCap.getMax() <= 0) {
                 log.severe("[Magic] Rarity '" + key + "' has missing or invalid aura_cap in " + fileName);
                 ok = false;
                 continue;
@@ -325,7 +324,7 @@ public final class ArtifactConfigLoader {
             }
             List<String> members = new ArrayList<>();
             for (String member : groups.getStringList(groupId)) {
-                if (member == null || member.isBlank()) {
+                if (member.isBlank()) {
                     continue;
                 }
                 String id = member.trim();
@@ -411,13 +410,13 @@ public final class ArtifactConfigLoader {
             }
             String namingId = section.getString("naming-scheme", "");
             String modelId = section.getString("model-scheme", "");
-            if (namingId == null || namingId.isBlank() || !ArtifactNamingSchemeRegistry.contains(namingId)) {
+            if (namingId.isBlank() || !ArtifactNamingSchemeRegistry.contains(namingId)) {
                 log.severe("[Magic] Artifact type '" + key + "' has missing naming-scheme '"
                         + namingId + "'");
                 ok = false;
                 continue;
             }
-            if (modelId == null || modelId.isBlank() || !ArtifactModelSchemeRegistry.contains(modelId)) {
+            if (modelId.isBlank() || !ArtifactModelSchemeRegistry.contains(modelId)) {
                 log.severe("[Magic] Artifact type '" + key + "' has missing model-scheme '"
                         + modelId + "'");
                 ok = false;
@@ -433,7 +432,7 @@ public final class ArtifactConfigLoader {
             ConfigurationSection raritySec = section.getConfigurationSection("rarities");
             if (raritySec != null) {
                 for (String rarityId : raritySec.getKeys(false)) {
-                    if (rarityId == null || rarityId.isBlank()) {
+                    if (rarityId.isBlank()) {
                         continue;
                     }
                     if (!ArtifactRarityRegistry.contains(rarityId)) {
@@ -459,7 +458,7 @@ public final class ArtifactConfigLoader {
             }
             boolean enabled = !section.getBoolean("disable", false);
             double weight = section.getDouble("weight", 0.0);
-            if (weight <= 0) {
+            if (weight <= 0 || !Double.isFinite(weight)) {
                 log.severe("[Magic] Artifact type '" + key + "' has missing or invalid weight in " + fileName);
                 ok = false;
                 continue;
@@ -487,12 +486,11 @@ public final class ArtifactConfigLoader {
         Map<String, CapRange> out = new LinkedHashMap<>();
         boolean ok = true;
         for (String rarityId : section.getKeys(false)) {
-            if (rarityId == null || rarityId.isBlank()) {
+            if (rarityId.isBlank()) {
                 continue;
             }
             CapRange parsed = CapRange.parse(section.getString(rarityId, ""));
-            if (parsed == null || parsed.getMin() > parsed.getMax() || parsed.getMax() <= 0
-                    || parsed.getMin() < 0) {
+            if (parsed == null || parsed.getMin() > parsed.getMax() || parsed.getMax() <= 0) {
                 log.severe("[Magic] Artifact type '" + typeId + "' has invalid " + field
                         + " for '" + rarityId + "' in " + fileName);
                 ok = false;

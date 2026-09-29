@@ -49,7 +49,7 @@ public final class MeditationSitYield {
 
     public boolean exhausted(Map<String, Double> attunedByArtifact) {
         for (Map.Entry<String, Double> entry : sessionCapByArtifact.entrySet()) {
-            double cap = entry.getValue() != null ? entry.getValue() : 0.0;
+            double cap = entry.getValue();
             if (cap <= EPSILON) {
                 continue;
             }

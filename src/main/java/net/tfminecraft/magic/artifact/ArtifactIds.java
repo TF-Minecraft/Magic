@@ -15,7 +15,7 @@ public final class ArtifactIds {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        return meta != null && meta.getPersistentDataContainer().has(
+        return meta.getPersistentDataContainer().has(
                 ArtifactKeys.artifactId(), PersistentDataType.STRING);
     }
 
@@ -24,9 +24,6 @@ public final class ArtifactIds {
             return null;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return null;
-        }
         String raw = meta.getPersistentDataContainer().get(
                 ArtifactKeys.artifactId(), PersistentDataType.STRING);
         if (raw == null || raw.isBlank()) {
@@ -48,9 +45,6 @@ public final class ArtifactIds {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().set(
                 ArtifactKeys.artifactId(),
                 PersistentDataType.STRING,

@@ -98,9 +98,6 @@ public final class SacrificeRiteSession {
 
     public double charge() {
         double seconds = SacrificeRegistry.getChargeSeconds();
-        if (seconds <= 0) {
-            return 1.0;
-        }
         double elapsed = (System.currentTimeMillis() - startMillis) / 1000.0;
         return Math.min(1.0, Math.max(0.0, elapsed / seconds));
     }

@@ -32,7 +32,7 @@ public final class ArtifactNamingScheme {
 
     public boolean isEmpty() {
         for (List<String> names : namesByKind.values()) {
-            if (names != null && !names.isEmpty()) {
+            if (!names.isEmpty()) {
                 return false;
             }
         }
@@ -49,7 +49,7 @@ public final class ArtifactNamingScheme {
 
     public List<String> firstNonEmptyKindNames() {
         for (List<String> names : namesByKind.values()) {
-            if (names != null && !names.isEmpty()) {
+            if (!names.isEmpty()) {
                 return names;
             }
         }

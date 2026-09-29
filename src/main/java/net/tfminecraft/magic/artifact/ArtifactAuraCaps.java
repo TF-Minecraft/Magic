@@ -45,9 +45,6 @@ public final class ArtifactAuraCaps {
             return clamp(Cache.artifactAuraCap);
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return clamp(Cache.artifactAuraCap);
-        }
         String rarityId = meta.getPersistentDataContainer().get(
                 ArtifactKeys.artifactRarity(), PersistentDataType.STRING);
         String primaryId = meta.getPersistentDataContainer().get(

@@ -320,14 +320,25 @@ public class Magic extends JavaPlugin {
             return;
         }
         target.getParentFile().mkdirs();
-        try (InputStream in = getResource(relativePath)) {
-            if (in == null) {
-                getLogger().warning("Missing bundled resource: " + relativePath);
-                return;
-            }
-            Files.copy(in, target.toPath());
+        InputStream resource = getResource(relativePath);
+        if (resource == null) {
+            getLogger().warning("Missing bundled resource: " + relativePath);
+            return;
+        }
+        try (InputStream in = resource) {
+            copyDefault(in, target);
         } catch (IOException ex) {
             getLogger().severe("Failed to copy default resource " + relativePath + ": " + ex.getMessage());
+        }
+    }
+
+    private static void copyDefault(InputStream in, File target) throws IOException {
+        var staged = Files.createTempFile(target.getParentFile().toPath(), ".magic-default-", ".tmp");
+        try {
+            Files.copy(in, staged, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.move(staged, target.toPath());
+        } finally {
+            Files.deleteIfExists(staged);
         }
     }
 }

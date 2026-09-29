@@ -34,7 +34,7 @@ public final class ElementDef {
         this.colors = readColors(config);
         this.slot = config.getInt("slot", -1);
         String perm = config.getString("permission", "");
-        this.permission = perm == null || perm.isBlank() ? null : perm.trim();
+        this.permission = perm.isBlank() ? null : perm.trim();
         this.maxResonance = Math.max(1.0, config.getDouble("max_resonance", 100.0));
         this.decayPerHourOverride = config.contains("decay_per_hour")
                 ? config.getDouble("decay_per_hour")

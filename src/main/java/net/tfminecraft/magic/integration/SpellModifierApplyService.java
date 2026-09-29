@@ -209,7 +209,7 @@ public final class SpellModifierApplyService {
 
     private static void unregisterStored(Player player, MMOPlayerData data) {
         AppliedState previous = applied.remove(player.getUniqueId());
-        if (previous == null || previous.modifiers == null || data == null) {
+        if (previous == null || data == null) {
             return;
         }
         for (SkillModifier modifier : previous.modifiers) {

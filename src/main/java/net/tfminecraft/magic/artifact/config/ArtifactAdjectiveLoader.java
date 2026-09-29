@@ -51,7 +51,7 @@ public final class ArtifactAdjectiveLoader {
         for (String rarityId : section.getKeys(false)) {
             List<String> words = new ArrayList<>();
             for (String word : section.getStringList(rarityId)) {
-                if (word != null && !word.isBlank()) {
+                if (!word.isBlank()) {
                     words.add(word.trim());
                 }
             }

@@ -29,6 +29,9 @@ public final class CapRange {
         try {
             double min = Double.parseDouble(parts[0].trim());
             double max = Double.parseDouble(parts[1].trim());
+            if (!Double.isFinite(min) || !Double.isFinite(max)) {
+                return null;
+            }
             return new CapRange(min, max);
         } catch (NumberFormatException ex) {
             return null;

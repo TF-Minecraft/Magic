@@ -46,7 +46,7 @@ public final class SacrificeRiteFx {
             return;
         }
         SacrificeFxDef fx = SacrificeRegistry.getFx();
-        if (fx == null || !fx.surges(session.getResolvedTierId())) {
+        if (!fx.surges(session.getResolvedTierId())) {
             return;
         }
         Color color = ShrineChargeFx.elementColor(session.getElementId());
@@ -63,9 +63,6 @@ public final class SacrificeRiteFx {
 
     private static void burst(Location at, Particle.DustOptions dust) {
         World world = at.getWorld();
-        if (world == null) {
-            return;
-        }
         world.spawnParticle(Particle.DUST, at, 36, 0.45, 0.55, 0.45, dust);
         world.spawnParticle(Particle.ENCHANT, at, 28, 0.5, 0.6, 0.5, 0.55);
         spawnOptional(world, at, "SOUL", 10, 0.35, 0.45, 0.35, 0.02);
@@ -91,9 +88,6 @@ public final class SacrificeRiteFx {
 
     private static void playSounds(Location at, SacrificeFxDef fx) {
         World world = at.getWorld();
-        if (world == null || fx == null) {
-            return;
-        }
         Sound surge = fx.getSurgeSound();
         if (surge != null) {
             world.playSound(at, surge, fx.getSurgeVolume(), fx.getSurgePitch());
@@ -116,17 +110,14 @@ public final class SacrificeRiteFx {
     }
 
     private static void spawnPull(SacrificeRiteSession session) {
-        if (session == null) {
-            return;
-        }
         Player victim = Bukkit.getPlayer(session.getVictimId());
         Furniture furniture = session.getFurniture();
-        if (victim == null || !victim.isOnline() || furniture == null) {
+        if (victim == null || !victim.isOnline()) {
             return;
         }
         Location from = victim.getLocation().add(0, 1.2, 0);
         Location to = SacrificeTargeting.originCenter(furniture);
-        if (from.getWorld() == null || to == null || from.getWorld() != to.getWorld()) {
+        if (to == null || from.getWorld() != to.getWorld()) {
             return;
         }
         World world = from.getWorld();

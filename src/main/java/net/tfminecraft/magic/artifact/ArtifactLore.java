@@ -39,9 +39,6 @@ public final class ArtifactLore {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore = stripMagicBlocks(lore);
         List<String> block = new ArrayList<>();
@@ -67,12 +64,9 @@ public final class ArtifactLore {
         block.addAll(attuneLines);
         for (SacrificeImprint imprint : SacrificeImprintStore.read(stack)) {
             String line = formatImprint(imprint);
-            if (line != null && !line.isBlank()) {
+            if (!line.isBlank()) {
                 block.add(MagicText.format("{color:label_muted}" + line));
             }
-        }
-        if (block.isEmpty()) {
-            return;
         }
         int loreStart = lore.size();
         block.set(0, BEGIN + block.get(0));
@@ -95,7 +89,7 @@ public final class ArtifactLore {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null || !meta.hasLore() || meta.getLore() == null) {
+        if (!meta.hasLore()) {
             apply(stack);
             return;
         }
@@ -103,7 +97,7 @@ public final class ArtifactLore {
                 ArtifactKeys.attuneStart(), PersistentDataType.INTEGER);
         Integer count = meta.getPersistentDataContainer().get(
                 ArtifactKeys.attuneCount(), PersistentDataType.INTEGER);
-        if (start == null || count == null || start < 0) {
+        if (start == null || count == null || start < 0 || count < 0) {
             apply(stack);
             return;
         }
@@ -112,7 +106,7 @@ public final class ArtifactLore {
             apply(stack);
             return;
         }
-        int end = Math.min(start + count, lore.size());
+        int end = (int) Math.min((long) start + count, lore.size());
         List<String> current = new ArrayList<>(lore.subList(start, end));
         List<String> attuneLines = buildAttuneLines(stack, artifact);
         if (current.equals(attuneLines) && count == attuneLines.size()) {
@@ -140,7 +134,7 @@ public final class ArtifactLore {
             String id = element.getId();
             double cap = artifact.getCap(id);
             double fill = artifact.getFill(id);
-            double nextFill = fillAfterDecay(id, fill, dtHours);
+            double nextFill = fillAfterDecay(element, fill, dtHours);
             String oldShown = formatAmount(ArtifactCareStore.usableFill(fill, cap, oldMuffle));
             String newShown = formatAmount(ArtifactCareStore.usableFill(nextFill, cap, newMuffle));
             if (!oldShown.equals(newShown)) {
@@ -158,12 +152,8 @@ public final class ArtifactLore {
                 "{color:label_muted}Muffled: " + MagicNumbers.format(muffle * 100.0) + "%");
     }
 
-    private static double fillAfterDecay(String elementId, double fill, double dtHours) {
+    private static double fillAfterDecay(ElementDef element, double fill, double dtHours) {
         if (dtHours <= 0.0) {
-            return fill;
-        }
-        ElementDef element = ElementRegistry.getById(elementId);
-        if (element == null) {
             return fill;
         }
         double rate = element.getAuraDecayPerHour();
@@ -187,7 +177,7 @@ public final class ArtifactLore {
             return null;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null || !meta.hasLore() || meta.getLore() == null) {
+        if (!meta.hasLore()) {
             return null;
         }
         Artifact artifact = Artifact.create();
@@ -244,13 +234,7 @@ public final class ArtifactLore {
     }
 
     private static void writeAttuneIndex(ItemStack stack, int start, int count) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return;
-        }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         Integer oldStart = meta.getPersistentDataContainer().get(
                 ArtifactKeys.attuneStart(), PersistentDataType.INTEGER);
         Integer oldCount = meta.getPersistentDataContainer().get(
@@ -300,7 +284,8 @@ public final class ArtifactLore {
             return null;
         }
         try {
-            return Double.parseDouble(raw.trim());
+            double amount = Double.parseDouble(raw.trim());
+            return Double.isFinite(amount) ? amount : null;
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -312,9 +297,6 @@ public final class ArtifactLore {
     }
 
     private static String formatImprint(SacrificeImprint imprint) {
-        if (imprint == null) {
-            return "";
-        }
         SacrificeElementDef def = SacrificeRegistry.getById(imprint.getElementId());
         if (def == null) {
             List<SacrificeElementDef> all = SacrificeRegistry.getAll();
@@ -325,9 +307,6 @@ public final class ArtifactLore {
 
     private static String rarityLine(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return null;
-        }
         String rarityId = meta.getPersistentDataContainer().get(
                 ArtifactKeys.artifactRarity(), PersistentDataType.STRING);
         if (rarityId == null || rarityId.isBlank()) {
@@ -356,31 +335,16 @@ public final class ArtifactLore {
     }
 
     private static int findMagicStart(List<String> lore) {
-        int start = -1;
         for (int i = 0; i < lore.size(); i++) {
             String line = lore.get(i);
-            int candidate = -1;
             if (hasHiddenMarker(line)) {
-                candidate = i;
-            } else if (isAuraHeader(line)) {
-                candidate = i;
-                if (i > 0 && isRarityOnlyLine(lore.get(i - 1))) {
-                    candidate = i - 1;
-                }
-            } else if (isFillLine(line)) {
-                candidate = i;
-                if (i > 0 && isAuraHeader(lore.get(i - 1))) {
-                    candidate = i - 1;
-                }
-                if (candidate > 0 && isRarityOnlyLine(lore.get(candidate - 1))) {
-                    candidate--;
-                }
+                return i;
             }
-            if (candidate >= 0 && (start < 0 || candidate < start)) {
-                start = candidate;
+            if (isAuraHeader(line) || isFillLine(line)) {
+                return i > 0 && isRarityOnlyLine(lore.get(i - 1)) ? i - 1 : i;
             }
         }
-        return start;
+        return -1;
     }
 
     private static boolean hasHiddenMarker(String line) {
@@ -406,10 +370,10 @@ public final class ArtifactLore {
             return false;
         }
         for (ArtifactRarityDef rarity : ArtifactRarityRegistry.getAll()) {
-            if (rarity != null && p.equals(rarity.getName().toLowerCase(Locale.ROOT))) {
+            if (p.equals(rarity.getName().toLowerCase(Locale.ROOT))) {
                 return true;
             }
-            if (rarity != null && p.equals(rarity.getId().toLowerCase(Locale.ROOT))) {
+            if (p.equals(rarity.getId().toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }
@@ -465,7 +429,7 @@ public final class ArtifactLore {
         if (!name.isEmpty()) {
             return name;
         }
-        return element.getId() == null ? "" : element.getId().toLowerCase(Locale.ROOT);
+        return element.getId().toLowerCase(Locale.ROOT);
     }
 
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.
@@ -516,18 +480,11 @@ public final class ArtifactLore {
     }
 
     private static String primaryId(ItemStack stack, Artifact artifact) {
-        if (stack != null && stack.hasItemMeta()) {
-            ItemMeta meta = stack.getItemMeta();
-            if (meta != null) {
-                String stored = meta.getPersistentDataContainer().get(
-                        ArtifactKeys.artifactPrimary(), PersistentDataType.STRING);
-                if (stored != null && !stored.isBlank()) {
-                    return stored.trim().toLowerCase(Locale.ROOT);
-                }
-            }
-        }
-        if (artifact == null) {
-            return "";
+        ItemMeta meta = stack.getItemMeta();
+        String stored = meta.getPersistentDataContainer().get(
+                ArtifactKeys.artifactPrimary(), PersistentDataType.STRING);
+        if (stored != null && !stored.isBlank()) {
+            return stored.trim().toLowerCase(Locale.ROOT);
         }
         String best = "";
         double bestCap = -1;

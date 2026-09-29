@@ -22,7 +22,7 @@ public final class PartSlots {
         }
         List<String> required = new ArrayList<>();
         for (String id : archetype.getRequired()) {
-            if (id == null || id.isBlank()) {
+            if (id.isBlank()) {
                 continue;
             }
             String key = id.trim().toLowerCase(Locale.ROOT);
@@ -38,11 +38,8 @@ public final class PartSlots {
             open.add(CORE);
         }
         for (String id : core.getPartLimit()) {
-            if (id == null || id.isBlank()) {
-                continue;
-            }
-            String key = id.trim().toLowerCase(Locale.ROOT);
-            if (CORE.equals(key) || open.contains(key) || !required.contains(key)) {
+            String key = id;
+            if (CORE.equals(key) || !required.contains(key)) {
                 continue;
             }
             open.add(key);

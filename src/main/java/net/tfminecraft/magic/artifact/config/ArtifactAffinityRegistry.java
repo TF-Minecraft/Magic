@@ -58,7 +58,7 @@ public final class ArtifactAffinityRegistry {
             return exact;
         }
         for (Map.Entry<String, List<String>> entry : groups.entrySet()) {
-            if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(groupId)) {
+            if (entry.getKey().equalsIgnoreCase(groupId)) {
                 return entry.getValue();
             }
         }

@@ -58,7 +58,7 @@ public final class ShrineRegistry {
     }
 
     public static void register(ShrineElementDef def) {
-        if (def == null || def.getElementId() == null || def.getElementId().isBlank()) {
+        if (def == null || def.getElementId().isBlank()) {
             return;
         }
         elements.put(def.getElementId(), def);

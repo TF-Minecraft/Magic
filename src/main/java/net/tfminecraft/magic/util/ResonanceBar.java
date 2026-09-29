@@ -11,7 +11,7 @@ public final class ResonanceBar {
     public static String build(ElementDef element, double current, int segments) {
         double max = element.getMaxResonance();
         double clampedCurrent = MagicNumbers.clamp(current, 0.0, max);
-        int filled = max <= 0 ? 0 : (int) Math.round(clampedCurrent / max * segments);
+        int filled = (int) Math.round(clampedCurrent / max * segments);
         filled = (int) MagicNumbers.clamp(filled, 0, segments);
 
         String barChar = GuiCache.resonanceBarChar;

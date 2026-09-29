@@ -37,6 +37,7 @@ public final class ChargeRegistry {
             return;
         }
         tiers.put(def.getTier(), def);
+        materials = null;
     }
 
     public static ChargeDef getByTier(int tier) {

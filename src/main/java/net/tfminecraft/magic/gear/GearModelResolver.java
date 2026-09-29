@@ -30,7 +30,7 @@ public final class GearModelResolver {
         if (parts == null) {
             return null;
         }
-        Map<String, Integer> votes = new LinkedHashMap<>();
+        Map<String, Long> votes = new LinkedHashMap<>();
         String coreScheme = "";
         for (PartDef part : parts) {
             if (part == null || !part.hasModelScheme()) {
@@ -40,7 +40,7 @@ public final class GearModelResolver {
             if (!GearModelSchemeRegistry.contains(id)) {
                 continue;
             }
-            votes.merge(id, part.getSchemeWeight(), Integer::sum);
+            votes.merge(id, (long) part.getSchemeWeight(), Long::sum);
             if (PartSlots.CORE.equalsIgnoreCase(part.getPartType())) {
                 coreScheme = id;
             }
@@ -48,11 +48,11 @@ public final class GearModelResolver {
         if (votes.isEmpty()) {
             return null;
         }
-        int best = -1;
+        long best = -1;
         String bestId = null;
         boolean tie = false;
-        for (Map.Entry<String, Integer> entry : votes.entrySet()) {
-            int weight = entry.getValue();
+        for (Map.Entry<String, Long> entry : votes.entrySet()) {
+            long weight = entry.getValue();
             if (weight > best) {
                 best = weight;
                 bestId = entry.getKey();
@@ -62,7 +62,7 @@ public final class GearModelResolver {
             }
         }
         // bestId is already the first scheme seen among the tied leaders; the core wins a tie it is in.
-        if (tie && !coreScheme.isEmpty() && votes.getOrDefault(coreScheme, 0) == best) {
+        if (tie && !coreScheme.isEmpty() && votes.getOrDefault(coreScheme, 0L) == best) {
             bestId = coreScheme;
         }
         return GearModelSchemeRegistry.get(bestId);
@@ -73,14 +73,16 @@ public final class GearModelResolver {
             return null;
         }
         String path = path(type, parts);
-        if (path == null || path.isBlank()) {
+        if (path == null) {
             return stack;
         }
         String normalized = ItemRef.normalize(path);
-        String prefix = normalized.split("\\.")[0];
+        int dot = normalized.indexOf('.');
+        String prefix = dot < 0 ? normalized : normalized.substring(0, dot);
         try {
             if (prefix.equalsIgnoreCase("ia")) {
-                return TLibs.getItemAPI().getArmorMerger().merge(stack, Optional.empty(), normalized);
+                ItemStack merged = TLibs.getItemAPI().getArmorMerger().merge(stack, Optional.empty(), normalized);
+                return merged == null || merged.getType().isAir() ? stack : merged;
             }
             if (prefix.equalsIgnoreCase("v")) {
                 return applyVanilla(stack, normalized);
@@ -100,17 +102,16 @@ public final class GearModelResolver {
             return stack;
         }
         Material material = Material.matchMaterial(parts[1].toUpperCase());
-        if (material == null) {
-            Magic.plugin.getLogger().warning("[Magic] Unknown vanilla material in gear model: " + path);
+        if (material == null || material.isAir() || !material.isItem()) {
+            Magic.plugin.getLogger().warning("[Magic] Invalid vanilla item material in gear model: " + path);
             return stack;
         }
+        Integer model = parts.length >= 3 ? Integer.parseInt(parts[2]) : null;
         stack.setType(material);
-        if (parts.length >= 3) {
+        if (model != null) {
             ItemMeta meta = stack.getItemMeta();
-            if (meta != null) {
-                LegacyModelData.set(meta, Integer.parseInt(parts[2]));
-                stack.setItemMeta(meta);
-            }
+            LegacyModelData.set(meta, model);
+            stack.setItemMeta(meta);
         }
         return stack;
     }

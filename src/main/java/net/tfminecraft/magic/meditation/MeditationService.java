@@ -81,9 +81,6 @@ public final class MeditationService implements Listener {
         }
         for (MeditationSession session : service.sessions.values()) {
             MeditationCircle circle = session.getCircle();
-            if (circle == null) {
-                continue;
-            }
             for (Furniture post : circle.getPedestals()) {
                 if (post != null && id.equals(post.getEntityId())) {
                     return true;
@@ -245,9 +242,6 @@ public final class MeditationService implements Listener {
         Location eye = player.getEyeLocation();
         Vector dir = eye.getDirection().normalize();
         World world = eye.getWorld();
-        if (world == null) {
-            return null;
-        }
         double range = MeditationCache.orbClickRange;
         double radius = MeditationCache.orbHitRadius;
         double radiusSq = radius * radius;

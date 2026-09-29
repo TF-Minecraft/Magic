@@ -91,7 +91,7 @@ public final class ArtifactFillChestService {
                 primaryArg = lockedPrimary;
             }
             ArtifactRoll roll = roller.roll(primaryArg, "roll");
-            if (roll == null || roll.isError()) {
+            if (roll.isError()) {
                 continue;
             }
             ItemStack stack = builder.build(roll, null, null, false);
@@ -101,8 +101,9 @@ public final class ArtifactFillChestService {
             contents[slot] = stack;
             placed++;
         }
-        inventory.clear();
-        inventory.setContents(contents);
+        if (placed > 0) {
+            inventory.setContents(contents);
+        }
         return placed;
     }
 
@@ -129,7 +130,7 @@ public final class ArtifactFillChestService {
         }
         if (ArtifactTypeRegistry.contains(id)) {
             ArtifactTypeDef type = ArtifactTypeRegistry.getById(id);
-            if (type != null && type.isEnabled()) {
+            if (type.isEnabled()) {
                 return Mode.TYPE;
             }
             return null;

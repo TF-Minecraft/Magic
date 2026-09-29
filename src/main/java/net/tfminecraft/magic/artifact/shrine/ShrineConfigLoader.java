@@ -114,7 +114,7 @@ public final class ShrineConfigLoader {
         ShrineFxDef defaults = readFx(fx.getConfigurationSection("default"), ShrineFxDef.fallback(), log);
         ShrineRegistry.setDefaultFx(defaults);
         for (String key : fx.getKeys(false)) {
-            if (key == null || key.isBlank() || "default".equalsIgnoreCase(key)) {
+            if (key.isBlank() || "default".equalsIgnoreCase(key)) {
                 continue;
             }
             ConfigurationSection section = fx.getConfigurationSection(key);

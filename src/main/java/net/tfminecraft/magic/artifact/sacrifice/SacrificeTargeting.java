@@ -30,7 +30,7 @@ public final class SacrificeTargeting {
     private static final double EPSILON = 0.0001;
 
     public enum Fail {
-            NONE,
+        NONE,
         NO_TARGET,
         NO_SCORE,
         MIN_SCORE,
@@ -88,7 +88,7 @@ public final class SacrificeTargeting {
     private SacrificeTargeting() {}
 
     public static Result find(Player caster, String elementId) {
-        if (caster == null || elementId == null || elementId.isBlank() || caster.getWorld() == null) {
+        if (caster == null || elementId == null || elementId.isBlank()) {
             return Result.fail(Fail.NO_TARGET);
         }
         Location casterLoc = caster.getLocation();
@@ -138,9 +138,6 @@ public final class SacrificeTargeting {
                 continue;
             }
             PlacedSlot slot = closestSlot(eligibleSlots, casterLoc, origin);
-            if (slot == null) {
-                continue;
-            }
             ready.add(new Candidate(furniture, slot.getId(), victim, score, origin.distanceSquared(casterLoc)));
         }
 
@@ -153,7 +150,7 @@ public final class SacrificeTargeting {
         if (best != null) {
             return Result.ok(best.furniture, best.slotId, best.victim, best.score);
         }
-        if (sawLowScore && SacrificeRegistry.isRequireMinScore()) {
+        if (sawLowScore) {
             return Result.fail(Fail.MIN_SCORE);
         }
         if (sawNoScore) {
@@ -181,7 +178,7 @@ public final class SacrificeTargeting {
             return SlotCheck.SKIP;
         }
         String filter = SacrificeRegistry.getPedestalSlot();
-        if (filter != null && !filter.equals("*") && !filter.equalsIgnoreCase(slot.getId())) {
+        if (!filter.equals("*") && !filter.equalsIgnoreCase(slot.getId())) {
             return SlotCheck.SKIP;
         }
         ItemStack item = ShrineChargeService.itemFromSlot(slot);
@@ -193,15 +190,13 @@ public final class SacrificeTargeting {
         if (!allowed.contains(elementId.trim().toLowerCase(Locale.ROOT))) {
             return SlotCheck.SKIP;
         }
+        // allowedElements already filters nonpositive caps on this immutable read snapshot.
         double cap = artifact.getCap(elementId);
-        if (cap <= 0) {
-            return SlotCheck.SKIP;
-        }
         if (artifact.getFill(elementId) + EPSILON >= cap) {
             return SlotCheck.FULL;
         }
         if (SacrificeRegistry.isRequireMinScore()) {
-            ShrineElementScore elementScore = score != null ? score.get(elementId) : null;
+            ShrineElementScore elementScore = score.get(elementId);
             double maxAura = elementScore != null ? elementScore.getMaxAura() : 0;
             if (maxAura <= EPSILON) {
                 return SlotCheck.NO_SCORE;
@@ -219,13 +214,10 @@ public final class SacrificeTargeting {
         Player best = null;
         double bestSq = Double.MAX_VALUE;
         for (Player player : world.getPlayers()) {
-            if (player == null || player.equals(caster) || !player.isOnline() || player.isDead()) {
+            if (player.equals(caster) || player.isDead()) {
                 continue;
             }
             Location loc = player.getLocation();
-            if (loc.getWorld() != world) {
-                continue;
-            }
             double distSq = loc.distanceSquared(origin);
             if (distSq > rangeSq || distSq >= bestSq) {
                 continue;

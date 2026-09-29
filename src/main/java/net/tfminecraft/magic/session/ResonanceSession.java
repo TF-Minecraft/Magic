@@ -103,14 +103,7 @@ public final class ResonanceSession {
     }
 
     public Map<String, Double> copyResonance() {
-        Map<String, Double> copy = new HashMap<>();
-        for (Map.Entry<String, Double> entry : resonance.entrySet()) {
-            if (entry.getKey() == null || entry.getValue() == null || entry.getValue() <= EPSILON) {
-                continue;
-            }
-            copy.put(entry.getKey(), entry.getValue());
-        }
-        return copy;
+        return new HashMap<>(resonance);
     }
 
     private void bumpModifiers() {
@@ -118,19 +111,9 @@ public final class ResonanceSession {
     }
 
     private double amount(String elementId) {
-        String id = normalizeElementId(elementId);
-        if (id.isEmpty()) {
-            return 0.0;
-        }
+        String id = elementId.trim().toLowerCase(Locale.ROOT);
         Double value = resonance.get(id);
         return value != null ? value : 0.0;
-    }
-
-    private static String normalizeElementId(String elementId) {
-        if (elementId == null) {
-            return "";
-        }
-        return elementId.trim().toLowerCase(Locale.ROOT);
     }
 
     private static String normalizeCastModeId(String castModeId) {

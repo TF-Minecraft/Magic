@@ -44,7 +44,7 @@ public final class ArtifactCareStore {
         Map<String, Long> users = parseUsers(meta.getPersistentDataContainer().get(
                 ArtifactKeys.careUsers(), PersistentDataType.STRING));
         int before = users.size();
-        users.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue() <= nowMs);
+        users.entrySet().removeIf(entry -> entry.getValue() <= nowMs);
         if (users.size() == before) {
             return;
         }
@@ -62,7 +62,7 @@ public final class ArtifactCareStore {
 
     public static int activeUserCount(ItemStack stack, long nowMs) {
         Map<String, Long> users = readUsers(stack);
-        users.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue() <= nowMs);
+        users.entrySet().removeIf(entry -> entry.getValue() <= nowMs);
         return users.size();
     }
 
@@ -80,9 +80,6 @@ public final class ArtifactCareStore {
             return false;
         }
         ItemMeta meta = metaOf(stack);
-        if (meta == null) {
-            return false;
-        }
         PersistentDataContainer root = meta.getPersistentDataContainer();
         long last = readLong(root, ArtifactKeys.careLastTick());
         double elapsedSec = 0.0;
@@ -128,7 +125,7 @@ public final class ArtifactCareStore {
         String id = characterId.trim();
         Map<String, Long> users = parseUsers(meta.getPersistentDataContainer().get(
                 ArtifactKeys.careUsers(), PersistentDataType.STRING));
-        users.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue() <= nowMs);
+        users.entrySet().removeIf(entry -> entry.getValue() <= nowMs);
         users.put(id, nowMs + ArtifactCareCache.usersTtlMs());
         writeUsers(meta, users);
         stack.setItemMeta(meta);
@@ -182,7 +179,7 @@ public final class ArtifactCareStore {
             return users;
         }
         for (String part : raw.split(";")) {
-            if (part == null || part.isBlank()) {
+            if (part.isBlank()) {
                 continue;
             }
             int colon = part.lastIndexOf(':');
@@ -203,23 +200,16 @@ public final class ArtifactCareStore {
     }
 
     private static void writeUsers(ItemMeta meta, Map<String, Long> users) {
-        if (users == null || users.isEmpty()) {
+        if (users.isEmpty()) {
             meta.getPersistentDataContainer().remove(ArtifactKeys.careUsers());
             return;
         }
         StringBuilder out = new StringBuilder();
         for (Map.Entry<String, Long> entry : users.entrySet()) {
-            if (entry.getKey() == null || entry.getKey().isBlank() || entry.getValue() == null) {
-                continue;
-            }
             if (out.length() > 0) {
                 out.append(';');
             }
             out.append(entry.getKey()).append(':').append(entry.getValue());
-        }
-        if (out.length() == 0) {
-            meta.getPersistentDataContainer().remove(ArtifactKeys.careUsers());
-            return;
         }
         meta.getPersistentDataContainer().set(
                 ArtifactKeys.careUsers(), PersistentDataType.STRING, out.toString());

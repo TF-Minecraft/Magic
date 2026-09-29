@@ -114,7 +114,7 @@ public final class GearRefresher {
             GemSocketsData next = new GemSocketsData(new ArrayList<>(colours));
             for (GemstoneData gem : existing) {
                 String colour = gem.getSocketColor();
-                if (colour != null && next.canReceive(colour) && next.apply(colour, gem)) {
+                if (colour != null && next.apply(colour, gem)) {
                     continue;
                 }
                 orphaned.add(gem);
@@ -139,9 +139,6 @@ public final class GearRefresher {
         }
         ItemMeta fromMeta = from.getItemMeta();
         ItemMeta toMeta = to.getItemMeta();
-        if (fromMeta == null || toMeta == null) {
-            return;
-        }
         copyString(fromMeta, toMeta, GearKeys.parts());
         copyString(fromMeta, toMeta, GearKeys.archetype());
         copyString(fromMeta, toMeta, GearKeys.orphans());

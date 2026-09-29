@@ -125,9 +125,9 @@ public final class OrbCache {
         if (best != null) {
             return best;
         }
-        for (Tier row : TIERS.values()) {
-            return row;
-        }
-        return new Tier(4, 0.7, 1.0, windowTicks, 4);
+        return TIERS.entrySet().stream()
+                .min(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .orElseGet(() -> new Tier(4, 0.7, 1.0, windowTicks, 4));
     }
 }

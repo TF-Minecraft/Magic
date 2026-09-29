@@ -37,9 +37,6 @@ public final class GearBrokenMarker {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return false;
-        }
         Byte broken = meta.getPersistentDataContainer().get(GearKeys.broken(), PersistentDataType.BYTE);
         return broken != null && broken != 0;
     }
@@ -50,9 +47,6 @@ public final class GearBrokenMarker {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().set(GearKeys.broken(), PersistentDataType.BYTE, (byte) 1);
         stack.setItemMeta(meta);
         WeaponLore.apply(stack);
@@ -63,9 +57,6 @@ public final class GearBrokenMarker {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().remove(GearKeys.broken());
         meta.getPersistentDataContainer().remove(GearKeys.orphans());
         stack.setItemMeta(meta);
@@ -77,9 +68,6 @@ public final class GearBrokenMarker {
             return orphans;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return orphans;
-        }
         String raw = meta.getPersistentDataContainer().get(GearKeys.orphans(), PersistentDataType.STRING);
         if (raw == null || raw.isBlank()) {
             return orphans;
@@ -100,9 +88,6 @@ public final class GearBrokenMarker {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<Orphan> all = new ArrayList<>(orphans(stack));
         all.addAll(added);
         List<String> tokens = new ArrayList<>();

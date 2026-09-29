@@ -113,13 +113,11 @@ public final class MeditationCircle {
             }
             String artifactId = uuid.toString();
             MeditationCache.ArtifactDef def = artifactByFurniture.get(furniture.getEntityId());
-            if (def == null || def.elementId == null) {
-                continue;
-            }
-            int n = Math.max(1, ArtifactCareStore.activeUserCount(item, nowMs));
+            int n = ArtifactCareStore.activeUserCount(item, nowMs);
             if (countsAsExtraUser(item, extraCharacterId, nowMs)) {
                 n++;
             }
+            n = Math.max(1, n);
             Artifact aura = Artifact.fromItem(item);
             double fill = aura != null ? aura.getFill(def.elementId) : 0.0;
             double cap = aura != null ? aura.getCap(def.elementId) : 0.0;
@@ -183,7 +181,7 @@ public final class MeditationCircle {
         for (Furniture furniture : artifactPedestals) {
             String artifactId = artifactIdOn(furniture);
             MeditationCache.ArtifactDef def = artifactByFurniture.get(furniture.getEntityId());
-            if (artifactId == null || def == null || def.elementId == null) {
+            if (artifactId == null) {
                 continue;
             }
             double cap = yield.sessionCap(artifactId);
@@ -208,7 +206,7 @@ public final class MeditationCircle {
     }
 
     private static boolean countsAsExtraUser(ItemStack item, String characterId, long nowMs) {
-        if (item == null || characterId == null || characterId.isBlank()) {
+        if (characterId == null || characterId.isBlank()) {
             return false;
         }
         Long until = ArtifactCareStore.readUsers(item).get(characterId.trim());
@@ -247,7 +245,7 @@ public final class MeditationCircle {
                 continue;
             }
             for (Furniture post : circle.getPedestals()) {
-                if (post != null && id.equals(post.getEntityId())) {
+                if (id.equals(post.getEntityId())) {
                     return true;
                 }
             }
@@ -388,9 +386,6 @@ public final class MeditationCircle {
 
     private static List<PlacedSlot> pedestalSlots(Furniture furniture) {
         List<PlacedSlot> slots = new ArrayList<>();
-        if (furniture == null) {
-            return slots;
-        }
         String slotId = MeditationCache.pedestalSlot;
         if (slotId == null || slotId.isBlank() || "*".equals(slotId)) {
             slots.addAll(furniture.getActiveSlots().values());
@@ -427,7 +422,7 @@ public final class MeditationCircle {
         Entity stand = standId != null ? Bukkit.getEntity(standId) : null;
         if (stand instanceof ItemDisplay display) {
             ItemStack shown = display.getItemStack();
-            if (shown != null && !shown.getType().isAir()) {
+            if (!shown.getType().isAir()) {
                 slot.setModel(shown);
                 return shown;
             }

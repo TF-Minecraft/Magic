@@ -81,7 +81,7 @@ public final class ArtifactCreateGuiManager implements Listener {
             }
             String nextId = rarities.get(i).getId();
             String previous = session.getRarityId();
-            if (nextId == null || nextId.equals(previous)) {
+            if (nextId.equals(previous)) {
                 return;
             }
             session.setRarityId(nextId);
@@ -142,13 +142,11 @@ public final class ArtifactCreateGuiManager implements Listener {
 
     private static void giveOrDrop(Player player, ItemStack stack) {
         Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
-        if (leftover.isEmpty() || player.getWorld() == null) {
+        if (leftover.isEmpty()) {
             return;
         }
         for (ItemStack extra : leftover.values()) {
-            if (extra != null && !extra.getType().isAir()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), extra);
-            }
+            player.getWorld().dropItemNaturally(player.getLocation(), extra);
         }
     }
 

@@ -39,13 +39,16 @@ public final class Messages {
     }
 
     private static FileConfiguration readBundled() {
-        try (InputStream in = Magic.plugin.getResource("messages.yml")) {
-            if (in == null) {
+        try {
+            InputStream resource = Magic.plugin.getResource("messages.yml");
+            if (resource == null) {
                 return null;
             }
-            FileConfiguration loaded = new YamlConfiguration();
-            loaded.loadFromString(new String(in.readAllBytes()));
-            return loaded;
+            try (InputStream in = resource) {
+                FileConfiguration loaded = new YamlConfiguration();
+                loaded.loadFromString(new String(in.readAllBytes()));
+                return loaded;
+            }
         } catch (Exception ex) {
             Magic.plugin.getLogger().warning("[Magic] Failed to load bundled messages.yml: " + ex.getMessage());
             return null;
@@ -68,13 +71,13 @@ public final class Messages {
     public static String getRaw(String path) {
         if (config != null && config.contains(path)) {
             String live = config.getString(path);
-            if (live != null && !live.isBlank()) {
+            if (!live.isBlank()) {
                 return live;
             }
         }
         if (bundled != null && bundled.contains(path)) {
             String fallback = bundled.getString(path);
-            if (fallback != null && !fallback.isBlank()) {
+            if (!fallback.isBlank()) {
                 return fallback;
             }
         }
