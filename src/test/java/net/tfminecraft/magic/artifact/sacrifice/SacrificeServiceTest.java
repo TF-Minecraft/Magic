@@ -184,7 +184,7 @@ class SacrificeServiceTest {
   }
 
   @Test
-  void fullChargeSendsOneNearNoticeAndSessionStoresResolution() {
+  void fullChargeSendsOneNearNoticeAndSessionStoresResolution() throws Exception {
     var session =
         new SacrificeRiteSession(
             caster.getUniqueId(),
@@ -218,6 +218,12 @@ class SacrificeServiceTest {
     SacrificeRegistry.setGlobals(
         .000001, 4, null, true, true, 0, 0, true, true, true, null, null, null);
     start();
+    // MockBukkit ticks do not advance the wall clock used by rite charging.
+    var active = SacrificeRiteService.sessions().iterator().next();
+    var startMillis = SacrificeRiteSession.class.getDeclaredField("startMillis");
+    startMillis.setAccessible(true);
+    startMillis.setLong(active, System.currentTimeMillis() - 1_000);
+    assertEquals(1, active.charge());
     tick();
     tick();
     assertEquals("sacrifice.near", victim.nextMessage());
