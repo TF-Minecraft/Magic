@@ -106,18 +106,19 @@ public final class GearOrbService implements Listener {
             Map<String, Double> snapshot,
             String primaryElement,
             int chargeTier) {
+        World world = station == null ? null : station.getWorld();
+        if (world == null) {
+            return false;
+        }
         String key = GearStationStore.key(station);
-        if (key.isEmpty() || SESSIONS.containsKey(key)) {
+        if (SESSIONS.containsKey(key)) {
             return false;
         }
         GearOrbSession session = new GearOrbSession(
                 station, player.getUniqueId(), snapshot, primaryElement, OrbCache.tier(chargeTier));
         SESSIONS.put(key, session);
         player.sendMessage(Messages.get("gear.orbs.start", "target", String.valueOf(session.goodTarget())));
-        World world = station.getWorld();
-        if (world != null) {
-            world.playSound(session.displayPoint(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.4f);
-        }
+        world.playSound(session.displayPoint(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.4f);
         return true;
     }
 
@@ -177,7 +178,7 @@ public final class GearOrbService implements Listener {
             weapon = WeaponLore.updateItem(weapon);
         }
         GearStationStore.update(session.getStation(), weapon);
-        if (player != null && player.isOnline() && Magic.plugin != null) {
+        if (player != null && player.isOnline()) {
             Magic.plugin.syncSpellModifiers(
                     player, Magic.plugin.getResonanceGuiManager().getSessionManager().get(player));
         }

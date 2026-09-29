@@ -1,6 +1,7 @@
 package net.tfminecraft.magic.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -29,7 +30,9 @@ public final class CostFormatter {
         if (map == null || map.isEmpty()) {
             return result;
         }
-        for (String path : new TreeSet<>(map.keySet())) {
+        TreeSet<String> paths = new TreeSet<>(Comparator.nullsLast(Comparator.naturalOrder()));
+        paths.addAll(map.keySet());
+        for (String path : paths) {
             Integer amount = map.get(path);
             if (path == null || amount == null) {
                 continue;

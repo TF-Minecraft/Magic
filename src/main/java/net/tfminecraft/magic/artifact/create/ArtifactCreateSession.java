@@ -36,7 +36,6 @@ public final class ArtifactCreateSession {
     private String previewBaseName;
     private String previewModelPath;
     private String previewLockPrimaryId;
-    private String previewLockRarityId;
 
     public ArtifactCreateSession() {
         this.rarityId = defaultRarityId();
@@ -91,7 +90,7 @@ public final class ArtifactCreateSession {
     }
 
     public void setCap(String elementId, double cap) {
-        if (elementId == null || elementId.isBlank()) {
+        if (elementId == null || elementId.isBlank() || !Double.isFinite(cap)) {
             return;
         }
         if (cap <= 0) {
@@ -122,7 +121,7 @@ public final class ArtifactCreateSession {
         }
         ElementRole role = roleOf(elementId);
         if (role == ElementRole.OFF) {
-            if (primaryId != null && !primaryId.isBlank()
+            if (primaryId != null
                     && !ElementVisibility.shownOnArtifact(elementId, primaryId)) {
                 return false;
             }
@@ -137,15 +136,13 @@ public final class ArtifactCreateSession {
             return true;
         }
         setCap(elementId, 0);
-        if (elementId.equals(primaryId)) {
-            assignPrimary(null);
-        }
+        assignPrimary(null);
         return true;
     }
 
     public boolean adjustSelectedCap(double delta) {
         String elementId = selectedElementId;
-        if (elementId == null || elementId.isBlank() || roleOf(elementId) == ElementRole.OFF) {
+        if (!Double.isFinite(delta) || roleOf(elementId) == ElementRole.OFF) {
             return false;
         }
         CapRange range = capRange(elementId);
@@ -170,20 +167,20 @@ public final class ArtifactCreateSession {
     }
 
     public ArtifactRoll toRoll() {
-        if (primaryId == null || primaryId.isBlank() || getCap(primaryId) <= 0) {
+        if (primaryId == null || getCap(primaryId) <= 0) {
             return null;
         }
         if (!ArtifactTypeRegistry.contains(primaryId) || !ArtifactRarityRegistry.contains(rarityId)) {
             return null;
         }
         ArtifactTypeDef primaryType = ArtifactTypeRegistry.getById(primaryId);
-        if (primaryType == null || !primaryType.isEnabled()) {
+        if (!primaryType.isEnabled()) {
             return null;
         }
         List<ArtifactAuraSlot> slots = new ArrayList<>();
         slots.add(new ArtifactAuraSlot(primaryId, getCap(primaryId)));
         for (Map.Entry<String, Double> entry : caps.entrySet()) {
-            if (primaryId.equals(entry.getKey()) || entry.getValue() == null || entry.getValue() <= 0) {
+            if (primaryId.equals(entry.getKey())) {
                 continue;
             }
             if (!ElementVisibility.shownOnArtifact(entry.getKey(), primaryId)) {
@@ -209,7 +206,6 @@ public final class ArtifactCreateSession {
         }
         if (primaryId.equals(previewLockPrimaryId)
                 && rarityId != null
-                && rarityId.equals(previewLockRarityId)
                 && previewBaseName != null
                 && !previewBaseName.isBlank()) {
             return;
@@ -225,7 +221,6 @@ public final class ArtifactCreateSession {
         previewBaseName = builder.pickBaseName(type, kind, rarityId);
         previewModelPath = pickedPath == null ? "" : pickedPath;
         previewLockPrimaryId = primaryId;
-        previewLockRarityId = rarityId;
     }
 
     private void clampCapsToRarity() {
@@ -264,6 +259,5 @@ public final class ArtifactCreateSession {
         previewBaseName = null;
         previewModelPath = null;
         previewLockPrimaryId = null;
-        previewLockRarityId = null;
     }
 }

@@ -18,9 +18,6 @@ public final class GearProvenance {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<String> ids = new ArrayList<>();
         if (parts != null) {
             for (PartDef part : parts) {
@@ -46,9 +43,6 @@ public final class GearProvenance {
             return 0;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return 0;
-        }
         Integer stored = meta.getPersistentDataContainer().get(
                 GearKeys.majorityTier(), PersistentDataType.INTEGER);
         return stored == null ? 0 : stored;
@@ -59,9 +53,6 @@ public final class GearProvenance {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         writeMajority(meta, parts);
         stack.setItemMeta(meta);
     }
@@ -81,7 +72,7 @@ public final class GearProvenance {
         List<String> missing = new ArrayList<>();
         for (String token : rawTokens(stack)) {
             String id = idOf(token);
-            if (!id.isEmpty() && PartRegistry.get(id) == null) {
+            if (PartRegistry.get(id) == null) {
                 missing.add(id);
             }
         }
@@ -114,15 +105,9 @@ public final class GearProvenance {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<String> tokens = new ArrayList<>();
         for (String token : rawTokens(stack)) {
             String id = idOf(token);
-            if (id.isEmpty()) {
-                continue;
-            }
             PartDef live = PartRegistry.get(id);
             tokens.add(id + ":" + (live == null ? revisionOf(token) : live.getRevision()));
         }
@@ -137,13 +122,7 @@ public final class GearProvenance {
     }
 
     private static int storedArchetypeRevision(ItemStack stack) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return 0;
-        }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return 0;
-        }
         Integer stored = meta.getPersistentDataContainer().get(
                 GearKeys.archetypeRevision(), PersistentDataType.INTEGER);
         return stored == null ? 0 : stored;
@@ -186,9 +165,6 @@ public final class GearProvenance {
             return "";
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return "";
-        }
         String raw = meta.getPersistentDataContainer().get(GearKeys.parts(), PersistentDataType.STRING);
         return raw == null ? "" : raw;
     }
@@ -199,9 +175,6 @@ public final class GearProvenance {
             return parts;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return parts;
-        }
         String raw = meta.getPersistentDataContainer().get(GearKeys.parts(), PersistentDataType.STRING);
         if (raw == null || raw.isBlank()) {
             return parts;
@@ -225,9 +198,6 @@ public final class GearProvenance {
             return null;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return null;
-        }
         String stored = meta.getPersistentDataContainer().get(
                 GearKeys.archetype(), PersistentDataType.STRING);
         return GearType.fromId(stored);
@@ -242,9 +212,6 @@ public final class GearProvenance {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return false;
-        }
         Byte locked = meta.getPersistentDataContainer().get(
                 GearKeys.socketsLocked(), PersistentDataType.BYTE);
         return locked != null && locked != 0;
@@ -255,9 +222,6 @@ public final class GearProvenance {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().set(
                 GearKeys.socketsLocked(), PersistentDataType.BYTE, (byte) 1);
         stack.setItemMeta(meta);

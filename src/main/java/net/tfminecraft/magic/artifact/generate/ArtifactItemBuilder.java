@@ -132,9 +132,7 @@ public final class ArtifactItemBuilder {
             if (names.isEmpty()) {
                 names = scheme.firstNonEmptyKindNames();
             }
-            if (!names.isEmpty()) {
-                base = names.get(rng.nextInt(names.size()));
-            }
+            base = names.get(rng.nextInt(names.size()));
         }
         return applyAdjective(base, type.getElementId(), rarityId);
     }
@@ -151,9 +149,6 @@ public final class ArtifactItemBuilder {
             return base;
         }
         String adjective = pool.get(rng.nextInt(pool.size()));
-        if (adjective == null || adjective.isBlank()) {
-            return base;
-        }
         return insertAdjective(base, adjective.trim());
     }
 
@@ -215,7 +210,7 @@ public final class ArtifactItemBuilder {
     }
 
     private static String buildDisplayName(ArtifactTypeDef type, String baseName) {
-        String rolledName = baseName != null && !baseName.isBlank() ? baseName : type.getElementId();
+        String rolledName = !baseName.isBlank() ? baseName : type.getElementId();
         ElementDef element = ElementRegistry.getById(type.getElementId());
         return MagicText.elementText(element, rolledName);
     }
@@ -242,10 +237,12 @@ public final class ArtifactItemBuilder {
             log(logFailures, "[Magic] No model scheme for artifact type " + type.getElementId());
             return stack;
         }
-        String prefix = path.split("\\.")[0];
+        int separator = path.indexOf('.');
+        String prefix = separator < 0 ? path : path.substring(0, separator);
         try {
             if (prefix.equalsIgnoreCase("ia")) {
-                return TLibs.getItemAPI().getArmorMerger().merge(stack, Optional.empty(), path);
+                ItemStack merged = TLibs.getItemAPI().getArmorMerger().merge(stack, Optional.empty(), path);
+                return merged == null || merged.getType().isAir() ? stack : merged;
             }
             if (prefix.equalsIgnoreCase("v")) {
                 return applyVanillaModel(stack, path);
@@ -264,22 +261,22 @@ public final class ArtifactItemBuilder {
         if (parts.length < 2) {
             return stack;
         }
-        stack.setType(Material.valueOf(parts[1].toUpperCase()));
-        if (parts.length >= 3) {
+        Material material = Material.valueOf(parts[1].toUpperCase(java.util.Locale.ROOT));
+        if (material.isAir() || !material.isItem()) {
+            return stack;
+        }
+        Integer model = parts.length >= 3 ? Integer.valueOf(parts[2]) : null;
+        stack.setType(material);
+        if (model != null) {
             ItemMeta meta = stack.getItemMeta();
-            if (meta != null) {
-                LegacyModelData.set(meta, Integer.parseInt(parts[2]));
-                stack.setItemMeta(meta);
-            }
+            LegacyModelData.set(meta, model);
+            stack.setItemMeta(meta);
         }
         return stack;
     }
 
     private static void writeIdentity(ItemStack stack, String rarityId, String primaryId) {
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().set(ArtifactKeys.artifactRarity(), PersistentDataType.STRING, rarityId);
         meta.getPersistentDataContainer().set(ArtifactKeys.artifactPrimary(), PersistentDataType.STRING, primaryId);
         meta.getPersistentDataContainer().set(

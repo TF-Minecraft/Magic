@@ -66,7 +66,7 @@ public final class ArtifactRoller {
         List<ArtifactTypeDef> pool = new ArrayList<>();
         for (String companionId : ArtifactAffinityRegistry.companions(type.getElementId())) {
             ArtifactTypeDef companion = findType(companionId);
-            if (companion == null || !companion.isEnabled() || !companion.hasRarity(rarity.getId())) {
+            if (!companion.hasRarity(rarity.getId())) {
                 continue;
             }
             if (!ElementVisibility.shownOnArtifact(companion.getElementId(), type.getElementId())) {
@@ -84,7 +84,7 @@ public final class ArtifactRoller {
                 rollCap(ArtifactAuraCaps.primaryRange(type.getElementId(), rarity.getId()))));
 
         int secondaryCount = Math.max(0, wanted - 1);
-        while (slots.size() < 1 + secondaryCount && !pool.isEmpty()) {
+        while (slots.size() < 1 + secondaryCount) {
             List<ArtifactTypeDef> eligible = new ArrayList<>();
             for (ArtifactTypeDef companion : pool) {
                 if (ArtifactAffinityRegistry.compatibleWith(slotIds(slots), companion.getElementId())) {
@@ -173,43 +173,42 @@ public final class ArtifactRoller {
     }
 
     private ArtifactTypeDef pickWeighted(List<ArtifactTypeDef> types) {
-        if (types == null || types.isEmpty()) {
+        return pickWeighted(types, ArtifactTypeDef::getWeight);
+    }
+
+    private <T> T pickWeighted(List<T> entries, java.util.function.ToDoubleFunction<T> weightOf) {
+        List<T> eligible = new ArrayList<>();
+        double maximum = 0.0;
+        for (T entry : entries) {
+            double weight = weightOf.applyAsDouble(entry);
+            if (weight > 0.0 && Double.isFinite(weight)) {
+                eligible.add(entry);
+                maximum = Math.max(maximum, weight);
+            }
+        }
+        if (eligible.isEmpty()) {
             return null;
         }
         double total = 0.0;
-        for (ArtifactTypeDef type : types) {
-            if (type.getWeight() > 0) {
-                total += type.getWeight();
-            }
-        }
-        if (total <= 0) {
-            return null;
+        for (T entry : eligible) {
+            total += weightOf.applyAsDouble(entry) / maximum;
         }
         double pick = rng.nextDouble() * total;
-        double acc = 0.0;
-        ArtifactTypeDef last = null;
-        for (ArtifactTypeDef type : types) {
-            if (type.getWeight() <= 0) {
-                continue;
-            }
-            acc += type.getWeight();
-            last = type;
-            if (pick <= acc) {
-                return type;
+        double accumulated = 0.0;
+        for (int i = 0; i < eligible.size() - 1; i++) {
+            T entry = eligible.get(i);
+            accumulated += weightOf.applyAsDouble(entry) / maximum;
+            if (pick <= accumulated) {
+                return entry;
             }
         }
-        return last;
+        return eligible.get(eligible.size() - 1);
     }
 
     private static List<String> slotIds(List<ArtifactAuraSlot> slots) {
         List<String> ids = new ArrayList<>();
-        if (slots == null) {
-            return ids;
-        }
         for (ArtifactAuraSlot slot : slots) {
-            if (slot != null && slot.getElementId() != null && !slot.getElementId().isBlank()) {
-                ids.add(slot.getElementId());
-            }
+            ids.add(slot.getElementId());
         }
         return ids;
     }
@@ -239,30 +238,7 @@ public final class ArtifactRoller {
     }
 
     private ArtifactRarityDef pickWeightedRarity() {
-        List<ArtifactRarityDef> rarities = ArtifactRarityRegistry.getAll();
-        double total = 0.0;
-        for (ArtifactRarityDef rarity : rarities) {
-            if (rarity.getWeight() > 0) {
-                total += rarity.getWeight();
-            }
-        }
-        if (total <= 0) {
-            return null;
-        }
-        double pick = rng.nextDouble() * total;
-        double acc = 0.0;
-        ArtifactRarityDef last = null;
-        for (ArtifactRarityDef rarity : rarities) {
-            if (rarity.getWeight() <= 0) {
-                continue;
-            }
-            acc += rarity.getWeight();
-            last = rarity;
-            if (pick <= acc) {
-                return rarity;
-            }
-        }
-        return last;
+        return pickWeighted(ArtifactRarityRegistry.getAll(), ArtifactRarityDef::getWeight);
     }
 
     private int inclusiveInt(int min, int max) {
@@ -273,9 +249,6 @@ public final class ArtifactRoller {
     }
 
     private static ArtifactTypeDef findType(String id) {
-        if (id == null || id.isBlank()) {
-            return null;
-        }
         ArtifactTypeDef exact = ArtifactTypeRegistry.getById(id);
         if (exact != null) {
             return exact;
@@ -289,9 +262,6 @@ public final class ArtifactRoller {
     }
 
     private static ArtifactRarityDef findRarity(String id) {
-        if (id == null || id.isBlank()) {
-            return null;
-        }
         ArtifactRarityDef exact = ArtifactRarityRegistry.getById(id);
         if (exact != null) {
             return exact;

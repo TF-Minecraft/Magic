@@ -2,6 +2,7 @@ package net.tfminecraft.magic.gear;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -16,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -34,6 +36,8 @@ public final class GearStationStore {
 
     private static final Map<String, Occupancy> OCCUPIED = new HashMap<>();
     private static boolean loading;
+    private static final Map<String, Object> retainedRows = new LinkedHashMap<>();
+    private static boolean unreadableStore;
 
     private GearStationStore() {}
 
@@ -156,8 +160,8 @@ public final class GearStationStore {
             Location location = locationFromKey(entry.getKey());
             Occupancy occupancy = entry.getValue();
             if (location != null) {
-                removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
-            } else if (occupancy != null && occupancy.displayId != null) {
+                removeDisplays(location, null, occupancy.displayId);
+            } else if (occupancy.displayId != null) {
                 Entity entity = Bukkit.getEntity(occupancy.displayId);
                 if (entity != null) {
                     entity.remove();
@@ -176,11 +180,20 @@ public final class GearStationStore {
         loading = true;
         try {
             OCCUPIED.clear();
+            retainedRows.clear();
+            unreadableStore = false;
             File file = file();
             if (!file.exists()) {
                 return;
             }
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            YamlConfiguration config = new YamlConfiguration();
+            try {
+                config.load(file);
+            } catch (IOException | InvalidConfigurationException ex) {
+                unreadableStore = true;
+                Magic.plugin.getLogger().warning("[Magic] Retaining unreadable gear stations: " + ex.getMessage());
+                return;
+            }
             ConfigurationSection root = config.getConfigurationSection("stations");
             if (root == null) {
                 return;
@@ -189,11 +202,13 @@ public final class GearStationStore {
             for (String key : root.getKeys(false)) {
                 ConfigurationSection section = root.getConfigurationSection(key);
                 if (section == null) {
+                    retainedRows.put(key, root.get(key));
                     continue;
                 }
                 Location location = locationOf(section);
                 ItemStack item = section.getItemStack("item");
                 if (location == null || item == null) {
+                    retainedRows.put(key, section.getValues(true));
                     continue;
                 }
                 UUID savedDisplay = uuidOf(section.getString("display"));
@@ -242,6 +257,7 @@ public final class GearStationStore {
         for (String stationKey : keys) {
             Location location = locationFromKey(stationKey);
             Occupancy occupancy = OCCUPIED.get(stationKey);
+            // Spawning a preceding display can invoke plugin listeners which remove stations/worlds.
             if (location == null || occupancy == null) {
                 continue;
             }
@@ -250,7 +266,7 @@ public final class GearStationStore {
                 continue;
             }
             UUID displayId = ensureDisplay(location, occupancy.getItem(), occupancy.displayId);
-            if (displayId != null && !displayId.equals(occupancy.displayId)) {
+            if (!displayId.equals(occupancy.displayId)) {
                 occupancy.displayId = displayId;
                 changed = true;
             }
@@ -296,7 +312,18 @@ public final class GearStationStore {
     }
 
     public static void save() {
+        if (unreadableStore) {
+            File file = file();
+            try {
+                Files.move(file.toPath(), file.toPath().resolveSibling(file.getName() + ".rejected-" + UUID.randomUUID()));
+                unreadableStore = false;
+            } catch (IOException ex) {
+                Magic.plugin.getLogger().warning("[Magic] Cannot preserve unreadable gear stations; refusing overwrite: " + ex.getMessage());
+                return;
+            }
+        }
         YamlConfiguration config = new YamlConfiguration();
+        retainedRows.forEach((key, value) -> config.set("stations." + key, value));
         int index = 0;
         for (Map.Entry<String, Occupancy> entry : OCCUPIED.entrySet()) {
             Occupancy occupancy = entry.getValue();
@@ -304,15 +331,16 @@ public final class GearStationStore {
             if (location == null || occupancy.getItem() == null) {
                 continue;
             }
+            while (retainedRows.containsKey(Integer.toString(index))) {
+                index++;
+            }
             String path = "stations." + index++;
-            config.set(path + ".world", location.getWorld() == null ? "" : location.getWorld().getName());
+            config.set(path + ".world", location.getWorld().getName());
             config.set(path + ".x", location.getBlockX());
             config.set(path + ".y", location.getBlockY());
             config.set(path + ".z", location.getBlockZ());
             config.set(path + ".item", occupancy.getItem());
-            if (occupancy.displayId != null) {
-                config.set(path + ".display", occupancy.displayId.toString());
-            }
+            config.set(path + ".display", occupancy.displayId.toString());
             if (occupancy.getOwner() != null) {
                 config.set(path + ".owner", occupancy.getOwner().toString());
             }
@@ -442,13 +470,10 @@ public final class GearStationStore {
 
     private static boolean isGearDisplay(ItemDisplay display) {
         ItemStack stack = display.getItemStack();
-        if (stack == null || !stack.hasItemMeta()) {
+        if (!stack.hasItemMeta()) {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return false;
-        }
         return meta.getPersistentDataContainer().has(GearKeys.archetype(), PersistentDataType.STRING)
                 || meta.getPersistentDataContainer().has(GearKeys.parts(), PersistentDataType.STRING);
     }

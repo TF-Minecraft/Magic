@@ -78,9 +78,7 @@ public final class ShrineChargeService {
                 return;
             }
             charge.write(item);
-            if (slot != null) {
-                slot.setCurrentItem(item);
-            }
+            slot.setCurrentItem(item);
             persistFurniture(furniture);
             if (player != null) {
                 player.sendMessage(Messages.get("charge.imprint.done"));
@@ -100,7 +98,7 @@ public final class ShrineChargeService {
     }
 
     public static AdminStart startAdmin(Player player, String elementId, double amount) {
-        if (player == null || player.getWorld() == null || elementId == null || elementId.isBlank()) {
+        if (player == null || elementId == null || elementId.isBlank()) {
             return AdminStart.NO_PEDESTAL;
         }
         String id = elementId.trim().toLowerCase(Locale.ROOT);
@@ -146,9 +144,7 @@ public final class ShrineChargeService {
                 if (artifact instanceof Charge charge && charge.getCap(id) <= 0
                         && charge.imprintElement(item, id)) {
                     charge.write(item);
-                    if (slot != null) {
-                        slot.setCurrentItem(item);
-                    }
+                    slot.setCurrentItem(item);
                     persistFurniture(furniture);
                 }
                 double cap = artifact.getCap(id);
@@ -255,7 +251,7 @@ public final class ShrineChargeService {
 
     private static boolean tickOne(ShrineChargeSession session, MagicTickContext context) {
         Furniture furniture = session.getFurniture();
-        if (furniture == null || furniture.isCarried()) {
+        if (furniture.isCarried()) {
             return false;
         }
         if (!session.isAdminForced() && MeditationCircle.containing(furniture)) {
@@ -286,16 +282,13 @@ public final class ShrineChargeService {
                 continue;
             }
             double cap = artifact.getCap(elementId);
-            if (cap <= 0) {
-                continue;
-            }
             double clamp = Math.min(cap, elementScore.getMaxAura());
             double fill = artifact.getFill(elementId);
             if (fill + EPSILON >= clamp) {
                 continue;
             }
             stillCharging = true;
-            double next = fill + elementScore.getAuraPerSecond();
+            double next = Math.min(clamp, fill + elementScore.getAuraPerSecond() * Cache.tickIntervalSeconds());
             artifact.setFill(elementId, next);
             progressed = true;
             AuraLog.append(
@@ -314,9 +307,7 @@ public final class ShrineChargeService {
             return stillCharging;
         }
         artifact.write(item);
-        if (slot != null) {
-            slot.setCurrentItem(item);
-        }
+        slot.setCurrentItem(item);
         if (crossedClamp) {
             ShrineChargeFx.complete(furniture, artifact, item, session.getScore());
         }
@@ -350,13 +341,13 @@ public final class ShrineChargeService {
             return false;
         }
         double seconds = ShrineRegistry.getFullChargeSeconds();
-        double aps = seconds > 0 && Cache.artifactAuraCap > 0
+        double aps = Cache.artifactAuraCap > 0
                 ? Cache.artifactAuraCap / seconds
                 : 0;
         if (aps <= 0) {
             return false;
         }
-        double next = Math.min(clamp, fill + aps);
+        double next = Math.min(clamp, fill + aps * Cache.tickIntervalSeconds());
         artifact.setFill(elementId, next);
         AuraLog.append(
                 "shrine-fill artifact=%s element=%s fill=%s->%s clamp=%s perSecond=%s",
@@ -367,9 +358,7 @@ public final class ShrineChargeService {
                 AuraLog.n(clamp),
                 AuraLog.n(aps));
         artifact.write(item);
-        if (slot != null) {
-            slot.setCurrentItem(item);
-        }
+        slot.setCurrentItem(item);
         if (next + EPSILON >= clamp) {
             ShrineChargeFx.complete(furniture, elementId);
             persist(session, true);
@@ -505,15 +494,13 @@ public final class ShrineChargeService {
             return allowed;
         }
         String primary = primaryId(item, artifact);
-        if (primary == null || primary.isBlank()) {
+        if (primary == null) {
             return allowed;
         }
         Set<String> affinity = new HashSet<>();
         affinity.add(primary);
         for (String companion : ArtifactAffinityRegistry.companions(primary)) {
-            if (companion != null && !companion.isBlank()) {
-                affinity.add(companion.trim().toLowerCase(Locale.ROOT));
-            }
+            affinity.add(companion.trim().toLowerCase(Locale.ROOT));
         }
         for (String id : artifact.getCappedElementIds()) {
             if (id == null || id.isBlank() || artifact.getCap(id) <= 0) {
@@ -554,7 +541,7 @@ public final class ShrineChargeService {
         Entity stand = standId != null ? Bukkit.getEntity(standId) : null;
         if (stand instanceof ItemDisplay display) {
             ItemStack shown = display.getItemStack();
-            if (shown != null && !shown.getType().isAir()) {
+            if (!shown.getType().isAir()) {
                 slot.setModel(shown);
                 return shown;
             }
@@ -568,7 +555,7 @@ public final class ShrineChargeService {
     }
 
     private static void persist(ShrineChargeSession session, boolean force) {
-        if (session == null || session.getFurniture() == null) {
+        if (session == null) {
             return;
         }
         persistFurniture(session.getFurniture());

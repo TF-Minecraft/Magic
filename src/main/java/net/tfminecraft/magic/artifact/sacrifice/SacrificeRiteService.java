@@ -144,16 +144,13 @@ public final class SacrificeRiteService {
     }
 
     private static void resolveKill(SacrificeRiteSession session, Player victim, Player caster) {
-        if (session == null) {
-            return;
-        }
         double charge = session.charge();
         SacrificeTierDef tier = SacrificeRegistry.tierForCharge(charge);
         RPCharacter character = RpCharactersBridge.getActiveCharacter(victim);
         String characterId = character != null ? character.getId() : null;
         String characterName = character != null ? character.getName() : null;
         boolean success = RpCharactersBridge.applySacrificeTier(victim, caster, tier);
-        session.markResolved(success, tier != null ? tier.getId() : "none", charge);
+        session.markResolved(success, tier.getId(), charge);
         if (success) {
             SacrificeFillService.apply(session, tier, characterId, characterName);
             SacrificeRiteFx.resolve(session, victim.getLocation());
@@ -162,9 +159,6 @@ public final class SacrificeRiteService {
     }
 
     private static Player daggerKiller(Player victim) {
-        if (victim == null) {
-            return null;
-        }
         EntityDamageEvent cause = victim.getLastDamageCause();
         if (!(cause instanceof EntityDamageByEntityEvent damage)) {
             return null;
@@ -208,9 +202,6 @@ public final class SacrificeRiteService {
     }
 
     private static void cancel(SacrificeRiteSession session, boolean notifyVictim) {
-        if (session == null) {
-            return;
-        }
         byCaster.remove(session.getCasterId());
         if (notifyVictim) {
             Player victim = Bukkit.getPlayer(session.getVictimId());
@@ -255,7 +246,7 @@ public final class SacrificeRiteService {
 
     private static boolean tickOne(SacrificeRiteSession session) {
         Furniture furniture = session.getFurniture();
-        if (furniture == null || furniture.isCarried()) {
+        if (furniture.isCarried()) {
             return false;
         }
         PlacedSlot slot = furniture.getActiveSlot(session.getSlotId()).orElse(null);

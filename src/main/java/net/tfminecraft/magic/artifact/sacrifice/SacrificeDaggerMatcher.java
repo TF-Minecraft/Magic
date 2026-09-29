@@ -10,9 +10,6 @@ public final class SacrificeDaggerMatcher {
 
     public static boolean matches(ItemStack item) {
         SacrificeDaggerDef def = SacrificeRegistry.getDagger();
-        if (def == null) {
-            return false;
-        }
         return TLibs.getItemAPI().getChecker().checkItemWithPath(item, def.getPath());
     }
 }

@@ -79,7 +79,7 @@ public final class ArtifactModelEntry {
         }
         String kind = trimmed.substring(0, open).trim();
         String path = trimmed.substring(open + 1, close).trim();
-        if (kind.isEmpty() || path.isEmpty()) {
+        if (path.isEmpty()) {
             return null;
         }
         String suffix = close + 1 < trimmed.length() ? trimmed.substring(close + 1).trim() : "";
@@ -93,9 +93,6 @@ public final class ArtifactModelEntry {
             } else {
                 min = suffix.substring(0, dash).trim().toLowerCase(Locale.ROOT);
                 max = suffix.substring(dash + 1).trim().toLowerCase(Locale.ROOT);
-                if (min.isEmpty() || max.isEmpty()) {
-                    return null;
-                }
             }
         }
         return new ArtifactModelEntry(kind, path, min, max);

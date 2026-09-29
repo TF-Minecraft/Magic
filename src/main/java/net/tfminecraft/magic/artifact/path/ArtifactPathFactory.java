@@ -23,8 +23,8 @@ public final class ArtifactPathFactory implements ItemPathHandler {
             return null;
         }
         ArtifactRoll roll = new ArtifactRoller().roll(spec);
-        if (roll == null || roll.isError()) {
-            if (Magic.plugin != null && roll != null && roll.getErrorKey() != null) {
+        if (roll.isError()) {
+            if (Magic.plugin != null) {
                 Magic.plugin.getLogger().warning("[Magic] Artifact path failed: " + roll.getErrorKey());
             }
             return null;

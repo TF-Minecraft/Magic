@@ -73,7 +73,7 @@ public final class ArtifactCreateGuiBuilder {
             int slot = raritySlots.get(i);
             if (i < rarities.size()) {
                 ArtifactRarityDef rarity = rarities.get(i);
-                boolean selected = rarity.getId() != null && rarity.getId().equals(selectedRarityId);
+                boolean selected = rarity.getId().equals(selectedRarityId);
                 inventory.setItem(slot, buildRarityItem(rarity, selected));
             } else {
                 inventory.setItem(slot, buildUnusedRarity());
@@ -120,11 +120,11 @@ public final class ArtifactCreateGuiBuilder {
         }
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(GuiText.format("{color:label_muted}Preview"));
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
-            item.setItemMeta(meta);
-        }
+        meta.setDisplayName(GuiText.format("{color:label_muted}Preview"));
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        item.setItemMeta(meta);
+
+
         return item;
     }
 
@@ -135,9 +135,6 @@ public final class ArtifactCreateGuiBuilder {
         Material fallback = selected ? Material.LIME_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE;
         ItemStack item = ItemRef.buildOrFallback(iconRef, fallback);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         String color = rarity.getColor() != null && !rarity.getColor().isBlank() ? rarity.getColor() : "#ffffff";
         meta.setDisplayName(GuiText.format(color + rarity.getName()));
         if (selected) {
@@ -160,9 +157,6 @@ public final class ArtifactCreateGuiBuilder {
     private static ItemStack buildElementItem(ElementDef element, ArtifactCreateSession session) {
         ItemStack item = ItemRef.buildOrFallback(element.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         meta.setDisplayName(MagicText.elementName(element));
         ElementRole role = session != null ? session.roleOf(element.getId()) : ElementRole.OFF;
         List<String> lore = new ArrayList<>();
@@ -176,7 +170,6 @@ public final class ArtifactCreateGuiBuilder {
         };
         lore.add(GuiText.text("label_muted", roleLabel));
         boolean selected = session != null
-                && element.getId() != null
                 && element.getId().equals(session.getSelectedElementId());
         if (selected) {
             lore.add(GuiText.text("label_accent", "Selected"));
@@ -193,9 +186,6 @@ public final class ArtifactCreateGuiBuilder {
     private static ItemStack buildButton(CastModeDef def) {
         ItemStack item = ItemRef.buildOrFallback(def.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         meta.setDisplayName(GuiText.format(def.getName()));
         meta.setLore(new ArrayList<>(GuiText.formatLoreLines(def.getLore())));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP, ItemFlag.HIDE_ENCHANTS);

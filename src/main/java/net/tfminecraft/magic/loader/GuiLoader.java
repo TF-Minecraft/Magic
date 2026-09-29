@@ -75,7 +75,7 @@ public final class GuiLoader implements LoaderInterface {
         if (colors != null) {
             for (String key : colors.getKeys(false)) {
                 String value = colors.getString(key, "");
-                if (value != null && !value.isBlank()) {
+                if (!value.isBlank()) {
                     colorTokens.put(key, value);
                 }
             }
@@ -155,7 +155,7 @@ public final class GuiLoader implements LoaderInterface {
                 ArtifactCreateCache.confirmSlot = slots.getInt("confirm", ArtifactCreateCache.confirmSlot);
                 ArtifactCreateCache.cancelSlot = slots.getInt("cancel", ArtifactCreateCache.cancelSlot);
                 List<Integer> raritySlots = slots.getIntegerList("rarities");
-                if (raritySlots != null && !raritySlots.isEmpty()) {
+                if (!raritySlots.isEmpty()) {
                     ArtifactCreateCache.raritySlots = List.copyOf(raritySlots);
                 }
             }

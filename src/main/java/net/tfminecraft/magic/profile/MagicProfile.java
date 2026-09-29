@@ -60,7 +60,7 @@ public final class MagicProfile {
                     continue;
                 }
                 for (Map.Entry<String, Double> entry : claim.getByElement().entrySet()) {
-                    if (entry.getKey() == null || entry.getValue() == null) {
+                    if (entry.getValue() == null) {
                         continue;
                     }
                     String id = entry.getKey().trim().toLowerCase(Locale.ROOT);

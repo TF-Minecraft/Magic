@@ -129,15 +129,15 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         ItemStack held = player.getInventory().getItemInMainHand();
         RuneKeybind.Outcome outcome = RuneKeybind.apply(held, trigger);
-        switch (outcome.result()) {
-            case NOT_RUNE -> sender.sendMessage(Messages.get("rune.not_a_rune"));
-            case NO_ABILITIES -> sender.sendMessage(Messages.get("rune.no_abilities"));
-            case FAILED -> sender.sendMessage(Messages.get("rune.failed"));
+        sender.sendMessage(switch (outcome.result()) {
+            case NOT_RUNE -> Messages.get("rune.not_a_rune");
+            case NO_ABILITIES -> Messages.get("rune.no_abilities");
+            case FAILED -> Messages.get("rune.failed");
             case OK -> {
                 player.getInventory().setItemInMainHand(outcome.item());
-                sender.sendMessage(Messages.get("rune.success", "trigger", trigger.name()));
+                yield Messages.get("rune.success", "trigger", trigger.name());
             }
-        }
+        });
         return true;
     }
 
@@ -222,7 +222,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         String characterId = Magic.plugin.getResonanceGuiManager().getSessionManager().getLoadedCharacterId(target);
         ResonanceSession session = Magic.plugin.getResonanceGuiManager().getSessionManager().get(target);
-        if (characterId == null || characterId.isBlank() || session == null) {
+        if (characterId == null || session == null) {
             sender.sendMessage(Messages.get("resonance.admin.no_character", "player", target.getName()));
             return true;
         }
@@ -314,19 +314,15 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         ShrineChargeService.AdminStart result = ShrineChargeService.startAdmin(player, elementId, amount);
-        switch (result) {
-            case NO_PEDESTAL -> sender.sendMessage(Messages.get("shrine.fill.no_pedestal"));
-            case NO_ARTIFACT -> sender.sendMessage(Messages.get("shrine.fill.no_artifact"));
-            case NO_CAP -> sender.sendMessage(Messages.get("shrine.fill.no_cap", "element", elementId));
-            case ALREADY_FULL -> sender.sendMessage(Messages.get(
-                    "shrine.fill.already_full",
-                    "element", elementId,
-                    "amount", MagicNumbers.format(amount)));
-            case STARTED -> sender.sendMessage(Messages.get(
-                    "shrine.fill.started",
-                    "element", elementId,
-                    "amount", MagicNumbers.format(amount)));
-        }
+        sender.sendMessage(switch (result) {
+            case NO_PEDESTAL -> Messages.get("shrine.fill.no_pedestal");
+            case NO_ARTIFACT -> Messages.get("shrine.fill.no_artifact");
+            case NO_CAP -> Messages.get("shrine.fill.no_cap", "element", elementId);
+            case ALREADY_FULL -> Messages.get("shrine.fill.already_full",
+                    "element", elementId, "amount", MagicNumbers.format(amount));
+            case STARTED -> Messages.get("shrine.fill.started",
+                    "element", elementId, "amount", MagicNumbers.format(amount));
+        });
         return true;
     }
 
@@ -370,7 +366,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     private static Double parseAmount(String raw) {
         try {
-            return Double.parseDouble(raw.trim());
+            double value = Double.parseDouble(raw.trim());
+            return Double.isFinite(value) ? value : null;
         } catch (NumberFormatException ex) {
             return null;
         }
@@ -421,7 +418,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Messages.get("artifact.setfill.no_item"));
             return true;
         }
-        if (ArtifactIds.read(item) == null) {
+        UUID id = ArtifactIds.read(item);
+        if (id == null) {
             sender.sendMessage(Messages.get("artifact.setfill.no_id"));
             return true;
         }
@@ -435,10 +433,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Messages.get("artifact.setfill.no_cap", "element", elementId));
             return true;
         }
-        double amount;
-        try {
-            amount = Double.parseDouble(args[3]);
-        } catch (NumberFormatException ex) {
+        Double amount = parseAmount(args[3]);
+        if (amount == null) {
             sender.sendMessage(Messages.get("artifact.setfill.invalid_amount"));
             return true;
         }
@@ -446,11 +442,10 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         artifact.setFill(elementId, amount);
         artifact.write(item);
         player.getInventory().setItemInMainHand(item);
-        UUID id = ArtifactIds.read(item);
         AuraLog.append(
                 "setfill player=%s artifact=%s element=%s fill=%s->%s requested=%s",
                 player.getName(),
-                id != null ? id.toString() : "-",
+                id.toString(),
                 elementId,
                 AuraLog.n(fillBefore),
                 AuraLog.n(artifact.getFill(elementId)),
@@ -464,7 +459,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     private static ItemStack heldArtifactItem(Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
-        if (item == null || item.getType().isAir()) {
+        if (item.getType().isAir()) {
             return null;
         }
         return item;
@@ -566,13 +561,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     private static void giveOrDrop(Player player, ItemStack stack) {
         Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
-        if (leftover.isEmpty() || player.getWorld() == null) {
-            return;
-        }
         for (ItemStack extra : leftover.values()) {
-            if (extra != null && !extra.getType().isAir()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), extra);
-            }
+            player.getWorld().dropItemNaturally(player.getLocation(), extra);
         }
     }
 

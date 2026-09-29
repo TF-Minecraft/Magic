@@ -41,7 +41,7 @@ public final class SocketLayout {
         }
         String key = slotId.trim().toLowerCase(Locale.ROOT);
         String mapped = LABELS.get(key);
-        if (mapped != null && !mapped.isBlank()) {
+        if (mapped != null) {
             return mapped;
         }
         return prettyId(key);
@@ -82,12 +82,12 @@ public final class SocketLayout {
             if (parts != null) {
                 for (PartDef part : parts) {
                     if (part != null) {
-                        count += part.socketCount(slotId);
+                        count = (int) Math.min(Integer.MAX_VALUE, (long) count + part.socketCount(slotId));
                     }
                 }
             }
             String suffix = archetype.slotSuffix(slotId);
-            if (suffix.isEmpty() || count <= 0) {
+            if (count <= 0) {
                 continue;
             }
             String colour = SocketColourRegistry.colour(band, suffix);
@@ -109,7 +109,7 @@ public final class SocketLayout {
         for (String slotId : archetype.slotIds()) {
             for (PartDef part : parts) {
                 if (part != null) {
-                    total += part.socketCount(slotId);
+                    total = (int) Math.min(Integer.MAX_VALUE, (long) total + part.socketCount(slotId));
                 }
             }
         }
@@ -129,12 +129,12 @@ public final class SocketLayout {
             if (parts != null) {
                 for (PartDef part : parts) {
                     if (part != null) {
-                        count += part.socketCount(slotId);
+                        count = (int) Math.min(Integer.MAX_VALUE, (long) count + part.socketCount(slotId));
                     }
                 }
             }
             String suffix = archetype.slotSuffix(slotId);
-            if (suffix.isEmpty() || count <= 0) {
+            if (count <= 0) {
                 continue;
             }
             for (int i = 0; i < count; i++) {

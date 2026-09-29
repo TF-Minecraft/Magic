@@ -46,7 +46,7 @@ public final class ResonanceService {
                         + MagicNumbers.format(session.getResonance(element.getId())));
             }
         }
-        if (dirty && player != null && Magic.plugin != null && Magic.plugin.getProfileService() != null) {
+        if (dirty && Magic.plugin != null && Magic.plugin.getProfileService() != null) {
             Magic.plugin.getProfileService().savePlayer(player);
         }
     }

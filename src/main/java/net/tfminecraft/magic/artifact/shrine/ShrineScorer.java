@@ -74,9 +74,7 @@ public final class ShrineScorer {
                     }
                     count += n;
                     List<Location> at = locations.get(material);
-                    if (at != null) {
-                        found.addAll(at);
-                    }
+                    found.addAll(at);
                 }
                 if (count <= 0) {
                     continue;
@@ -94,7 +92,7 @@ public final class ShrineScorer {
                 continue;
             }
             double maxAura = score * auraCap;
-            double aps = seconds > 0 ? score * (auraCap / seconds) : 0;
+            double aps = score * (auraCap / seconds);
             byElement.put(def.getElementId(), new ShrineElementScore(
                     def.getElementId(), maxAura, aps, active, pickEmitters(familyLocs, center, seed)));
         }
@@ -123,7 +121,7 @@ public final class ShrineScorer {
             }
         }
         Collections.shuffle(pool, rng);
-        if (picked.isEmpty() && !pool.isEmpty()) {
+        if (picked.isEmpty()) {
             Location first = pool.remove(0);
             picked.add(first.clone());
             used.add(key(first));

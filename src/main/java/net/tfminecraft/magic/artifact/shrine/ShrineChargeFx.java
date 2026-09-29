@@ -75,7 +75,7 @@ public final class ShrineChargeFx {
         }
         World world = furniture.getLoc().getWorld();
         Location at = target(furniture);
-        if (world == null || at == null) {
+        if (at == null) {
             return;
         }
         ShrineFxDef fx = ShrineRegistry.fx(elementId);
@@ -123,7 +123,7 @@ public final class ShrineChargeFx {
 
     private static void spawnPulls(ShrineChargeSession session) {
         Furniture furniture = session.getFurniture();
-        if (furniture == null || furniture.getLoc() == null || furniture.getLoc().getWorld() == null) {
+        if (furniture.getLoc() == null || furniture.getLoc().getWorld() == null) {
             return;
         }
         PlacedSlot slot = furniture.getActiveSlot(session.getSlotId()).orElse(null);

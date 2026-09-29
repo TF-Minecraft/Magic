@@ -6,13 +6,24 @@ package net.tfminecraft.magic.tick;
 public final class MagicTickContext {
 
     private final long elapsedSeconds;
+    private final long previousSeconds;
 
     public static MagicTickContext of(long elapsedSeconds) {
         return new MagicTickContext(elapsedSeconds);
     }
 
     MagicTickContext(long elapsedSeconds) {
+        this(elapsedSeconds - 1L, elapsedSeconds);
+    }
+
+    /** A callback can span part of a second or cross several periodic boundaries. */
+    public static MagicTickContext between(long previousSeconds, long elapsedSeconds) {
+        return new MagicTickContext(previousSeconds, elapsedSeconds);
+    }
+
+    private MagicTickContext(long previousSeconds, long elapsedSeconds) {
         this.elapsedSeconds = elapsedSeconds;
+        this.previousSeconds = previousSeconds;
     }
 
     public long seconds() {
@@ -28,7 +39,9 @@ public final class MagicTickContext {
     }
 
     public boolean every(long intervalSeconds) {
-        return intervalSeconds > 0 && elapsedSeconds % intervalSeconds == 0;
+        return intervalSeconds > 0
+                && Math.floorDiv(elapsedSeconds, intervalSeconds)
+                        > Math.floorDiv(previousSeconds, intervalSeconds);
     }
 
     public boolean everyMinutes(long minutes) {

@@ -51,7 +51,7 @@ public final class TierBands {
         if (table == null) {
             table = bands.get(DEFAULT_KEY);
         }
-        if (table == null || table.isEmpty()) {
+        if (table == null) {
             return 0;
         }
         int best = 0;

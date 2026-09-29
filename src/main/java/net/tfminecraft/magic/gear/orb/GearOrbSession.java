@@ -248,7 +248,7 @@ public final class GearOrbSession {
                     anchor.getX() + Math.cos(orb.getAngle()) * orb.getRadius(),
                     anchor.getY() + orb.getHeightBias() + bob,
                     anchor.getZ() + Math.sin(orb.getAngle()) * orb.getRadius());
-            if (orb.getIntroRemaining() > 0 && orb.getIntroMax() > 0) {
+            if (orb.getIntroRemaining() > 0) {
                 double t = 1.0 - (double) orb.getIntroRemaining() / orb.getIntroMax();
                 Location from = orb.getAnchor();
                 orb.setLocation(new Location(
@@ -349,7 +349,7 @@ public final class GearOrbSession {
     }
 
     private static Color resolveBeamColor(String elementId) {
-        ElementDef element = elementId == null || elementId.isBlank()
+        ElementDef element = elementId.isBlank()
                 ? null
                 : ElementRegistry.getById(elementId);
         if (element == null) {
@@ -359,9 +359,6 @@ public final class GearOrbSession {
     }
 
     private static double randomRange(ThreadLocalRandom random, double min, double max) {
-        if (max <= min) {
-            return min;
-        }
         return min + random.nextDouble() * (max - min);
     }
 }

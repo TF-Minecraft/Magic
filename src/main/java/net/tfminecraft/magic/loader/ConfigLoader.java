@@ -130,7 +130,7 @@ public final class ConfigLoader implements LoaderInterface {
     private static void loadRuneTypes(FileConfiguration config) {
         Cache.runeTypes.clear();
         for (String type : config.getStringList("runes.types")) {
-            if (type != null && !type.isBlank()) {
+            if (!type.isBlank()) {
                 Cache.runeTypes.add(type.trim().toLowerCase());
             }
         }
@@ -139,7 +139,7 @@ public final class ConfigLoader implements LoaderInterface {
     private static void loadRuneKeybinds(FileConfiguration config) {
         Cache.runeKeybinds.clear();
         for (String raw : config.getStringList("runes.keybinds")) {
-            if (raw == null || raw.isBlank()) {
+            if (raw.isBlank()) {
                 continue;
             }
             String id = raw.trim().toUpperCase(Locale.ROOT);
@@ -162,7 +162,7 @@ public final class ConfigLoader implements LoaderInterface {
             return;
         }
         String station = section.getString("station", net.tfminecraft.magic.gear.GearCache.station);
-        if (station != null && !station.isBlank()) {
+        if (!station.isBlank()) {
             net.tfminecraft.magic.gear.GearCache.station = station.trim();
         }
         int slot = section.getInt("output-slot", net.tfminecraft.magic.gear.GearCache.outputSlot);
@@ -206,7 +206,7 @@ public final class ConfigLoader implements LoaderInterface {
             return;
         }
         String display = section.getString("display_furniture", ArtifactCareCache.displayFurnitureId);
-        if (display != null && !display.isBlank()) {
+        if (!display.isBlank()) {
             ArtifactCareCache.displayFurnitureId = display.trim();
         }
         loadUsers(section.getConfigurationSection("users"));

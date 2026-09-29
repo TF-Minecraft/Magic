@@ -25,7 +25,8 @@ public final class GearCosts {
                 continue;
             }
             for (Map.Entry<String, Integer> entry : part.getCost().entrySet()) {
-                costs.merge(entry.getKey(), entry.getValue(), Integer::sum);
+                costs.merge(entry.getKey(), entry.getValue(),
+                        (a, b) -> (int) Math.min(Integer.MAX_VALUE, (long) a + b));
             }
         }
         return costs;
@@ -105,7 +106,7 @@ public final class GearCosts {
                 stack.setAmount(give);
                 remaining -= give;
                 for (ItemStack leftover : player.getInventory().addItem(stack).values()) {
-                    if (leftover != null && !leftover.getType().isAir() && at.getWorld() != null) {
+                    if (at.getWorld() != null) {
                         at.getWorld().dropItem(at, leftover);
                     }
                 }

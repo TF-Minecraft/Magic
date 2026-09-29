@@ -34,9 +34,6 @@ public final class WeaponLore {
         GearProvenance.applyMajority(stack, GearProvenance.resolveParts(stack));
         WeaponRequirement requirement = WeaponRequirement.fromItem(stack);
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore = stripBlock(lore);
         List<String> block = new ArrayList<>();

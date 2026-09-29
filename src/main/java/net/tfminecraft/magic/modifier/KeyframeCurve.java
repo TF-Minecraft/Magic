@@ -11,9 +11,17 @@ public final class KeyframeCurve {
     private final NavigableMap<Double, ModifierTriple> keys;
 
     public KeyframeCurve(NavigableMap<Double, ModifierTriple> keys) {
-        this.keys = keys == null || keys.isEmpty()
-                ? new TreeMap<>(Map.of(0.0, ModifierTriple.ZERO))
-                : new TreeMap<>(keys);
+        this.keys = new TreeMap<>();
+        if (keys != null) {
+            for (Map.Entry<Double, ModifierTriple> entry : keys.entrySet()) {
+                if (Double.isFinite(entry.getKey())) {
+                    this.keys.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if (this.keys.isEmpty()) {
+            this.keys.put(0.0, ModifierTriple.ZERO);
+        }
     }
 
     public static KeyframeCurve fromSection(ConfigurationSection section) {
@@ -22,7 +30,7 @@ public final class KeyframeCurve {
             return empty();
         }
         for (String rawKey : section.getKeys(false)) {
-            if (rawKey == null || rawKey.isBlank()) {
+            if (rawKey.isBlank()) {
                 continue;
             }
             double at;
@@ -75,7 +83,7 @@ public final class KeyframeCurve {
     public ModifierTriple sample(double amount) {
         Map.Entry<Double, ModifierTriple> first = keys.firstEntry();
         Map.Entry<Double, ModifierTriple> last = keys.lastEntry();
-        if (amount <= first.getKey()) {
+        if (Double.isNaN(amount) || amount <= first.getKey()) {
             return first.getValue();
         }
         if (amount >= last.getKey()) {
@@ -83,14 +91,11 @@ public final class KeyframeCurve {
         }
         Map.Entry<Double, ModifierTriple> floor = keys.floorEntry(amount);
         Map.Entry<Double, ModifierTriple> ceil = keys.ceilingEntry(amount);
-        if (floor == null) {
-            return first.getValue();
-        }
-        if (ceil == null || ceil.getKey().equals(floor.getKey())) {
+        if (ceil.getKey().equals(floor.getKey())) {
             return floor.getValue();
         }
         double span = ceil.getKey() - floor.getKey();
-        double t = span == 0.0 ? 0.0 : (amount - floor.getKey()) / span;
+        double t = (amount - floor.getKey()) / span;
         return floor.getValue().lerp(ceil.getValue(), t);
     }
 

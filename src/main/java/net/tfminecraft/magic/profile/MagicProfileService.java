@@ -103,7 +103,7 @@ public final class MagicProfileService {
 
     private void saveLoaded(Player player) {
         String characterId = sessionManager.getLoadedCharacterId(player);
-        if (characterId == null || characterId.isBlank()) {
+        if (characterId == null) {
             RPCharacter active = RpCharactersBridge.getActiveCharacter(player);
             characterId = active != null ? active.getId() : null;
         }

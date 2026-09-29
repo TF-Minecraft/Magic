@@ -20,7 +20,7 @@ public final class GearHand {
     /** @return the held mage weapon, or null when the player is holding something else */
     public static ItemStack held(Player player) {
         HeldSlot slot = heldSlot(player);
-        if (slot == null || player == null) {
+        if (slot == null) {
             return null;
         }
         return slot == HeldSlot.MAIN_HAND

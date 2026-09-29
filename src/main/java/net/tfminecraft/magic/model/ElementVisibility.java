@@ -81,7 +81,7 @@ public final class ElementVisibility {
             return exact;
         }
         for (ArtifactTypeDef type : ArtifactTypeRegistry.getAll()) {
-            if (type.getElementId() != null && type.getElementId().equalsIgnoreCase(id)) {
+            if (type.getElementId().equalsIgnoreCase(id)) {
                 return type;
             }
         }

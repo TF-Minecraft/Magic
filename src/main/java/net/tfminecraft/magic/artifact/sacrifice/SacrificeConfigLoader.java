@@ -47,12 +47,12 @@ public final class SacrificeConfigLoader {
         SacrificeRegistry.setRequireRpCharacters(config.getBoolean("require_rpcharacters", true));
         SacrificeRegistry.setRpChannel(config.getString("rp_channel", "rp"));
 
-        String daggerPath = config.getString("dagger");
+        String daggerPath = config.isString("dagger") ? config.getString("dagger") : null;
         ConfigurationSection daggerSec = config.getConfigurationSection("dagger");
         if (daggerPath == null || daggerPath.isBlank()) {
             if (daggerSec != null) {
                 daggerPath = daggerSec.getString("path", "");
-                if (daggerPath == null || daggerPath.isBlank()) {
+                if (daggerPath.isBlank()) {
                     daggerPath = legacyDaggerPath(daggerSec);
                 }
             }
@@ -97,7 +97,7 @@ public final class SacrificeConfigLoader {
                 }
                 List<String> words = new ArrayList<>();
                 for (String raw : elementSec.getStringList("words")) {
-                    if (raw == null || raw.isBlank()) {
+                    if (raw.isBlank()) {
                         continue;
                     }
                     String word = raw.trim();
@@ -113,7 +113,7 @@ public final class SacrificeConfigLoader {
                 String lorePain = lore != null ? lore.getString("pain", "") : "";
                 String loreScreams = lore != null ? lore.getString("screams", "") : "";
                 String loreSoul = lore != null ? lore.getString("soul", "") : "";
-                if (loreSoul == null || loreSoul.isBlank()) {
+                if (loreSoul.isBlank()) {
                     loreSoul = lore != null ? lore.getString("death", "") : "";
                 }
                 double elementMin = elementSec.contains("min_scenery_aura")
@@ -145,12 +145,12 @@ public final class SacrificeConfigLoader {
 
     private static String legacyDaggerPath(ConfigurationSection daggerSec) {
         String ia = daggerSec.getString("itemsadder", "");
-        if (ia != null && !ia.isBlank()) {
+        if (!ia.isBlank()) {
             String id = ia.trim();
             return id.regionMatches(true, 0, "ia.", 0, 3) ? id : "ia." + id;
         }
         String material = daggerSec.getString("material", "GOLDEN_SWORD");
-        String type = material != null && !material.isBlank()
+        String type = !material.isBlank()
                 ? material.trim().toLowerCase(Locale.ROOT)
                 : "golden_sword";
         int cmd = daggerSec.getInt("custom_model_data", -1);
@@ -187,7 +187,7 @@ public final class SacrificeConfigLoader {
         }
         Set<String> tiers = new LinkedHashSet<>();
         for (String id : fx.getStringList("surge_tiers")) {
-            if (id != null && !id.isBlank()) {
+            if (!id.isBlank()) {
                 tiers.add(id.trim().toLowerCase(Locale.ROOT));
             }
         }

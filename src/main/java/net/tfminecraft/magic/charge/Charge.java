@@ -54,9 +54,6 @@ public final class Charge implements AuraVessel {
 
     private static int readTier(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return 0;
-        }
         Integer stored = meta.getPersistentDataContainer().get(
                 ChargeKeys.chargeTier(), PersistentDataType.INTEGER);
         return stored == null ? 0 : stored;
@@ -64,9 +61,6 @@ public final class Charge implements AuraVessel {
 
     private static String readPrimary(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return "";
-        }
         String stored = meta.getPersistentDataContainer().get(
                 ArtifactKeys.artifactPrimary(), PersistentDataType.STRING);
         return stored == null || stored.isBlank() ? "" : stored.trim().toLowerCase(Locale.ROOT);
@@ -105,7 +99,7 @@ public final class Charge implements AuraVessel {
         boolean any = false;
         for (Map.Entry<String, ShrineElementScore> entry : score.getByElement().entrySet()) {
             ShrineElementScore elementScore = entry.getValue();
-            if (elementScore == null || elementScore.getMaxAura() <= 0) {
+            if (elementScore == null || !Double.isFinite(elementScore.getMaxAura()) || elementScore.getMaxAura() <= 0) {
                 continue;
             }
             if (!ElementVisibility.shownOnCharge(entry.getKey())) {
@@ -122,9 +116,7 @@ public final class Charge implements AuraVessel {
             return false;
         }
         stampTier(stack);
-        if (!best.isEmpty()) {
-            setPrimary(stack, best);
-        }
+        setPrimary(stack, best);
         return true;
     }
 
@@ -209,7 +201,7 @@ public final class Charge implements AuraVessel {
 
     @Override
     public String primaryElementId() {
-        return primary != null && !primary.isBlank() ? primary : aura.highestCapElementId();
+        return !primary.isBlank() ? primary : aura.highestCapElementId();
     }
 
     @Override

@@ -95,9 +95,6 @@ public final class ResonanceGuiBuilder {
                 : CharacterSkull.ofOwner(player);
 
         SkullMeta meta = (SkullMeta) head.getItemMeta();
-        if (meta == null) {
-            return head;
-        }
 
         if (character == null) {
             meta.setDisplayName(GuiText.text("label_accent", "Resonance"));
@@ -155,9 +152,6 @@ public final class ResonanceGuiBuilder {
     private static ItemStack buildCastModeItem(CastModeDef mode, boolean selected, ResonanceSession session) {
         ItemStack item = ItemRef.buildOrFallback(mode.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         meta.setDisplayName(GuiText.format(mode.getName()));
         List<String> lore = new ArrayList<>(GuiText.formatLoreLines(mode.getLore()));
         if (mode.getId().equalsIgnoreCase(GuiCache.castModeLeft.getId())) {
@@ -182,9 +176,6 @@ public final class ResonanceGuiBuilder {
     private static ItemStack buildElementItem(ElementDef element, ResonanceSession session) {
         ItemStack item = ItemRef.buildOrFallback(element.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
         meta.setDisplayName(MagicText.elementName(element));
         List<String> lore = new ArrayList<>();
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;

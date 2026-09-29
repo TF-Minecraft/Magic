@@ -74,7 +74,7 @@ public final class ArtifactAdjectiveRegistry {
     }
 
     private static List<String> getList(Map<String, List<String>> map, String rarityId) {
-        if (map == null || rarityId == null || rarityId.isBlank()) {
+        if (rarityId == null || rarityId.isBlank()) {
             return List.of();
         }
         List<String> exact = map.get(rarityId.trim().toLowerCase(Locale.ROOT));
@@ -83,7 +83,7 @@ public final class ArtifactAdjectiveRegistry {
 
     private static void addAll(List<String> out, List<String> extra) {
         for (String word : extra) {
-            if (word != null && !word.isBlank() && !out.contains(word)) {
+            if (!out.contains(word)) {
                 out.add(word);
             }
         }

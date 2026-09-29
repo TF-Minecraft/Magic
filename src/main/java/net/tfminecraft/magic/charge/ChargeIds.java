@@ -28,9 +28,6 @@ public final class ChargeIds {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return false;
-        }
         Integer tier = meta.getPersistentDataContainer().get(
                 ChargeKeys.chargeTier(), PersistentDataType.INTEGER);
         return tier != null && tier > 0;

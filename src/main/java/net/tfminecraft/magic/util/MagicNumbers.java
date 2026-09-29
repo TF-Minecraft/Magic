@@ -42,9 +42,6 @@ public final class MagicNumbers {
                 .setScale(places, RoundingMode.HALF_UP)
                 .stripTrailingZeros()
                 .toPlainString();
-        if ("-0".equals(raw)) {
-            return "0";
-        }
         return raw;
     }
 }

@@ -29,25 +29,19 @@ public final class VesselLore {
         }
         PlayerInventory inventory = player.getInventory();
         ItemStack[] storage = inventory.getStorageContents();
-        if (storage != null) {
-            for (int i = 0; i < storage.length; i++) {
-                storage[i] = updateItem(storage[i]);
-            }
-            inventory.setStorageContents(storage);
+        for (int i = 0; i < storage.length; i++) {
+            storage[i] = updateItem(storage[i]);
         }
+        inventory.setStorageContents(storage);
         ItemStack[] armor = inventory.getArmorContents();
-        if (armor != null) {
-            for (int i = 0; i < armor.length; i++) {
-                armor[i] = updateItem(armor[i]);
-            }
-            inventory.setArmorContents(armor);
+        for (int i = 0; i < armor.length; i++) {
+            armor[i] = updateItem(armor[i]);
         }
+        inventory.setArmorContents(armor);
         ItemStack[] extra = inventory.getExtraContents();
-        if (extra != null) {
-            for (int i = 0; i < extra.length; i++) {
-                extra[i] = updateItem(extra[i]);
-            }
-            inventory.setExtraContents(extra);
+        for (int i = 0; i < extra.length; i++) {
+            extra[i] = updateItem(extra[i]);
         }
+        inventory.setExtraContents(extra);
     }
 }

@@ -19,16 +19,13 @@ public final class SacrificeImprintStore {
             return out;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return out;
-        }
         String raw = meta.getPersistentDataContainer().get(
                 ArtifactKeys.sacrificeImprints(), PersistentDataType.STRING);
         if (raw == null || raw.isBlank()) {
             return out;
         }
         for (String part : raw.split(";")) {
-            if (part == null || part.isBlank()) {
+            if (part.isBlank()) {
                 continue;
             }
             String[] bits = part.split("\\|", 4);
@@ -46,9 +43,6 @@ public final class SacrificeImprintStore {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         if (imprints == null || imprints.isEmpty()) {
             meta.getPersistentDataContainer().remove(ArtifactKeys.sacrificeImprints());
             stack.setItemMeta(meta);
@@ -88,16 +82,13 @@ public final class SacrificeImprintStore {
             case SacrificeImprint.SCREAMS -> element.getLoreScreams();
             default -> element.getLorePain();
         };
-        if (template == null || template.isBlank()) {
+        if (template.isBlank()) {
             return "";
         }
-        return template.replace("{character}", imprint.getCharacterName() != null ? imprint.getCharacterName() : "");
+        return template.replace("{character}", imprint.getCharacterName());
     }
 
     private static String sanitize(String raw) {
-        if (raw == null) {
-            return "";
-        }
         return raw.replace('|', ' ').replace(';', ' ').trim();
     }
 }

@@ -30,7 +30,7 @@ public final class ArtifactPathParser {
         if ("artifact".equalsIgnoreCase(rest)) {
             return new ArtifactPathSpec(null, null, new LinkedHashMap<>());
         }
-        if (!rest.startsWith("(") || !rest.endsWith(")") || rest.length() < 2) {
+        if (!rest.startsWith("(") || !rest.endsWith(")")) {
             log("Expected magic.artifact or magic.(...): " + trimmed);
             return null;
         }
@@ -39,9 +39,6 @@ public final class ArtifactPathParser {
         String rarityId = null;
         LinkedHashMap<String, Double> extras = new LinkedHashMap<>();
         for (String token : inner.split(";")) {
-            if (token == null) {
-                continue;
-            }
             String part = token.trim();
             if (part.isEmpty()) {
                 continue;
@@ -89,9 +86,6 @@ public final class ArtifactPathParser {
     }
 
     private static String canonicalTypeId(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
         ArtifactTypeDef exact = ArtifactTypeRegistry.getById(raw);
         if (exact != null) {
             return exact.getElementId();

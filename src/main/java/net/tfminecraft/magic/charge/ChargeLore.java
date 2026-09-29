@@ -40,9 +40,6 @@ public final class ChargeLore {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore = stripChargeBlock(lore);
         List<String> block = new ArrayList<>();

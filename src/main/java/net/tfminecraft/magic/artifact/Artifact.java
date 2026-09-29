@@ -62,13 +62,7 @@ public final class Artifact implements AuraVessel {
     }
 
     private static String readPrimary(ItemStack stack) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return "";
-        }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return "";
-        }
         String stored = meta.getPersistentDataContainer().get(
                 ArtifactKeys.artifactPrimary(), PersistentDataType.STRING);
         return stored == null || stored.isBlank() ? "" : stored.trim().toLowerCase(Locale.ROOT);
@@ -116,7 +110,7 @@ public final class Artifact implements AuraVessel {
 
     @Override
     public String primaryElementId() {
-        return primary != null && !primary.isBlank() ? primary : aura.highestCapElementId();
+        return !primary.isBlank() ? primary : aura.highestCapElementId();
     }
 
     @Override

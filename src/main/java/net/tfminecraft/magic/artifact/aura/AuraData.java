@@ -43,16 +43,13 @@ public final class AuraData {
             return data;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return data;
-        }
         PersistentDataContainer root = meta.getPersistentDataContainer();
         PersistentDataContainer capContainer = root.get(capKey, PersistentDataType.TAG_CONTAINER);
         PersistentDataContainer fillContainer = root.get(fillKey, PersistentDataType.TAG_CONTAINER);
         if (capContainer != null) {
             for (NamespacedKey key : capContainer.getKeys()) {
                 Double value = capContainer.get(key, PersistentDataType.DOUBLE);
-                if (value != null && value > 0) {
+                if (value != null && Double.isFinite(value) && value > 0) {
                     data.cap.put(key.getKey(), value);
                 }
             }
@@ -60,7 +57,7 @@ public final class AuraData {
         if (fillContainer != null) {
             for (NamespacedKey key : fillContainer.getKeys()) {
                 Double value = fillContainer.get(key, PersistentDataType.DOUBLE);
-                if (value == null) {
+                if (value == null || !Double.isFinite(value)) {
                     continue;
                 }
                 data.fill.put(key.getKey(), value);
@@ -69,7 +66,7 @@ public final class AuraData {
         parseBlob(data, root.get(blobKey, PersistentDataType.STRING));
         if (data.cap.isEmpty() && !data.fill.isEmpty()) {
             for (Map.Entry<String, Double> entry : data.fill.entrySet()) {
-                if (entry.getValue() != null && entry.getValue() > 0) {
+                if (entry.getValue() > 0) {
                     data.cap.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -99,11 +96,17 @@ public final class AuraData {
             }
             try {
                 double capValue = Double.parseDouble(bits[1].trim());
+                if (!Double.isFinite(capValue)) {
+                    continue;
+                }
                 if (capValue > 0 && data.getCap(id) <= 0) {
                     data.cap.put(id, capValue);
                 }
                 if (bits.length >= 3) {
                     double fillValue = Double.parseDouble(bits[2].trim());
+                    if (!Double.isFinite(fillValue)) {
+                        continue;
+                    }
                     data.fill.putIfAbsent(id, fillValue);
                     if (data.getFill(id) <= 0 && fillValue > 0) {
                         data.fill.put(id, fillValue);
@@ -148,7 +151,7 @@ public final class AuraData {
 
     public void setCap(String elementId, double value) {
         String id = normalize(elementId);
-        if (id.isEmpty()) {
+        if (id.isEmpty() || !Double.isFinite(value)) {
             return;
         }
         double next = Math.max(0.0, value);
@@ -163,7 +166,7 @@ public final class AuraData {
 
     public void setFill(String elementId, double value) {
         String id = normalize(elementId);
-        if (id.isEmpty() || getCap(id) <= 0) {
+        if (id.isEmpty() || !Double.isFinite(value) || getCap(id) <= 0) {
             return;
         }
         fill.put(id, clampFill(value, getCap(id)));
@@ -178,7 +181,7 @@ public final class AuraData {
         String best = "";
         double bestCap = -1;
         for (Map.Entry<String, Double> entry : cap.entrySet()) {
-            if (entry.getValue() != null && entry.getValue() > bestCap) {
+            if (entry.getValue() > bestCap) {
                 bestCap = entry.getValue();
                 best = entry.getKey();
             }
@@ -196,17 +199,11 @@ public final class AuraData {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         PersistentDataContainer root = meta.getPersistentDataContainer();
         PersistentDataContainer capContainer = root.getAdapterContext().newPersistentDataContainer();
         PersistentDataContainer fillContainer = root.getAdapterContext().newPersistentDataContainer();
         StringBuilder blob = new StringBuilder();
         for (Map.Entry<String, Double> entry : cap.entrySet()) {
-            if (entry.getValue() == null || entry.getValue() <= 0) {
-                continue;
-            }
             NamespacedKey key;
             try {
                 key = ArtifactKeys.element(entry.getKey());
@@ -226,11 +223,16 @@ public final class AuraData {
         root.set(fillKey, PersistentDataType.TAG_CONTAINER, fillContainer);
         if (blob.length() > 0) {
             root.set(blobKey, PersistentDataType.STRING, blob.toString());
+        } else {
+            root.remove(blobKey);
         }
         stack.setItemMeta(meta);
     }
 
     public static double clampFill(double value, double capValue) {
+        if (!Double.isFinite(value) || !Double.isFinite(capValue)) {
+            return 0.0;
+        }
         return MagicNumbers.clamp(value, 0.0, Math.max(0.0, capValue));
     }
 

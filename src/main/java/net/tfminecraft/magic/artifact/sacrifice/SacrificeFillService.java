@@ -36,7 +36,7 @@ public final class SacrificeFillService {
         PlacedSlot slot = furniture.getActiveSlot(session.getSlotId()).orElse(null);
         ItemStack item = ShrineChargeService.itemFromSlot(slot);
         AuraVessel artifact = AuraVessels.fromItem(item);
-        if (artifact == null || item == null) {
+        if (artifact == null) {
             return;
         }
         String elementId = session.getElementId();
@@ -59,9 +59,7 @@ public final class SacrificeFillService {
             SacrificeImprintStore.write(item, imprints);
         }
         artifact.write(item);
-        if (slot != null) {
-            slot.setCurrentItem(item);
-        }
+        slot.setCurrentItem(item);
         persist(furniture);
         AuraLog.append(
                 "sacrifice artifact=%s element=%s fill=%s->%s gain=%s factor=%s cap=%s character=%s",
@@ -92,9 +90,6 @@ public final class SacrificeFillService {
     }
 
     private static void persist(Furniture furniture) {
-        if (furniture == null) {
-            return;
-        }
         try {
             InteractibleFurniture.getInstance().getFurnitureManager().persistFurniture(furniture);
         } catch (Exception ignored) {

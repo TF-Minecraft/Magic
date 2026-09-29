@@ -52,7 +52,7 @@ public final class CastDriftListener implements Listener {
     }
 
     private static boolean isSurge(String castModeId) {
-        if (castModeId == null || castModeId.isBlank()) {
+        if (castModeId.isBlank()) {
             return false;
         }
         return castModeId.equalsIgnoreCase(GuiCache.castModeLeft.getId())
@@ -66,11 +66,9 @@ public final class CastDriftListener implements Listener {
                 return fromMeta;
             }
         }
-        if (cast != null) {
-            double fromSkill = cast.getParameter("mana");
-            if (fromSkill > 0.0) {
-                return fromSkill;
-            }
+        double fromSkill = cast.getParameter("mana");
+        if (fromSkill > 0.0) {
+            return fromSkill;
         }
         return 0.0;
     }

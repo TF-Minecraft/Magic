@@ -20,14 +20,17 @@ public final class MagicTickService {
 
     private static BukkitTask task;
     private static long elapsedSeconds;
+    private static long elapsedTicks;
+    private static long scheduledIntervalTicks;
 
     private MagicTickService() {}
 
     public static void start() {
         stop();
         long intervalTicks = Math.max(1L, Cache.tickIntervalTicks);
+        scheduledIntervalTicks = intervalTicks;
         task = Magic.plugin.getServer().getScheduler().runTaskTimer(
-                Magic.plugin, MagicTickService::tick, 0L, intervalTicks);
+                Magic.plugin, MagicTickService::tick, intervalTicks, intervalTicks);
     }
 
     public static void stop() {
@@ -60,8 +63,10 @@ public final class MagicTickService {
     }
 
     private static void tick() {
-        elapsedSeconds++;
-        MagicTickContext context = MagicTickContext.of(elapsedSeconds);
+        long previousSeconds = elapsedSeconds;
+        elapsedTicks += scheduledIntervalTicks;
+        elapsedSeconds = elapsedTicks / 20L;
+        MagicTickContext context = MagicTickContext.between(previousSeconds, elapsedSeconds);
         for (MagicTickHandler handler : handlers) {
             try {
                 handler.onTick(context);

@@ -46,9 +46,6 @@ public final class GearItemBuilder {
         List<PartDef> parts = GearProvenance.resolveParts(stack);
         List<String> colours = SocketLayout.colours(archetype, parts, band);
         ItemStack rewritten = applyMmoData(stack, colours, parts);
-        if (rewritten == null) {
-            return stack;
-        }
         rewritten = GearModelResolver.apply(rewritten, type, parts);
         copyGearPdc(stack, rewritten);
         GearProvenance.lockSockets(rewritten);
@@ -79,9 +76,6 @@ public final class GearItemBuilder {
         }
         List<String> colours = SocketLayout.colours(archetype, parts, band);
         ItemStack withMmo = applyMmoData(base, colours, parts);
-        if (withMmo == null) {
-            withMmo = base;
-        }
         withMmo = GearModelResolver.apply(withMmo, type, parts);
         GearProvenance.stamp(withMmo, type, parts);
         return WeaponLore.updateItem(withMmo);
@@ -179,9 +173,6 @@ public final class GearItemBuilder {
     private static ItemStack decoratePreview(
             ItemStack stack, GearType type, Collection<PartDef> parts) {
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return stack;
-        }
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("");
         int majority = MajorityTierResolver.resolve(parts);
@@ -197,7 +188,7 @@ public final class GearItemBuilder {
             lore.add("§cMMOItems is not loaded");
         }
         meta.setLore(lore);
-        if (meta.getDisplayName() == null || meta.getDisplayName().isBlank()) {
+        if (meta.getDisplayName().isBlank()) {
             meta.setDisplayName("§6" + type.getDisplayName());
         }
         stack.setItemMeta(meta);
@@ -209,10 +200,8 @@ public final class GearItemBuilder {
     private static ItemStack barrier(String reason) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§c" + reason);
-            item.setItemMeta(meta);
-        }
+        meta.setDisplayName("§c" + reason);
+        item.setItemMeta(meta);
         return item;
     }
 }

@@ -41,8 +41,7 @@ public final class ArtifactDisplayIndex {
         if (artifactId == null) {
             return false;
         }
-        Integer count = displayed.get(artifactId);
-        return count != null && count > 0;
+        return displayed.containsKey(artifactId);
     }
 
     public static boolean isDisplayed(String artifactId) {
@@ -58,7 +57,8 @@ public final class ArtifactDisplayIndex {
         if (artifactId == null) {
             return;
         }
-        displayed.merge(artifactId, 1, Integer::sum);
+        displayed.merge(artifactId, 1, (count, added) ->
+                (int) Math.min(Integer.MAX_VALUE, (long) count + added));
     }
 
     public static void ensure(ItemStack item) {

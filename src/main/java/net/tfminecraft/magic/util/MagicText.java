@@ -59,14 +59,11 @@ public final class MagicText {
 
     private static String visibleName(ElementDef element) {
         String raw = element.getName();
-        if (raw == null || raw.isBlank()) {
+        if (raw.isBlank()) {
             raw = element.getId();
         }
         @SuppressWarnings("deprecation")
         String stripped = ChatColor.stripColor(raw);
-        if (stripped == null) {
-            stripped = raw;
-        }
         stripped = stripped.replaceAll("(?i)#[0-9a-f]{6}", "").trim();
         return stripped.isEmpty() ? element.getId() : stripped;
     }

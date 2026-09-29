@@ -32,7 +32,6 @@ public final class GearModelScheme {
         if (type == null) {
             return null;
         }
-        String path = paths.get(type);
-        return path == null || path.isBlank() ? null : path;
+        return paths.get(type);
     }
 }
