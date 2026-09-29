@@ -140,6 +140,7 @@ public final class GearRefresher {
         ItemMeta fromMeta = from.getItemMeta();
         ItemMeta toMeta = to.getItemMeta();
         copyString(fromMeta, toMeta, GearKeys.parts());
+        copyString(fromMeta, toMeta, GearKeys.craftInputs());
         copyString(fromMeta, toMeta, GearKeys.archetype());
         copyString(fromMeta, toMeta, GearKeys.orphans());
         Integer archetypeRevision = fromMeta.getPersistentDataContainer().get(

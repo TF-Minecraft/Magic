@@ -24,6 +24,11 @@ public final class GearKeys {
         return new NamespacedKey(Magic.plugin, "gear_parts");
     }
 
+    /** Materials actually charged when the weapon was crafted, as a JSON map of item path to amount. */
+    public static NamespacedKey craftInputs() {
+        return new NamespacedKey(Magic.plugin, "gear_craft_inputs");
+    }
+
     public static NamespacedKey socketsLocked() {
         return new NamespacedKey(Magic.plugin, "gear_sockets_locked");
     }

@@ -147,6 +147,12 @@ public final class GearItemBuilder {
             toMeta.getPersistentDataContainer().set(
                     GearKeys.parts(), org.bukkit.persistence.PersistentDataType.STRING, parts);
         }
+        String craftInputs = fromMeta.getPersistentDataContainer().get(
+                GearKeys.craftInputs(), org.bukkit.persistence.PersistentDataType.STRING);
+        if (craftInputs != null) {
+            toMeta.getPersistentDataContainer().set(
+                    GearKeys.craftInputs(), org.bukkit.persistence.PersistentDataType.STRING, craftInputs);
+        }
         toMeta.getPersistentDataContainer().set(
                 GearKeys.archetype(),
                 org.bukkit.persistence.PersistentDataType.STRING,
