@@ -24,6 +24,7 @@ import net.tfminecraft.magic.gear.GearCache;
 import net.tfminecraft.magic.gear.GearCosts;
 import net.tfminecraft.magic.gear.GearItemBuilder;
 import net.tfminecraft.magic.gear.GearKeys;
+import net.tfminecraft.magic.gear.GearProvenance;
 import net.tfminecraft.magic.gear.GearStationStore;
 import net.tfminecraft.magic.gear.GearType;
 import net.tfminecraft.magic.gear.PartDef;
@@ -290,6 +291,7 @@ public final class GearInventoryManager implements Listener {
         boolean staffBypass = GearCosts.bypasses(player);
         Map<String, Integer> charged = staffBypass ? Map.of() : GearCosts.total(parts);
         GearCosts.take(player, parts);
+        GearProvenance.stampInputs(prepared, charged);
         GearStationStore.occupy(station, prepared, player.getUniqueId(), charged);
         OpenStationManager.clear(player);
         player.closeInventory();

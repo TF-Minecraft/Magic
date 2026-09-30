@@ -38,6 +38,22 @@ class GearProvenanceCoverageTest extends GearCoverageSupport {
   }
 
   @Test
+  void craftInputsRecordWhatWasChargedAndReadBack() {
+    for (ItemStack item : Arrays.asList(null, new ItemStack(Material.AIR))) {
+      GearProvenance.stampInputs(item, Map.of("v.gold", 1));
+      assertNull(GearProvenance.readInputs(item));
+    }
+    var item = item();
+    assertNull(GearProvenance.readInputs(item), "Weapons crafted before the record have none");
+    GearProvenance.stampInputs(item, null);
+    assertEquals(Map.of(), GearProvenance.readInputs(item));
+    GearProvenance.stampInputs(item, Map.of("m.materials.steel_ingot", 4, "v.gold", 2));
+    assertEquals(Map.of("m.materials.steel_ingot", 4, "v.gold", 2), GearProvenance.readInputs(item));
+    tag(item, GearKeys.craftInputs(), PersistentDataType.STRING, "{not json");
+    assertNull(GearProvenance.readInputs(item));
+  }
+
+  @Test
   void stampingTracksPartAndArchetypeRevisions() {
     var item = item();
     GearProvenance.stamp(item, GearType.STAFF, null);

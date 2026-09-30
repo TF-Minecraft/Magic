@@ -1,15 +1,25 @@
 package net.tfminecraft.magic.gear;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
+
 public final class GearProvenance {
+
+    private static final Gson GSON = new Gson();
+    private static final Type INPUTS_TYPE = new TypeToken<LinkedHashMap<String, Integer>>() {}.getType();
 
     private GearProvenance() {}
 
@@ -36,6 +46,33 @@ public final class GearProvenance {
                 archetype == null ? 1 : archetype.getRevision());
         writeMajority(meta, parts);
         stack.setItemMeta(meta);
+    }
+
+    /** Records what the craft actually charged. Empty when staff bypassed the cost. */
+    public static void stampInputs(ItemStack stack, Map<String, Integer> charged) {
+        if (stack == null || !stack.hasItemMeta()) {
+            return;
+        }
+        ItemMeta meta = stack.getItemMeta();
+        meta.getPersistentDataContainer().set(
+                GearKeys.craftInputs(), PersistentDataType.STRING, GSON.toJson(charged == null ? Map.of() : charged));
+        stack.setItemMeta(meta);
+    }
+
+    /** Materials charged at craft time, or null for weapons crafted before this was recorded. */
+    public static Map<String, Integer> readInputs(ItemStack stack) {
+        if (stack == null || !stack.hasItemMeta()) {
+            return null;
+        }
+        String json = stack.getItemMeta().getPersistentDataContainer().get(GearKeys.craftInputs(), PersistentDataType.STRING);
+        if (json == null) {
+            return null;
+        }
+        try {
+            return GSON.fromJson(json, INPUTS_TYPE);
+        } catch (JsonParseException ex) {
+            return null;
+        }
     }
 
     public static int majorityOf(ItemStack stack) {
