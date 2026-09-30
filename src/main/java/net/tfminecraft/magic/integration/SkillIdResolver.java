@@ -38,6 +38,14 @@ public final class SkillIdResolver {
     }
 
     /**
+     * True for a skill cast from an MMOCore class skill bar. Class skills are not runes:
+     * Magic leaves them alone (no refusal, whiff, weapon wear or cast drift).
+     */
+    public static boolean isClassCast(Skill cast) {
+        return cast instanceof CastableSkill;
+    }
+
+    /**
      * Spells come from MMOItems key combinations, whose {@code AbilityData} is a plain
      * MythicLib {@link Skill} and never an MMOCore {@link CastableSkill}. The handler id
      * is therefore the id that resolves for both, so it is tried first and the MMOCore

@@ -23,7 +23,7 @@ public final class CastDriftListener implements Listener {
             return;
         }
         Skill cast = event.getCast();
-        if (!SkillIdResolver.isActiveCast(cast)) {
+        if (!SkillIdResolver.isActiveCast(cast) || SkillIdResolver.isClassCast(cast)) {
             return;
         }
         Player player = event.getPlayer();

@@ -65,7 +65,7 @@ public final class ResonanceCastListener implements Listener {
             return;
         }
         Skill cast = event.getCast();
-        if (!SkillIdResolver.isActiveCast(cast)) {
+        if (!SkillIdResolver.isActiveCast(cast) || SkillIdResolver.isClassCast(cast)) {
             return;
         }
         String skillId = SkillIdResolver.resolveSkillId(cast);
