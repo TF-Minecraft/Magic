@@ -54,9 +54,6 @@ public final class GearProvenance {
             return;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return;
-        }
         meta.getPersistentDataContainer().set(
                 GearKeys.craftInputs(), PersistentDataType.STRING, GSON.toJson(charged == null ? Map.of() : charged));
         stack.setItemMeta(meta);
@@ -67,11 +64,7 @@ public final class GearProvenance {
         if (stack == null || !stack.hasItemMeta()) {
             return null;
         }
-        ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            return null;
-        }
-        String json = meta.getPersistentDataContainer().get(GearKeys.craftInputs(), PersistentDataType.STRING);
+        String json = stack.getItemMeta().getPersistentDataContainer().get(GearKeys.craftInputs(), PersistentDataType.STRING);
         if (json == null) {
             return null;
         }

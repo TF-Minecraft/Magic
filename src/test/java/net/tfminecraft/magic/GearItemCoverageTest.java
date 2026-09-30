@@ -199,6 +199,15 @@ class GearItemCoverageTest extends GearMmoCoverageSupport {
         minimal,
         dest);
     assertEquals(GearType.STAFF, GearProvenance.archetypeOf(dest));
+    assertNull(GearProvenance.readInputs(dest));
+    GearProvenance.stampInputs(minimal, Map.of("v.gold", 3));
+    invoke(
+        GearItemBuilder.class,
+        "copyGearPdc",
+        new Class[] {ItemStack.class, ItemStack.class},
+        minimal,
+        dest);
+    assertEquals(Map.of("v.gold", 3), GearProvenance.readInputs(dest));
     for (ItemStack[] pair :
         new ItemStack[][] {
           {null, dest},
