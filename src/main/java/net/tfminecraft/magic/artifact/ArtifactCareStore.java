@@ -27,6 +27,20 @@ public final class ArtifactCareStore {
         return readLong(stack, ArtifactKeys.careLastTick());
     }
 
+    /** Sets an artifact's muffle level and resets its care clock. */
+    public static boolean setMuffle(ItemStack stack, double muffle, long nowMs) {
+        if (Artifact.fromItem(stack) == null) {
+            return false;
+        }
+        ItemMeta meta = metaOf(stack);
+        PersistentDataContainer root = meta.getPersistentDataContainer();
+        root.set(ArtifactKeys.careMuffle(), PersistentDataType.DOUBLE, clamp01(muffle));
+        root.set(ArtifactKeys.careLastTick(), PersistentDataType.LONG, nowMs);
+        stack.setItemMeta(meta);
+        ArtifactLore.apply(stack);
+        return true;
+    }
+
     public static Map<String, Long> readUsers(ItemStack stack) {
         ItemMeta meta = metaOf(stack);
         if (meta == null) {
