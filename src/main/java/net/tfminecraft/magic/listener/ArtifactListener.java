@@ -73,6 +73,22 @@ public final class ArtifactListener implements Listener {
                 ArtifactCareStore.Persist.ALWAYS);
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFurnitureSlotAddCare(FurnitureSlotItemAddEvent event) {
+        if (!ArtifactDisplayIndex.isDisplayFurniture(event.getFurniture())) {
+            return;
+        }
+        ItemStack item = event.getItem();
+        if (ArtifactIds.hasKey(item)) {
+            ArtifactCareStore.apply(
+                    item,
+                    false,
+                    System.currentTimeMillis(),
+                    ArtifactCareStore.Persist.ALWAYS);
+            event.setItem(item);
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFurnitureSlotAdd(FurnitureSlotItemAddEvent event) {
         Furniture furniture = event.getFurniture();
@@ -104,7 +120,15 @@ public final class ArtifactListener implements Listener {
             ShrineChargeService.stop(event.getFurniture().getEntityId(), event.getSlot().getId());
             SacrificeRiteService.stop(event.getFurniture().getEntityId(), event.getSlot().getId());
         }
-        event.setItem(VesselLore.updateItem(event.getItem()));
+        ItemStack item = event.getItem();
+        if (ArtifactDisplayIndex.isDisplayFurniture(event.getFurniture()) && ArtifactIds.hasKey(item)) {
+            ArtifactCareStore.apply(
+                    item,
+                    true,
+                    System.currentTimeMillis(),
+                    ArtifactCareStore.Persist.ALWAYS);
+        }
+        event.setItem(VesselLore.updateItem(item));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

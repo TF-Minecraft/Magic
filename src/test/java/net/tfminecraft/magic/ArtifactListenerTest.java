@@ -169,6 +169,60 @@ class ArtifactListenerTest {
   }
 
   @Test
+  void furnitureSlotTransitionsTickArtifactCareAcrossDisplayCases() {
+    var listener = new ArtifactListener();
+    var furniture = mock(Furniture.class);
+    when(furniture.getEntityId()).thenReturn(UUID.randomUUID());
+    var add = mock(FurnitureSlotItemAddEvent.class);
+    var take = mock(FurnitureSlotItemTakeEvent.class);
+    var plain = new ItemStack(Material.STONE);
+    var artifact = new ItemStack(Material.STONE);
+    ArtifactIds.writeNew(artifact);
+    when(add.getFurniture()).thenReturn(furniture);
+    when(add.getItem()).thenReturn(plain);
+    when(take.getFurniture()).thenReturn(furniture);
+    when(take.getItem()).thenReturn(artifact);
+    try (var display = mockStatic(ArtifactDisplayIndex.class);
+        var care = mockStatic(ArtifactCareStore.class);
+        var meditation = mockStatic(MeditationService.class);
+        var shrine = mockStatic(ShrineChargeService.class);
+        var sacrifice = mockStatic(SacrificeRiteService.class);
+        var lore = mockStatic(VesselLore.class)) {
+      listener.onFurnitureSlotAddCare(add);
+      display.when(() -> ArtifactDisplayIndex.isDisplayFurniture(furniture)).thenReturn(true);
+      listener.onFurnitureSlotAddCare(add);
+      verify(add, never()).setItem(plain);
+
+      when(add.getItem()).thenReturn(artifact);
+      listener.onFurnitureSlotAddCare(add);
+      verify(add).setItem(artifact);
+      care.verify(
+          () ->
+              ArtifactCareStore.apply(
+                  eq(artifact),
+                  eq(false),
+                  anyLong(),
+                  eq(ArtifactCareStore.Persist.ALWAYS)));
+
+      lore.when(() -> VesselLore.updateItem(artifact)).thenReturn(artifact);
+      listener.onFurnitureSlotTake(take);
+      care.verify(
+          () ->
+              ArtifactCareStore.apply(
+                  eq(artifact),
+                  eq(true),
+                  anyLong(),
+                  eq(ArtifactCareStore.Persist.ALWAYS)));
+      verify(take).setItem(artifact);
+
+      display.when(() -> ArtifactDisplayIndex.isDisplayFurniture(furniture)).thenReturn(false);
+      listener.onFurnitureSlotAddCare(add);
+      listener.onFurnitureSlotTake(take);
+      care.verifyNoMoreInteractions();
+    }
+  }
+
+  @Test
   void sacrificeChatOnlyStartsMatchingRpWordsAndHonorsVisibility() {
     var listener = new SacrificeListener();
     var player = server.addPlayer();
