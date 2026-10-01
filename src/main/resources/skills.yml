@@ -97,3 +97,36 @@ Frostveil:
 Frozen_Tomb:
   element: Seithr
   tier: 4
+
+#Mitlan
+Tide_Shard:
+  element: Mitlan
+  tier: 1
+
+Bubble_Shard:
+  element: Mitlan
+  tier: 1
+
+Scalding_Wave:
+  element: Mitlan
+  tier: 2
+
+Tidal_Shield:
+  element: Mitlan
+  tier: 2
+
+Mitlan_Glyph:
+  element: Mitlan
+  tier: 3
+
+Crashing_Wave:
+  element: Mitlan
+  tier: 3
+
+Maelstrom:
+  element: Mitlan
+  tier: 4
+
+Drowning_Prison:
+  element: Mitlan
+  tier: 4
