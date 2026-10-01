@@ -116,6 +116,22 @@ class ArtifactCareTest {
   }
 
   @Test
+  void setMuffleClampsTheValueAndResetsTheCareClock() {
+    var item = artifact();
+    try (var lore = mockStatic(ArtifactLore.class)) {
+      assertTrue(ArtifactCareStore.setMuffle(item, -1, 2000));
+      assertEquals(0, ArtifactCareStore.readMuffle(item));
+      assertEquals(2000, ArtifactCareStore.readLastTickMs(item));
+      lore.verify(() -> ArtifactLore.apply(item));
+
+      assertTrue(ArtifactCareStore.setMuffle(item, 2, 4000));
+      assertEquals(1, ArtifactCareStore.readMuffle(item));
+      assertEquals(4000, ArtifactCareStore.readLastTickMs(item));
+      assertFalse(ArtifactCareStore.setMuffle(new ItemStack(Material.STONE), .5, 5000));
+    }
+  }
+
+  @Test
   void chargeItemsNeverAcquireArtifactCareState() {
     assertFalse(ArtifactCareStore.tick(null, false, 1000));
     assertFalse(ArtifactCareStore.tick(new ItemStack(Material.AIR), false, 1000));

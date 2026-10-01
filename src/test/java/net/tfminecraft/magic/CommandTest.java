@@ -241,6 +241,53 @@ class CommandTest {
   }
 
   @Test
+  void artifactMuffleCommandsValidateAndUpdateHeldArtifact() {
+    expect("artifact.setmuffle.usage", "artifact", "setmuffle");
+    expect("artifact.unmuffle.usage", "artifact", "unmuffle", "extra");
+    var console = mock(CommandSender.class);
+    when(console.hasPermission(anyString())).thenReturn(true);
+    run(console, "artifact", "setmuffle", "25");
+    run(console, "artifact", "unmuffle");
+    verify(console).sendMessage("artifact.setmuffle.players_only");
+    verify(console).sendMessage("artifact.unmuffle.players_only");
+
+    expect("artifact.setmuffle.no_item", "artifact", "setmuffle", "25");
+    expect("artifact.unmuffle.no_item", "artifact", "unmuffle");
+    player.getInventory().setItemInMainHand(new ItemStack(Material.STONE));
+    expect("artifact.setmuffle.no_item", "artifact", "setmuffle", "25");
+    expect("artifact.unmuffle.no_item", "artifact", "unmuffle");
+
+    var noId = new ItemStack(Material.STONE);
+    var noIdArtifact = Artifact.create();
+    noIdArtifact.setCap("fire", 10);
+    noIdArtifact.persistPdc(noId);
+    player.getInventory().setItemInMainHand(noId);
+    expect("artifact.setmuffle.no_id", "artifact", "setmuffle", "25");
+    expect("artifact.unmuffle.no_id", "artifact", "unmuffle");
+
+    var item = artifact();
+    player.getInventory().setItemInMainHand(item);
+    expect("artifact.setmuffle.invalid_amount", "artifact", "setmuffle", "bad");
+    expect("artifact.setmuffle.invalid_amount", "artifact", "setmuffle", "-1");
+    expect("artifact.setmuffle.invalid_amount", "artifact", "setmuffle", "101");
+    expect("artifact.setmuffle.ok", "artifact", "setmuffle", "25");
+    ItemStack held = player.getInventory().getItemInMainHand();
+    assertEquals(.25, ArtifactCareStore.readMuffle(held), 1e-10);
+    assertTrue(held.getItemMeta().getLore().stream().anyMatch(line -> line.contains("Muffled: 25%")));
+
+    try (var care = mockStatic(ArtifactCareStore.class)) {
+      expect("artifact.setmuffle.no_item", "artifact", "setmuffle", "50");
+      expect("artifact.unmuffle.no_item", "artifact", "unmuffle");
+    }
+
+    expect("artifact.unmuffle.ok", "artifact", "unmuffle");
+    held = player.getInventory().getItemInMainHand();
+    assertEquals(0, ArtifactCareStore.readMuffle(held));
+    assertTrue(ArtifactCareStore.readLastTickMs(held) > 0);
+    assertTrue(held.getItemMeta().getLore().stream().noneMatch(line -> line.contains("Muffled:")));
+  }
+
+  @Test
   void nonFiniteAmountsAreRejectedWithoutChangingArtifactOrResonance() {
     player.getInventory().setItemInMainHand(artifact());
     sessions.setLoadedCharacterId(player, "character");
@@ -278,7 +325,7 @@ class CommandTest {
     assertEquals(List.of("fill"), tab("shrine", ""));
     assertEquals(2, tab("shrine", "fill", "").size());
     assertTrue(tab("shrine", "other", "").isEmpty());
-    assertEquals(5, tab("artifact", "").size());
+    assertEquals(7, tab("artifact", "").size());
     assertEquals(2, tab("artifact", "setfill", "").size());
     assertTrue(tab("artifact", "setfill", "fire", "").isEmpty());
     assertEquals(List.of("random", "fire"), tab("artifact", "roll", ""));

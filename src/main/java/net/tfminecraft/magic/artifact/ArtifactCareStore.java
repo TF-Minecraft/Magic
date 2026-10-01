@@ -33,9 +33,6 @@ public final class ArtifactCareStore {
             return false;
         }
         ItemMeta meta = metaOf(stack);
-        if (meta == null) {
-            return false;
-        }
         PersistentDataContainer root = meta.getPersistentDataContainer();
         root.set(ArtifactKeys.careMuffle(), PersistentDataType.DOUBLE, clamp01(muffle));
         root.set(ArtifactKeys.careLastTick(), PersistentDataType.LONG, nowMs);
