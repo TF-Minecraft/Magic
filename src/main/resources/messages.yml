@@ -20,7 +20,7 @@ admin:
 
   no_permission: "#ff5555You do not have permission to use this command."
 
-  usage: "#aaaaaaUsage: /magic rune keybind <trigger> #555555| #aaaaaa/magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
+  usage: "#aaaaaaUsage: /magic rune keybind <trigger> #555555| #aaaaaa/magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic artifact setmuffle #555555| #aaaaaa/magic artifact unmuffle #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
 
 rune:
 
@@ -117,7 +117,7 @@ resonance:
 
 artifact:
 
-  usage: "#aaaaaaUsage: /magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact path #555555| #aaaaaa/magic artifact setfill"
+  usage: "#aaaaaaUsage: /magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact path #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic artifact setmuffle #555555| #aaaaaa/magic artifact unmuffle"
 
   path:
 
@@ -186,6 +186,32 @@ artifact:
     invalid_amount: "#ff5555Fill amount must be a number."
 
     ok: "#55ff55Set {element} fill to {fill}."
+
+  setmuffle:
+
+    usage: "#aaaaaaUsage: /magic artifact setmuffle <percent 0-100>"
+
+    players_only: "#ff5555Only players can set artifact muffle."
+
+    no_item: "#ff5555Hold an artifact in your main hand."
+
+    no_id: "#ff5555That item has no artifact id."
+
+    invalid_amount: "#ff5555Muffle must be a number from 0 to 100."
+
+    ok: "#55ff55Set artifact muffle to {muffle}%."
+
+  unmuffle:
+
+    usage: "#aaaaaaUsage: /magic artifact unmuffle"
+
+    players_only: "#ff5555Only players can unmuffle artifacts."
+
+    no_item: "#ff5555Hold an artifact in your main hand."
+
+    no_id: "#ff5555That item has no artifact id."
+
+    ok: "#55ff55Cleared artifact muffle ({muffle}%)."
 
 meditation:
 
@@ -344,4 +370,3 @@ gear:
     failed: "#ff5555Could not refresh that weapon. Check console."
 
     ok: "#55ff55Weapon refreshed against the live gear config."
-

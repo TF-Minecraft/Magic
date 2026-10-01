@@ -19,9 +19,11 @@ import io.lumine.mythic.lib.skill.trigger.TriggerType;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
+import net.tfminecraft.magic.artifact.Artifact;
+import net.tfminecraft.magic.artifact.ArtifactCareStore;
+import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.aura.AuraVessel;
 import net.tfminecraft.magic.artifact.aura.AuraVessels;
-import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.fillchest.ArtifactFillChestService;
 import net.tfminecraft.magic.artifact.config.ArtifactRarityDef;
 import net.tfminecraft.magic.artifact.config.ArtifactRarityRegistry;
@@ -182,6 +184,12 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if ("setfill".equalsIgnoreCase(args[1])) {
             return handleArtifactSetFill(sender, args);
+        }
+        if ("setmuffle".equalsIgnoreCase(args[1])) {
+            return handleArtifactSetMuffle(sender, args, false);
+        }
+        if ("unmuffle".equalsIgnoreCase(args[1])) {
+            return handleArtifactSetMuffle(sender, args, true);
         }
         sender.sendMessage(Messages.get("artifact.usage"));
         return true;
@@ -457,6 +465,64 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private static boolean handleArtifactSetMuffle(CommandSender sender, String[] args, boolean clear) {
+        if (clear ? args.length != 2 : args.length != 3) {
+            sender.sendMessage(Messages.get(clear
+                    ? "artifact.unmuffle.usage"
+                    : "artifact.setmuffle.usage"));
+            return true;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Messages.get(clear
+                    ? "artifact.unmuffle.players_only"
+                    : "artifact.setmuffle.players_only"));
+            return true;
+        }
+        ItemStack item = heldArtifactItem(player);
+        if (item == null || Artifact.fromItem(item) == null) {
+            sender.sendMessage(Messages.get(clear
+                    ? "artifact.unmuffle.no_item"
+                    : "artifact.setmuffle.no_item"));
+            return true;
+        }
+        UUID id = ArtifactIds.read(item);
+        if (id == null) {
+            sender.sendMessage(Messages.get(clear
+                    ? "artifact.unmuffle.no_id"
+                    : "artifact.setmuffle.no_id"));
+            return true;
+        }
+        double requested;
+        if (clear) {
+            requested = 0.0;
+        } else {
+            Double percent = parseAmount(args[2]);
+            if (percent == null || percent < 0.0 || percent > 100.0) {
+                sender.sendMessage(Messages.get("artifact.setmuffle.invalid_amount"));
+                return true;
+            }
+            requested = percent / 100.0;
+        }
+        double before = ArtifactCareStore.readMuffle(item);
+        if (!ArtifactCareStore.setMuffle(item, requested, System.currentTimeMillis())) {
+            sender.sendMessage(Messages.get(clear
+                    ? "artifact.unmuffle.no_item"
+                    : "artifact.setmuffle.no_item"));
+            return true;
+        }
+        player.getInventory().setItemInMainHand(item);
+        AuraLog.append(
+                "setmuffle player=%s artifact=%s muffle=%s->%s",
+                player.getName(),
+                id.toString(),
+                AuraLog.n(before),
+                AuraLog.n(requested));
+        sender.sendMessage(Messages.get(
+                clear ? "artifact.unmuffle.ok" : "artifact.setmuffle.ok",
+                "muffle", MagicNumbers.format(requested * 100.0)));
+        return true;
+    }
+
     private static ItemStack heldArtifactItem(Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType().isAir()) {
@@ -673,7 +739,9 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return Collections.emptyList();
         }
         if (args.length == 2) {
-            return filterPrefix(List.of("roll", "give", "create", "path", "setfill"), args[1]);
+            return filterPrefix(
+                    List.of("roll", "give", "create", "path", "setfill", "setmuffle", "unmuffle"),
+                    args[1]);
         }
         if ("setfill".equalsIgnoreCase(args[1])) {
             if (args.length == 3) {
