@@ -36,8 +36,8 @@ oseni:
 
 mitlan:
   name: Mitlan
-  icon: v.LAPIS_LAZULI
-  color: "#5555ff"
+  icon: m.mitlan_runes.rune_of_mitlan_glyph
+  color: "#3b8268"
   slot: 34
   aura_decay_per_hour: 0
   resonance:
