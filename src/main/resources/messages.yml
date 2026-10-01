@@ -14,7 +14,7 @@ open:
 
   no_character: "#ff5555You need an active character to view resonance."
 
-  no_permission: "#ff5555You do not have permission to use /resonance."
+  no_permission: "#ff5555You feel no resonance within you."
 
 admin:
 
@@ -28,7 +28,7 @@ rune:
 
   players_only: "#ff5555Only players can rebind a held rune."
 
-  no_permission: "#ff5555You do not have permission to rebind runes."
+  no_permission: "#ff5555You are not skilled enough to rebind runes."
 
   not_a_rune: "#ff5555Hold a rune to rebind its abilities."
 
@@ -259,7 +259,7 @@ gear:
 
     empty: "#aaaaaa§oThere is nothing on this station"
 
-    gone: "#ff5555That station is no longer valid."
+    gone: "#ff5555That station is no longer there."
 
   craft:
 
@@ -319,7 +319,7 @@ gear:
 
     done: "#aaaaaa§oThe craft comes apart. The charge, if any, is spent"
 
-    not_yours: "#ff5555Only the player who prepared this craft can take it apart."
+    not_yours: "#ff5555Only the one who prepared this craft can take it apart."
 
   broken:
 
