@@ -14,7 +14,7 @@ commands:
     permission: magic.use
   magic:
     description: Magic plugin commands
-    usage: /magic <rune|reload|open|resonance|artifact|fillchest|shrine|refresh>
+    usage: /magic <rune|reload|open|resonance|artifact|fillchest|shrine|refresh|weapon>
 
 permissions:
   magic.use:
@@ -49,3 +49,6 @@ permissions:
   magic.bloodmagic:
     description: Allows Bloodmagic resonance
     default: false
+  magic.weapon.give:
+    description: Give completed weapons (default give-permission)
+    default: op

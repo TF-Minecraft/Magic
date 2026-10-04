@@ -12,6 +12,8 @@ import io.lumine.mythic.lib.skill.trigger.TriggerType;
  * Runtime flags from config.yml.
  */
 public final class Cache {
+    public static String givePermission = "magic.weapon.give";
+
 
     public static boolean debug = false;
     public static String defaultCastMode = "flow";

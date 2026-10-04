@@ -1,3 +1,6 @@
+# Permission required to spawn completed weapons; blank disables the command.
+give-permission: magic.weapon.give
+
 debug: false
 # When true, aura events are appended to plugins/Magic/logs/aura.log
 logging: true

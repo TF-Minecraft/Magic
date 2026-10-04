@@ -15,6 +15,22 @@ Magic connects a character's relationship with the elements to meditation, artif
 
 Magic keeps resonance profiles tied to roleplay characters through RPCharacters. Its menus make current affinities and modifiers visible, while its equipment systems connect preparation at the crafting station with the character's experience when casting spells.
 
+## Staff weapon commands
+
+`/magic weapon give <player> <staff|wand|sword> <element> <aura> <part> [part...]`
+
+Gives one completed mage weapon to an online player. Use part IDs from `gear/parts.yml`
+and an element ID from the loaded element configuration. Supply exactly one part for
+each required category, respecting the core's part limit. Aura is the raw attunement
+amount and must reach a configured tier band. The command applies attunement, finalizes
+sockets and records no material cost. It does not change the recipient's resonance.
+The recipient needs an empty inventory slot.
+
+`give-permission` in `config.yml` defaults to `magic.weapon.give` (operators).
+Set it to your staff permission; a blank value disables giving. This permission is
+independent of `magic.admin`. Reload configuration with `/magic reload`.
+Tab completion suggests recipients, archetypes, elements and enabled part IDs.
+
 ## Documentation
 
 [Project documentation](https://github.com/TF-Minecraft/Docs/blob/main/projects/Magic/README.md)
