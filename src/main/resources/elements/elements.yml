@@ -1,13 +1,13 @@
 # Magic element catalog. Each element has a fixed GUI slot (0-53).
-# color is one "#rrggbb", or a list of hex stops for a gradient across the name.
 # Row 2: Spirit (20), Arcanum (22), Illusion (24)
 # Row 3 (third from bottom): Cerrith, Seithr, Oseni, Mitlan
 # Row 4 (second from bottom): Shadowmancy, Necromancy, Bloodmagic
 
 cerrith:
-  name: Cerrith
-  icon: m.cerrith_runes.rune_of_cerrith_glyph
-  color: "#466629"
+  name: "Cerrith"
+  icon: m.icons.cerrith_rune
+  color:
+    - "#466629"
   slot: 28
   aura_decay_per_hour: 0
   resonance:
@@ -15,9 +15,10 @@ cerrith:
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 seithr:
-  name: Seithr
-  icon: m.seithr_runes.rune_of_cold_embrace
-  color: "#15E5FF"
+  name: "Seithr"
+  icon: m.icons.seithr_rune
+  color:
+    - "#15E5FF"
   slot: 30
   aura_decay_per_hour: 0
   resonance:
@@ -25,9 +26,10 @@ seithr:
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 oseni:
-  name: Oseni
-  icon: m.oseni_runes.rune_of_oseni_glyph
-  color: "#e29a00"
+  name: "Oseni"
+  icon: m.icons.oseni_rune
+  color:
+    - "#e29a00"
   slot: 32
   aura_decay_per_hour: 0
   resonance:
@@ -35,9 +37,10 @@ oseni:
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 mitlan:
-  name: Mitlan
-  icon: v.LAPIS_LAZULI
-  color: "#5555ff"
+  name: "Mitlan"
+  icon: m.icons.mitlan_rune
+  color:
+    - "#3b8268"
   slot: 34
   aura_decay_per_hour: 0
   resonance:
@@ -45,33 +48,33 @@ mitlan:
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 shadowmancy:
-  name: Shadowmancy
-  icon: v.INK_SAC
-  color: "#555555"
+  name: "Shadowmancy"
+  icon: m.icons.shadowmancy_rune
+  color:
+    - "#716f6f"
   slot: 40
-  permission: magic.shadowmancy
   aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 necromancy:
-  name: Necromancy
-  icon: v.WITHER_SKELETON_SKULL
-  color: "#00aaaa"
+  name: "Necromancy"
+  icon: m.icons.necromancy_rune
+  color:
+    - "#aa00aa"
   slot: 38
-  permission: magic.necromancy
   aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 arcanum:
-  name: Arcanum
-  icon: v.ENCHANTED_BOOK
-  color: "#aa00aa"
+  name: "Arcanum"
+  icon: m.icons.arcanum_rune
+  color:
+    - "#c471ed"
   slot: 22
-  permission: magic.arcanum
   decay_per_hour: -0.035
   aura_decay_per_hour: 0
   resonance:
@@ -79,33 +82,34 @@ arcanum:
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 spirit:
-  name: Spirit
-  icon: v.FEATHER
-  color: "#e8d5a3"
+  name: "Spirit"
+  icon: m.icons.spiritual_rune
+  color:
+    - "#67b26f"
   slot: 20
-  permission: magic.spirit
   aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 illusion:
-  name: Illusion
-  icon: v.ENDER_PEARL
-  color: "#e070b0"
+  name: "Illusion"
+  icon: m.icons.illusion_rune
+  color:
+    - "#feac5e"
   slot: 24
-  permission: magic.illusion
   aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }
     100: { mana: -0.20, damage: 0.20, cooldown: -0.20 }
 
 bloodmagic:
-  name: Bloodmagic
-  icon: v.REDSTONE
-  color: "#aa0000"
-  slot: 42
+  name: "Bloodmagic"
   permission: magic.bloodmagic
+  icon: m.icons.bloodmagic_rune
+  color:
+    - "#d10202"
+  slot: 42
   aura_decay_per_hour: 0
   resonance:
     0:   { mana: 0.20, damage: -0.20, cooldown: 0.20 }

@@ -173,7 +173,7 @@ public final class ConfigLoader implements LoaderInterface {
         long confirm = section.getLong("confirm_seconds", 5L);
         net.tfminecraft.magic.gear.GearCache.confirmMillis = Math.max(1L, confirm) * 1000L;
         net.tfminecraft.magic.gear.GearCache.socketRarityPrefix =
-                section.getBoolean("socket_rarity_prefix", true);
+                section.getBoolean("socket_rarity_prefix", false);
         loadAlignment(section.getConfigurationSection("alignment"));
     }
 

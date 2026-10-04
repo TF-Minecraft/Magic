@@ -14,7 +14,7 @@ public final class GearCache {
     public static boolean alignmentEnabled = false;
 
     /** When false, gem socket colour strings omit Common/Rare/Epic/Legendary prefix. */
-    public static boolean socketRarityPrefix = true;
+    public static boolean socketRarityPrefix = false;
 
     /** Weapon tier band in the spell's element -> bonus. Never a penalty. */
     private static final Map<Integer, ModifierTriple> ALIGNMENT = new LinkedHashMap<>();

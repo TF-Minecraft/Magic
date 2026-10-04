@@ -17,6 +17,8 @@ iron_staff_core:
     - m.currency.enchanted_dust(4)
   part-limit:
     - handle
+  stats:
+    - max_item_damage(500.0)
   sockets: {}
   lore:
     - "§7A basic magical core with one rune slot"
@@ -35,6 +37,8 @@ steel_staff_core:
   part-limit:
     - handle
     - tome
+  stats:
+    - max_item_damage(1000.0)
   sockets: {}
   lore:
     - "§7A more advanced magical core with two rune slots"
@@ -54,6 +58,8 @@ abyssalite_staff_core:
     - handle
     - tome
     - tome2
+  stats:
+    - max_item_damage(2000.0)
   sockets: {}
   lore:
     - "§7An incredible magical core with three rune slots"
@@ -74,6 +80,8 @@ mythril_staff_core:
     - tome
     - tome2
     - tome3
+  stats:
+    - max_item_damage(4000.0)
   sockets: {}
   lore:
     - "§7An insanely powerful magical core with four rune slots"
@@ -92,9 +100,10 @@ iron_wand_core:
   part-limit:
     - handle
   stats:
-    - attack_damage(4)
+    - attack_damage(4.5)
     - attack_speed(1.2)
     - mana_cost(2)
+    - max_item_damage(500.0)
   sockets: {}
   lore:
     - "§7A basic magical core with one rune slot and a simple way of mana channeling"
@@ -112,6 +121,11 @@ steel_wand_core:
     - m.currency.enchanted_dust(4)
   part-limit:
     - handle
+  stats:
+    - attack_damage(5.0)
+    - attack_speed(1.2)
+    - mana_cost(2)
+    - max_item_damage(1000.0)
   sockets: {}
   lore:
     - "§7An improved magical core with one rune slot and a better way of mana channeling"
@@ -130,6 +144,11 @@ abyssalite_wand_core:
   part-limit:
     - handle
     - tome
+  stats:
+    - attack_damage(5.5)
+    - attack_speed(1.2)
+    - mana_cost(1)
+    - max_item_damage(2000.0)
   sockets: {}
   lore:
     - "§7A good magical core with two rune slots and an advanced way of mana channeling"
@@ -152,6 +171,7 @@ mythril_wand_core:
     - attack_damage(6)
     - attack_speed(1.2)
     - mana_cost(1)
+    - max_item_damage(4000.0)
   sockets: {}
   lore:
     - "§7A great magical core with two rune slots and a powerful way of mana channeling"
@@ -169,6 +189,10 @@ iron_sword_core:
     - m.currency.enchanted_dust(4)
   part-limit:
     - handle
+  stats:
+    - attack_damage(4.5)
+    - attack_speed(1.2)
+    - max_item_damage(500.0)
   sockets: {}
   lore:
     - "§7A basic magical core with one rune slot and a simple blade edge"
@@ -186,6 +210,10 @@ steel_sword_core:
     - m.currency.enchanted_dust(4)
   part-limit:
     - handle
+  stats:
+    - attack_damage(5.0)
+    - attack_speed(1.2)
+    - max_item_damage(1000.0)
   sockets: {}
   lore:
     - "§7An improved magical core with one rune slot and a better blade edge"
@@ -204,6 +232,10 @@ abyssalite_sword_core:
   part-limit:
     - handle
     - tome
+  stats:
+    - attack_damage(5.5)
+    - attack_speed(1.2)
+    - max_item_damage(2000.0)
   sockets: {}
   lore:
     - "§7A good magical core with two rune slots and an advanced blade edge"
@@ -222,6 +254,10 @@ mythril_sword_core:
   part-limit:
     - handle
     - tome
+  stats:
+    - attack_damage(6.0)
+    - attack_speed(1.2)
+    - max_item_damage(4000.0)
   sockets: {}
   lore:
     - "§7A great magical core with two rune slots and a powerful blade edge"
@@ -302,9 +338,9 @@ normal_oak_tome:
     - staff
     - wand
     - sword
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
   lore:
     - "§7A mundane book with no effect"
 
@@ -316,9 +352,9 @@ oak_tome:
     - staff
     - wand
     - sword
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(2)
   sockets:
     minor_rune: 1
@@ -335,7 +371,7 @@ basic_tome:
     - sword
   item: m.materials.basic_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(4)
   sockets:
     lesser_rune: 1
@@ -352,7 +388,7 @@ petty_tome:
     - sword
   item: m.materials.petty_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(6)
   sockets:
     greater_rune: 1
@@ -369,7 +405,7 @@ heavy_tome:
     - sword
   item: m.materials.heavy_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(8)
   sockets:
     ascendant_rune: 1
@@ -382,11 +418,9 @@ normal_oak_tome2:
   tier: 1
   type:
     - staff
-    - wand
-    - sword
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
   lore:
     - "§7A mundane book with no effect"
 
@@ -396,9 +430,9 @@ oak_tome2:
   tier: 1
   type:
     - staff
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(2)
   sockets:
     minor_rune: 1
@@ -413,7 +447,7 @@ basic_tome2:
     - staff
   item: m.materials.basic_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(4)
   sockets:
     lesser_rune: 1
@@ -428,7 +462,7 @@ petty_tome2:
     - staff
   item: m.materials.petty_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(6)
   sockets:
     greater_rune: 1
@@ -443,7 +477,7 @@ heavy_tome2:
     - staff
   item: m.materials.heavy_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(8)
   sockets:
     ascendant_rune: 1
@@ -456,11 +490,9 @@ normal_oak_tome3:
   tier: 1
   type:
     - staff
-    - wand
-    - sword
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
   lore:
     - "§7A mundane book with no effect"
 
@@ -470,9 +502,9 @@ oak_tome3:
   tier: 1
   type:
     - staff
-  item: v.book
+  item: m.materials.book
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(2)
   sockets:
     minor_rune: 1
@@ -487,7 +519,7 @@ basic_tome3:
     - staff
   item: m.materials.basic_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(4)
   sockets:
     lesser_rune: 1
@@ -502,7 +534,7 @@ petty_tome3:
     - staff
   item: m.materials.petty_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(6)
   sockets:
     greater_rune: 1
@@ -517,11 +549,29 @@ heavy_tome3:
     - staff
   item: m.materials.heavy_tome
   cost:
-    - v.book(2)
+    - m.materials.book(2)
     - m.currency.enchanted_dust(8)
   sockets:
     ascendant_rune: 1
   lore:
     - "§7An amazing tome capable of channeling ascendant runes"
 
+
+
+# Historical dev/tutorial ID: refresh existing weapons, hide from new crafts.
+petty_tom32:
+  disabled: true
+  name: "§dPetty Magical Tome"
+  part-type: tome3
+  tier: 3
+  type:
+    - staff
+  item: m.materials.petty_tome
+  cost:
+    - m.materials.book(2)
+    - m.currency.enchanted_dust(6)
+  sockets:
+    greater_rune: 1
+  lore:
+    - "§7An advanced tome capable of channeling greater runes"
 
