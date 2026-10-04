@@ -38,6 +38,7 @@ public final class ConfigLoader implements LoaderInterface {
             return false;
         }
 
+        Cache.givePermission = config.getString("give-permission", "magic.weapon.give").trim();
         Cache.debug = config.getBoolean("debug", Cache.debug);
         Cache.loggingEnabled = config.getBoolean("logging", true);
         Cache.wipeLog = config.getBoolean("wipe-log", true);

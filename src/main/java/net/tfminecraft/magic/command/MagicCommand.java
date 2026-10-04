@@ -55,6 +55,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             if (hasAdmin(sender)) {
                 sender.sendMessage(Messages.get("admin.usage"));
+            } else if (WeaponGiveCommand.allowed(sender)) {
+                sender.sendMessage("\u00a7eUsage: /magic weapon give <player> <staff|wand|sword> <element> <aura> <part> [part...]");
             } else if (hasRuneKeybind(sender)) {
                 sender.sendMessage(Messages.get("rune.usage"));
             } else {
@@ -65,6 +67,10 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
         if ("rune".equalsIgnoreCase(args[0])) {
             return handleRune(sender, args);
+        }
+
+        if ("weapon".equalsIgnoreCase(args[0])) {
+            return WeaponGiveCommand.execute(sender, args);
         }
 
         if (!hasAdmin(sender)) {
@@ -658,13 +664,20 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             return Collections.emptyList();
         }
+        if ("weapon".equalsIgnoreCase(args[0])) {
+            return WeaponGiveCommand.complete(sender, args);
+        }
+        boolean give = WeaponGiveCommand.allowed(sender);
         boolean admin = hasAdmin(sender);
         boolean rune = hasRuneKeybind(sender);
-        if (!admin && !rune) {
+        if (!admin && !rune && !give) {
             return Collections.emptyList();
         }
         if (args.length == 1) {
             List<String> options = new ArrayList<>();
+            if (give) {
+                options.add("weapon");
+            }
             if (rune) {
                 options.add("rune");
             }
