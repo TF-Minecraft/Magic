@@ -1,12 +1,12 @@
 # Mage weapon archetypes. Templates are TLibs MMOItems paths Fran owns.
 # slots: id -> TLibs colour suffix. Prefix comes from socket-colours.yml.
-# Colour written = "{prefix} {suffix}", e.g. "Rare Staff Projectile Rune".
+# By default only the suffix is written, matching the school runes' gem-color.
 # icon: ItemRef path for picker/assembly GUIs (v.MATERIAL, m.TYPE.ID, ia.namespace:id).
 
 staff:
   name: Staff
   template: m.mage_staffs.mage_custom_staff
-  icon: v.STICK
+  icon: m.mage_staffs.mage_custom_staff
   melee: false
   required:
     - core
@@ -23,7 +23,7 @@ staff:
 wand:
   name: Wand
   template: m.mage_wands.mage_custom_wand
-  icon: v.BLAZE_ROD
+  icon: m.mage_wands.mage_custom_wand
   melee: false
   required:
     - core
@@ -38,7 +38,7 @@ wand:
 sword:
   name: Sword
   template: m.mage_swords.mage_custom_sword
-  icon: v.IRON_SWORD
+  icon: m.mage_swords.mage_custom_sword
   melee: true
   required:
     - core

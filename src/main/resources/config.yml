@@ -28,12 +28,13 @@ equilibrium:
     0:   { mana: 0, damage: 0, cooldown: 0 }
     100: { mana: -0.20, damage: 0.25, cooldown: -0.05 }
 
-# Runes: MMOItems type ids (item-types.yml) that /magic rune keybind can rebind.
-# keybinds: triggers a rune can be set to. The cast listener also treats them as a
-# spell, besides CAST and API. A weapon still has to be attuned to the spell's element.
+# School rune MMOItems type ids (item-types.yml) that /magic rune keybind can rebind.
 runes:
   types:
-    - GEM_STONE
+    - CERRITH_RUNES
+    - OSENI_RUNES
+    - SEITHR_RUNES
+    - MITLAN_RUNES
   keybinds:
     - RIGHT_CLICK
     - LEFT_CLICK
@@ -109,7 +110,7 @@ gear:
 
   # When false, rune socket colours use only the archetype suffix (e.g. "Minor Rune")
   # without the band prefix (Common / Rare / Epic / Legendary). Band still gates attunement.
-  socket_rarity_prefix: true
+  socket_rarity_prefix: false
 
   # One-sided bonus for holding a weapon attuned to the element of the spell you cast.
   # Keyed by the weapon's tier band in that element. A weapon with no attunement in an
@@ -136,4 +137,3 @@ gear:
       mana: 0.00
       damage: 0.10
       cooldown: -0.10
-
