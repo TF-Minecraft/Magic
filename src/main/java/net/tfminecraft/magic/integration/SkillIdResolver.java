@@ -74,20 +74,25 @@ public final class SkillIdResolver {
         if (skillId == null || skillId.isBlank() || MMOCore.plugin == null) {
             return null;
         }
-        RegisteredSkill exact = MMOCore.plugin.skillManager.getSkill(skillId);
-        if (exact != null && exact.getHandler() != null) {
-            return exact.getHandler();
+        // Binding keys are stored lowercase and MythicLib ids are uppercase, so the exact lookup
+        // needs the upper-cased id.
+        for (String id : new String[] {skillId, skillId.toUpperCase(Locale.ROOT)}) {
+            RegisteredSkill exact = MMOCore.plugin.skillManager.getSkill(id);
+            if (exact != null && exact.getHandler() != null) {
+                return exact.getHandler();
+            }
         }
+        // Handler ids before display names: a class copy (CLASS_RESTORATION, shown as "Restoration")
+        // shares the rune's name, and a name match bound the rune's modifiers to the class skill.
         for (RegisteredSkill skill : MMOCore.plugin.skillManager.getAll()) {
-            if (skill == null) {
-                continue;
-            }
-            if (skill.getName() != null && skill.getName().equalsIgnoreCase(skillId)) {
-                return skill.getHandler();
-            }
-            SkillHandler<?> handler = skill.getHandler();
+            SkillHandler<?> handler = skill == null ? null : skill.getHandler();
             if (handler != null && skillId.equalsIgnoreCase(handler.getLowerCaseId())) {
                 return handler;
+            }
+        }
+        for (RegisteredSkill skill : MMOCore.plugin.skillManager.getAll()) {
+            if (skill != null && skill.getName() != null && skill.getName().equalsIgnoreCase(skillId)) {
+                return skill.getHandler();
             }
         }
         return null;
