@@ -35,9 +35,13 @@ tiers:
 #   cerrith:
 #     1: 15
 #     2: 45
+#
+# The same bands gate spell casts against the caster's resonance, which stops at the
+# element's max_resonance (100 by default). Keep the top band at or below it, or no
+# one can cast tier IV spells.
 bands:
   default:
     1: 10
-    2: 40
-    3: 75
-    4: 110
+    2: 35
+    3: 65
+    4: 95
