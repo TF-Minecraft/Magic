@@ -107,6 +107,7 @@ class SkillResolverEdgeTest {
     assertSame(runeHandler, SkillIdResolver.handlerForBinding("restoration"));
     // skills.yml keys are stored lowercase; the MythicLib id is upper case
     when(manager.getSkill("RESTORATION")).thenReturn(rune);
+    when(manager.getAll()).thenReturn(List.of()); // only the upper-cased exact lookup can find it now
     assertSame(runeHandler, SkillIdResolver.handlerForBinding("restoration"));
   }
 }
