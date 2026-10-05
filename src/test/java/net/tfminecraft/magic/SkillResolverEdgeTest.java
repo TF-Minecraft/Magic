@@ -84,4 +84,30 @@ class SkillResolverEdgeTest {
     assertSame(second, SkillIdResolver.handlerForBinding("ABILITY"));
     assertNull(SkillIdResolver.handlerForBinding("unknown"));
   }
+
+  @Test
+  void bindingPrefersTheRuneHandlerOverAClassCopyWithTheSameName() throws Exception {
+    MMOCore.plugin = mock(MMOCore.class);
+    var manager = mock(SkillManager.class);
+    var field = MMOCore.class.getDeclaredField("skillManager");
+    field.setAccessible(true);
+    field.set(MMOCore.plugin, manager);
+    // CLASS_RESTORATION is shown as "Restoration" and comes first; the rune RESTORATION has the handler id.
+    var classCopy = mock(RegisteredSkill.class);
+    var classHandler = mock(SkillHandler.class);
+    when(classCopy.getName()).thenReturn("Restoration");
+    when(classCopy.getHandler()).thenReturn(classHandler);
+    when(classHandler.getLowerCaseId()).thenReturn("class_restoration");
+    var rune = mock(RegisteredSkill.class);
+    var runeHandler = mock(SkillHandler.class);
+    when(rune.getName()).thenReturn("Restoration");
+    when(rune.getHandler()).thenReturn(runeHandler);
+    when(runeHandler.getLowerCaseId()).thenReturn("restoration");
+    when(manager.getAll()).thenReturn(List.of(classCopy, rune));
+    assertSame(runeHandler, SkillIdResolver.handlerForBinding("restoration"));
+    // skills.yml keys are stored lowercase; the MythicLib id is upper case
+    when(manager.getSkill("RESTORATION")).thenReturn(rune);
+    when(manager.getAll()).thenReturn(List.of()); // only the upper-cased exact lookup can find it now
+    assertSame(runeHandler, SkillIdResolver.handlerForBinding("restoration"));
+  }
 }
