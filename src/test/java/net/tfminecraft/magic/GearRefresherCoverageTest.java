@@ -134,6 +134,39 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
   }
 
   @Test
+  void outdatedRunesRebuildCurrentGearAndStampTheirRevisions() {
+    var item = managed();
+    MockBukkit.createMockPlugin("MMOItems");
+    MockBukkit.createMockPlugin("MythicLib");
+    var built = item();
+    var revisions = Map.of(UUID.randomUUID(), 3);
+    try (var nbt = mockStatic(NBTItem.class);
+        var stats = mockStatic(GearStatApplicator.class);
+        var model = mockStatic(GearModelResolver.class);
+        var lore = mockStatic(WeaponLore.class);
+        var runes = mockStatic(RuneRefresher.class);
+        var items =
+            mockConstruction(
+                LiveMMOItem.class,
+                (m, c) -> {
+                  var builder = mock(ItemStackBuilder.class);
+                  when(m.newBuilder()).thenReturn(builder);
+                  when(builder.build()).thenReturn(built);
+                })) {
+      model
+          .when(() -> GearModelResolver.apply(any(), any(), any()))
+          .thenAnswer(i -> i.getArgument(0));
+      lore.when(() -> WeaponLore.updateItem(any())).thenAnswer(i -> i.getArgument(0));
+      runes.when(() -> RuneRefresher.isOutdated(item)).thenReturn(false);
+      assertNull(GearRefresher.refreshIfOutdated(item, null));
+      runes.when(() -> RuneRefresher.isOutdated(item)).thenReturn(true);
+      runes.when(() -> RuneRefresher.refresh(any(), eq(item))).thenReturn(revisions);
+      assertSame(built, GearRefresher.refreshIfOutdated(item, null));
+      runes.verify(() -> RuneRefresher.stamp(built, revisions));
+    }
+  }
+
+  @Test
   void incompatibleGemsAreHeldAndFailuresNeverReplaceOriginals() {
     MockBukkit.createMockPlugin("MMOItems");
     MockBukkit.createMockPlugin("MythicLib");

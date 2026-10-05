@@ -1,7 +1,10 @@
 package net.tfminecraft.magic.gear;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -52,7 +55,7 @@ public final class GearRefresher {
             return broken;
         }
 
-        if (!force && !GearProvenance.isOutdated(stack)) {
+        if (!force && !GearProvenance.isOutdated(stack) && !RuneRefresher.isOutdated(stack)) {
             int live = MajorityTierResolver.resolve(GearProvenance.resolveParts(stack));
             if (live > 0 && GearProvenance.majorityOf(stack) != live) {
                 ItemStack clone = stack.clone();
@@ -71,12 +74,14 @@ public final class GearRefresher {
         List<String> colours = SocketLayout.colours(archetype, GearProvenance.resolveParts(stack), band);
 
         List<GemstoneData> orphaned = new ArrayList<>();
-        ItemStack rebuilt = rewrite(stack, colours, orphaned);
+        Map<UUID, Integer> runeRevisions = new HashMap<>();
+        ItemStack rebuilt = rewrite(stack, colours, orphaned, runeRevisions);
         if (rebuilt == null) {
             return null;
         }
 
         copyGearPdc(stack, rebuilt);
+        RuneRefresher.stamp(rebuilt, runeRevisions);
         WeaponRequirement.fromItem(stack).persist(rebuilt);
         WeaponRift.copy(stack, rebuilt);
         GearProvenance.syncRevisions(rebuilt);
@@ -99,9 +104,11 @@ public final class GearRefresher {
     /**
      * Writes the target socket colours while carrying existing runes across. Unlike
      * {@code GearItemBuilder} craft, which builds fresh socket data at craft time,
-     * this puts every gem it can back into a matching empty socket first.
+     * this puts every gem it can back into a matching empty socket first, then brings
+     * socketed runes up to their current template.
      */
-    private static ItemStack rewrite(ItemStack stack, List<String> colours, List<GemstoneData> orphaned) {
+    private static ItemStack rewrite(ItemStack stack, List<String> colours, List<GemstoneData> orphaned,
+            Map<UUID, Integer> runeRevisions) {
         try {
             LiveMMOItem mmo = new LiveMMOItem(NBTItem.get(stack));
             List<GemstoneData> existing = new ArrayList<>();
@@ -121,6 +128,7 @@ public final class GearRefresher {
             }
             mmo.setData(ItemStats.GEM_SOCKETS, next);
             GearStatApplicator.apply(mmo, GearProvenance.resolveParts(stack));
+            runeRevisions.putAll(RuneRefresher.refresh(mmo, stack));
             ItemStack built = mmo.newBuilder().build();
             if (built == null || built.getType().isAir()) {
                 return null;

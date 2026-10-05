@@ -1,14 +1,20 @@
 package net.tfminecraft.magic.listener;
 
+import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Magic;
@@ -17,7 +23,9 @@ import net.tfminecraft.magic.gear.GearRefresher;
 /**
  * Lazy refresh. A crafted weapon catches up with the gear config the next time the
  * player touches it, so a reload never has to walk every inventory on the server.
- * Runs next tick because the slot contents have not settled when these events fire.
+ * Joining and opening a chest also check every slot, so after a restart weapons catch
+ * up without anyone touching them. Runs next tick because the slot contents have not
+ * settled when these events fire.
  */
 public final class GearRefreshListener implements Listener {
 
@@ -76,6 +84,42 @@ public final class GearRefreshListener implements Listener {
                 player.getInventory().setItem(slot, rebuilt);
             }
         });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        later(() -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            sweep(player.getInventory(), player);
+            sweep(player.getEnderChest(), player);
+        });
+    }
+
+    /** Chests, barrels and storage entities only; plugin menus are left alone. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onOpen(InventoryOpenEvent event) {
+        Inventory inventory = event.getInventory();
+        if (!isWorldStorage(inventory.getHolder(false)) || !(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+        later(() -> sweep(inventory, player));
+    }
+
+    public static boolean isWorldStorage(InventoryHolder holder) {
+        return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest || holder instanceof Entity;
+    }
+
+    private static void sweep(Inventory inventory, Player player) {
+        ItemStack[] contents = inventory.getContents();
+        for (int slot = 0; slot < contents.length; slot++) {
+            ItemStack rebuilt = GearRefresher.refreshIfOutdated(contents[slot], player);
+            if (rebuilt != null) {
+                inventory.setItem(slot, rebuilt);
+            }
+        }
     }
 
     private static void later(Runnable task) {
