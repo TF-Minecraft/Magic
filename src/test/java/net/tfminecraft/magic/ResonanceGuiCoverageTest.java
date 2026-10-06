@@ -22,6 +22,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.*;
 import org.junit.jupiter.api.*;
+import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockito.*;
 
 class ResonanceGuiCoverageTest extends GearCoverageSupport {
@@ -132,6 +133,25 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
         new CastModeDef("other", "v.PAPER", "Other", List.of()),
         false,
         session);
+  }
+
+  @Test
+  void lockedElementSlotsShowFillerUntilUnlocked() {
+    var yaml = new YamlConfiguration();
+    yaml.set("slot", 9);
+    yaml.set("permission", "magic.secret");
+    ElementRegistry.register(new ElementDef("lockedEdge", yaml));
+    var session = new ResonanceSession();
+    var inventory = ResonanceGuiBuilder.build(p, new ResonanceGuiHolder(p.getUniqueId(), "c"), session);
+    var inner = inventory.getItem(GridLayout.innerFillerSlots().get(0));
+    var border = inventory.getItem(GridLayout.borderFillerSlots().get(0));
+    assertEquals(inner, inventory.getItem(23));
+    assertEquals(border, inventory.getItem(9));
+
+    p.addAttachment(MockBukkit.createMockPlugin(), "magic.secret", true);
+    ResonanceGuiBuilder.populate(inventory, p, session);
+    assertNotEquals(inner, inventory.getItem(23));
+    assertNotEquals(border, inventory.getItem(9));
   }
 
   @Test

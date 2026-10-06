@@ -67,8 +67,16 @@ public final class ResonanceGuiBuilder {
                 buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
 
         for (ElementDef element : ElementRegistry.getAll()) {
-            if (element.getSlot() >= 0 && element.isUnlocked(player)) {
-                inventory.setItem(element.getSlot(), buildElementItem(element, session));
+            int slotIndex = element.getSlot();
+            if (slotIndex < 0) {
+                continue;
+            }
+            if (element.isUnlocked(player)) {
+                inventory.setItem(slotIndex, buildElementItem(element, session));
+            } else {
+                // Locked schools keep their reserved slot; fill it so the menu shows no gap.
+                ItemStack filler = GridLayout.isBorderSlot(slotIndex) ? borderFiller : innerFiller;
+                inventory.setItem(slotIndex, filler.clone());
             }
         }
     }
