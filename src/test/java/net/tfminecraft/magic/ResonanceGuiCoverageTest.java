@@ -153,7 +153,9 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     assertEquals(inner, inventory.getItem(23));
     assertEquals(border, inventory.getItem(9));
     var castMode = inventory.getItem(GridLayout.castModeLeftSlot());
-    assertEquals(GuiText.format(GuiCache.castModeLeft.getName()), castMode.getItemMeta().getDisplayName());
+    assertEquals(
+        ChatColor.stripColor(GuiText.format(GuiCache.castModeLeft.getName())),
+        ChatColor.stripColor(castMode.getItemMeta().getDisplayName()));
 
     p.addAttachment(MockBukkit.createMockPlugin(), "magic.secret", true);
     ResonanceGuiBuilder.populate(inventory, p, session);
