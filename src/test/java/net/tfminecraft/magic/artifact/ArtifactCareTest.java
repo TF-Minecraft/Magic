@@ -116,6 +116,35 @@ class ArtifactCareTest {
   }
 
   @Test
+  void unhousedArtifactsMuffleOnlyWhileAuraIsStored() {
+    var empty = artifact();
+    var emptied = Artifact.fromItem(empty);
+    emptied.setFill("fire", 0);
+    emptied.persistPdc(empty);
+    try (var lore = mockStatic(ArtifactLore.class)) {
+      assertTrue(ArtifactCareStore.tick(empty, false, 1000));
+      assertTrue(ArtifactCareStore.tick(empty, false, 11000));
+      assertEquals(0, ArtifactCareStore.readMuffle(empty));
+      assertEquals(11000, ArtifactCareStore.readLastTickMs(empty));
+
+      emptied.setFill("fire", 5);
+      emptied.persistPdc(empty);
+      assertTrue(ArtifactCareStore.tick(empty, false, 12000));
+      assertEquals(.1, ArtifactCareStore.readMuffle(empty), 1e-10);
+
+      var drained = artifact();
+      assertTrue(ArtifactCareStore.setMuffle(drained, .4, 1000));
+      var drainedAura = Artifact.fromItem(drained);
+      drainedAura.setFill("fire", 0);
+      drainedAura.persistPdc(drained);
+      assertTrue(ArtifactCareStore.tick(drained, false, 5000));
+      assertEquals(.4, ArtifactCareStore.readMuffle(drained), 1e-10);
+      assertTrue(ArtifactCareStore.tick(drained, true, 7000));
+      assertEquals(0, ArtifactCareStore.readMuffle(drained), 1e-10);
+    }
+  }
+
+  @Test
   void setMuffleClampsTheValueAndResetsTheCareClock() {
     var item = artifact();
     try (var lore = mockStatic(ArtifactLore.class)) {

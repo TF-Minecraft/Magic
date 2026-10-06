@@ -93,6 +93,7 @@ public final class ArtifactCareStore {
         if (stack == null || stack.getType().isAir() || ChargeIds.isCharge(stack)) {
             return false;
         }
+        boolean storesAura = storesAura(stack);
         ItemMeta meta = metaOf(stack);
         PersistentDataContainer root = meta.getPersistentDataContainer();
         long last = readLong(root, ArtifactKeys.careLastTick());
@@ -107,7 +108,7 @@ public final class ArtifactCareStore {
         if (ArtifactCareCache.muffledEnabled && last > 0L) {
             if (housed) {
                 muffle = clamp01(muffle - ArtifactCareCache.muffledRecoverPerHour * dtHours);
-            } else {
+            } else if (storesAura) {
                 muffle = clamp01(muffle + ArtifactCareCache.muffledOffPerHour * dtHours);
             }
         }
@@ -143,6 +144,11 @@ public final class ArtifactCareStore {
         users.put(id, nowMs + ArtifactCareCache.usersTtlMs());
         writeUsers(meta, users);
         stack.setItemMeta(meta);
+    }
+
+    private static boolean storesAura(ItemStack stack) {
+        Artifact artifact = Artifact.fromItem(stack);
+        return artifact != null && artifact.hasStoredAura();
     }
 
     private static void decayFill(ItemStack stack, double dtHours) {

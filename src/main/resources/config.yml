@@ -98,7 +98,7 @@ attunement:
   # Muffle 0-1. Scales with tick.seconds_per_hour (3600 = real time).
   # Off: 1/24 per hour (full muffle in 24h). Recover: 1/168 per hour (clear in 7d).
   # Accepted: player inv, pedestal, artifact_display, item frames.
-  # Chests and other containers raise muffle. No chat.
+  # Chests and other containers raise muffle only while aura is stored. No chat.
   muffled:
     recover_per_hour: 0.00595238095
     off_per_hour: 0.04166666667
