@@ -58,6 +58,21 @@ public final class ResonanceGuiBuilder {
             inventory.setItem(slotIndex, innerFiller.clone());
         }
 
+        for (ElementDef element : ElementRegistry.getAll()) {
+            int slotIndex = element.getSlot();
+            if (slotIndex < 0) {
+                continue;
+            }
+            if (element.isUnlocked(player)) {
+                inventory.setItem(slotIndex, buildElementItem(element, session));
+            } else {
+                // Locked schools keep their reserved slot; fill it so the menu shows no gap.
+                ItemStack filler = GridLayout.isBorderSlot(slotIndex) ? borderFiller : innerFiller;
+                inventory.setItem(slotIndex, filler.clone());
+            }
+        }
+
+        // Controls go last so an element configured on their slot never hides them.
         inventory.setItem(GridLayout.characterHeadSlot(), buildCharacterHead(player, session));
         inventory.setItem(
                 GridLayout.castModeLeftSlot(),
@@ -65,12 +80,6 @@ public final class ResonanceGuiBuilder {
         inventory.setItem(
                 GridLayout.castModeRightSlot(),
                 buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
-
-        for (ElementDef element : ElementRegistry.getAll()) {
-            if (element.getSlot() >= 0 && element.isUnlocked(player)) {
-                inventory.setItem(element.getSlot(), buildElementItem(element, session));
-            }
-        }
     }
 
     private static String normalizeCastModeId(String castModeId) {

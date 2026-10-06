@@ -12,6 +12,7 @@ import net.tfminecraft.magic.modifier.*;
 import net.tfminecraft.magic.registry.*;
 import net.tfminecraft.magic.session.*;
 import net.tfminecraft.magic.util.GridLayout;
+import net.tfminecraft.magic.util.GuiText;
 import net.tfminecraft.rpcharacters.RPCharacters;
 import net.tfminecraft.rpcharacters.api.CharacterSkull;
 import net.tfminecraft.rpcharacters.focus.FocusService;
@@ -22,6 +23,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.*;
 import org.junit.jupiter.api.*;
+import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockito.*;
 
 class ResonanceGuiCoverageTest extends GearCoverageSupport {
@@ -132,6 +134,37 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
         new CastModeDef("other", "v.PAPER", "Other", List.of()),
         false,
         session);
+  }
+
+  @Test
+  void lockedElementSlotsShowFillerUntilUnlocked() {
+    var yaml = new YamlConfiguration();
+    yaml.set("slot", 9);
+    yaml.set("permission", "magic.secret");
+    ElementRegistry.register(new ElementDef("lockedEdge", yaml));
+    var onControl = new YamlConfiguration();
+    onControl.set("slot", GridLayout.castModeLeftSlot());
+    onControl.set("permission", "magic.secret");
+    ElementRegistry.register(new ElementDef("onControl", onControl));
+    var session = new ResonanceSession();
+    var inventory = ResonanceGuiBuilder.build(p, new ResonanceGuiHolder(p.getUniqueId(), "c"), session);
+    var inner = inventory.getItem(GridLayout.innerFillerSlots().get(0));
+    var border = inventory.getItem(GridLayout.borderFillerSlots().get(0));
+    assertEquals(inner, inventory.getItem(23));
+    assertEquals(border, inventory.getItem(9));
+    var castMode = inventory.getItem(GridLayout.castModeLeftSlot());
+    assertEquals(
+        ChatColor.stripColor(GuiText.format(GuiCache.castModeLeft.getName())),
+        ChatColor.stripColor(castMode.getItemMeta().getDisplayName()));
+
+    p.addAttachment(MockBukkit.createMockPlugin(), "magic.secret", true);
+    ResonanceGuiBuilder.populate(inventory, p, session);
+    for (var entry : Map.of(23, "locked", 9, "lockedEdge").entrySet()) {
+      var item = inventory.getItem(entry.getKey());
+      assertEquals(Material.BARRIER, item.getType());
+      assertEquals(entry.getValue(), ChatColor.stripColor(item.getItemMeta().getDisplayName()));
+    }
+    assertEquals(castMode, inventory.getItem(GridLayout.castModeLeftSlot()));
   }
 
   @Test

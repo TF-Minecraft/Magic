@@ -2,6 +2,7 @@
 # Row 2: Spirit (20), Arcanum (22), Illusion (24)
 # Row 3 (third from bottom): Cerrith, Seithr, Oseni, Mitlan
 # Row 4 (second from bottom): Shadowmancy, Necromancy, Bloodmagic
+# Special schools (rows 2 and 4) stay hidden until the player holds magic.<id>.
 
 cerrith:
   name: "Cerrith"
@@ -49,6 +50,7 @@ mitlan:
 
 shadowmancy:
   name: "Shadowmancy"
+  permission: magic.shadowmancy
   icon: m.icons.shadowmancy_rune
   color:
     - "#716f6f"
@@ -60,6 +62,7 @@ shadowmancy:
 
 necromancy:
   name: "Necromancy"
+  permission: magic.necromancy
   icon: m.icons.necromancy_rune
   color:
     - "#aa00aa"
@@ -71,6 +74,7 @@ necromancy:
 
 arcanum:
   name: "Arcanum"
+  permission: magic.arcanum
   icon: m.icons.arcanum_rune
   color:
     - "#c471ed"
@@ -83,6 +87,7 @@ arcanum:
 
 spirit:
   name: "Spirit"
+  permission: magic.spirit
   icon: m.icons.spiritual_rune
   color:
     - "#67b26f"
@@ -94,6 +99,7 @@ spirit:
 
 illusion:
   name: "Illusion"
+  permission: magic.illusion
   icon: m.icons.illusion_rune
   color:
     - "#feac5e"
