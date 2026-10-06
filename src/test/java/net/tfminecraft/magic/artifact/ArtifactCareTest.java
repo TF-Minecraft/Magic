@@ -145,6 +145,33 @@ class ArtifactCareTest {
   }
 
   @Test
+  void emptyUnhousedArtifactsAnchorTheClockWhenAChestScanWouldSkipThem() {
+    var item = artifact();
+    var aura = Artifact.fromItem(item);
+    aura.setFill("fire", 0);
+    aura.persistPdc(item);
+    try (var lore = mockStatic(ArtifactLore.class)) {
+      assertTrue(ArtifactCareStore.tick(item, false, 1000));
+      assertTrue(ArtifactCareStore.apply(item, false, 11000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(0, ArtifactCareStore.readMuffle(item));
+      assertEquals(11000, ArtifactCareStore.readLastTickMs(item));
+      lore.verify(() -> ArtifactLore.apply(any()), never());
+
+      assertFalse(ArtifactCareStore.apply(item, false, 11000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(11000, ArtifactCareStore.readLastTickMs(item));
+      ArtifactCareCache.muffledOffPerHour = .00001;
+      assertFalse(ArtifactCareStore.apply(item, false, 12000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(11000, ArtifactCareStore.readLastTickMs(item));
+      ArtifactCareCache.muffledOffPerHour = .1;
+
+      aura.setFill("fire", 5);
+      aura.persistPdc(item);
+      assertTrue(ArtifactCareStore.tick(item, false, 12000));
+      assertEquals(.1, ArtifactCareStore.readMuffle(item), 1e-10);
+    }
+  }
+
+  @Test
   void setMuffleClampsTheValueAndResetsTheCareClock() {
     var item = artifact();
     try (var lore = mockStatic(ArtifactLore.class)) {

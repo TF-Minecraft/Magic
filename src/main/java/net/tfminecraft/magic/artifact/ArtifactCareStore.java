@@ -14,6 +14,7 @@ import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.attunement.ArtifactCareCache;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
+import net.tfminecraft.magic.util.MagicNumbers;
 
 public final class ArtifactCareStore {
 
@@ -114,7 +115,12 @@ public final class ArtifactCareStore {
         }
         boolean force = persist == Persist.ALWAYS;
         boolean visible = ArtifactLore.careVisibleWouldChange(stack, muffle, dtHours);
-        if (!force && !visible) {
+        boolean anchorEmptyClock = ArtifactCareCache.muffledEnabled
+                && !housed
+                && !storesAura
+                && last > 0L
+                && emptyStorageClockIsStale(dtHours);
+        if (!force && !visible && !anchorEmptyClock) {
             return false;
         }
         if (ArtifactCareCache.muffledEnabled) {
@@ -149,6 +155,20 @@ public final class ArtifactCareStore {
     private static boolean storesAura(ItemStack stack) {
         Artifact artifact = Artifact.fromItem(stack);
         return artifact != null && artifact.hasStoredAura();
+    }
+
+    /**
+     * Chest scans persist only when lore would change. An empty artifact has no lore
+     * change, so its clock would stay put and a later fill would muffle for the empty time.
+     * Anchor once the gap would have shown on the muffle percent, and leave shorter gaps
+     * alone so an open chest is not rewritten on every scan.
+     */
+    private static boolean emptyStorageClockIsStale(double dtHours) {
+        double gained = ArtifactCareCache.muffledOffPerHour * dtHours;
+        if (gained <= 0.0) {
+            return false;
+        }
+        return !MagicNumbers.format(gained * 100.0).equals(MagicNumbers.format(0));
     }
 
     private static void decayFill(ItemStack stack, double dtHours) {
