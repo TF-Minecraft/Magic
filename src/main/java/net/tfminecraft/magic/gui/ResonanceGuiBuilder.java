@@ -58,14 +58,6 @@ public final class ResonanceGuiBuilder {
             inventory.setItem(slotIndex, innerFiller.clone());
         }
 
-        inventory.setItem(GridLayout.characterHeadSlot(), buildCharacterHead(player, session));
-        inventory.setItem(
-                GridLayout.castModeLeftSlot(),
-                buildCastModeItem(GuiCache.castModeLeft, castModeId.equals(GuiCache.castModeLeft.getId()), session));
-        inventory.setItem(
-                GridLayout.castModeRightSlot(),
-                buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
-
         for (ElementDef element : ElementRegistry.getAll()) {
             int slotIndex = element.getSlot();
             if (slotIndex < 0) {
@@ -79,6 +71,15 @@ public final class ResonanceGuiBuilder {
                 inventory.setItem(slotIndex, filler.clone());
             }
         }
+
+        // Controls go last so an element configured on their slot never hides them.
+        inventory.setItem(GridLayout.characterHeadSlot(), buildCharacterHead(player, session));
+        inventory.setItem(
+                GridLayout.castModeLeftSlot(),
+                buildCastModeItem(GuiCache.castModeLeft, castModeId.equals(GuiCache.castModeLeft.getId()), session));
+        inventory.setItem(
+                GridLayout.castModeRightSlot(),
+                buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
     }
 
     private static String normalizeCastModeId(String castModeId) {
