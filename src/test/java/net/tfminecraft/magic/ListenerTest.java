@@ -12,6 +12,8 @@ import net.tfminecraft.magic.session.ResonanceSessionManager;
 import net.tfminecraft.rpcharacters.lifecycle.CharacterActivatedEvent;
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import org.bukkit.Material;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.*;
@@ -179,5 +181,77 @@ class ListenerTest {
     listener.onPlayerQuit(new PlayerQuitEvent(player, "quit"));
     verify(profile).deactivate(player);
     verify(Magic.plugin).clearSpellModifiers(player);
+  }
+
+  @Test
+  void joinSweepRefreshesInventoryOffhandAndEnderChestNextTick() {
+    var listener = new GearRefreshListener();
+    var player = server.addPlayer();
+    var old = new ItemStack(Material.STICK);
+    var rebuilt = new ItemStack(Material.BLAZE_ROD);
+    player.getInventory().setItem(4, old);
+    player.getInventory().setItemInOffHand(old);
+    player.getInventory().setItem(5, new ItemStack(Material.DIRT));
+    player.getEnderChest().setItem(1, old);
+    try (var refresh = mockStatic(GearRefresher.class)) {
+      refresh.when(() -> GearRefresher.refreshIfOutdated(old, player)).thenReturn(rebuilt);
+      var join = mock(PlayerJoinEvent.class);
+      when(join.getPlayer()).thenReturn(player);
+      listener.onJoin(join);
+      assertEquals(old, player.getInventory().getItem(4));
+      server.getScheduler().performOneTick();
+      assertEquals(rebuilt, player.getInventory().getItem(4));
+      assertEquals(rebuilt, player.getInventory().getItemInOffHand());
+      assertEquals(Material.DIRT, player.getInventory().getItem(5).getType());
+      assertEquals(rebuilt, player.getEnderChest().getItem(1));
+      Player gone = mock(Player.class);
+      when(gone.isOnline()).thenReturn(false);
+      when(join.getPlayer()).thenReturn(gone);
+      listener.onJoin(join);
+      server.getScheduler().performOneTick();
+      verify(gone, never()).getInventory();
+    }
+  }
+
+  @Test
+  void openSweepOnlyTouchesWorldStorageOpenedByPlayers() {
+    var listener = new GearRefreshListener();
+    var player = server.addPlayer();
+    var old = new ItemStack(Material.STICK);
+    var rebuilt = new ItemStack(Material.BLAZE_ROD);
+    try (var refresh = mockStatic(GearRefresher.class)) {
+      refresh.when(() -> GearRefresher.refreshIfOutdated(old, player)).thenReturn(rebuilt);
+      Inventory menu = mock(Inventory.class);
+      var open = mock(InventoryOpenEvent.class);
+      when(open.getInventory()).thenReturn(menu);
+      when(open.getPlayer()).thenReturn(player);
+      listener.onOpen(open);
+      server.getScheduler().performOneTick();
+      verify(menu, never()).getContents();
+      Inventory chest = mock(Inventory.class);
+      when(chest.getHolder(false)).thenReturn(mock(BlockInventoryHolder.class));
+      when(chest.getContents()).thenReturn(new ItemStack[] {null, old});
+      when(open.getInventory()).thenReturn(chest);
+      when(open.getPlayer()).thenReturn(mock(HumanEntity.class));
+      listener.onOpen(open);
+      server.getScheduler().performOneTick();
+      verify(chest, never()).getContents();
+      when(open.getPlayer()).thenReturn(player);
+      listener.onOpen(open);
+      verify(chest, never()).setItem(anyInt(), any());
+      server.getScheduler().performOneTick();
+      verify(chest).setItem(1, rebuilt);
+      verify(chest, never()).setItem(eq(0), any());
+    }
+  }
+
+  @Test
+  void worldStorageCoversBlocksDoubleChestsAndEntitiesButNotMenus() {
+    assertTrue(GearRefreshListener.isWorldStorage(mock(BlockInventoryHolder.class)));
+    assertTrue(GearRefreshListener.isWorldStorage(mock(DoubleChest.class)));
+    assertTrue(GearRefreshListener.isWorldStorage(mock(StorageMinecart.class)));
+    assertFalse(GearRefreshListener.isWorldStorage(mock(InventoryHolder.class)));
+    assertFalse(GearRefreshListener.isWorldStorage(mock(Player.class)));
+    assertFalse(GearRefreshListener.isWorldStorage(null));
   }
 }

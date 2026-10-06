@@ -61,6 +61,11 @@ public final class GearKeys {
         return new NamespacedKey(Magic.plugin, "gear_part_id");
     }
 
+    /** Template revision of each socketed rune, by its MMOItems gem history id. */
+    public static NamespacedKey runeRevisions() {
+        return new NamespacedKey(Magic.plugin, "gear_rune_revisions");
+    }
+
     /** Marks the ItemDisplay that shows the weapon resting on a gear station. */
     public static NamespacedKey stationDisplay() {
         return new NamespacedKey(Magic.plugin, "gear_station_display");
