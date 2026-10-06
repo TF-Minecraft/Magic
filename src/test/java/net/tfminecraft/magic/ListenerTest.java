@@ -251,6 +251,7 @@ class ListenerTest {
     assertTrue(GearRefreshListener.isWorldStorage(mock(DoubleChest.class)));
     assertTrue(GearRefreshListener.isWorldStorage(mock(StorageMinecart.class)));
     assertFalse(GearRefreshListener.isWorldStorage(mock(InventoryHolder.class)));
+    assertFalse(GearRefreshListener.isWorldStorage(mock(Player.class)));
     assertFalse(GearRefreshListener.isWorldStorage(null));
   }
 }

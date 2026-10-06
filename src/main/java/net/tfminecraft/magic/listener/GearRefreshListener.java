@@ -2,6 +2,7 @@ package net.tfminecraft.magic.listener;
 
 import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -108,8 +109,10 @@ public final class GearRefreshListener implements Listener {
         later(() -> sweep(inventory, player));
     }
 
+    /** Players are entities too, but a menu owned by a player is not storage. */
     public static boolean isWorldStorage(InventoryHolder holder) {
-        return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest || holder instanceof Entity;
+        return holder instanceof BlockInventoryHolder || holder instanceof DoubleChest
+                || (holder instanceof Entity && !(holder instanceof HumanEntity));
     }
 
     private static void sweep(Inventory inventory, Player player) {

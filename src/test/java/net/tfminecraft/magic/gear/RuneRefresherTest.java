@@ -174,18 +174,28 @@ class RuneRefresherTest {
   void refreshReplacesOnlyOutdatedRunesAndReportsTheirRevisions() {
     template("KNOWN", "CURRENT", 3);
     template("KNOWN", "STALE", 5);
+    template("KNOWN", "BUILDS", 7);
+    UUID d = UUID.fromString("00000000-0000-0000-0000-00000000000d");
     var item = weapon();
     RuneRefresher.stamp(item, Map.of(A, 3, B, 4));
     when(MMOItems.plugin.getMMOItem(any(), anyString())).thenReturn(null);
+    MMOItem fresh = mock(MMOItem.class);
+    when(MMOItems.plugin.getMMOItem(any(), eq("BUILDS"))).thenReturn(fresh);
     MMOItem mmo = mock(MMOItem.class);
     try (var nbt =
-        nbt(sockets(gem(A, "KNOWN", "CURRENT"), gem(B, "KNOWN", "STALE"), gem(C, "GONE", "X")))) {
-      assertEquals(Map.of(A, 3, B, 5), RuneRefresher.refresh(mmo, item));
+        nbt(
+            sockets(
+                gem(A, "KNOWN", "CURRENT"),
+                gem(B, "KNOWN", "STALE"),
+                gem(C, "GONE", "X"),
+                gem(d, "KNOWN", "BUILDS")))) {
+      // B could not be rebuilt, so it gets no stamp and is tried again next time.
+      assertEquals(Map.of(A, 3, d, 7), RuneRefresher.refresh(mmo, item));
     }
     verify(MMOItems.plugin, times(1)).getMMOItem(any(), eq("STALE"));
     verify(MMOItems.plugin, never()).getMMOItem(any(), eq("CURRENT"));
     verify(logger).warning(contains("KNOWN.STALE"));
-    verifyNoInteractions(mmo);
+    verify(mmo, never()).mergeData(any(), any(), any());
   }
 
   @Test
@@ -227,7 +237,7 @@ class RuneRefresherTest {
     when(MMOItems.plugin.getMMOItem(type, "STALE")).thenReturn(fresh);
 
     try (var abilities = mockConstruction(AbilityData.class)) {
-      RuneRefresher.replace(mmo, new RuneRefresher.Socketed(B, "KNOWN", "STALE"));
+      assertTrue(RuneRefresher.replace(mmo, new RuneRefresher.Socketed(B, "KNOWN", "STALE")));
       verify(abilityHist).removeGemData(B);
       verify(manaHist).removeGemData(B);
       verify(otherHist, never()).removeGemData(any());

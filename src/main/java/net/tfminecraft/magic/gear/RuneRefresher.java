@@ -57,7 +57,8 @@ public final class RuneRefresher {
 
     /**
      * Brings every outdated rune in {@code mmo} up to its template. {@code stack} is the
-     * weapon {@code mmo} was read from. Returns the revisions to stamp on the rebuilt weapon.
+     * weapon {@code mmo} was read from. Returns the revisions to stamp on the rebuilt weapon;
+     * a rune that could not be rebuilt is left out, so it is tried again next time.
      */
     public static Map<UUID, Integer> refresh(MMOItem mmo, ItemStack stack) {
         Map<UUID, Integer> stamped = stamps(stack);
@@ -67,10 +68,9 @@ public final class RuneRefresher {
             if (live < 0) {
                 continue;
             }
-            if (!Integer.valueOf(live).equals(stamped.get(gem.uuid()))) {
-                replace(mmo, gem);
+            if (Integer.valueOf(live).equals(stamped.get(gem.uuid())) || replace(mmo, gem)) {
+                revisions.put(gem.uuid(), live);
             }
-            revisions.put(gem.uuid(), live);
         }
         return revisions;
     }
@@ -150,13 +150,13 @@ public final class RuneRefresher {
         return template == null ? -1 : template.getRevisionId();
     }
 
-    /** Same steps as MMOItems socketing a gem, but over the gem's existing history id. */
+    /** Same steps as MMOItems socketing a gem, but over the gem's existing history id. False when the template could not be built. */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    static void replace(MMOItem mmo, Socketed gem) {
+    static boolean replace(MMOItem mmo, Socketed gem) {
         MMOItem fresh = MMOItems.plugin.getMMOItem(MMOItems.plugin.getTypes().get(gem.type()), gem.id());
         if (fresh == null) {
             Magic.plugin.getLogger().warning("[Magic] Rune " + gem.type() + "." + gem.id() + " could not be rebuilt; kept as socketed.");
-            return;
+            return false;
         }
         AbilityListData oldAbilities = null;
         for (StatHistory hist : new ArrayList<>(mmo.getStatHistories())) {
@@ -180,6 +180,7 @@ public final class RuneRefresher {
             }
             mmo.mergeData(stat, data, gem.uuid());
         }
+        return true;
     }
 
     /** The template's abilities with the trigger each one had in the weapon, by position. */
