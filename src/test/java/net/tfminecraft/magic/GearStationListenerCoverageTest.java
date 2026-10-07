@@ -247,4 +247,97 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     listener.onFurnitureBroken(broken("test:station", entity));
     assertFalse(GearStationStore.isOccupied(loc));
   }
+
+  @Test
+  void emptyStationAcceptsAWeaponItCanCreateSoItCanBeChargedAgain() {
+    player.getInventory().setItemInMainHand(item());
+    right();
+    verify(listener.inventory()).openAssembly(player);
+    assertFalse(GearStationStore.isOccupied(loc));
+    OpenStationManager.clear(player);
+
+    var foreign = item();
+    tag(foreign, GearKeys.archetype(), PersistentDataType.STRING, "staff");
+    player.getInventory().setItemInMainHand(foreign);
+    right();
+    assertFalse(GearStationStore.isOccupied(loc));
+    verify(listener.inventory(), times(1)).openAssembly(player);
+
+    ArchetypeRegistry.register(
+        new ArchetypeDef(GearType.STAFF, "Staff", "v.stick", "", false, List.of(), Map.of()));
+    player.setSneaking(true);
+    right();
+    assertFalse(GearStationStore.isOccupied(loc));
+    player.setSneaking(false);
+
+    var stacked = attuned();
+    tag(stacked, GearKeys.archetype(), PersistentDataType.STRING, "staff");
+    stacked.setAmount(2);
+    player.getInventory().setItemInMainHand(stacked);
+    right();
+    var occupancy = GearStationStore.get(loc);
+    assertNotNull(occupancy);
+    assertTrue(occupancy.isRested());
+    assertEquals(player.getUniqueId(), occupancy.getOwner());
+    assertEquals(Map.of(), occupancy.getCharged());
+    assertEquals(1, occupancy.getItem().getAmount());
+    assertTrue(GearStationStore.isAttuned(occupancy.getItem()));
+    assertEquals(1, player.getInventory().getItemInMainHand().getAmount());
+
+    var sitting = occupancy.getItem();
+    var another = attuned();
+    tag(another, GearKeys.archetype(), PersistentDataType.STRING, "staff");
+    player.getInventory().setItemInMainHand(another);
+    right();
+    assertSame(sitting, GearStationStore.get(loc).getItem());
+
+    var charge = item();
+    tag(charge, ChargeKeys.chargeTier(), PersistentDataType.INTEGER, 1);
+    player.getInventory().setItemInMainHand(charge);
+    try (var service = mockStatic(GearChargeService.class)) {
+      right();
+      service.verify(() -> GearChargeService.tryApply(eq(player), eq(loc), any()));
+    }
+
+    player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+    right();
+    assertFalse(GearStationStore.isOccupied(loc));
+    assertTrue(
+        loc.getWorld().getEntitiesByClass(Item.class).stream()
+            .anyMatch(dropped -> GearProvenance.stationCanCreate(dropped.getItemStack())));
+  }
+
+  @Test
+  void restedUnattunedWeaponCanBePickedUpAndReturnedFromARunningCharge() {
+    ArchetypeRegistry.register(
+        new ArchetypeDef(GearType.WAND, "Wand", "v.blaze_rod", "", false, List.of(), Map.of()));
+    var weapon = item();
+    tag(weapon, GearKeys.archetype(), PersistentDataType.STRING, "wand");
+    player.getInventory().setItemInMainHand(weapon);
+    right();
+    assertTrue(GearStationStore.get(loc).isRested());
+    assertFalse(GearStationStore.isAttuned(GearStationStore.get(loc).getItem()));
+
+    player.setSneaking(true);
+    left();
+    assertTrue(GearStationStore.isOccupied(loc));
+    player.setSneaking(false);
+
+    player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+    right();
+    assertFalse(GearStationStore.isOccupied(loc));
+
+    GearStationStore.rest(loc, weapon.clone(), UUID.randomUUID());
+    GearStationStore.get(loc).setOrbSessionActive(true);
+    player.setSneaking(true);
+    left();
+    assertTrue(GearStationStore.isOccupied(loc));
+
+    player.addAttachment(Magic.plugin, "magic.admin", true);
+    left();
+    assertFalse(GearStationStore.isOccupied(loc));
+    assertTrue(
+        Arrays.stream(player.getInventory().getContents())
+            .anyMatch(stack -> stack != null && GearProvenance.isGear(stack)));
+  }
 }

@@ -32,6 +32,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     assertSame(value, GearStationStore.get(location));
     assertEquals(owner, value.getOwner());
     assertEquals(Map.of("v.iron_ingot", 2), value.getCharged());
+    assertFalse(value.isRested());
     assertSame(weapon, value.getItem());
     assertNull(GearStationStore.eject(location));
     value.setOrbSessionActive(true);
@@ -49,7 +50,34 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     value = GearStationStore.occupy(location, weapon, null, null);
     assertNull(value.getOwner());
     assertNull(value.getCharged());
+    assertFalse(value.isRested());
     assertSame(weapon, GearStationStore.takeForAbort(location));
+  }
+
+  @Test
+  void restedWeaponLeavesWhileUnattunedAndSurvivesReload() {
+    var location = station();
+    var owner = UUID.randomUUID();
+    var weapon = item();
+    assertNull(GearStationStore.rest(null, weapon, owner));
+    assertNull(GearStationStore.rest(location, null, owner));
+    var rested = GearStationStore.rest(location, weapon, owner);
+    assertTrue(rested.isRested());
+    assertEquals(owner, rested.getOwner());
+    assertEquals(Map.of(), rested.getCharged());
+    assertSame(weapon, GearStationStore.eject(location));
+    assertFalse(GearStationStore.isOccupied(location));
+
+    GearStationStore.rest(location, weapon, owner);
+    GearStationStore.shutdown();
+    GearStationStore.load();
+    var loaded = GearStationStore.get(location);
+    assertNotNull(loaded);
+    assertTrue(loaded.isRested());
+    assertEquals(owner, loaded.getOwner());
+    assertEquals(Map.of(), loaded.getCharged());
+    assertEquals(weapon.getType(), loaded.getItem().getType());
+    assertEquals("Gear", loaded.getItem().getItemMeta().getDisplayName());
   }
 
   @Test

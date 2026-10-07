@@ -21,6 +21,7 @@ class GearProvenanceCoverageTest extends GearCoverageSupport {
       assertEquals("", GearProvenance.partsRaw(item));
       assertTrue(GearProvenance.resolveParts(item).isEmpty());
       assertFalse(GearProvenance.isGear(item));
+      assertFalse(GearProvenance.stationCanCreate(item));
       assertFalse(GearProvenance.isOutdated(item));
       assertFalse(GearProvenance.socketsLocked(item));
     }

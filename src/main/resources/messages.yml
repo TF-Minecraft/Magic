@@ -287,6 +287,10 @@ gear:
 
     gone: "#ff5555That station is no longer there."
 
+    rested: "#aaaaaa§oThe weapon settles onto the station"
+
+    not_craftable: "#aaaaaa§oThis station cannot shape that weapon"
+
   craft:
 
     lacking: "#ff5555You lack the materials for those parts."
@@ -344,6 +348,8 @@ gear:
   abort:
 
     done: "#aaaaaa§oThe craft comes apart. The charge, if any, is spent"
+
+    returned: "#aaaaaa§oThe attunement breaks off. The weapon comes back to you"
 
     not_yours: "#ff5555Only the one who prepared this craft can take it apart."
 

@@ -170,8 +170,35 @@ public final class GearStationListener implements Listener {
             reclaim(player, location, hand);
             return;
         }
+        if (GearProvenance.stationCanCreate(hand)) {
+            rest(player, location, hand);
+            return;
+        }
+        if (GearProvenance.isGear(hand)) {
+            player.sendMessage(Messages.get("gear.station.not_craftable"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
         OpenStationManager.set(player, location);
         inventory.openAssembly(player);
+    }
+
+    /**
+     * Puts one of the held weapon onto an empty station so it can take another charge.
+     * A craft that is already waiting is left alone; this only runs when the station is clear.
+     */
+    private static void rest(Player player, Location location, ItemStack hand) {
+        ItemStack placed = hand.clone();
+        placed.setAmount(1);
+        if (hand.getAmount() <= 1) {
+            player.getInventory().setItemInMainHand(null);
+        } else {
+            hand.setAmount(hand.getAmount() - 1);
+        }
+        player.updateInventory();
+        GearStationStore.rest(location, placed, player.getUniqueId());
+        player.sendMessage(Messages.get("gear.station.rested"));
+        player.playSound(location, Sound.BLOCK_ANVIL_USE, 1f, 1.2f);
     }
 
     /**
@@ -226,7 +253,7 @@ public final class GearStationListener implements Listener {
         if ((occupancy != null && occupancy.isOrbSessionActive()) || GearOrbService.isActive(location)) {
             return;
         }
-        if (occupancy != null && !GearStationStore.isAttuned(occupancy.getItem())) {
+        if (occupancy != null && !GearStationStore.isAttuned(occupancy.getItem()) && !occupancy.isRested()) {
             player.sendMessage(Messages.get("gear.eject.unattuned"));
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
@@ -237,6 +264,35 @@ public final class GearStationListener implements Listener {
         }
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         drop.getWorld().dropItem(drop, item);
+        player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
+    }
+
+    /**
+     * Stops a charge already running on a weapon that was set back down, and returns that
+     * weapon. An idle rested weapon stays put; an empty hand picks it up.
+     */
+    private void returnRested(Player player, Location location, GearStationStore.Occupancy occupancy) {
+        UUID owner = occupancy.getOwner() != null ? occupancy.getOwner() : GearOrbService.sessionOwner(location);
+        if (owner != null && !owner.equals(player.getUniqueId()) && !player.hasPermission("magic.admin")) {
+            player.sendMessage(Messages.get("gear.abort.not_yours"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+        GearOrbService.abort(location);
+        ItemStack weapon = GearStationStore.takeForAbort(location);
+        if (weapon == null) {
+            return;
+        }
+        recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
+        recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
+        Location drop = location.clone().add(0.5, 1.0, 0.5);
+        for (ItemStack leftover : player.getInventory().addItem(weapon).values()) {
+            if (leftover != null && !leftover.getType().isAir() && drop.getWorld() != null) {
+                drop.getWorld().dropItem(drop, leftover);
+            }
+        }
+        player.updateInventory();
+        player.sendMessage(Messages.get("gear.abort.returned"));
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
     }
 
@@ -266,6 +322,13 @@ public final class GearStationListener implements Listener {
             return;
         }
         if (GearStationStore.isAttuned(occupancy.getItem())) {
+            return;
+        }
+        if (occupancy.isRested()) {
+            if (!occupancy.isOrbSessionActive() && !GearOrbService.isActive(location)) {
+                return;
+            }
+            returnRested(player, location, occupancy);
             return;
         }
         UUID owner = occupancy.getOwner() != null ? occupancy.getOwner() : GearOrbService.sessionOwner(location);
