@@ -47,12 +47,14 @@ public final class GearStationStore {
         private boolean orbSessionActive;
         private final UUID owner;
         private final Map<String, Integer> charged;
+        private final boolean rested;
 
-        Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged) {
+        Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged, boolean rested) {
             this.item = item;
             this.displayId = displayId;
             this.owner = owner;
             this.charged = charged == null ? null : Map.copyOf(charged);
+            this.rested = rested;
         }
 
         /** Player who prepared the craft. Null for stations saved before owners were recorded. */
@@ -66,6 +68,14 @@ public final class GearStationStore {
          */
         public Map<String, Integer> getCharged() {
             return charged;
+        }
+
+        /**
+         * A weapon the player set back on the station to take another charge.
+         * It is not a fresh craft, so taking it off never refunds materials.
+         */
+        public boolean isRested() {
+            return rested;
         }
 
         public ItemStack getItem() {
@@ -105,12 +115,25 @@ public final class GearStationStore {
     }
 
     public static Occupancy occupy(Location location, ItemStack item, UUID owner, Map<String, Integer> charged) {
+        return place(location, item, owner, charged, false);
+    }
+
+    /**
+     * Sets an existing weapon on an empty station so it can take another charge.
+     * Nothing was consumed, so the station records no material cost.
+     */
+    public static Occupancy rest(Location location, ItemStack item, UUID owner) {
+        return place(location, item, owner, Map.of(), true);
+    }
+
+    private static Occupancy place(
+            Location location, ItemStack item, UUID owner, Map<String, Integer> charged, boolean rested) {
         if (location == null || item == null) {
             return null;
         }
         clear(location, false);
         UUID displayId = spawnDisplay(location, item);
-        Occupancy occupancy = new Occupancy(item, displayId, owner, charged);
+        Occupancy occupancy = new Occupancy(item, displayId, owner, charged, rested);
         OCCUPIED.put(key(location), occupancy);
         save();
         return occupancy;
@@ -121,7 +144,7 @@ public final class GearStationStore {
         if (occupancy == null) {
             return null;
         }
-        if (occupancy.isOrbSessionActive() || !isAttuned(occupancy.getItem())) {
+        if (occupancy.isOrbSessionActive() || (!isAttuned(occupancy.getItem()) && !occupancy.isRested())) {
             return null;
         }
         ItemStack item = occupancy.getItem();
@@ -224,7 +247,8 @@ public final class GearStationStore {
                     continue;
                 }
                 UUID displayId = ensureDisplay(location, item, savedDisplay);
-                OCCUPIED.put(key(location), new Occupancy(item, displayId, owner, charged));
+                OCCUPIED.put(key(location), new Occupancy(
+                        item, displayId, owner, charged, section.getBoolean("rested")));
             }
             if (dropped) {
                 save();
@@ -343,6 +367,9 @@ public final class GearStationStore {
             config.set(path + ".display", occupancy.displayId.toString());
             if (occupancy.getOwner() != null) {
                 config.set(path + ".owner", occupancy.getOwner().toString());
+            }
+            if (occupancy.isRested()) {
+                config.set(path + ".rested", true);
             }
             if (occupancy.getCharged() != null) {
                 config.createSection(path + ".charged");

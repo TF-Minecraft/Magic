@@ -244,6 +244,11 @@ public final class GearProvenance {
         return archetypeOf(stack) != null;
     }
 
+    /** True when this weapon's archetype is one the station still offers. */
+    public static boolean stationCanCreate(ItemStack stack) {
+        return ArchetypeRegistry.get(archetypeOf(stack)) != null;
+    }
+
     public static boolean socketsLocked(ItemStack stack) {
         if (stack == null || !stack.hasItemMeta()) {
             return false;
