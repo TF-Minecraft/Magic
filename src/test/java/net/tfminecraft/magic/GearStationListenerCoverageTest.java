@@ -308,7 +308,7 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
   }
 
   @Test
-  void restedUnattunedWeaponCanBePickedUpAndReturnedFromARunningCharge() {
+  void restedUnattunedWeaponCanBePickedUpAndReturnedFromARunningCharge() throws Exception {
     ArchetypeRegistry.register(
         new ArchetypeDef(GearType.WAND, "Wand", "v.blaze_rod", "", false, List.of(), Map.of()));
     var weapon = item();
@@ -322,22 +322,56 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     left();
     assertTrue(GearStationStore.isOccupied(loc));
     player.setSneaking(false);
-
     player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
     right();
     assertFalse(GearStationStore.isOccupied(loc));
 
-    GearStationStore.rest(loc, weapon.clone(), UUID.randomUUID());
-    GearStationStore.get(loc).setOrbSessionActive(true);
     player.setSneaking(true);
+    GearStationStore.rest(loc, weapon.clone(), player.getUniqueId());
+    orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(true);
+    left();
+    assertFalse(GearStationStore.isOccupied(loc));
+    orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(false);
+
+    GearStationStore.rest(loc, weapon.clone(), null);
+    GearStationStore.get(loc).setOrbSessionActive(true);
+    orbs.when(() -> GearOrbService.sessionOwner(loc)).thenReturn(null);
+    left();
+    assertFalse(GearStationStore.isOccupied(loc));
+
+    orbs.when(() -> GearOrbService.sessionOwner(loc)).thenReturn(UUID.randomUUID());
+    GearStationStore.rest(loc, weapon.clone(), null);
+    GearStationStore.get(loc).setOrbSessionActive(true);
     left();
     assertTrue(GearStationStore.isOccupied(loc));
 
+    GearStationStore.rest(loc, weapon.clone(), UUID.randomUUID());
+    GearStationStore.get(loc).setOrbSessionActive(true);
+    left();
+    assertTrue(GearStationStore.isOccupied(loc));
     player.addAttachment(Magic.plugin, "magic.admin", true);
+    aborts().put("old", 0L);
+    aborts().put("fresh", System.currentTimeMillis());
+    for (int i = 0; i < player.getInventory().getSize(); i++) {
+      player.getInventory().setItem(i, new ItemStack(Material.STONE, 64));
+    }
     left();
     assertFalse(GearStationStore.isOccupied(loc));
+    assertFalse(aborts().containsKey("old"));
+    assertTrue(aborts().containsKey("fresh"));
     assertTrue(
-        Arrays.stream(player.getInventory().getContents())
-            .anyMatch(stack -> stack != null && GearProvenance.isGear(stack)));
+        loc.getWorld().getEntitiesByClass(Item.class).stream()
+            .anyMatch(dropped -> GearProvenance.isGear(dropped.getItemStack())));
+
+    GearStationStore.rest(loc, weapon.clone(), player.getUniqueId());
+    GearStationStore.get(loc).setOrbSessionActive(true);
+    orbs.when(() -> GearOrbService.abort(loc))
+        .thenAnswer(
+            a -> {
+              GearStationStore.takeForAbort(loc);
+              return null;
+            });
+    left();
+    assertFalse(GearStationStore.isOccupied(loc));
   }
 }

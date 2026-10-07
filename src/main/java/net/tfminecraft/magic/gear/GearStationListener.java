@@ -287,9 +287,7 @@ public final class GearStationListener implements Listener {
         recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         for (ItemStack leftover : player.getInventory().addItem(weapon).values()) {
-            if (leftover != null && !leftover.getType().isAir() && drop.getWorld() != null) {
-                drop.getWorld().dropItem(drop, leftover);
-            }
+            drop.getWorld().dropItem(drop, leftover);
         }
         player.updateInventory();
         player.sendMessage(Messages.get("gear.abort.returned"));
