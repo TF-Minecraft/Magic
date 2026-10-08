@@ -15,22 +15,6 @@ Magic connects a character's relationship with the elements to meditation, artif
 
 Magic keeps resonance profiles tied to roleplay characters through RPCharacters. Its menus make current affinities and modifiers visible, while its equipment systems connect preparation at the crafting station with the character's experience when casting spells.
 
-## Staff weapon commands
-
-`/magic weapon give <player> <staff|wand|sword> <element> <aura> <part> [part...]`
-
-Gives one completed mage weapon to an online player. Use part IDs from `gear/parts.yml`
-and an element ID from the loaded element configuration. Supply exactly one part for
-each required category, respecting the core's part limit. Aura is the raw attunement
-amount and must reach a configured tier band. The command applies attunement, finalizes
-sockets and records no material cost. It does not change the recipient's resonance.
-The recipient needs an empty inventory slot.
-
-`give-permission` in `config.yml` defaults to `magic.weapon.give` (operators).
-Set it to your staff permission; a blank value disables giving. This permission is
-independent of `magic.admin`. Reload configuration with `/magic reload`.
-Tab completion suggests recipients, archetypes, elements and enabled part IDs.
-
 ## Documentation
 
 [Project documentation](https://github.com/TF-Minecraft/Docs/blob/main/projects/Magic/README.md)
@@ -39,18 +23,22 @@ Technical documentation is maintained in [TF-Minecraft/Docs](https://github.com/
 
 ## Tests and coverage
 
-Use Java 21 and the pinned dependencies installed by `.github/scripts/prepare-release.sh`, then run:
+Use Java 21 and prepare the
+[pinned shared and private dependencies](https://github.com/TF-Minecraft/Docs/blob/main/projects/Magic/README.md#build-and-dependencies),
+then run:
 
 ```sh
 mvn -B --no-transfer-progress clean verify
 ```
 
 JUnit exercises domain calculations, configuration loading, item persistence, artifact generation,
-character sessions, and plugin lifecycle through MockBukkit and isolated external integration mocks.
+character sessions, and plugin lifecycle through MockBukkit and Mockito integration mocks.
 JaCoCo measures every production class with no coverage exclusions. Maven `verify` requires
 100% line, branch, and instruction coverage. The HTML report is
 `target/site/jacoco/index.html`; XML and CSV reports are alongside it. CI uploads coverage reports
 for builds and releases. Test dependencies are not bundled into the plugin JAR.
+Surefire test reports are in `target/surefire-reports/`. Live Paper behaviour,
+provider integrations, and client visuals require separate gameplay checks.
 
 ## License
 
