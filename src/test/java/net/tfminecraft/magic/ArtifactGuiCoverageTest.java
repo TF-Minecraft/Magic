@@ -85,7 +85,7 @@ class ArtifactGuiCoverageTest extends GearCoverageSupport {
 
   @Test
   void builderRendersSelectionsCapsRaritiesAndLockedPreview() {
-    var holder = new ArtifactCreateGuiHolder(p.getUniqueId());
+    var holder = new ArtifactCreateGuiHolder(p.getUniqueId(), null);
     assertEquals(p.getUniqueId(), holder.getPlayerUuid());
     var inventory = ArtifactCreateGuiBuilder.build(holder, null);
     holder.setInventory(inventory);
@@ -226,4 +226,23 @@ class ArtifactGuiCoverageTest extends GearCoverageSupport {
       ArtifactCreateCache.raritySlots = old;
     }
   }
+  @Test
+  void cancelledCreatorMenuCannotMutateTheNextMenuOrRemoveItsSession() {
+    var manager = new ArtifactCreateGuiManager();
+    manager.cancel(p);
+    manager.open(p);
+    var oldClick = click(21);
+    var oldClose = mock(InventoryCloseEvent.class);
+    when(oldClose.getPlayer()).thenReturn(p);
+    when(oldClose.getView()).thenReturn(p.getOpenInventory());
+    manager.cancel(p);
+    assertNull(manager.getSession(p));
+    manager.open(p);
+    var replacement = manager.getSession(p);
+    manager.onInventoryClick(oldClick);
+    assertNull(replacement.getPrimaryId());
+    manager.onInventoryClose(oldClose);
+    assertSame(replacement, manager.getSession(p));
+  }
+
 }

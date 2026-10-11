@@ -70,9 +70,9 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
   @Test
   void builderRendersCharacterFocusElementsAndBothModes() throws Exception {
     var session = new ResonanceSession();
-    var holder = new ResonanceGuiHolder(p.getUniqueId(), "character");
+    var holder = new ResonanceGuiHolder(p.getUniqueId(), null, new ResonanceSession());
     assertEquals(p.getUniqueId(), holder.getPlayerUuid());
-    assertEquals("character", holder.getCharacterId());
+    assertNull(holder.getSession());
     var inventory = ResonanceGuiBuilder.build(p, holder, session);
     holder.setInventory(inventory);
     assertSame(inventory, holder.getInventory());
@@ -147,7 +147,7 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     onControl.set("permission", "magic.secret");
     ElementRegistry.register(new ElementDef("onControl", onControl));
     var session = new ResonanceSession();
-    var inventory = ResonanceGuiBuilder.build(p, new ResonanceGuiHolder(p.getUniqueId(), "c"), session);
+    var inventory = ResonanceGuiBuilder.build(p, new ResonanceGuiHolder(p.getUniqueId(), null, new ResonanceSession()), session);
     var inner = inventory.getItem(GridLayout.innerFillerSlots().get(0));
     var border = inventory.getItem(GridLayout.borderFillerSlots().get(0));
     assertEquals(inner, inventory.getItem(23));
@@ -168,53 +168,64 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
   }
 
   @Test
-  void managerHonorsCharacterGateChangesModeAndClosesStaleCharacters() throws Exception {
+  void managerHonorsReadinessAndRejectsOldGenerationClicksAndRefresh() throws Exception {
     var manager = new ResonanceGuiManager();
-    assertNotNull(manager.getSessionManager());
-    bridge.when(RpCharactersBridge::isAvailable).thenReturn(true);
+    var provider = new CharacterTestSupport();
+    manager.getSessionManager().start(provider.plugin, null);
     assertFalse(manager.tryOpen(p, false));
     assertTrue(manager.tryOpen(p, true));
-    manager.refreshOpenInventories();
-    var same = click(GridLayout.castModeLeftSlot());
-    manager.onInventoryClick(same);
-    manager.onInventoryClick(same);
-    var event = click(GridLayout.castModeRightSlot());
-    manager.onInventoryClick(event);
-    assertEquals(
-        GuiCache.castModeRight.getId(), manager.getSessionManager().get(p).getCastModeId());
     manager.onInventoryClick(click(GridLayout.castModeLeftSlot()));
-    manager.onInventoryClick(click(1));
-    manager.onInventoryClick(click(60));
-    manager.closeIfCharacterChanged(p, "new");
-    assertNull(p.getOpenInventory().getTopInventory());
     p.openInventory(Bukkit.createInventory(null, 9));
-    manager.closeIfCharacterChanged(p, "new");
+    assertTrue(manager.tryOpen(p, true));
+    manager.refreshOpenInventories();
+    p.openInventory(Bukkit.createInventory(null, 9));
+    manager.close(p);
     manager.refreshOpenInventories();
     var nonplayer = click(0);
     when(nonplayer.getWhoClicked()).thenReturn(mock(HumanEntity.class));
     manager.onInventoryClick(nonplayer);
     manager.onInventoryClick(click(0));
-    var character = mock(RPCharacter.class);
-    when(character.getId()).thenReturn("c1");
-    when(character.getName()).thenReturn("Mage");
-    when(character.getSkull()).thenAnswer(a -> new ItemStack(Material.PLAYER_HEAD));
-    bridge.when(() -> RpCharactersBridge.getActiveCharacter(p)).thenReturn(character);
+
+    var token = provider.start(p, "Alice");
+    var state = new ResonanceSession();
+    manager.getSessionManager().put(token, state);
     assertTrue(manager.tryOpen(p, false));
-    manager.closeIfCharacterChanged(p, "c1");
-    assertTrue(p.getOpenInventory().getTopInventory().getHolder() instanceof ResonanceGuiHolder);
+    var same = click(GridLayout.castModeLeftSlot());
+    manager.onInventoryClick(same);
+    manager.onInventoryClick(same);
+    manager.onInventoryClick(click(GridLayout.castModeRightSlot()));
+    assertEquals(GuiCache.castModeRight.getId(), state.getCastModeId());
+    manager.onInventoryClick(click(GridLayout.castModeLeftSlot()));
+    manager.onInventoryClick(click(1));
+    manager.onInventoryClick(click(60));
+    manager.refreshOpenInventories();
+    var holder = (ResonanceGuiHolder) p.getOpenInventory().getTopInventory().getHolder();
+    assertEquals(token, holder.getSession());
     var drag = mock(InventoryDragEvent.class);
     when(drag.getView()).thenReturn(p.getOpenInventory());
     manager.onInventoryDrag(drag);
     verify(drag).setCancelled(true);
-    manager.closeIfCharacterChanged(p, "c2");
+    var lateClick = click(GridLayout.castModeRightSlot());
+    provider.start(p, "Bob");
+    var returned = provider.start(p, "Alice");
+    var replacement = new ResonanceSession();
+    manager.getSessionManager().put(returned, replacement);
+    String originalMode = replacement.getCastModeId();
+    manager.onInventoryClick(lateClick);
+    assertEquals(originalMode, replacement.getCastModeId());
+    assertTrue(manager.tryOpen(p, false));
+    provider.start(p, "Bob");
+    manager.refreshOpenInventories();
     p.openInventory(Bukkit.createInventory(null, 9));
     when(drag.getView()).thenReturn(p.getOpenInventory());
     manager.onInventoryDrag(drag);
-    bridge.when(RpCharactersBridge::isAvailable).thenReturn(false);
+    provider.unregister();
     assertTrue(manager.tryOpen(p, false));
+    manager.refreshOpenInventories();
+    manager.close(p);
+    p.openInventory(Bukkit.createInventory(null, 9));
     for (String mode : Arrays.asList(null, " ", "surge", "flow", "OTHER"))
-      assertNotNull(
-          invoke(ResonanceGuiManager.class, "castModeChatLabel", new Class[] {String.class}, mode));
+      assertNotNull(invoke(ResonanceGuiManager.class, "castModeChatLabel", new Class[] {String.class}, mode));
   }
 
   @Test
@@ -282,4 +293,17 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
                 null);
     assertNotNull(item.getItemMeta().getLore());
   }
+  @Test
+  void aGuiOwnedByAnotherAccountCannotChangeItsBoundResonance() {
+    var manager = new ResonanceGuiManager();
+    var state = new ResonanceSession();
+    String original = state.getCastModeId();
+    var holder = new ResonanceGuiHolder(UUID.randomUUID(), null, state);
+    var inventory = Bukkit.createInventory(holder, 54);
+    holder.setInventory(inventory);
+    p.openInventory(inventory);
+    manager.onInventoryClick(click(GridLayout.castModeRightSlot()));
+    assertEquals(original, state.getCastModeId());
+  }
+
 }

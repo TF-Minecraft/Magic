@@ -156,9 +156,14 @@ class CommandTest {
     expect("resonance.admin.usage", "resonance");
     expect("artifact.give.unknown_player", "resonance", "get", "missing");
     expect("resonance.admin.no_character", "resonance", "get", "Mage");
-    sessions.setLoadedCharacterId(player, "character");
+    sessions.getOrCreate(player);
     expect("resonance.admin.no_character", "resonance", "get", "Mage");
-    var s = sessions.getOrCreate(player);
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "character");
+    sessions.start(provider.plugin, null);
+    expect("resonance.admin.no_character", "resonance", "get", "Mage");
+    var s = new ResonanceSession();
+    sessions.put(token, s);
     run(player, "resonance", "get", "Mage");
     assertEquals("resonance.admin.get_header", player.nextMessage());
     assertEquals("resonance.admin.get_line", player.nextMessage());
@@ -290,8 +295,11 @@ class CommandTest {
   @Test
   void nonFiniteAmountsAreRejectedWithoutChangingArtifactOrResonance() {
     player.getInventory().setItemInMainHand(artifact());
-    sessions.setLoadedCharacterId(player, "character");
-    var session = sessions.getOrCreate(player);
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "character");
+    sessions.start(provider.plugin, null);
+    var session = new ResonanceSession();
+    sessions.put(token, session);
     session.setResonance("fire", 7);
     for (String amount : List.of("NaN", "Infinity", "-Infinity")) {
       expect("artifact.setfill.invalid_amount", "artifact", "setfill", "fire", amount);

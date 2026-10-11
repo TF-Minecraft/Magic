@@ -300,4 +300,40 @@ class ArtifactListenerTest {
       service.verify(() -> ArtifactFillChestService.clear(player.getUniqueId()), times(2));
     }
   }
+  @Test
+  void deferredShrineWorkKeepsTheWorldItemButDropsAnOfflineOrStaleActor() {
+    var listener = new ArtifactListener();
+    var player = server.addPlayer();
+    var furniture = mock(Furniture.class);
+    when(furniture.getId()).thenReturn("pedestal");
+    var slot = mock(SlotDefinition.class);
+    when(slot.getId()).thenReturn("main");
+    var item = new ItemStack(Material.STONE);
+    var artifact = Artifact.create();
+    artifact.setCap("fire", 10);
+    artifact.persistPdc(item);
+    var add = mock(FurnitureSlotItemAddEvent.class);
+    when(add.getFurniture()).thenReturn(furniture);
+    when(add.getSlot()).thenReturn(slot);
+    when(add.getItem()).thenReturn(item);
+    when(add.getPlayer()).thenReturn(player);
+    var provider = new CharacterTestSupport();
+    provider.start(player, "Alice");
+    try (var display = mockStatic(ArtifactDisplayIndex.class);
+         var shrine = mockStatic(ShrineChargeService.class);
+         var lore = mockStatic(VesselLore.class)) {
+      listener.onFurnitureSlotAdd(add);
+      listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      provider.start(player, "Bob");
+      provider.start(player, "Alice");
+      server.getScheduler().performOneTick();
+      shrine.verify(() -> ShrineChargeService.tryStart(null, furniture, "main"));
+      lore.verifyNoInteractions();
+      listener.onFurnitureSlotAdd(add);
+      player.disconnect();
+      server.getScheduler().performOneTick();
+      shrine.verify(() -> ShrineChargeService.tryStart(null, furniture, "main"), times(2));
+    }
+  }
+
 }

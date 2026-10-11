@@ -3,6 +3,10 @@ package net.tfminecraft.magic.gear.orb;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
+
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.Characters;
+import net.tfminecraft.magic.integration.SessionGuard;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
@@ -67,6 +71,14 @@ public final class GearOrbService implements Listener {
         SESSIONS.clear();
     }
 
+    public static void finishForPlayer(UUID playerId) {
+        for (GearOrbSession session : new ArrayList<>(SESSIONS.values())) {
+            if (playerId.equals(session.getPlayerId())) {
+                complete(session, false);
+            }
+        }
+    }
+
     public static boolean isActive(Location station) {
         return station != null && SESSIONS.containsKey(GearStationStore.key(station));
     }
@@ -106,6 +118,10 @@ public final class GearOrbService implements Listener {
             Map<String, Double> snapshot,
             String primaryElement,
             int chargeTier) {
+        CharacterSession identity = Characters.currentSession(player).orElse(null);
+        if (!SessionGuard.isCurrent(identity)) {
+            return false;
+        }
         World world = station == null ? null : station.getWorld();
         if (world == null) {
             return false;
@@ -115,7 +131,7 @@ public final class GearOrbService implements Listener {
             return false;
         }
         GearOrbSession session = new GearOrbSession(
-                station, player.getUniqueId(), snapshot, primaryElement, OrbCache.tier(chargeTier));
+                station, player.getUniqueId(), snapshot, primaryElement, OrbCache.tier(chargeTier), identity);
         SESSIONS.put(key, session);
         player.sendMessage(Messages.get("gear.orbs.start", "target", String.valueOf(session.goodTarget())));
         world.playSound(session.displayPoint(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.4f);
@@ -130,7 +146,7 @@ public final class GearOrbService implements Listener {
                 continue;
             }
             Player player = Bukkit.getPlayer(session.getPlayerId());
-            if (player == null || !player.isOnline()) {
+            if (player == null || !player.isOnline() || !session.isCurrent()) {
                 complete(session, false);
                 continue;
             }
@@ -148,7 +164,9 @@ public final class GearOrbService implements Listener {
     }
 
     private static void complete(GearOrbSession session, boolean announce) {
-        SESSIONS.remove(GearStationStore.key(session.getStation()));
+        if (!SESSIONS.remove(GearStationStore.key(session.getStation()), session)) {
+            return;
+        }
         session.end();
         Player player = Bukkit.getPlayer(session.getPlayerId());
         GearStationStore.Occupancy occupancy = GearStationStore.get(session.getStation());
@@ -178,7 +196,7 @@ public final class GearOrbService implements Listener {
             weapon = WeaponLore.updateItem(weapon);
         }
         GearStationStore.update(session.getStation(), weapon);
-        if (player != null && player.isOnline()) {
+        if (player != null && player.isOnline() && session.isCurrent()) {
             Magic.plugin.syncSpellModifiers(
                     player, Magic.plugin.getResonanceGuiManager().getSessionManager().get(player));
         }
@@ -222,7 +240,7 @@ public final class GearOrbService implements Listener {
             return;
         }
         GearOrbSession session = sessionOf(player.getUniqueId());
-        if (session == null || !session.claimSwing(tickCount) || !session.canHit(tickCount)) {
+        if (session == null || !session.isCurrent() || !session.claimSwing(tickCount) || !session.canHit(tickCount)) {
             return;
         }
         GearOrb orb = hitscan(player, session);

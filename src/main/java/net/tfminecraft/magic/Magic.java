@@ -123,7 +123,7 @@ public class Magic extends JavaPlugin {
 
         MagicProfileStore profileStore = new MagicProfileStore(
                 new File(getDataFolder(), "data/characters"));
-        profileService = new MagicProfileService(profileStore, resonanceGuiManager.getSessionManager());
+        profileService = new MagicProfileService(this, profileStore, resonanceGuiManager.getSessionManager());
         getServer().getPluginManager().registerEvents(
                 new MagicSessionListener(profileService, resonanceGuiManager), this);
         if (RpCharactersBridge.isAvailable()) {
@@ -169,7 +169,7 @@ public class Magic extends JavaPlugin {
             meditationService.stop();
         }
         if (profileService != null) {
-            profileService.saveAllOnline();
+            profileService.close();
         }
         if (ItemScanService.get() != null) {
             ItemScanService.get().unsubscribe(attuneScanHandler);

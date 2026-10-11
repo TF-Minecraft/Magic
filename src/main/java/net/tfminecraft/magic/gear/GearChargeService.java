@@ -37,6 +37,10 @@ public final class GearChargeService {
         }
     }
 
+    public static void clear(Player player) {
+        CONFIRMS.remove(player.getUniqueId());
+    }
+
     public static void tryApply(Player player, Location station, ItemStack hand) {
         Charge charge = Charge.fromItem(hand);
         if (charge == null) {

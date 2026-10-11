@@ -18,7 +18,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.integration.SessionGuard;
+import net.tfminecraft.tlibs.character.CharacterSessionStartEvent;
 import net.tfminecraft.magic.gear.GearRefresher;
 
 /**
@@ -34,7 +35,7 @@ public final class GearRefreshListener implements Listener {
     public void onDrop(PlayerDropItemEvent event) {
         Item drop = event.getItemDrop();
         Player player = event.getPlayer();
-        later(() -> {
+        SessionGuard.runLater(player, () -> {
             if (drop.isValid()) {
                 ItemStack rebuilt = GearRefresher.refreshIfOutdated(drop.getItemStack(), player);
                 if (rebuilt != null) {
@@ -53,10 +54,7 @@ public final class GearRefreshListener implements Listener {
         // before next tick (a menu closes), so a raw view slot may no longer exist.
         Inventory clicked = event.getClickedInventory();
         int slot = event.getSlot();
-        later(() -> {
-            if (!player.isOnline()) {
-                return;
-            }
+        SessionGuard.runLater(player, () -> {
             if (clicked != null && slot >= 0 && slot < clicked.getSize()) {
                 ItemStack rebuilt = GearRefresher.refreshIfOutdated(clicked.getItem(slot), player);
                 if (rebuilt != null) {
@@ -75,10 +73,7 @@ public final class GearRefreshListener implements Listener {
     public void onItemHeld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
         int slot = event.getNewSlot();
-        later(() -> {
-            if (!player.isOnline()) {
-                return;
-            }
+        SessionGuard.runLater(player, () -> {
             ItemStack rebuilt = GearRefresher.refreshIfOutdated(
                     player.getInventory().getItem(slot), player);
             if (rebuilt != null) {
@@ -89,11 +84,16 @@ public final class GearRefreshListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        later(() -> {
-            if (!player.isOnline()) {
-                return;
-            }
+        sweepLater(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSessionStart(CharacterSessionStartEvent event) {
+        sweepLater(event.getPlayer());
+    }
+
+    private static void sweepLater(Player player) {
+        SessionGuard.runLater(player, () -> {
             sweep(player.getInventory(), player);
             sweep(player.getEnderChest(), player);
         });
@@ -106,7 +106,7 @@ public final class GearRefreshListener implements Listener {
         if (!isWorldStorage(inventory.getHolder(false)) || !(event.getPlayer() instanceof Player player)) {
             return;
         }
-        later(() -> sweep(inventory, player));
+        SessionGuard.runLater(player, () -> sweep(inventory, player));
     }
 
     /** Players are entities too, but a menu owned by a player is not storage. */
@@ -125,10 +125,4 @@ public final class GearRefreshListener implements Listener {
         }
     }
 
-    private static void later(Runnable task) {
-        if (Magic.plugin == null) {
-            return;
-        }
-        Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, task);
-    }
 }

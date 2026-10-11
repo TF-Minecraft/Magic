@@ -7,11 +7,9 @@ import com.google.gson.Gson;
 import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Logger;
-import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.profile.*;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.*;
-import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockbukkit.mockbukkit.*;
@@ -83,33 +81,76 @@ class ProfileEdgeTest {
   }
 
   @Test
-  void profileServiceHandlesLoadedIdWithoutSessionAndBlankBridgeCharacter() throws Exception {
+  void profileServiceNeverFallsBackToAccountOrUnloadedCharacter() throws Exception {
     var sessions = new ResonanceSessionManager();
     var store = new MagicProfileStore(temp.toFile());
-    var service = new MagicProfileService(store, sessions);
+    var provider = new CharacterTestSupport();
+    var service = new MagicProfileService(provider.plugin, store, sessions);
     var player = server.addPlayer();
-    var active = mock(RPCharacter.class);
-    when(active.getId()).thenReturn("one");
-    sessions.setLoadedCharacterId(player, "one");
-    try (var bridge = mockStatic(RpCharactersBridge.class)) {
-      service.activate(player, active);
-      assertNotNull(sessions.get(player));
-      assertTrue(store.exists("one"));
-      var unmatched = mock(RPCharacter.class);
-      when(unmatched.getId()).thenReturn("other");
-      bridge.when(() -> RpCharactersBridge.getActiveCharacter(player)).thenReturn(unmatched);
-      assertNull(service.findOnlineWithCharacter("missing"));
-      sessions.remove(player.getUniqueId());
-      service.saveAllOnline();
-      when(unmatched.getId()).thenReturn("");
-      service.saveAllOnline();
-      service.loadOnlineCharacters();
-      assertNull(sessions.get(player));
-    }
+    var token = provider.start(player, "one");
+    assertNull(sessions.get(player));
+    assertNull(sessions.getLoadedCharacterId(player));
+    service.savePlayer(player);
+    assertFalse(store.exists(CharacterTestSupport.id("one")));
+    service.activate(player, token);
+    sessions.get(player).setResonance("fire", 23);
+    assertNull(service.findOnlineWithCharacter("missing"));
+    provider.unregister();
+    service.savePlayer(player);
+    service.close();
+    assertEquals(23, store.load(CharacterTestSupport.id("one")).getResonance().get("fire"));
     var nested = temp.resolve("nested");
     var nestedStore = new MagicProfileStore(nested.toFile());
     Files.delete(nested);
     nestedStore.save(MagicProfile.fromDefaults("saved", null));
     assertTrue(Files.exists(nested.resolve("saved.json")));
   }
+  @Test
+  void sharedUuidLoadsAndSavesTheExistingLegacyCaseSpelling() throws Exception {
+    var player = server.addPlayer();
+    String id = CharacterTestSupport.id("legacy-case");
+    String legacyId = id.toUpperCase(Locale.ROOT);
+    var store = new MagicProfileStore(temp.toFile());
+    var profile = MagicProfile.fromDefaults(legacyId, player.getUniqueId());
+    profile.setResonance(new HashMap<>(Map.of("fire", 43d)));
+    store.save(profile);
+    String original = Files.readString(temp.resolve(legacyId + ".json"));
+    var provider = new CharacterTestSupport();
+    var sessions = new ResonanceSessionManager();
+    var service = new MagicProfileService(provider.plugin, store, sessions);
+    service.activate(player, provider.start(player, "legacy-case"));
+    assertEquals(43, sessions.get(player).getResonance("fire"));
+    assertEquals(original, Files.readString(temp.resolve(legacyId + ".json")));
+    sessions.get(player).setResonance("fire", 57);
+    service.close();
+    assertFalse(Files.exists(temp.resolve(id + ".json")));
+    assertEquals(57, store.load(legacyId).getResonance().get("fire"));
+    assertTrue(store.exists(id));
+  }
+
+  @Test
+  void ambiguousLegacySpellingFailsWithoutReplacingEitherProfile() throws Exception {
+    String id = "abcdefab-abcd-abcd-abcd-abcdefabcdef";
+    var first = temp.resolve(id.toUpperCase(Locale.ROOT) + ".json");
+    var second = temp.resolve("Abcdefab-abcd-abcd-abcd-abcdefabcdef.json");
+    Files.writeString(first, "first profile");
+    Files.writeString(second, "second profile");
+    var store = new MagicProfileStore(temp.toFile());
+    assertThrows(IllegalStateException.class, () -> store.load(id));
+    assertThrows(IllegalStateException.class, () -> store.save(MagicProfile.fromDefaults(id, null)));
+    assertEquals("first profile", Files.readString(first));
+    assertEquals("second profile", Files.readString(second));
+    assertFalse(Files.exists(temp.resolve(id + ".json")));
+  }
+
+  @Test
+  void unreadableProfileDirectoryDoesNotClaimACharacterFileExists() throws Exception {
+    Path blocked = temp.resolve("blocked-directory");
+    Files.writeString(blocked, "preserved file");
+    var store = new MagicProfileStore(blocked.toFile());
+    assertFalse(store.exists(CharacterTestSupport.id("absent")));
+    assertNull(store.load(CharacterTestSupport.id("absent")));
+    assertEquals("preserved file", Files.readString(blocked));
+  }
+
 }

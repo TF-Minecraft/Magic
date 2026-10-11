@@ -73,7 +73,7 @@ class MeditationSessionTest {
         player,
         circle,
         new MeditationSitYield(Map.of("artifact", cap), Map.of("artifact", 1)),
-        resonance);
+        resonance, null);
   }
 
   void activate(MeditationSession session) {
@@ -191,7 +191,7 @@ class MeditationSessionTest {
 
   @Test
   void missingYieldAndMissingPedestalItemCannotGrantResonance() {
-    var empty = new MeditationSession(player, circle, null, null);
+    var empty = new MeditationSession(player, circle, null, null, null);
     empty.tick(player, null);
     empty.end();
     when(circle.artifactIdOn(post)).thenReturn(null);
@@ -226,7 +226,7 @@ class MeditationSessionTest {
       MeditationCache.spawnIntervalTicks = 5;
       MeditationCache.orbLifetimeTicks = 100;
       var session =
-          new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance);
+          new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance, null);
       activate(session);
       for (int i = 0; i < 15; i++) session.tick(player, resonance);
       assertEquals(3, session.livingOrbs().size());
@@ -240,7 +240,7 @@ class MeditationSessionTest {
       for (double equilibrium : new double[] {-100, 100}) {
         resonance.setEquilibrium(equilibrium);
         var mixed =
-            new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance);
+            new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance, null);
         activate(mixed);
         for (int i = 0; i < 15; i++) mixed.tick(player, resonance);
         assertEquals(
@@ -288,7 +288,7 @@ class MeditationSessionTest {
   void sessionsWithoutResonanceStillAllowVisualWindDownAndMissingSourcesClose() {
     var visual =
         new MeditationSession(
-            player, circle, new MeditationSitYield(Map.of("artifact", 2d), null), null);
+            player, circle, new MeditationSitYield(Map.of("artifact", 2d), null), null, null);
     var starter = visual.livingOrbs().getFirst();
     visual.onOrbHit(player, starter, resonance, null);
     for (int i = 0; i < 5; i++) visual.tick(player, resonance);
@@ -481,4 +481,17 @@ class MeditationSessionTest {
     assertEquals(0, resonance.getResonance("fire"));
     session.end();
   }
+  @Test
+  void theModelKeepsItsCapturedResonanceAndFullCharacterToken() {
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "Alice");
+    var session = new MeditationSession(player, circle, null, resonance, token);
+    assertTrue(session.isCurrent());
+    assertSame(resonance, session.getResonance());
+    provider.start(player, "Bob");
+    provider.start(player, "Alice");
+    assertFalse(session.isCurrent());
+    assertSame(resonance, session.getResonance());
+  }
+
 }

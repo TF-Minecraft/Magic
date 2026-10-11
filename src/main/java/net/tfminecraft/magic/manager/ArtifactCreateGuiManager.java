@@ -32,7 +32,7 @@ public final class ArtifactCreateGuiManager implements Listener {
 
     public void open(Player player) {
         ArtifactCreateSession session = new ArtifactCreateSession();
-        ArtifactCreateGuiHolder holder = new ArtifactCreateGuiHolder(player.getUniqueId());
+        ArtifactCreateGuiHolder holder = new ArtifactCreateGuiHolder(player.getUniqueId(), session);
         var inventory = ArtifactCreateGuiBuilder.build(holder, session);
         holder.setInventory(inventory);
         player.openInventory(inventory);
@@ -69,7 +69,7 @@ public final class ArtifactCreateGuiManager implements Listener {
         }
 
         ArtifactCreateSession session = getSession(player);
-        if (session == null) {
+        if (session == null || session != holder.getSession()) {
             return;
         }
 
@@ -163,10 +163,17 @@ public final class ArtifactCreateGuiManager implements Listener {
         if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
-        if (!(event.getView().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder)) {
+        if (!(event.getView().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder holder)) {
             return;
         }
+        sessions.remove(player.getUniqueId(), holder.getSession());
+    }
+
+    public void cancel(Player player) {
         sessions.remove(player.getUniqueId());
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder) {
+            player.closeInventory();
+        }
     }
 
     @EventHandler

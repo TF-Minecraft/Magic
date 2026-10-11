@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.magic.integration.SessionGuard;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Color;
@@ -35,6 +38,8 @@ public final class MeditationSession {
     private static final Color FLOW_FALLBACK = Color.fromRGB(0x5bc4d4);
     private static final Color SURGE_FALLBACK = Color.fromRGB(0xe85d4a);
 
+    private final CharacterSession identity;
+    private final ResonanceSession resonance;
     private final MeditationCircle circle;
     private final MeditationSitYield yield;
     private Phase phase = Phase.START_ORB;
@@ -54,7 +59,10 @@ public final class MeditationSession {
             Player player,
             MeditationCircle circle,
             MeditationSitYield yield,
-            ResonanceSession resonance) {
+            ResonanceSession resonance,
+            CharacterSession identity) {
+        this.identity = identity;
+        this.resonance = resonance;
         this.circle = circle;
         for (Furniture furniture : circle.getPedestals()) {
             furnitureById.putIfAbsent(furniture.getEntityId(), furniture);
@@ -62,6 +70,14 @@ public final class MeditationSession {
         this.yield = yield != null ? yield : MeditationSitYield.empty();
         closeCappedElements(player, resonance);
         spawnStarter(player);
+    }
+
+    public boolean isCurrent() {
+        return SessionGuard.isCurrent(identity);
+    }
+
+    public ResonanceSession getResonance() {
+        return resonance;
     }
 
     public MeditationCircle getCircle() {

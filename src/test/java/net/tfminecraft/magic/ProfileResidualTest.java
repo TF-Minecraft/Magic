@@ -41,19 +41,19 @@ class ProfileResidualTest {
   }
 
   @Test
-  void onlineLookupCanTurnOfflineBeforeIterationCallback() {
-    var sessions = new ResonanceSessionManager();
-    var player = mock(Player.class);
-    var id = UUID.randomUUID();
-    when(player.getUniqueId()).thenReturn(id);
-    sessions.getOrCreate(player);
-    try (var bukkit = mockStatic(Bukkit.class)) {
-      bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(player);
-      sessions.forEachOnlineSession((p, s) -> fail("offline player must not receive callbacks"));
-      when(player.isOnline()).thenReturn(true);
+  void disconnectedPlayersDoNotReceiveSessionTicks() {
+    var server = org.mockbukkit.mockbukkit.MockBukkit.mock();
+    try {
+      var sessions = new ResonanceSessionManager();
+      var player = server.addPlayer();
+      sessions.getOrCreate(player);
       var seen = new ArrayList<Player>();
       sessions.forEachOnlineSession((p, s) -> seen.add(p));
       assertEquals(List.of(player), seen);
+      player.disconnect();
+      sessions.forEachOnlineSession((p, s) -> fail("offline player must not receive callbacks"));
+    } finally {
+      org.mockbukkit.mockbukkit.MockBukkit.unmock();
     }
   }
 }

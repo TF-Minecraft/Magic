@@ -7,9 +7,14 @@ import java.util.*;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.meditation.*;
 import net.tfminecraft.magic.profile.MagicProfileService;
+import net.tfminecraft.magic.registry.ElementRegistry;
+import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
 import net.tfminecraft.rpcharacters.RPCharacters;
 import net.tfminecraft.rpcharacters.focus.FocusService;
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.CharacterSessionEndEvent.Reason;
+import net.tfminecraft.tlibs.character.Characters;
 import org.bukkit.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
@@ -30,6 +35,7 @@ class MeditationServiceTest {
   ResonanceSessionManager sessions;
   MockedStatic<MeditationCircle> detection;
   MockedStatic<Messages> messages;
+  MockedStatic<ElementRegistry> elements;
   MockedConstruction<MeditationSession> created;
 
   @BeforeEach
@@ -55,14 +61,27 @@ class MeditationServiceTest {
     detection = mockStatic(MeditationCircle.class);
     detection.when(() -> MeditationCircle.detect(any())).thenReturn(circle);
     messages = mockStatic(Messages.class, i -> i.getArgument(0));
+    elements = mockStatic(ElementRegistry.class, CALLS_REAL_METHODS);
+    elements.when(() -> ElementRegistry.getById("fire")).thenReturn(DomainTest.element("fire"));
     created =
-        mockConstruction(MeditationSession.class, (m, c) -> when(m.getCircle()).thenReturn(circle));
+        mockConstruction(
+            MeditationSession.class,
+            (m, c) -> {
+              when(m.getCircle()).thenReturn(circle);
+              when(m.getResonance()).thenReturn((ResonanceSession) c.arguments().get(3));
+              CharacterSession identity = (CharacterSession) c.arguments().get(4);
+              when(m.isCurrent())
+                  .thenAnswer(
+                      ignored -> identity == null ? !Characters.available() : Characters.isCurrent(identity));
+            });
   }
 
   @AfterEach
   void cleanup() {
     service.stop();
+    sessions.close();
     created.close();
+    elements.close();
     messages.close();
     detection.close();
     Magic.plugin = null;
@@ -342,5 +361,132 @@ class MeditationServiceTest {
       service.onSwing(new PlayerAnimationEvent(player));
       verify(session).claimTiredNotice();
     }
+  }
+
+  ResonanceSession activate(CharacterTestSupport characters, String label, double fire) {
+    CharacterSession identity = characters.start(player, label);
+    ResonanceSession resonance = new ResonanceSession();
+    resonance.setResonance("fire", fire);
+    sessions.put(identity, resonance);
+    when(profiles.characterId(player)).thenReturn(identity.ref().characterId().toString());
+    return resonance;
+  }
+
+  void allowHit(MeditationSession session) {
+    var orb = mock(MeditationOrb.class);
+    when(orb.getLocation(anyInt())).thenAnswer(ignored -> player.getEyeLocation().add(0, 0, 2));
+    when(session.livingOrbs()).thenReturn(List.of(orb));
+    when(session.claimSwing(anyLong())).thenReturn(true);
+    when(session.canHit(anyLong())).thenReturn(true);
+    doReturn(null).when(world).rayTraceBlocks(any(), any(), anyDouble(), any(), anyBoolean());
+  }
+
+  @Test
+  void returningToTheSameCharacterCannotSpendFocusOrGrantResonanceFromOldOrbs() {
+    var characters = new CharacterTestSupport();
+    sessions.start(characters.plugin, null);
+    var original = activate(characters, "Alice", 4);
+    var firstIdentity = Characters.currentSession(player).orElseThrow();
+    var old = start();
+    allowHit(old);
+    doAnswer(
+            call -> {
+              ((ResonanceSession) call.getArgument(2)).addResonance("fire", 10);
+              return false;
+            })
+        .when(old).onOrbHit(any(), any(), any(), any());
+    activate(characters, "Bob", 8);
+    var replacement = activate(characters, "Alice", 12);
+    var returnedIdentity = Characters.currentSession(player).orElseThrow();
+    assertEquals(firstIdentity.ref(), returnedIdentity.ref());
+    assertNotEquals(firstIdentity, returnedIdentity);
+
+    try (var rp = mockStatic(RPCharacters.class)) {
+      var focus = mock(FocusService.class);
+      when(focus.trySpend(any(), anyInt())).thenReturn(true);
+      rp.when(RPCharacters::getFocusService).thenReturn(focus);
+      service.onSwing(new PlayerAnimationEvent(player));
+      verify(focus, never()).trySpend(any(), anyInt());
+      verify(old, never()).onOrbHit(any(), any(), any(), any());
+      assertEquals(4, original.getResonance("fire"));
+      assertEquals(12, replacement.getResonance("fire"));
+      player.leaveVehicle();
+      tick();
+      verify(old).end();
+      verify(old, never()).tick(any(), any());
+      verify(profiles, never()).savePlayer(any());
+    }
+  }
+
+  @Test
+  void focusCallbackEndingTheSessionCannotApplyTheHitToItsReplacement() {
+    var characters = new CharacterTestSupport();
+    sessions.start(characters.plugin, null);
+    var original = activate(characters, "Alice", 4);
+    var old = start();
+    allowHit(old);
+    var replacement = new java.util.concurrent.atomic.AtomicReference<ResonanceSession>();
+    try (var rp = mockStatic(RPCharacters.class)) {
+      var focus = mock(FocusService.class);
+      rp.when(RPCharacters::getFocusService).thenReturn(focus);
+      when(focus.trySpend(player, MeditationCache.mentalCostPerHit))
+          .thenAnswer(
+              ignored -> {
+                characters.end(player, Reason.DEATH);
+                MeditationService.cancel(player);
+                replacement.set(activate(characters, "Bob", 9));
+                return true;
+              });
+      service.onSwing(new PlayerAnimationEvent(player));
+      verify(focus).trySpend(player, MeditationCache.mentalCostPerHit);
+      verify(old).end();
+      verify(old, never()).onOrbHit(any(), any(), any(), any());
+      assertEquals(4, original.getResonance("fire"));
+      assertEquals(9, replacement.get().getResonance("fire"));
+      service.onSwing(new PlayerAnimationEvent(player));
+      verifyNoMoreInteractions(focus);
+    }
+  }
+
+  @Test
+  void sessionEndImmediatelyUnlocksFurnitureAndRepeatedCancellationIsHarmless() {
+    var characters = new CharacterTestSupport();
+    sessions.start(characters.plugin, null);
+    activate(characters, "Alice", 4);
+    var old = start();
+    var post = mock(Furniture.class);
+    when(post.getEntityId()).thenReturn(UUID.randomUUID());
+    when(circle.getPedestals()).thenReturn(List.of(post));
+    assertTrue(MeditationService.locksFurniture(post));
+    characters.end(player, Reason.SHUTDOWN);
+    MeditationService.cancel(player);
+    MeditationService.cancel(player);
+    assertFalse(MeditationService.locksFurniture(post));
+    tick();
+    verify(old).end();
+    verify(old, never()).tick(any(), any());
+    verify(profiles, never()).savePlayer(any());
+    assertEquals(1, created.constructed().size());
+  }
+
+  @Test
+  void readinessRequiresBothACurrentCharacterAndItsLoadedResonance() {
+    var characters = new CharacterTestSupport();
+    sessions.start(characters.plugin, null);
+    sit();
+    service.start();
+    tick();
+    assertTrue(created.constructed().isEmpty());
+    var identity = characters.start(player, "Alice");
+    tick();
+    assertTrue(created.constructed().isEmpty());
+    verify(circle, never()).stampAndSnapshot(any(), anyLong());
+    var resonance = new ResonanceSession();
+    sessions.put(identity, resonance);
+    tick();
+    assertEquals(1, created.constructed().size());
+    var active = created.constructed().getFirst();
+    tick();
+    verify(active).tick(player, resonance);
   }
 }

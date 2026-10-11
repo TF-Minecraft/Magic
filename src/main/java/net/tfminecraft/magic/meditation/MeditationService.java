@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.Characters;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
@@ -70,6 +73,17 @@ public final class MeditationService implements Listener {
         }
     }
 
+    public static void cancel(Player player) {
+        MeditationService service = instance;
+        if (service != null) {
+            MeditationSession session = service.sessions.remove(player.getUniqueId());
+            if (session != null) {
+                session.end();
+            }
+            service.sitNotices.remove(player.getUniqueId());
+        }
+    }
+
     public static boolean locksFurniture(Furniture furniture) {
         MeditationService service = instance;
         if (service == null || furniture == null) {
@@ -98,6 +112,11 @@ public final class MeditationService implements Listener {
                 continue;
             }
             Player player = Bukkit.getPlayer(id);
+            if (!session.isCurrent()) {
+                sessions.remove(id);
+                session.end();
+                continue;
+            }
             if (session.isWindingDown()) {
                 tickWindDown(id, player, session);
                 continue;
@@ -110,8 +129,7 @@ public final class MeditationService implements Listener {
                 tickWindDown(id, player, session);
                 continue;
             }
-            ResonanceSession resonance = sessionManager.getOrCreate(player);
-            session.tick(player, resonance);
+            session.tick(player, session.getResonance());
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID id = player.getUniqueId();
@@ -128,8 +146,7 @@ public final class MeditationService implements Listener {
     }
 
     private void tickWindDown(UUID playerId, Player player, MeditationSession session) {
-        ResonanceSession resonance = player != null ? sessionManager.getOrCreate(player) : null;
-        session.tick(player, resonance);
+        session.tick(player, session.getResonance());
         if (!session.hasActiveOrbs()) {
             finishSession(playerId, player);
         }
@@ -149,6 +166,11 @@ public final class MeditationService implements Listener {
         if (!player.isInsideVehicle()) {
             return;
         }
+        CharacterSession identity = Characters.currentSession(player).orElse(null);
+        ResonanceSession resonance = sessionManager.getOrCreate(player);
+        if (resonance == null) {
+            return;
+        }
         MeditationCircle circle = MeditationCircle.detect(player.getLocation());
         if (circle == null) {
             return;
@@ -162,14 +184,13 @@ public final class MeditationService implements Listener {
         }
         long nowMs = System.currentTimeMillis();
         String characterId = profileService != null ? profileService.characterId(player) : null;
-        ResonanceSession resonance = sessionManager.getOrCreate(player);
         MeditationSitYield preview = circle.snapshotYield(nowMs, characterId);
         if (!preview.hasAnyCap() || !circle.canGainResonance(player, resonance, preview)) {
             notifySit(player, Messages.get("meditation.nothing"));
             return;
         }
         MeditationSitYield yield = circle.stampAndSnapshot(characterId, nowMs);
-        sessions.put(player.getUniqueId(), new MeditationSession(player, circle, yield, resonance));
+        sessions.put(player.getUniqueId(), new MeditationSession(player, circle, yield, resonance, identity));
     }
 
     private void notifySit(Player player, String message) {
@@ -212,7 +233,7 @@ public final class MeditationService implements Listener {
 
     private void tryHit(Player player) {
         MeditationSession session = sessions.get(player.getUniqueId());
-        if (session == null || session.isWindingDown()
+        if (session == null || !session.isCurrent() || session.isWindingDown()
                 || !session.claimSwing(tickCount) || !session.canHit(tickCount)) {
             return;
         }
@@ -228,7 +249,10 @@ public final class MeditationService implements Listener {
             return;
         }
         session.markHit(tickCount);
-        ResonanceSession resonance = sessionManager.getOrCreate(player);
+        if (!session.isCurrent()) {
+            return;
+        }
+        ResonanceSession resonance = session.getResonance();
         boolean complete = session.onOrbHit(player, orb, resonance, profileService);
         if (complete) {
             session.playComplete(player);
