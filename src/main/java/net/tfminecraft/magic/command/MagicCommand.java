@@ -236,7 +236,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         String characterId = Magic.plugin.getResonanceGuiManager().getSessionManager().getLoadedCharacterId(target);
         ResonanceSession session = Magic.plugin.getResonanceGuiManager().getSessionManager().get(target);
-        if (characterId == null || session == null) {
+        if (session == null || characterId == null) {
             sender.sendMessage(Messages.get("resonance.admin.no_character", "player", target.getName()));
             return true;
         }

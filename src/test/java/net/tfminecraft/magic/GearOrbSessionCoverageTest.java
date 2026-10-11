@@ -33,7 +33,7 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
     fills.put("zero", 0d);
     fills.put("negative", -1d);
     var id = UUID.randomUUID();
-    var s = new GearOrbSession(at, id, fills, null, new OrbCache.Tier(2, 1, 1, 20, 2));
+    var s = new GearOrbSession(at, id, fills, null, new OrbCache.Tier(2, 1, 1, 20, 2), null);
     at.setX(99);
     fills.put("fire", 999d);
     assertEquals(1, s.getStation().getX());
@@ -90,7 +90,7 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
                 UUID.randomUUID(),
                 Map.of("fire", 10d),
                 "unknown",
-                new OrbCache.Tier(2, ratio, 1, 20, 2));
+                new OrbCache.Tier(2, ratio, 1, 20, 2), null);
         s.tick(null);
         assertEquals(1, s.livingOrbs().size());
         var first = s.livingOrbs().getFirst();
@@ -116,7 +116,7 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
     Location at = new Location(null, 0, 0, 0);
     OrbCache.lifetimeTicks = 1;
     var s =
-        new GearOrbSession(at, UUID.randomUUID(), Map.of(), "", new OrbCache.Tier(1, 1, 1, 20, 1));
+        new GearOrbSession(at, UUID.randomUUID(), Map.of(), "", new OrbCache.Tier(1, 1, 1, 20, 1), null);
     s.tick(null);
     assertEquals(1, s.livingOrbs().size());
     s.tick(null);
@@ -139,7 +139,7 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
             UUID.randomUUID(),
             Map.of(),
             "fire",
-            new OrbCache.Tier(1, 1, 1, 20, 1));
+            new OrbCache.Tier(1, 1, 1, 20, 1), null);
     s.playComplete();
     var dust = org.mockito.ArgumentCaptor.forClass(Particle.DustOptions.class);
     verify(world)
@@ -165,7 +165,7 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
             UUID.randomUUID(),
             Map.of(),
             null,
-            new OrbCache.Tier(2, 1, 1, 20, 1));
+            new OrbCache.Tier(2, 1, 1, 20, 1), null);
     s.tick(null);
     assertEquals(1, s.livingOrbs().size());
     s.tick(null);
@@ -173,4 +173,17 @@ class GearOrbSessionCoverageTest extends GearCoverageSupport {
     for (int i = 0; i < 8; i++) s.tick(null);
     assertEquals(2, s.livingOrbs().size());
   }
+  @Test
+  void theModelRejectsAReplacementGenerationOfTheSameCharacter() {
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "Alice");
+    var session = new GearOrbSession(player.getLocation(), player.getUniqueId(), Map.of(),
+        "fire", new OrbCache.Tier(1, 1, 1, 20, 1), token);
+    assertTrue(session.isCurrent());
+    provider.start(player, "Bob");
+    provider.start(player, "Alice");
+    assertFalse(session.isCurrent());
+  }
+
 }

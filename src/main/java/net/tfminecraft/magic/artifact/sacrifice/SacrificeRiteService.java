@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.Characters;
+import net.tfminecraft.magic.integration.SessionGuard;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
@@ -70,6 +74,11 @@ public final class SacrificeRiteService {
             sendFail(caster, target.getFail());
             return;
         }
+        CharacterSession casterSession = Characters.currentSession(caster).orElse(null);
+        CharacterSession victimSession = Characters.currentSession(target.getVictim()).orElse(null);
+        if (!SessionGuard.isCurrent(casterSession) || !SessionGuard.isCurrent(victimSession)) {
+            return;
+        }
         SacrificeRiteSession session = new SacrificeRiteSession(
                 caster.getUniqueId(),
                 target.getVictim().getUniqueId(),
@@ -77,7 +86,7 @@ public final class SacrificeRiteService {
                 target.getSlotId(),
                 elementId,
                 target.getScore(),
-                System.currentTimeMillis());
+                System.currentTimeMillis(), casterSession, victimSession);
         byCaster.put(caster.getUniqueId(), session);
         target.getVictim().sendMessage(Messages.get("sacrifice.dread"));
         ensureTicker();
@@ -144,6 +153,12 @@ public final class SacrificeRiteService {
     }
 
     private static void resolveKill(SacrificeRiteSession session, Player victim, Player caster) {
+        if (!session.isCurrent()) {
+            cancel(session, false);
+            return;
+        }
+        byCaster.remove(session.getCasterId(), session);
+        // Permadeath synchronously ends the victim session. Detach before that cleanup re-enters.
         double charge = session.charge();
         SacrificeTierDef tier = SacrificeRegistry.tierForCharge(charge);
         RPCharacter character = RpCharactersBridge.getActiveCharacter(victim);
@@ -202,7 +217,7 @@ public final class SacrificeRiteService {
     }
 
     private static void cancel(SacrificeRiteSession session, boolean notifyVictim) {
-        byCaster.remove(session.getCasterId());
+        byCaster.remove(session.getCasterId(), session);
         if (notifyVictim) {
             Player victim = Bukkit.getPlayer(session.getVictimId());
             if (victim != null && victim.isOnline()) {
@@ -245,6 +260,9 @@ public final class SacrificeRiteService {
     }
 
     private static boolean tickOne(SacrificeRiteSession session) {
+        if (!session.isCurrent()) {
+            return false;
+        }
         Furniture furniture = session.getFurniture();
         if (furniture.isCarried()) {
             return false;

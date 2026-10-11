@@ -9,7 +9,8 @@ import net.tfminecraft.magic.listener.*;
 import net.tfminecraft.magic.manager.ResonanceGuiManager;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
-import net.tfminecraft.rpcharacters.lifecycle.CharacterActivatedEvent;
+import net.tfminecraft.tlibs.character.CharacterSessionStartEvent;
+import net.tfminecraft.tlibs.character.CharacterSessionEndEvent;
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import org.bukkit.Material;
 import org.bukkit.block.DoubleChest;
@@ -159,28 +160,20 @@ class ListenerTest {
   }
 
   @Test
-  void roleplayCharacterEventsSavePreviousThenActivateAndCloseOldGui() {
+  void sharedSessionEventsActivateAndClearOutgoingActivities() {
     var player = server.addPlayer();
+    player.openInventory(server.createInventory(null, 9));
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "next");
     var profile = mock(MagicProfileService.class);
     var gui = mock(ResonanceGuiManager.class, RETURNS_DEEP_STUBS);
     var listener = new MagicSessionListener(profile, gui);
-    var event = mock(CharacterActivatedEvent.class);
-    listener.onCharacterActivated(event);
-    when(event.getOwner()).thenReturn(player);
-    listener.onCharacterActivated(event);
-    var character = mock(RPCharacter.class);
-    when(character.getId()).thenReturn("next");
-    when(event.getCharacter()).thenReturn(character);
-    listener.onCharacterActivated(event);
-    verify(profile).activate(player, character);
-    verify(gui).closeIfCharacterChanged(player, "next");
-    var previous = mock(RPCharacter.class);
-    when(event.getPrevious()).thenReturn(previous);
-    listener.onCharacterActivated(event);
-    verify(profile).savePrevious(player, previous);
+    listener.onSessionStart(new CharacterSessionStartEvent(player, token));
+    verify(profile).activate(player, token);
+    listener.onSessionEnd(new CharacterSessionEndEvent(player, token, CharacterSessionEndEvent.Reason.SWITCH));
     listener.onPlayerQuit(new PlayerQuitEvent(player, "quit"));
-    verify(profile).deactivate(player);
-    verify(Magic.plugin).clearSpellModifiers(player);
+    verify(Magic.plugin, times(3)).clearSpellModifiers(player);
+    verify(gui.getSessionManager(), times(3)).removeStandalone(player.getUniqueId());
   }
 
   @Test
@@ -254,4 +247,84 @@ class ListenerTest {
     assertFalse(GearRefreshListener.isWorldStorage(mock(Player.class)));
     assertFalse(GearRefreshListener.isWorldStorage(null));
   }
+  @Test
+  void delayedInventoryAndModifierWorkCannotCrossAnAliceBobAliceSwitch() {
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    var first = provider.start(player, "Alice");
+    var old = new ItemStack(Material.STICK);
+    player.getInventory().setItem(1, old);
+    var storage = server.createInventory(null, 9);
+    storage.setItem(1, old);
+    player.openInventory(storage);
+    player.getOpenInventory().setCursor(old);
+    var event = mock(InventoryClickEvent.class);
+    when(event.getWhoClicked()).thenReturn(player);
+    when(event.getClickedInventory()).thenReturn(storage);
+    when(event.getSlot()).thenReturn(1);
+    try (var refresh = mockStatic(GearRefresher.class)) {
+      refresh.when(() -> GearRefresher.refreshIfOutdated(any(), eq(player)))
+          .thenReturn(new ItemStack(Material.BLAZE_ROD));
+      new GearRefreshListener().onClick(event);
+      new GearRefreshListener().onItemHeld(new PlayerItemHeldEvent(player, 0, 1));
+      new GearAlignmentListener().onItemHeld(new PlayerItemHeldEvent(player, 0, 1));
+      provider.start(player, "Bob");
+      var next = provider.start(player, "Alice");
+      assertNotEquals(first, next);
+      server.getScheduler().performOneTick();
+      refresh.verifyNoInteractions();
+      verify(Magic.plugin, never()).syncSpellModifiers(any(), any());
+      assertEquals(old, storage.getItem(1));
+      assertEquals(old, player.getInventory().getItem(1));
+      assertEquals(old, player.getOpenInventory().getCursor());
+    }
+  }
+
+  @Test
+  void sharedStartSchedulesJoinSweepOnlyWhenCharacterIsReady() {
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    var listener = new GearRefreshListener();
+    var old = new ItemStack(Material.STICK);
+    var rebuilt = new ItemStack(Material.BLAZE_ROD);
+    player.getInventory().setItem(1, old);
+    try (var refresh = mockStatic(GearRefresher.class)) {
+      refresh.when(() -> GearRefresher.refreshIfOutdated(old, player)).thenReturn(rebuilt);
+      listener.onJoin(new PlayerJoinEvent(player, "join"));
+      server.getScheduler().performOneTick();
+      assertEquals(old, player.getInventory().getItem(1));
+      var token = provider.start(player, "Alice");
+      listener.onSessionStart(new CharacterSessionStartEvent(player, token));
+      server.getScheduler().performOneTick();
+      assertEquals(rebuilt, player.getInventory().getItem(1));
+    }
+  }
+
+  @Test
+  void endClearsMagicMenusSelectionsAndPendingChestActions() {
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    var token = provider.start(player, "Alice");
+    var gui = new ResonanceGuiManager();
+    var listener = new MagicSessionListener(mock(MagicProfileService.class), gui);
+    var end = new CharacterSessionEndEvent(player, token, CharacterSessionEndEvent.Reason.DEATH);
+    for (InventoryHolder holder : Arrays.asList(
+        new net.tfminecraft.magic.gui.ResonanceGuiHolder(player.getUniqueId(), token, new net.tfminecraft.magic.session.ResonanceSession()),
+        new net.tfminecraft.magic.gear.gui.AssemblyHolder(),
+        new net.tfminecraft.magic.gear.gui.PartSelectionHolder("core"),
+        new net.tfminecraft.magic.gear.gui.TypeSelectionHolder(), null)) {
+      player.openInventory(server.createInventory(holder, 9));
+      net.tfminecraft.magic.gear.gui.OpenStationManager.set(player, player.getLocation());
+      net.tfminecraft.magic.gear.gui.SelectedPartsManager.set(player, "core", "wood");
+      net.tfminecraft.magic.gear.gui.TypeSelectionManager.set(player, GearType.WAND);
+      net.tfminecraft.magic.artifact.fillchest.ArtifactFillChestService.arm(
+          player.getUniqueId(), net.tfminecraft.magic.artifact.fillchest.ArtifactFillChestService.Mode.ALL, null);
+      listener.onSessionEnd(end);
+      assertNull(net.tfminecraft.magic.gear.gui.OpenStationManager.get(player));
+      assertTrue(net.tfminecraft.magic.gear.gui.SelectedPartsManager.categories(player).isEmpty());
+      assertEquals(GearType.STAFF, net.tfminecraft.magic.gear.gui.TypeSelectionManager.get(player));
+      assertNull(net.tfminecraft.magic.artifact.fillchest.ArtifactFillChestService.get(player.getUniqueId()));
+    }
+  }
+
 }

@@ -1,25 +1,25 @@
 package net.tfminecraft.magic.profile;
 
-import java.util.UUID;
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
-import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
-import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.Characters;
 
 public final class MagicProfileService {
 
     private final MagicProfileStore store;
     private final ResonanceSessionManager sessionManager;
 
-    public MagicProfileService(MagicProfileStore store, ResonanceSessionManager sessionManager) {
+    public MagicProfileService(Plugin plugin, MagicProfileStore store, ResonanceSessionManager sessionManager) {
         this.store = store;
         this.sessionManager = sessionManager;
+        sessionManager.start(plugin, this::save);
     }
 
     public String characterId(Player player) {
@@ -31,94 +31,57 @@ public final class MagicProfileService {
             return null;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (characterId.equals(sessionManager.getLoadedCharacterId(player))) {
-                return player;
-            }
-            RPCharacter active = RpCharactersBridge.getActiveCharacter(player);
-            if (active != null && characterId.equals(active.getId())) {
+            if (characterId.equalsIgnoreCase(characterId(player))) {
                 return player;
             }
         }
         return null;
     }
 
-    public void activate(Player player, RPCharacter character) {
-        if (player == null || character == null || character.getId() == null || character.getId().isBlank()) {
+    public void activate(Player player, CharacterSession identity) {
+        if (player == null || identity == null || !player.getUniqueId().equals(identity.ref().ownerId())
+                || !Characters.isCurrent(identity) || sessionManager.getSession(identity) != null) {
             return;
         }
-        String characterId = character.getId();
-        String loaded = sessionManager.getLoadedCharacterId(player);
-        ResonanceSession live = sessionManager.get(player);
-        if (characterId.equals(loaded) && live != null) {
-            return;
-        }
+        String characterId = identity.ref().characterId().toString();
         MagicProfile profile = store.load(characterId);
         if (profile == null) {
-            profile = MagicProfile.fromDefaults(characterId, player.getUniqueId());
+            profile = MagicProfile.fromDefaults(characterId, identity.ref().ownerId());
             store.save(profile);
             if (Cache.debug) {
                 Magic.plugin.getLogger().info("[Magic] Created profile for character " + characterId);
             }
-        } else {
-            profile.setOwnerUuid(player.getUniqueId().toString());
         }
-        ResonanceSession session = sessionManager.getOrCreate(player);
+        ResonanceSession session = new ResonanceSession();
         profile.applyTo(session);
-        sessionManager.setLoadedCharacterId(player, characterId);
-    }
-
-    public void savePrevious(Player player, RPCharacter previous) {
-        if (player == null || previous == null || previous.getId() == null || previous.getId().isBlank()) {
-            return;
-        }
-        ResonanceSession session = sessionManager.get(player);
-        if (session == null) {
-            return;
-        }
-        store.save(MagicProfile.fromSession(previous.getId(), player.getUniqueId(), session));
-    }
-
-    public void deactivate(Player player) {
-        if (player == null) {
-            return;
-        }
-        saveLoaded(player);
-        sessionManager.remove(player.getUniqueId());
-    }
-
-    public void saveAllOnline() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            saveLoaded(player);
-        }
+        sessionManager.put(identity, session);
     }
 
     public void loadOnlineCharacters() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            RPCharacter character = RpCharactersBridge.getActiveCharacter(player);
-            if (character != null) {
-                activate(player, character);
-            }
+            Characters.currentSession(player).ifPresent(session -> activate(player, session));
         }
-    }
-
-    private void saveLoaded(Player player) {
-        String characterId = sessionManager.getLoadedCharacterId(player);
-        if (characterId == null) {
-            RPCharacter active = RpCharactersBridge.getActiveCharacter(player);
-            characterId = active != null ? active.getId() : null;
-        }
-        if (characterId == null || characterId.isBlank()) {
-            return;
-        }
-        ResonanceSession session = sessionManager.get(player);
-        if (session == null) {
-            return;
-        }
-        UUID owner = player.getUniqueId();
-        store.save(MagicProfile.fromSession(characterId, owner, session));
     }
 
     public void savePlayer(Player player) {
-        saveLoaded(player);
+        if (player == null) {
+            return;
+        }
+        Characters.currentSession(player).ifPresent(identity -> {
+            ResonanceSession session = sessionManager.getSession(identity);
+            if (session != null) {
+                save(identity, session);
+            }
+        });
+    }
+
+    private void save(CharacterSession identity, ResonanceSession session) {
+        // End events invalidate the token before delivery. Flush the captured value directly.
+        store.save(MagicProfile.fromSession(identity.ref().characterId().toString(),
+                identity.ref().ownerId(), session));
+    }
+
+    public void close() {
+        sessionManager.close();
     }
 }

@@ -12,12 +12,11 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 
-import net.tfminecraft.rpcharacters.objects.RPCharacter;
+import net.tfminecraft.tlibs.character.Characters;
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.gui.ResonanceGuiBuilder;
 import net.tfminecraft.magic.gui.ResonanceGuiHolder;
-import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
 import net.tfminecraft.magic.util.GridLayout;
@@ -32,8 +31,8 @@ public final class ResonanceGuiManager implements Listener {
 
     public boolean tryOpen(Player player, boolean bypassCharacterCheck) {
         if (!bypassCharacterCheck
-                && RpCharactersBridge.isAvailable()
-                && RpCharactersBridge.getActiveCharacter(player) == null) {
+                && Characters.available()
+                && sessionManager.get(player) == null) {
             player.sendMessage(Messages.get("open.no_character"));
             return false;
         }
@@ -42,10 +41,12 @@ public final class ResonanceGuiManager implements Listener {
     }
 
     public void open(Player player) {
-        RPCharacter character = RpCharactersBridge.getActiveCharacter(player);
-        String characterId = character != null ? character.getId() : null;
         ResonanceSession session = sessionManager.getOrCreate(player);
-        ResonanceGuiHolder holder = new ResonanceGuiHolder(player.getUniqueId(), characterId);
+        if (session == null) {
+            session = new ResonanceSession();
+        }
+        ResonanceGuiHolder holder = new ResonanceGuiHolder(player.getUniqueId(),
+                Characters.currentSession(player).orElse(null), session);
         var inventory = ResonanceGuiBuilder.build(player, holder, session);
         holder.setInventory(inventory);
         player.openInventory(inventory);
@@ -57,7 +58,10 @@ public final class ResonanceGuiManager implements Listener {
             if (!(top.getHolder() instanceof ResonanceGuiHolder holder)) {
                 continue;
             }
-            ResonanceSession session = sessionManager.getOrCreate(player);
+            ResonanceSession session = currentSession(player, holder);
+            if (session == null) {
+                continue;
+            }
             ResonanceGuiBuilder.populate(top, player, session);
             holder.setInventory(top);
         }
@@ -78,7 +82,10 @@ public final class ResonanceGuiManager implements Listener {
             return;
         }
 
-        ResonanceSession session = sessionManager.getOrCreate(player);
+        ResonanceSession session = currentSession(player, holder);
+        if (session == null) {
+            return;
+        }
         String previousMode = session.getCastModeId();
         if (rawSlot == GridLayout.castModeLeftSlot()) {
             session.setCastModeId(GuiCache.castModeLeft.getId());
@@ -127,15 +134,20 @@ public final class ResonanceGuiManager implements Listener {
         event.setCancelled(true);
     }
 
-    public void closeIfCharacterChanged(Player player, String characterId) {
-        Inventory top = player.getOpenInventory().getTopInventory();
-        if (!(top.getHolder() instanceof ResonanceGuiHolder holder)) {
-            return;
-        }
-        String openId = holder.getCharacterId();
-        if (openId == null || !openId.equals(characterId)) {
+    public void close(Player player) {
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ResonanceGuiHolder) {
             player.closeInventory();
         }
+    }
+
+    private ResonanceSession currentSession(Player player, ResonanceGuiHolder holder) {
+        boolean current = holder.getSession() == null
+                ? Characters.currentSession(player).isEmpty() : Characters.isCurrent(holder.getSession());
+        if (!player.getUniqueId().equals(holder.getPlayerUuid()) || !current) {
+            close(player);
+            return null;
+        }
+        return holder.getResonance();
     }
 
     private void refreshGui(Player player, ResonanceGuiHolder holder, ResonanceSession session) {

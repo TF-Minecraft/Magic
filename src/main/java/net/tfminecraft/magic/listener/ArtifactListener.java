@@ -19,6 +19,8 @@ import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemAddEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemTakeEvent;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.integration.SessionGuard;
+import net.tfminecraft.tlibs.character.Characters;
 import net.tfminecraft.magic.artifact.aura.AuraVessels;
 import net.tfminecraft.magic.artifact.ArtifactCarePlaces;
 import net.tfminecraft.magic.artifact.ArtifactCareStore;
@@ -107,7 +109,9 @@ public final class ArtifactListener implements Listener {
         }
         String slotId = event.getSlot().getId();
         Player player = event.getPlayer();
-        Bukkit.getScheduler().runTask(Magic.plugin, () -> ShrineChargeService.tryStart(player, furniture, slotId));
+        var identity = Characters.currentSession(player).orElse(null);
+        Bukkit.getScheduler().runTask(Magic.plugin, () -> ShrineChargeService.tryStart(
+                player.isOnline() && SessionGuard.isCurrent(identity) ? player : null, furniture, slotId));
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -164,7 +168,7 @@ public final class ArtifactListener implements Listener {
         if (!(event.getEntity() instanceof Player player)) {
             return;
         }
-        Bukkit.getScheduler().runTask(Magic.plugin, () -> VesselLore.updateInventory(player));
+        SessionGuard.runLater(player, () -> VesselLore.updateInventory(player));
     }
 
     @EventHandler

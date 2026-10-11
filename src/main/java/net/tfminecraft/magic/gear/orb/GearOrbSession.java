@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.magic.integration.SessionGuard;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Color;
@@ -28,6 +31,7 @@ import net.tfminecraft.magic.util.MagicText;
  */
 public final class GearOrbSession {
 
+    private final CharacterSession identity;
     private final Location station;
     private final UUID playerId;
     private final Map<String, Double> snapshot;
@@ -49,13 +53,19 @@ public final class GearOrbSession {
             UUID playerId,
             Map<String, Double> snapshot,
             String primaryElement,
-            OrbCache.Tier tier) {
+            OrbCache.Tier tier,
+            CharacterSession identity) {
+        this.identity = identity;
         this.station = station.clone();
         this.playerId = playerId;
         this.snapshot = new LinkedHashMap<>(snapshot);
         this.primaryElement = primaryElement == null ? "" : primaryElement;
         this.tier = tier;
         this.beamColor = resolveBeamColor(this.primaryElement);
+    }
+
+    public boolean isCurrent() {
+        return SessionGuard.isCurrent(identity);
     }
 
     public Location getStation() {

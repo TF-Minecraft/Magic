@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.integration.SessionGuard;
 import net.tfminecraft.magic.gear.GearCache;
 
 /**
@@ -61,11 +62,9 @@ public final class GearAlignmentListener implements Listener {
         if (!GearCache.alignmentEnabled || player == null || Magic.plugin == null) {
             return;
         }
-        Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, () -> {
-            if (player.isOnline()) {
+        SessionGuard.runLater(player, () -> {
                 Magic.plugin.syncSpellModifiers(
                         player, Magic.plugin.getResonanceGuiManager().getSessionManager().get(player));
-            }
         });
     }
 }

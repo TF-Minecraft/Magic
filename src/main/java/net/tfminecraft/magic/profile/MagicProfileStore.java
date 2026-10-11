@@ -106,6 +106,18 @@ public final class MagicProfileStore {
     }
 
     private File fileFor(String characterId) {
-        return new File(folder, characterId + ".json");
+        File exact = new File(folder, characterId + ".json");
+        if (exact.exists()) {
+            return exact;
+        }
+        // Earlier versions used RPCharacters' UUID spelling verbatim. Keep that file on disk.
+        File[] equivalents = folder.listFiles((dir, name) -> name.equalsIgnoreCase(exact.getName()));
+        if (equivalents == null || equivalents.length == 0) {
+            return exact;
+        }
+        if (equivalents.length > 1) {
+            throw new IllegalStateException("Multiple case-equivalent Magic profiles for " + characterId);
+        }
+        return equivalents[0];
     }
 }

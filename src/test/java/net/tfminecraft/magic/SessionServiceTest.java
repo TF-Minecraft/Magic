@@ -3,6 +3,8 @@ package net.tfminecraft.magic;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Logger;
@@ -12,15 +14,23 @@ import net.tfminecraft.magic.profile.*;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.service.*;
 import net.tfminecraft.magic.session.*;
-import net.tfminecraft.rpcharacters.objects.RPCharacter;
+import net.tfminecraft.tlibs.character.*;
+import net.tfminecraft.tlibs.character.CharacterSessionEndEvent.Reason;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockbukkit.mockbukkit.*;
 
 class SessionServiceTest {
   @TempDir Path temp;
   ServerMock server;
+  Magic magic;
+  Plugin plugin;
   ResonanceSessionManager sessions;
   MagicProfileStore store;
   MagicProfileService service;
@@ -28,12 +38,14 @@ class SessionServiceTest {
   @BeforeEach
   void setup() {
     server = MockBukkit.mock();
-    Magic.plugin = mock(Magic.class);
-    when(Magic.plugin.getLogger()).thenReturn(Logger.getAnonymousLogger());
+    plugin = MockBukkit.createMockPlugin("MagicProfiles");
+    magic = mock(Magic.class);
+    Magic.plugin = magic;
+    when(magic.getLogger()).thenReturn(Logger.getAnonymousLogger());
     sessions = new ResonanceSessionManager();
-    store = new MagicProfileStore(temp.toFile());
-    service = new MagicProfileService(store, sessions);
-    when(Magic.plugin.getProfileService()).thenReturn(service);
+    store = spy(new MagicProfileStore(temp.toFile()));
+    service = new MagicProfileService(plugin, store, sessions);
+    when(magic.getProfileService()).thenReturn(service);
     ElementRegistry.clear();
     ElementRegistry.register(DomainTest.element("fire"));
     Cache.defaultEquilibrium = 0;
@@ -50,105 +62,238 @@ class SessionServiceTest {
 
   @AfterEach
   void cleanup() {
-    Magic.plugin = null;
-    MockBukkit.unmock();
-    ElementRegistry.clear();
-    Cache.debug = false;
-    Cache.secondsPerHour = 3600;
-  }
-
-  RPCharacter character(String id) {
-    RPCharacter character = mock(RPCharacter.class);
-    when(character.getId()).thenReturn(id);
-    return character;
+    try {
+      Magic.plugin = magic;
+      service.close();
+    } finally {
+      Magic.plugin = null;
+      MockBukkit.unmock();
+      ElementRegistry.clear();
+      Cache.debug = false;
+      Cache.secondsPerHour = 3600;
+    }
   }
 
   @Test
-  void sessionManagerTracksPlayersAndClearsCharacterIdentity() {
+  void standaloneGameplayIsEphemeralAndOnlyOnlineSessionsTick() {
     var player = server.addPlayer();
+    server.addPlayer();
     assertNull(sessions.get(null));
     assertNull(sessions.get(player));
     assertNull(sessions.getLoadedCharacterId(null));
-    sessions.setLoadedCharacterId(null, "id");
     var first = sessions.getOrCreate(player);
     assertSame(first, sessions.getOrCreate(player));
     assertSame(first, sessions.get(player));
-    sessions.setLoadedCharacterId(player, "id");
-    assertEquals("id", sessions.getLoadedCharacterId(player));
-    sessions.setLoadedCharacterId(player, null);
-    assertNull(sessions.getLoadedCharacterId(player));
-    sessions.setLoadedCharacterId(player, " ");
     assertNull(sessions.getLoadedCharacterId(player));
     List<Object> seen = new ArrayList<>();
-    sessions.forEachOnlineSession(
-        (p, s) -> {
-          assertSame(player, p);
-          assertSame(first, s);
-          seen.add(s);
-        });
-    assertEquals(1, seen.size());
+    sessions.forEachOnlineSession((online, value) -> {
+      assertSame(player, online);
+      assertSame(first, value);
+      seen.add(value);
+    });
+    assertEquals(List.of(first), seen);
     player.disconnect();
-    sessions.forEachOnlineSession((p, s) -> fail("Offline sessions must not tick"));
-    sessions.remove(null);
-    sessions.remove(player.getUniqueId());
+    sessions.forEachOnlineSession((online, value) -> fail("Offline sessions must not tick"));
+    sessions.removeStandalone(null);
+    sessions.removeStandalone(player.getUniqueId());
     assertNull(sessions.get(player));
+    var unstarted = new ResonanceSessionManager();
+    assertNull(unstarted.getSession(new CharacterSession(
+        new CharacterRef(player.getUniqueId(), UUID.randomUUID()), 1)));
+    unstarted.close();
   }
 
   @Test
-  void activationCreatesRestoresAndAvoidsOverwritingLiveSession() {
+  void providerRequiresAReadyLoadedProfileAndManagerCanOnlyStartOnce() {
     var player = server.addPlayer();
-    service.activate(null, character("x"));
+    var ephemeral = sessions.getOrCreate(player);
+    ephemeral.setResonance("fire", 70);
+    CharacterTestSupport characters = new CharacterTestSupport();
+    assertNull(sessions.getOrCreate(player));
+    var token = characters.start(player, "one");
+    assertNull(sessions.getOrCreate(player));
+    assertNull(sessions.getLoadedCharacterId(player));
+    service.activate(player, token);
+    assertNotSame(ephemeral, sessions.get(player));
+    assertEquals(0, sessions.get(player).getResonance("fire"));
+    assertEquals(CharacterTestSupport.id("one"), sessions.getLoadedCharacterId(player));
+    assertSame(sessions.get(player), sessions.getOrCreate(player));
+    assertSame(sessions.get(player), sessions.getSession(token));
+    assertThrows(IllegalStateException.class, () -> sessions.start(plugin, (session, value) -> {}));
+    characters.unregister();
+    assertNull(sessions.get(player), "Binding a character must discard its account-only temporary state");
+  }
+
+  @Test
+  void aliceBobAliceUsesFreshTokensAndFlushesTheOutgoingStoredValueAfterInvalidation() {
+    var player = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    var alice = characters.start(player, "alice");
+    service.activate(player, alice);
+    var aliceValue = sessions.get(player);
+    aliceValue.setResonance("fire", 25);
+    List<Boolean> currentDuringEnd = new ArrayList<>();
+    List<ResonanceSession> readableDuringEnd = new ArrayList<>();
+    server.getPluginManager().registerEvent(CharacterSessionEndEvent.class, new Listener() {},
+        EventPriority.NORMAL, (listener, event) -> {
+          CharacterSession outgoing = ((CharacterSessionEndEvent) event).getSession();
+          currentDuringEnd.add(Characters.isCurrent(outgoing));
+          readableDuringEnd.add(sessions.getSession(outgoing));
+        }, plugin);
+    var bob = characters.start(player, "bob");
+    assertEquals(List.of(false), currentDuringEnd);
+    assertEquals(1, readableDuringEnd.size());
+    assertNull(readableDuringEnd.getFirst());
+    assertEquals(25, store.load(CharacterTestSupport.id("alice")).getResonance().get("fire"));
+    assertNull(sessions.getSession(alice));
+    service.activate(player, bob);
+    sessions.get(player).setResonance("fire", 7);
+    var aliceAgain = characters.start(player, "alice");
+    assertEquals(alice.ref(), aliceAgain.ref());
+    assertNotEquals(alice.sessionId(), aliceAgain.sessionId());
+    assertFalse(Characters.isCurrent(alice));
+    assertFalse(Characters.isCurrent(bob));
+    service.activate(player, aliceAgain);
+    var restored = sessions.get(player);
+    assertNotSame(aliceValue, restored);
+    assertEquals(25, restored.getResonance("fire"));
+    assertEquals(7, store.load(CharacterTestSupport.id("bob")).getResonance().get("fire"));
+    sessions.put(alice, new ResonanceSession());
+    service.activate(player, alice);
+    assertSame(restored, sessions.get(player));
+    assertEquals(aliceAgain.ref().characterId().toString(), service.characterId(player));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Reason.class, names = {"QUIT", "DEATH", "SHUTDOWN"})
+  void terminalEventsFlushTheEndedValueExactlyOnce(Reason reason) {
+    var player = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    var token = characters.start(player, "ended");
+    service.activate(player, token);
+    sessions.get(player).setResonance("fire", 32);
+    clearInvocations(store);
+    characters.end(player, reason);
+    assertFalse(Characters.isCurrent(token));
+    assertNull(sessions.get(player));
+    assertNull(sessions.getSession(token));
+    assertNull(service.characterId(player));
+    assertEquals(32, store.load(CharacterTestSupport.id("ended")).getResonance().get("fire"));
+    characters.end(player, reason);
+    service.close();
+    verify(store, times(1)).save(any());
+  }
+
+  @Test
+  void closeFlushesEveryStoredValueAfterProviderUnregistration() {
+    var first = server.addPlayer();
+    var second = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    service.activate(first, characters.start(first, "first"));
+    service.activate(second, characters.start(second, "second"));
+    sessions.get(first).setResonance("fire", 31);
+    sessions.get(second).setResonance("fire", 42);
+    clearInvocations(store);
+    characters.unregister();
+    assertFalse(Characters.available());
+    assertNull(sessions.get(first));
+    service.close();
+    assertEquals(31, store.load(CharacterTestSupport.id("first")).getResonance().get("fire"));
+    assertEquals(42, store.load(CharacterTestSupport.id("second")).getResonance().get("fire"));
+    service.close();
+    verify(store, times(2)).save(any());
+  }
+
+  @Test
+  void duplicateActivationDoesNotReloadWhileNullMismatchedAndStaleTokensAreIgnored() {
+    var player = server.addPlayer();
+    var other = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    var token = characters.start(player, "one");
+    service.activate(null, token);
     service.activate(player, null);
-    service.activate(player, character(null));
-    service.activate(player, character(" "));
+    service.activate(other, token);
+    service.activate(player, new CharacterSession(token.ref(), token.sessionId() + 100));
     assertNull(sessions.get(player));
+    verify(store, never()).load(anyString());
     Cache.debug = true;
-    service.activate(player, character("one"));
-    assertTrue(store.exists("one"));
-    assertEquals("one", service.characterId(player));
+    service.activate(player, token);
+    assertTrue(store.exists(CharacterTestSupport.id("one")));
     sessions.get(player).setResonance("fire", 25);
-    service.activate(player, character("one"));
+    clearInvocations(store);
+    service.activate(player, token);
     assertEquals(25, sessions.get(player).getResonance("fire"));
-    service.savePrevious(null, character("one"));
-    service.savePrevious(player, null);
-    service.savePrevious(player, character(null));
-    service.savePrevious(player, character(" "));
-    service.savePrevious(player, character("one"));
-    assertEquals(25, store.load("one").getResonance().get("fire"));
-    service.deactivate(null);
-    service.deactivate(player);
-    assertNull(sessions.get(player));
-    service.activate(player, character("one"));
-    assertEquals(25, sessions.get(player).getResonance("fire"));
-    assertSame(player, service.findOnlineWithCharacter("one"));
+    verify(store, never()).load(anyString());
+    characters.end(player, Reason.QUIT);
+    clearInvocations(store);
+    service.activate(player, token);
+    verifyNoInteractions(store);
+  }
+
+  @Test
+  void standaloneAndFallbackCharacterStateAreNeverPersisted() throws Exception {
+    var player = server.addPlayer();
+    sessions.getOrCreate(player).setResonance("fire", 73);
+    try (var bridge = mockStatic(RpCharactersBridge.class)) {
+      service.savePlayer(null);
+      service.savePlayer(player);
+      service.loadOnlineCharacters();
+      assertNull(service.characterId(player));
+      assertNull(service.findOnlineWithCharacter("untracked-rpc-character"));
+      service.close();
+      bridge.verifyNoInteractions();
+    }
+    verify(store, never()).save(any());
+    assertFalse(store.exists(player.getUniqueId().toString()));
+    try (var files = Files.list(temp)) {
+      assertEquals(0, files.count());
+    }
+  }
+
+  @Test
+  void bootstrapLoadsOnlyReadySessionsAndFindsOnlyLoadedCharacterIdentities() {
+    var ready = server.addPlayer();
+    var pending = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    characters.start(ready, "ready");
+    assertNull(service.findOnlineWithCharacter(CharacterTestSupport.id("ready")));
+    try (var bridge = mockStatic(RpCharactersBridge.class)) {
+      service.loadOnlineCharacters();
+      bridge.verifyNoInteractions();
+    }
+    assertEquals(CharacterTestSupport.id("ready"), service.characterId(ready));
+    assertNull(service.characterId(pending));
+    assertNull(sessions.getOrCreate(pending));
+    assertSame(ready, service.findOnlineWithCharacter(CharacterTestSupport.id("ready").toUpperCase(Locale.ROOT)));
     assertNull(service.findOnlineWithCharacter(null));
     assertNull(service.findOnlineWithCharacter(" "));
-    assertNull(service.findOnlineWithCharacter("missing"));
-    service.saveAllOnline();
-    service.deactivate(player);
-    service.savePrevious(player, character("one"));
+    assertNull(service.findOnlineWithCharacter(CharacterTestSupport.id("unknown")));
   }
 
   @Test
-  void onlineLoadingAndFallbackSavingUseActiveRoleplayCharacter() {
+  void savePlayerSavesOnlyTheCurrentBoundTokenNeverLatePreviousValuesOrPendingProfiles() {
     var player = server.addPlayer();
     var empty = server.addPlayer();
-    try (var bridge = mockStatic(RpCharactersBridge.class)) {
-      var active = character("active");
-      bridge.when(() -> RpCharactersBridge.getActiveCharacter(player)).thenReturn(active);
-      assertSame(player, service.findOnlineWithCharacter("active"));
-      service.loadOnlineCharacters();
-      assertEquals("active", service.characterId(player));
-      assertNull(service.characterId(empty));
-      sessions.setLoadedCharacterId(player, null);
-      sessions.get(player).setResonance("fire", 17);
-      service.savePlayer(player);
-      assertEquals(17, store.load("active").getResonance().get("fire"));
-      service.savePlayer(empty);
-      sessions.remove(player.getUniqueId());
-      service.savePlayer(player);
-      assertEquals(17, store.load("active").getResonance().get("fire"));
-    }
+    CharacterTestSupport characters = new CharacterTestSupport();
+    var alice = characters.start(player, "alice");
+    service.activate(player, alice);
+    var oldValue = sessions.get(player);
+    oldValue.setResonance("fire", 12);
+    var bob = characters.start(player, "bob");
+    clearInvocations(store);
+    service.savePlayer(player);
+    service.savePlayer(empty);
+    verify(store, never()).save(any());
+    service.activate(player, bob);
+    sessions.get(player).setResonance("fire", 34);
+    oldValue.setResonance("fire", 99);
+    service.savePlayer(player);
+    assertEquals(34, store.load(CharacterTestSupport.id("bob")).getResonance().get("fire"));
+    assertEquals(12, store.load(CharacterTestSupport.id("alice")).getResonance().get("fire"));
+    characters.end(player, Reason.QUIT);
+    clearInvocations(store);
+    service.savePlayer(player);
+    verifyNoInteractions(store);
   }
 
   @Test
@@ -181,7 +326,8 @@ class SessionServiceTest {
     cfg.set("permission", "magic.grow");
     ElementRegistry.register(new ElementDef("grow", cfg));
     var player = server.addPlayer();
-    service.activate(player, character("one"));
+    CharacterTestSupport characters = new CharacterTestSupport();
+    service.activate(player, characters.start(player, "one"));
     var s = sessions.get(player);
     s.setResonance("constant", 10);
     s.setResonance("decay", 10);
@@ -189,8 +335,8 @@ class SessionServiceTest {
     assertEquals(9.5, s.getResonance("decay"));
     assertEquals(0, s.getResonance("grow"));
     assertEquals(10, s.getResonance("constant"));
-    assertEquals(9.5, store.load("one").getResonance().get("decay"));
-    player.addAttachment(MockBukkit.createMockPlugin(), "magic.grow", true);
+    assertEquals(9.5, store.load(CharacterTestSupport.id("one")).getResonance().get("decay"));
+    player.addAttachment(plugin, "magic.grow", true);
     Cache.debug = true;
     ResonanceService.tickOnlineSessions(sessions);
     assertEquals(.5, s.getResonance("grow"));
@@ -200,22 +346,47 @@ class SessionServiceTest {
   }
 
   @Test
-  void activatingCorruptProfilePreservesOriginalBytes() throws Exception {
-    var corrupt = temp.resolve("corrupt.json");
+  void activatingCorruptProfilePreservesOriginalBytesBeforeCreatingFreshDefaults() throws Exception {
+    String id = CharacterTestSupport.id("corrupt");
+    var corrupt = temp.resolve(id + ".json");
     String original = "{broken profile";
-    java.nio.file.Files.writeString(corrupt, original);
+    Files.writeString(corrupt, original);
     var player = server.addPlayer();
-    service.activate(player, character("corrupt"));
-    assertEquals("corrupt", service.characterId(player));
-    try (var files = java.nio.file.Files.list(temp)) {
-      var backup =
-          files
-              .filter(p -> p.getFileName().toString().startsWith("corrupt.json.rejected-"))
-              .findFirst()
-              .orElseThrow();
-      assertEquals(original, java.nio.file.Files.readString(backup));
+    CharacterTestSupport characters = new CharacterTestSupport();
+    service.activate(player, characters.start(player, "corrupt"));
+    assertEquals(id, service.characterId(player));
+    try (var files = Files.list(temp)) {
+      var backup = files.filter(path -> path.getFileName().toString().startsWith(id + ".json.rejected-"))
+          .findFirst().orElseThrow();
+      assertEquals(original, Files.readString(backup));
     }
-    assertNotNull(store.load("corrupt"));
+    assertNotNull(store.load(id));
+  }
+
+  @Test
+  void anUnpreservableCorruptProfileRemainsQuarantinedThroughSaveAndEndFlush() throws Exception {
+    String id = CharacterTestSupport.id("quarantined");
+    Path corrupt = temp.resolve(id + ".json");
+    String original = "{unreadable profile";
+    Files.writeString(corrupt, original);
+    var player = server.addPlayer();
+    CharacterTestSupport characters = new CharacterTestSupport();
+    var token = characters.start(player, "quarantined");
+    try (var files = mockStatic(Files.class, invocation -> {
+      if (invocation.getMethod().getName().equals("move") && corrupt.equals(invocation.getArgument(0))) {
+        throw new IOException("cannot preserve original");
+      }
+      return invocation.callRealMethod();
+    })) {
+      service.activate(player, token);
+      sessions.get(player).setResonance("fire", 60);
+      service.savePlayer(player);
+      characters.end(player, Reason.QUIT);
+    }
+    assertEquals(original, Files.readString(corrupt));
+    try (var files = Files.list(temp)) {
+      assertEquals(List.of(corrupt), files.toList());
+    }
   }
 
   @Test
@@ -223,7 +394,7 @@ class SessionServiceTest {
     var player = server.addPlayer();
     var session = sessions.getOrCreate(player);
     var profiles = mock(MagicProfileService.class);
-    when(Magic.plugin.getProfileService()).thenReturn(profiles);
+    when(magic.getProfileService()).thenReturn(profiles);
     ElementRegistry.clear();
     ResonanceService.tickOnlineSessions(sessions);
     verifyNoInteractions(profiles);
@@ -231,7 +402,7 @@ class SessionServiceTest {
     cfg.set("decay_per_hour", -.5);
     ElementRegistry.register(new ElementDef("decay", cfg));
     session.setResonance("decay", 10);
-    when(Magic.plugin.getProfileService()).thenReturn(null);
+    when(magic.getProfileService()).thenReturn(null);
     ResonanceService.tickOnlineSessions(sessions);
     assertEquals(9.5, session.getResonance("decay"));
     Magic.plugin = null;

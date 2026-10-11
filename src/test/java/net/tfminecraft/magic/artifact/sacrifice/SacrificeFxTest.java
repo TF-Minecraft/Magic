@@ -33,7 +33,7 @@ class SacrificeFxTest {
             "main",
             "fire",
             new ShrineScore(null),
-            0);
+            0, null, null);
     Magic.plugin = mock(Magic.class);
     when(Magic.plugin.isEnabled()).thenReturn(true);
     when(Magic.plugin.getServer()).thenReturn(server);

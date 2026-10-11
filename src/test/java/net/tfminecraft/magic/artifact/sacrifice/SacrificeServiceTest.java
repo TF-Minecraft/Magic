@@ -193,7 +193,7 @@ class SacrificeServiceTest {
             "main",
             "fire",
             score,
-            System.currentTimeMillis() - 20_000);
+            System.currentTimeMillis() - 20_000, null, null);
     assertEquals(1, session.charge());
     assertEquals(caster.getUniqueId(), session.getCasterId());
     assertEquals(victim.getUniqueId(), session.getVictimId());
@@ -212,7 +212,7 @@ class SacrificeServiceTest {
     assertTrue(session.isNearSent());
     var future =
         new SacrificeRiteSession(
-            null, null, null, null, null, null, System.currentTimeMillis() + 10_000);
+            null, null, null, null, null, null, System.currentTimeMillis() + 10_000, null, null);
     assertEquals(0, future.charge());
     assertNull(future.getFurnitureId());
     SacrificeRegistry.setGlobals(
@@ -286,7 +286,7 @@ class SacrificeServiceTest {
     var shrine = new ShrineScore(Map.of("fire", new ShrineElementScore("fire", 50, 1, null, null)));
     var session =
         new SacrificeRiteSession(
-            caster.getUniqueId(), victim.getUniqueId(), furniture, "main", "fire", shrine, 0);
+            caster.getUniqueId(), victim.getUniqueId(), furniture, "main", "fire", shrine, 0, null, null);
     var tier = new SacrificeTierDef("soul", 0, 1, .1, "soul", true);
     SacrificeFillService.apply(null, tier, "character", "Name");
     SacrificeFillService.apply(session, tier, "character", "Name");
@@ -307,13 +307,13 @@ class SacrificeServiceTest {
     Cache.artifactAuraCap = 100;
     var tier = new SacrificeTierDef("pain", 0, 1, .1, "pain", false);
     for (String id : Arrays.asList(null, "", "water", "fire")) {
-      var session = new SacrificeRiteSession(null, null, furniture, "main", id, null, 0);
+      var session = new SacrificeRiteSession(null, null, furniture, "main", id, null, 0, null, null);
       session.markResolved(true, "pain", 1);
       SacrificeFillService.apply(session, tier, null, null);
       assertEquals(0, Artifact.fromItem(item).getFill("fire"));
     }
     var session =
-        new SacrificeRiteSession(null, null, furniture, "main", "fire", new ShrineScore(null), 0);
+        new SacrificeRiteSession(null, null, furniture, "main", "fire", new ShrineScore(null), 0, null, null);
     session.markResolved(true, "pain", 1);
     SacrificeFillService.apply(session, tier, "", "");
     assertEquals(0, Artifact.fromItem(item).getFill("fire"));
@@ -323,7 +323,7 @@ class SacrificeServiceTest {
         session, new SacrificeTierDef("none", 0, 1, 0, "none", false), null, null);
     item = null;
     SacrificeFillService.apply(session, tier, null, null);
-    var absent = new SacrificeRiteSession(null, null, null, "main", "fire", score, 0);
+    var absent = new SacrificeRiteSession(null, null, null, "main", "fire", score, 0, null, null);
     absent.markResolved(true, "pain", 1);
     SacrificeFillService.apply(absent, tier, null, null);
   }
@@ -438,7 +438,7 @@ class SacrificeServiceTest {
     var shrine = new ShrineScore(Map.of("fire", new ShrineElementScore("fire", 50, 1, null, null)));
     var session =
         new SacrificeRiteSession(
-            caster.getUniqueId(), victim.getUniqueId(), furniture, "main", "fire", shrine, 0);
+            caster.getUniqueId(), victim.getUniqueId(), furniture, "main", "fire", shrine, 0, null, null);
     session.markResolved(true, "soul", 1);
     var tier = new SacrificeTierDef("soul", 0, 1, .1, "soul", true);
     try (var external =
@@ -520,4 +520,82 @@ class SacrificeServiceTest {
       }
     }
   }
+  @Test
+  void ritesRequireReadyParticipantsAndCannotFollowEitherCharacterAcrossSwitches() {
+    var provider = new CharacterTestSupport();
+    SacrificeRiteService.tryStart(caster, "fire");
+    assertFalse(SacrificeRiteService.hasSessions());
+    provider.start(caster, "Caster");
+    SacrificeRiteService.tryStart(caster, "fire");
+    assertFalse(SacrificeRiteService.hasSessions());
+    provider.start(victim, "Alice");
+    start();
+    tick();
+    assertTrue(SacrificeRiteService.hasSessions());
+    provider.start(victim, "Bob");
+    provider.start(victim, "Alice");
+    tick();
+    assertFalse(SacrificeRiteService.hasSessions());
+    assertEquals("sacrifice.subside", victim.nextMessage());
+    start();
+    provider.start(caster, "OtherCaster");
+    tick();
+    assertFalse(SacrificeRiteService.hasSessions());
+    assertEquals("sacrifice.subside", victim.nextMessage());
+  }
+
+  @Test
+  void lateDeathCannotResolveARiteAgainstAReplacementCharacter() {
+    var provider = new CharacterTestSupport();
+    provider.start(caster, "Caster");
+    provider.start(victim, "Alice");
+    var damage = mock(EntityDamageByEntityEvent.class);
+    when(damage.getDamager()).thenReturn(caster);
+    victim.setLastDamageCause(damage);
+    start();
+    provider.start(victim, "Bob");
+    provider.start(victim, "Alice");
+    try (var bridge = mockStatic(RpCharactersBridge.class);
+         var fill = mockStatic(SacrificeFillService.class)) {
+      SacrificeRiteService.handleDeath(victim);
+      bridge.verifyNoInteractions();
+      fill.verifyNoInteractions();
+      assertFalse(SacrificeRiteService.hasSessions());
+    }
+  }
+
+  @Test
+  void synchronousDeathEndAndRecursiveDeathResolveTheCapturedRiteOnce() {
+    var provider = new CharacterTestSupport();
+    provider.start(caster, "Caster");
+    provider.start(victim, "Alice");
+    server.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+      @org.bukkit.event.EventHandler
+      public void onEnd(net.tfminecraft.tlibs.character.CharacterSessionEndEvent event) {
+        SacrificeRiteService.cancelForPlayer(event.getPlayer().getUniqueId());
+        SacrificeRiteService.handleDeath(event.getPlayer());
+      }
+    }, provider.plugin);
+    var damage = mock(EntityDamageByEntityEvent.class);
+    when(damage.getDamager()).thenReturn(caster);
+    victim.setLastDamageCause(damage);
+    var character = mock(RPCharacter.class);
+    when(character.getId()).thenReturn(CharacterTestSupport.id("Alice"));
+    when(character.getName()).thenReturn("Alice");
+    try (var bridge = mockStatic(RpCharactersBridge.class);
+         var fill = mockStatic(SacrificeFillService.class)) {
+      bridge.when(() -> RpCharactersBridge.getActiveCharacter(victim)).thenReturn(character);
+      bridge.when(() -> RpCharactersBridge.applySacrificeTier(eq(victim), eq(caster), any()))
+          .thenAnswer(call -> {
+            provider.end(victim, net.tfminecraft.tlibs.character.CharacterSessionEndEvent.Reason.DEATH);
+            return true;
+          });
+      start();
+      SacrificeRiteService.handleDeath(victim);
+      fill.verify(() -> SacrificeFillService.apply(any(), any(), eq(CharacterTestSupport.id("Alice")), eq("Alice")), times(1));
+      assertFalse(SacrificeRiteService.hasSessions());
+      assertNull(victim.nextMessage(), "Resolved death must not also send the cancelled-rite message");
+    }
+  }
+
 }

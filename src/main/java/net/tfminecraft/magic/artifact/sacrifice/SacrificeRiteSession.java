@@ -2,11 +2,16 @@ package net.tfminecraft.magic.artifact.sacrifice;
 
 import java.util.UUID;
 
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.magic.integration.SessionGuard;
+
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.artifact.shrine.ShrineScore;
 
 public final class SacrificeRiteSession {
 
+    private final CharacterSession casterSession;
+    private final CharacterSession victimSession;
     private final UUID casterId;
     private final UUID victimId;
     private final UUID furnitureId;
@@ -27,7 +32,11 @@ public final class SacrificeRiteSession {
             String slotId,
             String elementId,
             ShrineScore score,
-            long startMillis) {
+            long startMillis,
+            CharacterSession casterSession,
+            CharacterSession victimSession) {
+        this.casterSession = casterSession;
+        this.victimSession = victimSession;
         this.casterId = casterId;
         this.victimId = victimId;
         this.furniture = furniture;
@@ -36,6 +45,10 @@ public final class SacrificeRiteSession {
         this.elementId = elementId;
         this.score = score;
         this.startMillis = startMillis;
+    }
+
+    public boolean isCurrent() {
+        return SessionGuard.isCurrent(casterSession) && SessionGuard.isCurrent(victimSession);
     }
 
     public UUID getCasterId() {

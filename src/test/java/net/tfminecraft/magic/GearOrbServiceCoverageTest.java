@@ -6,6 +6,9 @@ import static org.mockito.Mockito.*;
 import java.util.*;
 import net.tfminecraft.magic.gear.*;
 import net.tfminecraft.magic.gear.orb.*;
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.CharacterSessionEndEvent.Reason;
+import net.tfminecraft.tlibs.character.Characters;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
@@ -37,6 +40,10 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
               when(s.displayPoint()).thenReturn(station);
               when(s.capturedFill()).thenReturn(Map.of("fire", 10d));
               when(s.goodTarget()).thenReturn(2);
+              CharacterSession identity = (CharacterSession) c.arguments().get(5);
+              when(s.isCurrent())
+                  .thenAnswer(
+                      ignored -> identity == null ? !Characters.available() : Characters.isCurrent(identity));
             });
   }
 
@@ -321,5 +328,131 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
       }
       verify(two).end();
     }
+  }
+
+  @Test
+  void aPresentProviderRequiresAReadySessionBeforeStartingAnOrbRun() {
+    var characters = new CharacterTestSupport();
+    var player = server.addPlayer();
+    assertFalse(GearOrbService.begin(player, station, Map.of(), "fire", 1));
+    assertTrue(sessions.constructed().isEmpty());
+    characters.start(player, "Alice");
+    var run = begin(player);
+    assertTrue(run.isCurrent());
+    characters.end(player, Reason.DEATH);
+    GearOrbService.finishForPlayer(player.getUniqueId());
+    assertFalse(GearOrbService.begin(player, station, Map.of(), "fire", 1));
+    verify(run).end();
+    characters.unregister();
+    assertTrue(GearOrbService.begin(player, station, Map.of(), "fire", 1));
+  }
+
+  @Test
+  void returningToTheSameCharacterRejectsOldOrbHitsAndCleansUpOnTheNextTick() throws Exception {
+    var characters = new CharacterTestSupport();
+    var player = server.addPlayer();
+    var original = characters.start(player, "Alice");
+    var old = begin(player);
+    when(old.claimSwing(anyLong())).thenReturn(true);
+    when(old.canHit(anyLong())).thenReturn(true);
+    when(old.livingOrbs()).thenReturn(List.of(orb(player.getEyeLocation().add(0, 0, 2))));
+    characters.start(player, "Bob");
+    var returned = characters.start(player, "Alice");
+    assertEquals(original.ref(), returned.ref());
+    assertNotEquals(original, returned);
+
+    new GearOrbService().onSwing(new PlayerAnimationEvent(player));
+    verify(old, never()).onHit(any(), any());
+    verify(old, never()).markHit(anyLong());
+    invoke(GearOrbService.class, "tick", new Class[] {});
+    verify(old).end();
+    verify(old, never()).tick(any());
+    verify(Magic.plugin, never()).syncSpellModifiers(any(), any());
+    assertFalse(GearOrbService.isActive(station));
+  }
+
+  @Test
+  void finishingAnOutgoingActorPreservesEarnedFillAndLeavesOtherActorsRunning() throws Exception {
+    var characters = new CharacterTestSupport();
+    var player = server.addPlayer();
+    var other = server.addPlayer();
+    characters.start(player, "Alice");
+    characters.start(other, "Other");
+    Location second = new Location(world, 1, 0, 0);
+    Location third = new Location(world, 2, 0, 0);
+    var firstRun = begin(player);
+    assertTrue(GearOrbService.begin(player, second, Map.of(), "fire", 1));
+    var secondRun = sessions.constructed().getLast();
+    assertTrue(GearOrbService.begin(other, third, Map.of(), "fire", 1));
+    var otherRun = sessions.constructed().getLast();
+    when(firstRun.capturedFill()).thenReturn(Map.of("fire", 3d));
+    when(secondRun.capturedFill()).thenReturn(Map.of("fire", 7d));
+    ItemStack firstWeapon = item();
+    ItemStack secondWeapon = new ItemStack(Material.BLAZE_ROD);
+    var firstOccupancy = mock(GearStationStore.Occupancy.class);
+    var secondOccupancy = mock(GearStationStore.Occupancy.class);
+    when(firstOccupancy.getItem()).thenReturn(firstWeapon);
+    when(secondOccupancy.getItem()).thenReturn(secondWeapon);
+    stores.when(() -> GearStationStore.get(station)).thenReturn(firstOccupancy);
+    stores.when(() -> GearStationStore.get(second)).thenReturn(secondOccupancy);
+
+    try (var requirements = mockStatic(WeaponRequirement.class);
+        var lore = mockStatic(WeaponLore.class);
+        var chat = mockStatic(WeaponAttunementChat.class)) {
+      var firstRequirement = mock(WeaponRequirement.class);
+      var secondRequirement = mock(WeaponRequirement.class);
+      requirements.when(() -> WeaponRequirement.fromItem(firstWeapon)).thenReturn(firstRequirement);
+      requirements.when(() -> WeaponRequirement.fromItem(secondWeapon)).thenReturn(secondRequirement);
+      lore.when(() -> WeaponLore.updateItem(firstWeapon)).thenReturn(firstWeapon);
+      lore.when(() -> WeaponLore.updateItem(secondWeapon)).thenReturn(secondWeapon);
+      characters.end(player, Reason.DEATH);
+      GearOrbService.finishForPlayer(player.getUniqueId());
+      GearOrbService.finishForPlayer(player.getUniqueId());
+
+      verify(firstRun).end();
+      verify(secondRun).end();
+      verify(firstRequirement).mergeAmounts(Map.of("fire", 3d));
+      verify(secondRequirement).mergeAmounts(Map.of("fire", 7d));
+      verify(firstRequirement).persist(firstWeapon);
+      verify(secondRequirement).persist(secondWeapon);
+      verify(firstOccupancy).setOrbSessionActive(false);
+      verify(secondOccupancy).setOrbSessionActive(false);
+      stores.verify(() -> GearStationStore.update(station, firstWeapon));
+      stores.verify(() -> GearStationStore.update(second, secondWeapon));
+      assertFalse(GearOrbService.isActive(station));
+      assertFalse(GearOrbService.isActive(second));
+      assertTrue(GearOrbService.isActive(third));
+      verify(otherRun, never()).end();
+      verify(Magic.plugin, never()).syncSpellModifiers(any(), any());
+      chat.verifyNoInteractions();
+
+      invoke(GearOrbService.class, "tick", new Class[] {});
+      verify(otherRun).tick(other);
+      verify(firstRun, never()).tick(any());
+      verify(secondRun, never()).tick(any());
+    }
+  }
+
+  @Test
+  void obsoleteCompletionCannotRemoveOrPersistOverANewerRunAtTheSameStation() throws Exception {
+    var characters = new CharacterTestSupport();
+    var player = server.addPlayer();
+    characters.start(player, "Alice");
+    var old = begin(player);
+    characters.end(player, Reason.SWITCH);
+    GearOrbService.finishForPlayer(player.getUniqueId());
+    characters.start(player, "Bob");
+    var replacement = begin(player);
+    var occupancy = mock(GearStationStore.Occupancy.class);
+    stores.when(() -> GearStationStore.get(station)).thenReturn(occupancy);
+
+    invoke(GearOrbService.class, "complete", new Class[] {GearOrbSession.class, boolean.class}, old, true);
+    assertTrue(GearOrbService.isActive(station));
+    verify(old).end();
+    verify(old, never()).playComplete();
+    verify(replacement, never()).end();
+    verifyNoInteractions(occupancy);
+    invoke(GearOrbService.class, "tick", new Class[] {});
+    verify(replacement).tick(player);
   }
 }
