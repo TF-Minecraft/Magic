@@ -71,6 +71,35 @@ class MagicLifecycleCoverageTest {
   }
 
   @Test
+  void aFailedProfileFlushStillRunsEveryLaterShutdownStep() throws Exception {
+    MockBukkit.mock();
+    try (var libs = mockStatic(TLibs.class);
+        var bridge = mockStatic(RpCharactersBridge.class)) {
+      var api = mock(ItemAPI.class, RETURNS_DEEP_STUBS);
+      libs.when(TLibs::getItemAPI).thenReturn(api);
+      String descriptor =
+          "name: Magic\nmain: net.tfminecraft.magic.Magic\nversion: test\napi-version: '1.21'\n";
+      var plugin =
+          MockBukkit.loadWith(
+              Magic.class, new ByteArrayInputStream(descriptor.getBytes(StandardCharsets.UTF_8)));
+      var profiles = mock(net.tfminecraft.magic.profile.MagicProfileService.class);
+      doThrow(new IllegalStateException("Multiple case-equivalent Magic profiles")).when(profiles).close();
+      var field = Magic.class.getDeclaredField("profileService");
+      field.setAccessible(true);
+      field.set(plugin, profiles);
+      try (var stations = mockStatic(net.tfminecraft.magic.gear.GearStationStore.class)) {
+        assertDoesNotThrow(plugin::onDisable);
+        stations.verify(net.tfminecraft.magic.gear.GearStationStore::shutdown);
+      }
+      verify(api).unregisterPathHandler("magic");
+      field.set(plugin, null);
+    } finally {
+      MockBukkit.unmock();
+      Magic.plugin = null;
+    }
+  }
+
+  @Test
   void resourcesPreserveExistingFilesAndLogReadFailures() throws Exception {
     MockBukkit.mock();
     try (var libs = mockStatic(TLibs.class);

@@ -1,7 +1,5 @@
 package net.tfminecraft.magic.integration;
 
-import java.util.UUID;
-
 import org.bukkit.entity.Player;
 
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
@@ -11,7 +9,6 @@ import net.tfminecraft.rpcharacters.permadeath.PermadeathService;
 import net.tfminecraft.rpcharacters.permadeath.PermakillCause;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeTierDef;
-import net.tfminecraft.tlibs.character.CharacterInfo;
 import net.tfminecraft.tlibs.character.CharacterSession;
 import net.tfminecraft.tlibs.character.Characters;
 
@@ -32,23 +29,12 @@ public final class RpCharactersBridge {
                 ? character : null;
     }
 
-    public static String resolveDisplayTab(Player player) {
-        if (!isAvailable() || player == null) {
+    /** The character's real name in its name colour, without masks or aliases. */
+    public static String resolveRealName(RPCharacter character) {
+        if (character == null) {
             return "";
         }
-        return DisplayIdentityService.ensureDisplayTabWhite(Characters.displayName(player));
-    }
-
-    /** Canonical plain name for lore, including offline characters; empty for unavailable or unknown identities. */
-    public static String resolveCharacterName(String characterId) {
-        if (!isAvailable() || characterId == null || characterId.isBlank()) {
-            return "";
-        }
-        try {
-            return Characters.info(UUID.fromString(characterId)).map(CharacterInfo::name).orElse("");
-        } catch (IllegalArgumentException ex) {
-            return "";
-        }
+        return DisplayIdentityService.colourPlain(character.getName(), character.getNameColour());
     }
 
     /**

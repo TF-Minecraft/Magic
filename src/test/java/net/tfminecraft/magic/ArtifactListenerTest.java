@@ -301,6 +301,19 @@ class ArtifactListenerTest {
     }
   }
   @Test
+  void pickupLoreUpdateRunsForAPlayerWithoutACharacter() {
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    try (var lore = mockStatic(VesselLore.class)) {
+      new ArtifactListener().onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      server.getScheduler().performOneTick();
+      lore.verify(() -> VesselLore.updateInventory(player));
+    } finally {
+      provider.unregister();
+    }
+  }
+
+  @Test
   void deferredShrineWorkKeepsTheWorldItemButDropsAnOfflineOrStaleActor() {
     var listener = new ArtifactListener();
     var player = server.addPlayer();

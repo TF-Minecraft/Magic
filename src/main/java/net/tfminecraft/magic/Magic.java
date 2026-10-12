@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.logging.Level;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -165,30 +166,49 @@ public class Magic extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (meditationService != null) {
-            meditationService.stop();
-        }
-        if (profileService != null) {
-            profileService.close();
-        }
-        if (ItemScanService.get() != null) {
-            ItemScanService.get().unsubscribe(attuneScanHandler);
-        }
-        GearOrbService.stop();
-        GearStationStore.shutdown();
-        MagicTickService.stop();
-        MagicTickService.clearHandlers();
-        TLibs.getItemAPI().unregisterPathHandler("magic");
-        ArtifactFillChestService.clearAll();
-        ShrineChargeService.clearAll();
-        SacrificeRiteService.clearAll();
-        if (isMmoStackPresent()) {
-            SpellModifierApplyService.clearAll();
-        }
-        ResonanceCastListener.clearAll();
-        GearBrokenMarker.clearWarningSession();
-        revisionTracker.flush();
+        // Each step runs even if an earlier one fails, so one bad profile cannot skip the rest.
+        shutdownStep("meditation", () -> {
+            if (meditationService != null) {
+                meditationService.stop();
+            }
+        });
+        shutdownStep("profiles", () -> {
+            if (profileService != null) {
+                profileService.close();
+            }
+        });
+        shutdownStep("item scan", () -> {
+            if (ItemScanService.get() != null) {
+                ItemScanService.get().unsubscribe(attuneScanHandler);
+            }
+        });
+        shutdownStep("gear orbs", GearOrbService::stop);
+        shutdownStep("gear stations", GearStationStore::shutdown);
+        shutdownStep("tick service", () -> {
+            MagicTickService.stop();
+            MagicTickService.clearHandlers();
+        });
+        shutdownStep("path handler", () -> TLibs.getItemAPI().unregisterPathHandler("magic"));
+        shutdownStep("fill chests", ArtifactFillChestService::clearAll);
+        shutdownStep("shrine charges", ShrineChargeService::clearAll);
+        shutdownStep("sacrifice rites", SacrificeRiteService::clearAll);
+        shutdownStep("spell modifiers", () -> {
+            if (isMmoStackPresent()) {
+                SpellModifierApplyService.clearAll();
+            }
+        });
+        shutdownStep("cast listener", ResonanceCastListener::clearAll);
+        shutdownStep("broken gear warnings", GearBrokenMarker::clearWarningSession);
+        shutdownStep("revision tracker", revisionTracker::flush);
         getLogger().info("Magic disabled.");
+    }
+
+    private void shutdownStep(String name, Runnable step) {
+        try {
+            step.run();
+        } catch (RuntimeException ex) {
+            getLogger().log(Level.SEVERE, "[Magic] Shutdown step '" + name + "' failed", ex);
+        }
     }
 
     public static RevisionTracker getRevisionTracker() {

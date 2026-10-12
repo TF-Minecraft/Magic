@@ -59,7 +59,6 @@ public final class MagicSessionListener implements Listener {
         GearOrbService.finishForPlayer(player.getUniqueId());
         GearChargeService.clear(player);
         ArtifactFillChestService.clear(player.getUniqueId());
-        Magic.plugin.getArtifactCreateGuiManager().cancel(player);
         if (holder instanceof ResonanceGuiHolder) {
             guiManager.close(player);
         }

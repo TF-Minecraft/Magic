@@ -59,6 +59,10 @@ public final class SacrificeRiteService {
         if (def == null || !def.isEnabled()) {
             return;
         }
+        if (!SessionGuard.ready(caster)) {
+            caster.sendMessage(Messages.get("sacrifice.fail.no_character"));
+            return;
+        }
         if ((SacrificeRegistry.isOneRitePerCaster() || SacrificeRegistry.isRefuseNewWordsWhileActive())
                 && hasCaster(caster.getUniqueId())) {
             caster.sendMessage(Messages.get("sacrifice.fail.active"));
@@ -76,7 +80,8 @@ public final class SacrificeRiteService {
         }
         CharacterSession casterSession = Characters.currentSession(caster).orElse(null);
         CharacterSession victimSession = Characters.currentSession(target.getVictim()).orElse(null);
-        if (!SessionGuard.isCurrent(casterSession) || !SessionGuard.isCurrent(victimSession)) {
+        if (!SessionGuard.isCurrent(victimSession)) {
+            caster.sendMessage(Messages.get("sacrifice.fail.victim_no_character"));
             return;
         }
         SacrificeRiteSession session = new SacrificeRiteSession(

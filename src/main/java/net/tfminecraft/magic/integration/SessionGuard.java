@@ -10,22 +10,32 @@ import net.tfminecraft.tlibs.character.Characters;
 public final class SessionGuard {
     private SessionGuard() {}
 
+    /**
+     * Runs next tick unless the player started, ended or switched character in between.
+     * A player with no character still gets the work done.
+     */
     public static void runLater(Player player, Runnable action) {
         if (Magic.plugin == null) {
             return;
         }
         CharacterSession session = Characters.currentSession(player).orElse(null);
-        if (!isCurrent(session)) {
-            return;
-        }
         Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, () -> {
-            if (player.isOnline() && isCurrent(session)) {
+            if (player.isOnline() && unchanged(player, session)) {
                 action.run();
             }
         });
     }
 
+    /** Whether the player may start character-bound work: a current character, or no provider. */
+    public static boolean ready(Player player) {
+        return isCurrent(Characters.currentSession(player).orElse(null));
+    }
+
     public static boolean isCurrent(CharacterSession session) {
         return session == null ? !Characters.available() : Characters.isCurrent(session);
+    }
+
+    private static boolean unchanged(Player player, CharacterSession session) {
+        return session == null ? Characters.currentSession(player).isEmpty() : Characters.isCurrent(session);
     }
 }

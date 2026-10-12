@@ -169,13 +169,6 @@ public final class ArtifactCreateGuiManager implements Listener {
         sessions.remove(player.getUniqueId(), holder.getSession());
     }
 
-    public void cancel(Player player) {
-        sessions.remove(player.getUniqueId());
-        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder) {
-            player.closeInventory();
-        }
-    }
-
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         sessions.remove(event.getPlayer().getUniqueId());

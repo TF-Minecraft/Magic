@@ -83,7 +83,7 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     when(character.getSkull()).thenAnswer(a -> new ItemStack(Material.PLAYER_HEAD));
     bridge.when(() -> RpCharactersBridge.getActiveCharacter(p)).thenReturn(character);
     for (String tab : Arrays.asList(null, " ", "Display Name")) {
-      bridge.when(() -> RpCharactersBridge.resolveDisplayTab(p)).thenReturn(tab);
+      bridge.when(() -> RpCharactersBridge.resolveRealName(character)).thenReturn(tab);
       ResonanceGuiBuilder.populate(inventory, p, session);
       assertTrue(
           inventory
