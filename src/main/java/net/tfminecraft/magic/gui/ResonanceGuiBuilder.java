@@ -108,9 +108,9 @@ public final class ResonanceGuiBuilder {
         if (character == null) {
             meta.setDisplayName(GuiText.text("label_accent", "Resonance"));
         } else {
-            String displayTab = RpCharactersBridge.resolveDisplayTab(player);
-            meta.setDisplayName(displayTab != null && !displayTab.isBlank()
-                    ? displayTab
+            String realName = RpCharactersBridge.resolveRealName(character);
+            meta.setDisplayName(realName != null && !realName.isBlank()
+                    ? realName
                     : GuiText.text("label_accent", character.getName()));
         }
         meta.setLore(buildHeadLore(player, session));

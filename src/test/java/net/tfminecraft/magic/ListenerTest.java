@@ -281,7 +281,7 @@ class ListenerTest {
   }
 
   @Test
-  void sharedStartSchedulesJoinSweepOnlyWhenCharacterIsReady() {
+  void refreshRunsWithoutACharacterButNeverAcrossAStartOrEnd() {
     var player = server.addPlayer();
     var provider = new CharacterTestSupport();
     var listener = new GearRefreshListener();
@@ -292,11 +292,20 @@ class ListenerTest {
       refresh.when(() -> GearRefresher.refreshIfOutdated(old, player)).thenReturn(rebuilt);
       listener.onJoin(new PlayerJoinEvent(player, "join"));
       server.getScheduler().performOneTick();
-      assertEquals(old, player.getInventory().getItem(1));
+      assertEquals(rebuilt, player.getInventory().getItem(1));
+      player.getInventory().setItem(1, old);
+      listener.onItemHeld(new PlayerItemHeldEvent(player, 0, 1));
       var token = provider.start(player, "Alice");
+      server.getScheduler().performOneTick();
+      assertEquals(old, player.getInventory().getItem(1));
       listener.onSessionStart(new CharacterSessionStartEvent(player, token));
       server.getScheduler().performOneTick();
       assertEquals(rebuilt, player.getInventory().getItem(1));
+      player.getInventory().setItem(1, old);
+      listener.onItemHeld(new PlayerItemHeldEvent(player, 0, 1));
+      provider.end(player, CharacterSessionEndEvent.Reason.SWITCH);
+      server.getScheduler().performOneTick();
+      assertEquals(old, player.getInventory().getItem(1));
     }
   }
 

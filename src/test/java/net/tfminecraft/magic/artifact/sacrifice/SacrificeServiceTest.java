@@ -525,9 +525,12 @@ class SacrificeServiceTest {
     var provider = new CharacterTestSupport();
     SacrificeRiteService.tryStart(caster, "fire");
     assertFalse(SacrificeRiteService.hasSessions());
+    assertEquals("sacrifice.fail.no_character", caster.nextMessage());
     provider.start(caster, "Caster");
     SacrificeRiteService.tryStart(caster, "fire");
     assertFalse(SacrificeRiteService.hasSessions());
+    assertEquals("sacrifice.fail.victim_no_character", caster.nextMessage());
+    assertNull(victim.nextMessage());
     provider.start(victim, "Alice");
     start();
     tick();

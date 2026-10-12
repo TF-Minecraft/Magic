@@ -76,6 +76,28 @@ class GearChargeCoverageTest extends GearCoverageSupport {
   }
 
   @Test
+  void playerWithoutACharacterIsToldSoAndTheStationIsLeftAlone() {
+    var characters = new CharacterTestSupport();
+    var player = server.addPlayer();
+    var loc = player.getLocation();
+    var hand = item();
+    var charge = charge(1);
+    charge.setCap("fire", 5);
+    charge.setFill("fire", 5);
+    try (var charges = mockStatic(Charge.class);
+        var stations = mockStatic(GearStationStore.class);
+        var orbs = mockStatic(GearOrbService.class)) {
+      charges.when(() -> Charge.fromItem(hand)).thenReturn(charge);
+      GearChargeService.tryApply(player, loc, hand);
+      assertTrue(player.nextMessage().endsWith("You need an active character to charge a weapon."));
+      stations.verifyNoInteractions();
+      orbs.verifyNoInteractions();
+    } finally {
+      characters.unregister();
+    }
+  }
+
+  @Test
   void successfulRunsConsumeOnlyAfterBeginAndSnapshotPositiveFill() {
     var p = server.addPlayer();
     var loc = p.getLocation();

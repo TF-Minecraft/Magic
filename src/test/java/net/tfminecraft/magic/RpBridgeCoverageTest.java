@@ -3,12 +3,10 @@ package net.tfminecraft.magic;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.time.Instant;
 import java.util.*;
 import net.tfminecraft.magic.artifact.sacrifice.*;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.rpcharacters.RPCharacters;
-import net.tfminecraft.rpcharacters.managers.PlayerManager;
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.rpcharacters.permadeath.*;
 import net.tfminecraft.tlibs.character.*;
@@ -39,16 +37,10 @@ class RpBridgeCoverageTest {
     try (var rp = mockStatic(RPCharacters.class)) {
       assertFalse(RpCharactersBridge.isAvailable());
       assertNull(RpCharactersBridge.getActiveCharacter(player));
-      assertEquals("", RpCharactersBridge.resolveDisplayTab(player));
-      assertEquals("", RpCharactersBridge.resolveCharacterName(UUID.randomUUID().toString()));
+      assertEquals("", RpCharactersBridge.resolveRealName(null));
       registerProvider();
       assertTrue(RpCharactersBridge.isAvailable());
       assertNull(RpCharactersBridge.getActiveCharacter(null));
-      assertEquals("", RpCharactersBridge.resolveDisplayTab(null));
-      assertEquals("", RpCharactersBridge.resolveCharacterName(null));
-      assertEquals("", RpCharactersBridge.resolveCharacterName(" "));
-      assertEquals("", RpCharactersBridge.resolveCharacterName("not-a-uuid"));
-      assertEquals("", RpCharactersBridge.resolveCharacterName(UUID.randomUUID().toString()));
       when(identity.currentSession(player)).thenReturn(Optional.empty());
       assertNull(RpCharactersBridge.getActiveCharacter(player));
       rp.verifyNoInteractions();
@@ -56,33 +48,17 @@ class RpBridgeCoverageTest {
   }
 
   @Test
-  void canonicalNamesComeFromCompleteOfflineDirectoryRegardlessOfStatus() {
-    registerProvider();
-    UUID owner = UUID.randomUUID(), id = UUID.randomUUID();
-    try (var rp = mockStatic(RPCharacters.class); var players = mockStatic(PlayerManager.class)) {
-      for (CharacterStatus status : CharacterStatus.values()) {
-        CharacterInfo info = new CharacterInfo(new CharacterRef(owner, id), "Hidden canonical name",
-            status, "human", Set.of(), 120, Instant.ofEpochMilli(1000));
-        when(identity.info(id)).thenReturn(Optional.of(info));
-        assertEquals("Hidden canonical name", RpCharactersBridge.resolveCharacterName(id.toString()));
-        assertEquals("Hidden canonical name", RpCharactersBridge.resolveCharacterName(id.toString().toUpperCase(Locale.ROOT)));
-      }
-      rp.verifyNoInteractions();
-      players.verifyNoInteractions();
-    }
-  }
-
-  @Test
-  void sharedDisplayIncludesMasksOrAliasesAndRetainsWhiteFormatting() {
+  void ownResonanceScreenShowsTheRealNameNotTheMaskOrAlias() {
     var player = server.addPlayer();
     registerProvider();
-    when(identity.displayName(player)).thenReturn("Masked Alias");
-    assertEquals("§fMasked Alias", RpCharactersBridge.resolveDisplayTab(player));
-    when(identity.displayName(player)).thenReturn("§fAlready white");
-    assertEquals("§fAlready white", RpCharactersBridge.resolveDisplayTab(player));
-    server.getServicesManager().unregister(CharacterIdentity.class, identity);
-    assertFalse(RpCharactersBridge.isAvailable());
-    assertEquals("", RpCharactersBridge.resolveDisplayTab(player));
+    when(identity.displayName(player)).thenReturn("Masked Stranger");
+    var character = mock(RPCharacter.class);
+    when(character.getName()).thenReturn("Real Name");
+    when(character.getEffectiveDisplayPlain()).thenReturn("Nickname");
+    String name = RpCharactersBridge.resolveRealName(character);
+    assertTrue(name.startsWith("\u00a7f"), name);
+    assertEquals("Real Name", org.bukkit.ChatColor.stripColor(name));
+    verify(identity, never()).displayName(any());
   }
 
   @Test

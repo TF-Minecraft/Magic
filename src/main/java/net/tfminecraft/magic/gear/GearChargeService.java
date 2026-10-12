@@ -17,6 +17,7 @@ import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.charge.Charge;
 import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.gear.orb.GearOrbService;
+import net.tfminecraft.magic.integration.SessionGuard;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
@@ -49,6 +50,10 @@ public final class GearChargeService {
         }
         if (charge.isBlank() || WeaponRequirement.highestBand(charge) <= 0) {
             player.sendMessage(Messages.get("gear.charge.blank"));
+            return;
+        }
+        if (!SessionGuard.ready(player)) {
+            player.sendMessage(Messages.get("gear.charge.no_character"));
             return;
         }
         GearStationStore.Occupancy occupancy = GearStationStore.get(station);

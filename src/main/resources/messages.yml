@@ -276,6 +276,8 @@ sacrifice:
     min_score: "#aaaaaa§oThe shrine is too weak to hear you"
     active: "#aaaaaa§oA rite is already underway"
     full: "#aaaaaa§oThat vessel can hold no more"
+    no_character: "#aaaaaa§oYou need an active character to perform a rite"
+    victim_no_character: "#aaaaaa§oThat offering has no active character"
 
 gear:
 
@@ -306,6 +308,8 @@ gear:
     not_charge: "#ff5555That is not an enchanted charge."
 
     blank: "#aaaaaa§oThe charge holds no aura yet"
+
+    no_character: "#ff5555You need an active character to charge a weapon."
 
     warn: "#ff5555This charge is beyond your resonance:"
 

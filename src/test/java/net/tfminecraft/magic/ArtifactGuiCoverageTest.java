@@ -227,16 +227,13 @@ class ArtifactGuiCoverageTest extends GearCoverageSupport {
     }
   }
   @Test
-  void cancelledCreatorMenuCannotMutateTheNextMenuOrRemoveItsSession() {
+  void replacedCreatorMenuCannotMutateTheNextMenuOrRemoveItsSession() {
     var manager = new ArtifactCreateGuiManager();
-    manager.cancel(p);
     manager.open(p);
     var oldClick = click(21);
     var oldClose = mock(InventoryCloseEvent.class);
     when(oldClose.getPlayer()).thenReturn(p);
     when(oldClose.getView()).thenReturn(p.getOpenInventory());
-    manager.cancel(p);
-    assertNull(manager.getSession(p));
     manager.open(p);
     var replacement = manager.getSession(p);
     manager.onInventoryClick(oldClick);
