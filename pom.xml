@@ -88,6 +88,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- TLibs' ItemSkinPreserver needs NBTAPI types; the NBTAPI plugin provides them at runtime. -->
+        <dependency>
+            <groupId>local</groupId>
+            <artifactId>item-nbt-api-plugin</artifactId>
+            <version>2.16.1-tfmc-c571502e7686</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>local</groupId>
             <artifactId>MMOItems</artifactId>

@@ -101,6 +101,7 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
     try (var nbt = mockStatic(NBTItem.class);
         var stats = mockStatic(GearStatApplicator.class);
         var model = mockStatic(GearModelResolver.class);
+        var skin = mockStatic(GearSkin.class, i -> i.getArgument(1));
         var lore = mockStatic(WeaponLore.class);
         var items =
             mockConstruction(
@@ -130,6 +131,7 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
       var captured = org.mockito.ArgumentCaptor.forClass(GemSocketsData.class);
       verify(items.constructed().getFirst()).setData(eq(ItemStats.GEM_SOCKETS), captured.capture());
       assertEquals(List.of(good), captured.getValue().getGems());
+      skin.verify(() -> GearSkin.keep(same(item), same(built)));
     }
   }
 
@@ -143,6 +145,7 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
     try (var nbt = mockStatic(NBTItem.class);
         var stats = mockStatic(GearStatApplicator.class);
         var model = mockStatic(GearModelResolver.class);
+        var skin = mockStatic(GearSkin.class, i -> i.getArgument(1));
         var lore = mockStatic(WeaponLore.class);
         var runes = mockStatic(RuneRefresher.class);
         var items =
@@ -183,6 +186,7 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
       try (var nbt = mockStatic(NBTItem.class);
           var stats = mockStatic(GearStatApplicator.class);
           var model = mockStatic(GearModelResolver.class);
+        var skin = mockStatic(GearSkin.class, i -> i.getArgument(1));
           var lore = mockStatic(WeaponLore.class);
           var broken = mockStatic(GearBrokenMarker.class);
           var items =

@@ -46,7 +46,7 @@ public final class GearItemBuilder {
         List<PartDef> parts = GearProvenance.resolveParts(stack);
         List<String> colours = SocketLayout.colours(archetype, parts, band);
         ItemStack rewritten = applyMmoData(stack, colours, parts);
-        rewritten = GearModelResolver.apply(rewritten, type, parts);
+        rewritten = GearSkin.keep(stack, GearModelResolver.apply(rewritten, type, parts));
         copyGearPdc(stack, rewritten);
         GearProvenance.lockSockets(rewritten);
         WeaponRequirement.fromItem(stack).persist(rewritten);
