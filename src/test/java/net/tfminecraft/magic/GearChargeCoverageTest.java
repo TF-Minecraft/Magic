@@ -89,7 +89,8 @@ class GearChargeCoverageTest extends GearCoverageSupport {
         var orbs = mockStatic(GearOrbService.class)) {
       charges.when(() -> Charge.fromItem(hand)).thenReturn(charge);
       GearChargeService.tryApply(player, loc, hand);
-      assertEquals("You need an active character to charge a weapon.",
+      // Whether messages.yml is loaded depends on test order, so compare against the live lookup.
+      assertEquals(org.bukkit.ChatColor.stripColor(Messages.get("gear.charge.no_character")),
           org.bukkit.ChatColor.stripColor(player.nextMessage()));
       stations.verifyNoInteractions();
       orbs.verifyNoInteractions();
