@@ -180,12 +180,14 @@ class GearItemCoverageTest extends GearMmoCoverageSupport {
     assertSame(stack, GearItemBuilder.rewriteSockets(stack, 1));
     tag(stack, GearKeys.socketsLocked(), PersistentDataType.BYTE, null);
     try (var models = mockStatic(GearModelResolver.class);
+        var skin = mockStatic(GearSkin.class, i -> i.getArgument(1));
         var lore = mockStatic(WeaponLore.class)) {
       models
           .when(() -> GearModelResolver.apply(any(), any(), any()))
           .thenAnswer(i -> i.getArgument(0));
       lore.when(() -> WeaponLore.updateItem(any())).thenAnswer(i -> i.getArgument(0));
       assertSame(stack, GearItemBuilder.rewriteSockets(stack, 1));
+      skin.verify(() -> GearSkin.keep(same(stack), same(stack)));
       assertTrue(GearProvenance.socketsLocked(stack));
       assertEquals("core:1", GearProvenance.partsRaw(stack));
     }

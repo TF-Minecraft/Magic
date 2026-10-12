@@ -134,7 +134,7 @@ public final class GearRefresher {
                 return null;
             }
             GearType type = GearProvenance.archetypeOf(stack);
-            return GearModelResolver.apply(built, type, GearProvenance.resolveParts(stack));
+            return GearSkin.keep(stack, GearModelResolver.apply(built, type, GearProvenance.resolveParts(stack)));
         } catch (Exception ex) {
             Magic.plugin.getLogger().warning("[Magic] Gear refresh failed: " + ex.getMessage());
             return null;
