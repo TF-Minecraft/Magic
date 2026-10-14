@@ -9,6 +9,9 @@ import net.tfminecraft.magic.charge.ChargeKeys;
 import net.tfminecraft.magic.gear.*;
 import net.tfminecraft.magic.gear.gui.*;
 import net.tfminecraft.magic.gear.orb.GearOrbService;
+import net.tfminecraft.magic.gear.ownership.GearEffects;
+import net.tfminecraft.magic.gear.ownership.GearItems;
+import net.tfminecraft.magic.gear.ownership.GearPropertyStore;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
@@ -170,7 +173,7 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     seed(loc, attuned(), null, null);
     left();
     assertTrue(GearStationStore.isOccupied(loc));
-    seed(loc, item(), UUID.randomUUID(), Map.of("v.stone", 2));
+    var foreign = seed(loc, item(), UUID.randomUUID(), Map.of("v.stone", 2));
     left();
     assertTrue(GearStationStore.isOccupied(loc));
     try (var costs = mockStatic(GearCosts.class); var refs = mockStatic(net.tfminecraft.magic.util.ItemRef.class)) {
@@ -180,7 +183,13 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
       aborts().put("old", 0L);
       aborts().put("new", System.currentTimeMillis());
       left();
-      assertEquals(2, player.getInventory().all(Material.STONE).values().stream().mapToInt(ItemStack::getAmount).sum());
+      assertTrue(player.getInventory().isEmpty(), "staff does not acquire another character's refund");
+      var store = GearStationStore.property();
+      assertTrue(store.returns(store.identity().current(player).orElseThrow().owner()).isEmpty());
+      var returned = store.returns(foreign.characterOwner()).getFirst();
+      assertEquals(foreign.characterOwner(), GearPropertyStore.returnOwner(returned));
+      assertEquals("pending", GearPropertyStore.text(returned, "state"));
+      assertEquals(new ItemStack(Material.STONE, 2), GearItems.item(GearPropertyStore.bytes(returned.getAsJsonArray("items").get(0).getAsString())));
       assertFalse(GearStationStore.isOccupied(loc));
       assertFalse(aborts().containsKey("old"));
       seed(loc, item(), player.getUniqueId(), Map.of());
@@ -235,7 +244,7 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
         player,
         loc);
     player.setSneaking(true);
-    seed(loc, item(), null, Map.of());
+    seed(loc, item(), player.getUniqueId(), Map.of());
     orbs.when(() -> GearOrbService.abort(loc))
         .thenAnswer(
             a -> {
@@ -246,6 +255,8 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
             });
     left();
     assertFalse(GearStationStore.isOccupied(loc));
+    assertTrue(player.getInventory().isEmpty());
+    assertTrue(GearStationStore.property().returns(GearStationStore.property().identity().current(player).orElseThrow().owner()).isEmpty());
     seed(loc, item(), null, Map.of());
     var entity = mock(Entity.class);
     when(entity.getLocation()).thenReturn(loc.clone().add(.5, .5, .5));
@@ -338,11 +349,14 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     assertFalse(GearStationStore.isOccupied(loc));
     orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(false);
 
-    seedRest(loc, weapon.clone(), null);
+    var ownerless = seedRest(loc, weapon.clone(), null);
     GearStationStore.get(loc).setOrbSessionActive(true);
     orbs.when(() -> GearOrbService.sessionOwner(loc)).thenReturn(null);
+    var rawOwnerless = GearStationStore.property().station(ownerless.generation()).raw();
     left();
-    assertFalse(GearStationStore.isOccupied(loc));
+    assertTrue(GearStationStore.isOccupied(loc), "unknown recipient cannot become the aborting character");
+    assertSame(ownerless, GearStationStore.get(loc));
+    assertTrue(net.tfminecraft.magic.gear.ownership.GearYaml.equal(rawOwnerless, GearStationStore.property().station(ownerless.generation()).raw()));
 
     var foreignActor = new net.tfminecraft.magic.gear.ownership.GearIdentity.Token(new net.tfminecraft.magic.gear.ownership.GearIdentity.Owner(UUID.randomUUID(), UUID.randomUUID()),1);
     orbs.when(() -> GearOrbService.actor(loc)).thenReturn(foreignActor);
@@ -351,7 +365,7 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     left();
     assertTrue(GearStationStore.isOccupied(loc));
 
-    seedRest(loc, weapon.clone(), UUID.randomUUID());
+    var foreign = seedRest(loc, weapon.clone(), UUID.randomUUID());
     GearStationStore.get(loc).setOrbSessionActive(true);
     left();
     assertTrue(GearStationStore.isOccupied(loc));
@@ -361,13 +375,22 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     for (int i = 0; i < player.getInventory().getSize(); i++) {
       player.getInventory().setItem(i, new ItemStack(Material.STONE, 64));
     }
+    var inventoryBefore = GearEffects.frame(player.getInventory().getContents());
+    int dropsBefore = loc.getWorld().getEntitiesByClass(Item.class).size();
+    var store = GearStationStore.property();
+    var actor = store.identity().current(player).orElseThrow().owner();
+    int actorReturnsBefore = store.returns(actor).size();
     left();
     assertFalse(GearStationStore.isOccupied(loc));
     assertFalse(aborts().containsKey("old"));
     assertTrue(aborts().containsKey("fresh"));
-    assertTrue(
-        loc.getWorld().getEntitiesByClass(Item.class).stream()
-            .anyMatch(dropped -> GearProvenance.isGear(dropped.getItemStack())));
+    assertEquals(inventoryBefore, GearEffects.frame(player.getInventory().getContents()));
+    assertEquals(dropsBefore, loc.getWorld().getEntitiesByClass(Item.class).size(), "staff abort does not create a public drop");
+    assertEquals(actorReturnsBefore, store.returns(actor).size());
+    var returned = store.returns(foreign.characterOwner()).getFirst();
+    assertEquals(foreign.characterOwner(), GearPropertyStore.returnOwner(returned));
+    assertEquals("pending", GearPropertyStore.text(returned, "state"));
+    assertEquals(weapon, GearItems.item(GearPropertyStore.bytes(returned.getAsJsonArray("items").get(0).getAsString())));
 
     seedRest(loc, weapon.clone(), player.getUniqueId());
     GearStationStore.get(loc).setOrbSessionActive(true);

@@ -41,7 +41,8 @@ public final class GearPropertyStore {
         for (Station station : rows) {
             Object id = station.raw().get("occupancy-id");
             if (id instanceof String value && !ids.add(value)) throw new Conflict("Duplicate occupancy ID");
-            if (!"released".equals(station.raw().get("effect-state")) && station.raw().get("world") instanceof String && station.raw().get("x") instanceof Integer && station.raw().get("y") instanceof Integer && station.raw().get("z") instanceof Integer && !places.add(location(station.raw()))) throw new Conflict("Duplicate occupied location");
+            String at = knownLocation(station.raw());
+            if (!"released".equals(station.raw().get("effect-state")) && at != null && !places.add(at)) throw new Conflict("Duplicate occupied location");
         }
         return rows;
     }
@@ -49,6 +50,11 @@ public final class GearPropertyStore {
         Object world = row.get("world");
         if (!(world instanceof String text) || text.isBlank() || text.contains(",")) throw new Conflict("Invalid station world");
         return text + "," + coordinate(row.get("x")) + "," + coordinate(row.get("y")) + "," + coordinate(row.get("z"));
+    }
+    private static String knownLocation(Map<?, ?> row) {
+        if (!(row.get("world") instanceof String world) || world.isBlank() || world.contains(",")
+                || !(row.get("x") instanceof Integer) || !(row.get("y") instanceof Integer) || !(row.get("z") instanceof Integer)) return null;
+        return world + "," + row.get("x") + "," + row.get("y") + "," + row.get("z");
     }
     private static int coordinate(Object value) throws IOException {
         if (!(value instanceof Integer)) throw new Conflict("Invalid station coordinate");
@@ -76,7 +82,7 @@ public final class GearPropertyStore {
         if (found == null) throw new Conflict("Occupancy disappeared"); return found;
     }
     public boolean occupied(String at) throws IOException {
-        for (Station station : stations()) if (at.equals(location(station.raw())) && !"released".equals(station.raw().get("effect-state"))) return true;
+        for (Station station : stations()) if (at.equals(knownLocation(station.raw())) && !"released".equals(station.raw().get("effect-state"))) return true;
         return false;
     }
     public void insert(Map<Object, Object> row) throws IOException {
@@ -525,5 +531,19 @@ public final class GearPropertyStore {
     public static String hash(byte[] bytes) { try { return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)); } catch (java.security.NoSuchAlgorithmException ex) { throw new AssertionError(ex); } }
     public static JsonObject read(Path file) throws IOException { return GearJson.parse(Files.readString(file, StandardCharsets.UTF_8)); }
     public static void write(Path file, JsonObject raw) throws IOException { GearFiles.write(file, GearJson.bytes(raw), true); }
-    private static List<Path> files(Path folder) throws IOException { if (!Files.exists(folder)) return List.of(); try (var paths = Files.list(folder)) { return paths.sorted().toList(); } }
+    private static List<Path> files(Path folder) throws IOException {
+        if (!Files.exists(folder)) return List.of();
+        List<Path> files = new ArrayList<>();
+        try (var paths = Files.list(folder)) {
+            for (Path path : paths.sorted().toList()) {
+                String name = path.getFileName().toString();
+                if (name.startsWith("magic-") && name.endsWith(".tmp")) {
+                    if (!Files.isRegularFile(path, java.nio.file.LinkOption.NOFOLLOW_LINKS)) throw new Conflict("Temporary-looking gear path is not a regular file");
+                    continue;
+                }
+                files.add(path);
+            }
+        }
+        return files;
+    }
 }

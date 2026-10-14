@@ -84,6 +84,9 @@ public final class GearEffects {
     public static boolean abortReturn(Player player, Location station, GearStationStore.Occupancy occupancy, Map<String, Integer> charged) {
         GearPropertyStore store = GearStationStore.property(); var token = store.identity().current(player);
         if (token.isEmpty() || !authorize(player, station, occupancy)) return false;
+        GearIdentity.Owner recipient = occupancy.characterOwner();
+        if (recipient == null) return false;
+        GearIdentity.Token actor = token.orElseThrow();
         if (!occupancy.isRested() && charged == null) return false;
         List<String> items = new ArrayList<>();
         if (occupancy.isRested()) items.add(GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem())));
@@ -96,15 +99,16 @@ public final class GearEffects {
         }
         UUID operation = UUID.nameUUIDFromBytes((occupancy.generation() + ":abort").getBytes(java.nio.charset.StandardCharsets.UTF_8));
         try {
-            store.requireUnlocked(token.orElseThrow().owner());
-            if (!store.identity().current(token.orElseThrow(), player) || GearStationStore.get(station) != occupancy) return false;
+            store.requireUnlocked(actor.owner());
+            if (!recipient.equals(actor.owner())) store.requireUnlocked(recipient);
+            if (!store.identity().current(actor, player) || GearStationStore.get(station) != occupancy) return false;
             GearStationStore.expected(station, occupancy);
             GearOrbService.abort(station);
             if (GearStationStore.takeForAbort(station) == null) return false;
-            store.createReturn(token.orElseThrow().owner(), operation, items, "held");
+            store.createReturn(recipient, operation, items, "held");
             if (!GearStationStore.acknowledgeRelease(station, occupancy.generation())) return false;
-            JsonObject expected = GearPropertyStore.read(store.returnFile(token.orElseThrow().owner(), operation)); JsonObject pending = expected.deepCopy(); pending.addProperty("state", "pending"); store.saveReturn(expected, pending);
-            deliver(player, token.orElseThrow()); return true;
+            JsonObject expected = GearPropertyStore.read(store.returnFile(recipient, operation)); JsonObject pending = expected.deepCopy(); pending.addProperty("state", "pending"); store.saveReturn(expected, pending);
+            if (recipient.equals(actor.owner())) deliver(player, actor); return true;
         } catch (IOException | RuntimeException ex) { GearStationStore.warning(ex); return false; }
     }
     public static void deliver(Player player, GearIdentity.Token token) {

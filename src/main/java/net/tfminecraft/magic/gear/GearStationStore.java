@@ -384,8 +384,9 @@ public final class GearStationStore {
                 var station = property().station(occupancy.generation());
                 if (!java.util.Objects.equals(occupancy.characterOwner(), ownerOrNull(station.raw()))) continue;
                 if (occupancy.characterOwner() != null) property().requireUnlocked(occupancy.characterOwner());
+                if (occupancy.displayId == null || occupancy.displayId.toString().equals(station.raw().get("display"))) continue;
                 var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
-                if (occupancy.displayId != null) after.put("display", occupancy.displayId.toString());
+                after.put("display", occupancy.displayId.toString());
                 property().patch(station, after);
             } catch (IOException ex) { warning(ex); }
         }
