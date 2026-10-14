@@ -29,14 +29,21 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
     world = mock(World.class);
     when(world.getName()).thenReturn("world");
     station = new Location(world, 0, 0, 0);
-    stores = mockStatic(GearStationStore.class);
+    stores = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
     stores.when(() -> GearStationStore.key(any())).thenCallRealMethod();
+    var initial = mock(GearStationStore.Occupancy.class);
+    when(initial.generation()).thenReturn(UUID.randomUUID());
+    stores.when(() -> GearStationStore.get(any())).thenReturn(initial);
+    stores.when(() -> GearStationStore.update(any(), any(GearStationStore.Occupancy.class), any(ItemStack.class))).thenReturn(true);
     sessions =
         mockConstruction(
             GearOrbSession.class,
             (s, c) -> {
               when(s.getStation()).thenReturn(((Location) c.arguments().get(0)).clone());
               when(s.getPlayerId()).thenReturn((UUID) c.arguments().get(1));
+              var capturedOccupancy = GearStationStore.get((Location)c.arguments().get(0));
+              when(s.occupancy()).thenReturn(capturedOccupancy);
+              when(s.matches(any())).thenAnswer(a -> java.util.Objects.equals(c.arguments().get(5), a.getArgument(0)));
               when(s.displayPoint()).thenReturn(station);
               when(s.capturedFill()).thenReturn(Map.of("fire", 10d));
               when(s.goodTarget()).thenReturn(2);
@@ -57,6 +64,31 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
   GearOrbSession begin(Player p) {
     assertTrue(GearOrbService.begin(p, station, Map.of(), "fire", 1));
     return sessions.constructed().getLast();
+  }
+
+  @Test void capturedCleanupLeavesIncomingRunsAndOwnerlessSessionsUntouched()throws Exception{
+    var p=server.addPlayer();var q=server.addPlayer();var outgoing=Characters.currentSession(p).orElseThrow();var run=begin(p);
+    var owner=new net.tfminecraft.magic.gear.ownership.GearIdentity.Owner(p.getUniqueId(),outgoing.ref().characterId());
+    assertFalse(GearOrbService.touches(owner));when(run.occupancy()).thenReturn(null);assertFalse(GearOrbService.touches(owner));
+    var occupancy=mock(GearStationStore.Occupancy.class);when(occupancy.characterOwner()).thenReturn(owner);when(run.occupancy()).thenReturn(occupancy);assertTrue(GearOrbService.touches(owner));
+    assertNull(GearOrbService.actor(null));assertNull(GearOrbService.actor(new Location(world,99,0,0)));var token=new net.tfminecraft.magic.gear.ownership.GearIdentity.Token(owner,outgoing.sessionId());when(run.actor()).thenReturn(token);assertEquals(token,GearOrbService.actor(station));
+    GearOrbService.finishForSession(q.getUniqueId(),outgoing);GearOrbService.finishForSession(p.getUniqueId(),Characters.currentSession(q).orElseThrow());GearOrbService.finishStaleForPlayer(q.getUniqueId());GearOrbService.finishStaleForPlayer(p.getUniqueId());assertTrue(GearOrbService.isActive(station));
+    when(run.isCurrent()).thenReturn(false);GearOrbService.finishStaleForPlayer(p.getUniqueId());assertFalse(GearOrbService.isActive(station));verify(run).end();
+    run=begin(p);when(run.occupancy()).thenReturn(null);GearOrbService.finishForSession(p.getUniqueId(),outgoing);assertFalse(GearOrbService.isActive(station));
+    stores.when(()->GearStationStore.get(station)).thenReturn(null);assertFalse(GearOrbService.begin(p,station,Map.of(),"fire",1));GearOrbService.abort(station);
+  }
+
+  @Test void beginRequiresTheExactNativeSessionAfterTheProviderBoundary()throws Exception{
+    var p=server.addPlayer();var identity=Characters.currentSession(p).orElseThrow();var token=net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(identity);
+    var store=spy(GearStationStore.property());var field=GearStationStore.class.getDeclaredField("property");field.setAccessible(true);field.set(null,store);
+    var bridge=mock(net.tfminecraft.magic.gear.ownership.GearIdentity.class);when(store.identity()).thenReturn(bridge);when(bridge.current(token,p)).thenReturn(true);
+    try(var natives=mockStatic(Characters.class)){
+      natives.when(()->Characters.currentSession(p)).thenReturn(Optional.empty());assertFalse(GearOrbService.begin(p,station,Map.of(),"fire",1,token));
+      natives.when(()->Characters.currentSession(p)).thenReturn(Optional.of(new CharacterSession(identity.ref(),identity.sessionId()+1)));assertFalse(GearOrbService.begin(p,station,Map.of(),"fire",1,token));
+      natives.when(()->Characters.currentSession(p)).thenReturn(Optional.of(identity));assertFalse(GearOrbService.begin(p,station,Map.of(),"fire",1,token));
+      natives.when(()->Characters.isCurrent(identity)).thenReturn(true);assertTrue(GearOrbService.begin(p,station,Map.of(),"fire",1,token));GearOrbService.abort(station);
+    }
+    when(bridge.current(p)).thenReturn(Optional.empty());assertFalse(GearOrbService.begin(p,station,Map.of(),"fire",1));
   }
 
   @Test
@@ -99,7 +131,7 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
     var occupancy = mock(GearStationStore.Occupancy.class);
     stores.when(() -> GearStationStore.get(station)).thenReturn(occupancy);
     server.getScheduler().performOneTick();
-    verify(occupancy).setOrbSessionActive(false);
+    verify(occupancy, never()).setOrbSessionActive(false);
     s = begin(p);
     doThrow(new IllegalStateException("broken")).when(s).tick(p);
     server.getScheduler().performOneTick();
@@ -147,8 +179,13 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
       verify(requirement, times(4)).mergeAmounts(Map.of("fire", 10d));
       verify(requirement, times(4)).persist(weapon);
       builder.verify(() -> GearItemBuilder.rewriteSockets(weapon, 2), times(2));
-      stores.verify(() -> GearStationStore.update(station, updated), times(4));
+      stores.verify(() -> GearStationStore.update(station, occupancy, updated), times(4));
       chat.verify(() -> WeaponAttunementChat.sendPostChargeSummary(p, updated), times(3));
+      try(var effects=mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class)){
+        stores.when(()->GearStationStore.update(station,occupancy,updated)).thenReturn(false);var failed=begin(p);
+        invoke(GearOrbService.class,"complete",new Class[]{GearOrbSession.class,boolean.class},failed,false);
+        effects.verify(()->net.tfminecraft.magic.gear.ownership.GearEffects.hold(occupancy.generation()));assertFalse(GearOrbService.isActive(station));
+      }
     }
   }
 
@@ -257,9 +294,8 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
 
   @Test
   void completionHandlesDisconnectedPlayers() throws Exception {
-    var player = mock(Player.class);
-    var id = UUID.randomUUID();
-    when(player.getUniqueId()).thenReturn(id);
+    var player = server.addPlayer();
+    var id = player.getUniqueId();
     var weapon = item();
     var occupancy = mock(GearStationStore.Occupancy.class);
     when(occupancy.getItem()).thenReturn(weapon);
@@ -272,9 +308,9 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
       req.when(() -> WeaponRequirement.fromItem(weapon)).thenReturn(requirement);
       lore.when(() -> WeaponLore.updateItem(weapon)).thenReturn(weapon);
       for (int mode = 0; mode < 2; mode++) {
+        bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(player);
         var session = begin(player);
-        bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(mode == 0 ? null : player);
-        when(player.isOnline()).thenReturn(false);
+        bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(mode == 0 ? null : mock(Player.class));
         invoke(
             GearOrbService.class,
             "complete",
@@ -283,8 +319,9 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
             true);
         verify(session).playComplete();
       }
+      bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(player);
       var session = begin(player);
-      when(player.isOnline()).thenReturn(false);
+      bukkit.when(() -> Bukkit.getPlayer(id)).thenReturn(mock(Player.class));
       invoke(GearOrbService.class, "tick", new Class[] {});
       verify(session).end();
     }
@@ -393,6 +430,8 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
     var secondOccupancy = mock(GearStationStore.Occupancy.class);
     when(firstOccupancy.getItem()).thenReturn(firstWeapon);
     when(secondOccupancy.getItem()).thenReturn(secondWeapon);
+    when(firstRun.occupancy()).thenReturn(firstOccupancy);
+    when(secondRun.occupancy()).thenReturn(secondOccupancy);
     stores.when(() -> GearStationStore.get(station)).thenReturn(firstOccupancy);
     stores.when(() -> GearStationStore.get(second)).thenReturn(secondOccupancy);
 
@@ -417,8 +456,8 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
       verify(secondRequirement).persist(secondWeapon);
       verify(firstOccupancy).setOrbSessionActive(false);
       verify(secondOccupancy).setOrbSessionActive(false);
-      stores.verify(() -> GearStationStore.update(station, firstWeapon));
-      stores.verify(() -> GearStationStore.update(second, secondWeapon));
+      stores.verify(() -> GearStationStore.update(station, firstOccupancy, firstWeapon));
+      stores.verify(() -> GearStationStore.update(second, secondOccupancy, secondWeapon));
       assertFalse(GearOrbService.isActive(station));
       assertFalse(GearOrbService.isActive(second));
       assertTrue(GearOrbService.isActive(third));

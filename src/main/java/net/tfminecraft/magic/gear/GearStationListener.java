@@ -80,10 +80,12 @@ public final class GearStationListener implements Listener {
         if (station == null) {
             return;
         }
+        GearStationStore.Occupancy captured = GearStationStore.get(station);
         GearOrbService.abort(station);
         ItemStack weapon = GearStationStore.takeForAbort(station);
         if (weapon != null) {
             station.getWorld().dropItem(station.clone().add(0.5, 1.0, 0.5), weapon);
+            GearStationStore.acknowledgeRelease(station, captured.generation());
             Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(station)
                     + " lost its furniture. Dropped the weapon and removed its display.");
         }
@@ -142,6 +144,7 @@ public final class GearStationListener implements Listener {
         }
         event.setCancelled(true);
         Player player = event.getPlayer();
+        if (GearStationStore.property().identity().current(player).isEmpty()) return;
         Location location = block.getLocation();
         ItemStack hand = player.getInventory().getItemInMainHand();
         boolean emptyHand = hand.getType().isAir();
@@ -190,13 +193,14 @@ public final class GearStationListener implements Listener {
     private static void rest(Player player, Location location, ItemStack hand) {
         ItemStack placed = hand.clone();
         placed.setAmount(1);
-        if (hand.getAmount() <= 1) {
-            player.getInventory().setItemInMainHand(null);
-        } else {
-            hand.setAmount(hand.getAmount() - 1);
-        }
-        player.updateInventory();
-        GearStationStore.rest(location, placed, player.getUniqueId());
+        var token = GearStationStore.property().identity().current(player);
+        if (token.isEmpty()) return;
+        List<String> before = net.tfminecraft.magic.gear.ownership.GearEffects.frame(player.getInventory().getContents());
+        ItemStack[] after = net.tfminecraft.magic.gear.ownership.GearEffects.cloneContents(player.getInventory().getContents());
+        int slot = player.getInventory().getHeldItemSlot();
+        if (after[slot] == null || !java.util.Arrays.equals(net.tfminecraft.magic.gear.ownership.GearItems.bytes(hand), net.tfminecraft.magic.gear.ownership.GearItems.bytes(after[slot]))) return;
+        if (after[slot].getAmount() <= 1) after[slot] = null; else after[slot].setAmount(after[slot].getAmount() - 1);
+        if (GearStationStore.deposit(player, token.orElseThrow(), location, placed, Map.of(), true, after, before) == null) return;
         player.sendMessage(Messages.get("gear.station.rested"));
         player.playSound(location, Sound.BLOCK_ANVIL_USE, 1f, 1.2f);
     }
@@ -258,12 +262,14 @@ public final class GearStationListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
+        if (GearStationStore.property().identity().current(player).isEmpty()) return;
         ItemStack item = GearStationStore.eject(location);
         if (item == null) {
             return;
         }
         Location drop = location.clone().add(0.5, 1.0, 0.5);
         drop.getWorld().dropItem(drop, item);
+        GearStationStore.acknowledgeRelease(location, occupancy.generation());
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
     }
 
@@ -272,24 +278,12 @@ public final class GearStationListener implements Listener {
      * weapon. An idle rested weapon stays put; an empty hand picks it up.
      */
     private void returnRested(Player player, Location location, GearStationStore.Occupancy occupancy) {
-        UUID owner = occupancy.getOwner() != null ? occupancy.getOwner() : GearOrbService.sessionOwner(location);
-        if (owner != null && !owner.equals(player.getUniqueId()) && !player.hasPermission("magic.admin")) {
-            player.sendMessage(Messages.get("gear.abort.not_yours"));
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, location, occupancy)) {
+            player.sendMessage(Messages.get("gear.abort.not_yours")); return;
         }
-        GearOrbService.abort(location);
-        ItemStack weapon = GearStationStore.takeForAbort(location);
-        if (weapon == null) {
-            return;
-        }
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, Map.of())) return;
         recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
         recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
-        Location drop = location.clone().add(0.5, 1.0, 0.5);
-        for (ItemStack leftover : player.getInventory().addItem(weapon).values()) {
-            drop.getWorld().dropItem(drop, leftover);
-        }
-        player.updateInventory();
         player.sendMessage(Messages.get("gear.abort.returned"));
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
     }
@@ -329,23 +323,13 @@ public final class GearStationListener implements Listener {
             returnRested(player, location, occupancy);
             return;
         }
-        UUID owner = occupancy.getOwner() != null ? occupancy.getOwner() : GearOrbService.sessionOwner(location);
-        if (owner != null && !owner.equals(player.getUniqueId()) && !player.hasPermission("magic.admin")) {
-            player.sendMessage(Messages.get("gear.abort.not_yours"));
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, location, occupancy)) {
+            player.sendMessage(Messages.get("gear.abort.not_yours")); return;
         }
-        GearOrbService.abort(location);
-        ItemStack weapon = GearStationStore.takeForAbort(location);
-        if (weapon == null) {
-            return;
-        }
+        Map<String, Integer> charged = occupancy.getCharged();
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, charged)) return;
         recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
         recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
-        Map<String, Integer> charged = occupancy.getCharged() != null
-                ? occupancy.getCharged()
-                : GearCosts.total(GearProvenance.resolveParts(weapon));
-        GearCosts.refund(player, charged, location);
         player.sendMessage(Messages.get("gear.abort.done"));
         player.playSound(location, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.4f);
     }

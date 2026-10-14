@@ -1,12 +1,8 @@
 package net.tfminecraft.magic.gear.gui;
 
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.entity.Player;
 
-public final class TypeSelectionHolder implements InventoryHolder {
-
-    @Override
-    public Inventory getInventory() {
-        return null;
-    }
+public final class TypeSelectionHolder extends GearMenuHolder {
+    public TypeSelectionHolder() { this(null); }
+    public TypeSelectionHolder(Player player) { super(player); }
 }

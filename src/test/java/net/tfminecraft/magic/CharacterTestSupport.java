@@ -40,7 +40,10 @@ public final class CharacterTestSupport {
     }
 
     @Override
-    public Optional<CharacterInfo> info(UUID characterId) { return Optional.empty(); }
+    public Optional<CharacterInfo> info(UUID characterId) {
+      return current.values().stream().map(CharacterSession::ref).filter(ref -> ref.characterId().equals(characterId))
+          .findFirst().map(ref -> new CharacterInfo(ref, "Test", net.tfminecraft.tlibs.character.CharacterStatus.ALIVE, null, java.util.Set.of(), 0, java.time.Instant.EPOCH));
+    }
 
     @Override
     public Optional<List<CharacterInfo>> characters(UUID ownerId) { return Optional.empty(); }

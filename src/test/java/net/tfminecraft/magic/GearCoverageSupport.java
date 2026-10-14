@@ -17,6 +17,9 @@ import org.mockbukkit.mockbukkit.*;
 abstract class GearCoverageSupport {
   @TempDir Path temp;
   ServerMock server;
+  GearCharacterFixture characters;
+  org.mockito.MockedStatic<net.tfminecraft.magic.gear.ownership.InventoryCheckpoint> checkpoint;
+  org.mockito.MockedStatic<net.tfminecraft.magic.gear.ownership.GearItems> codec;
   Map<java.lang.reflect.Field, Object> orbConfig = new HashMap<>();
 
   @BeforeEach
@@ -29,6 +32,19 @@ abstract class GearCoverageSupport {
     when(Magic.plugin.isEnabled()).thenReturn(true);
     when(Magic.plugin.getLogger()).thenReturn(Logger.getLogger("GearCoverage"));
     when(Magic.plugin.getDataFolder()).thenReturn(temp.toFile());
+    characters = new GearCharacterFixture();
+    checkpoint = mockStatic(net.tfminecraft.magic.gear.ownership.InventoryCheckpoint.class);
+    var snapshots = new LinkedHashMap<String, ItemStack>();
+    codec = mockStatic(net.tfminecraft.magic.gear.ownership.GearItems.class);
+    codec.when(() -> net.tfminecraft.magic.gear.ownership.GearItems.bytes(any())).thenAnswer(call -> {
+      ItemStack item = call.getArgument(0);
+      for (var entry : snapshots.entrySet()) if (entry.getValue().equals(item)) return entry.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      String id = UUID.randomUUID().toString(); snapshots.put(id, item.clone()); return id.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    });
+    codec.when(() -> net.tfminecraft.magic.gear.ownership.GearItems.item(any())).thenAnswer(call -> {
+      String id = new String((byte[])call.getArgument(0),java.nio.charset.StandardCharsets.UTF_8);
+      var item = snapshots.get(id); if(item==null) throw new IllegalArgumentException("Unknown fixture bytes");return item.clone();
+    });
     for (var f : OrbCache.class.getFields())
       if (!java.lang.reflect.Modifier.isFinal(f.getModifiers())) orbConfig.put(f, f.get(null));
     ArchetypeRegistry.clear();
@@ -38,6 +54,8 @@ abstract class GearCoverageSupport {
   @AfterEach
   void cleanupGear() throws Exception {
     try {
+      checkpoint.close();
+      codec.close();
       MockBukkit.unmock();
     } finally {
       Magic.plugin = null;

@@ -90,6 +90,24 @@ public final class GearCosts {
         player.updateInventory();
     }
 
+    /** Plans removal on clones; a deposit checks the captured frame again before commit. */
+    public static ItemStack[] plan(Player player, Collection<PartDef> parts) {
+        ItemStack[] after = net.tfminecraft.magic.gear.ownership.GearEffects.cloneContents(player.getInventory().getContents());
+        if (bypasses(player)) return after;
+        for (var cost : total(parts).entrySet()) {
+            int remaining = cost.getValue();
+            for (int i = 0; i < after.length && remaining > 0; i++) {
+                ItemStack item = after[i]; if (item == null) continue;
+                try { if (!TLibs.getItemAPI().getChecker().checkItemWithPath(item, cost.getKey())) continue; }
+                catch (RuntimeException ex) { continue; }
+                int remove = Math.min(remaining, item.getAmount()); remaining -= remove;
+                if (remove == item.getAmount()) after[i] = null; else item.setAmount(item.getAmount() - remove);
+            }
+            if (remaining > 0) return null;
+        }
+        return after;
+    }
+
     public static void refund(Player player, Map<String, Integer> costs, Location drop) {
         if (player == null || costs == null || costs.isEmpty()) {
             return;

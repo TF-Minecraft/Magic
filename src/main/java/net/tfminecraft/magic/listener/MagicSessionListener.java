@@ -37,14 +37,17 @@ public final class MagicSessionListener implements Listener {
     @EventHandler
     public void onSessionStart(CharacterSessionStartEvent event) {
         Player player = event.getPlayer();
-        clearActivities(player);
+        var captured = net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(event.getSession());
+        clearActivities(player, null, false);
+        if (net.tfminecraft.magic.gear.GearStationStore.property().identity().current(captured, player)) clearStaleGear(player);
         profileService.activate(player, event.getSession());
+        net.tfminecraft.magic.gear.ownership.GearEffects.deliver(player, captured);
         Magic.plugin.syncSpellModifiers(player, guiManager.getSessionManager().get(player));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onSessionEnd(CharacterSessionEndEvent event) {
-        clearActivities(event.getPlayer());
+        clearActivities(event.getPlayer(), event.getSession());
     }
 
     @EventHandler
@@ -53,23 +56,41 @@ public final class MagicSessionListener implements Listener {
     }
 
     private void clearActivities(Player player) {
+        clearActivities(player, null);
+    }
+    private void clearActivities(Player player, net.tfminecraft.tlibs.character.CharacterSession outgoing) {
+        clearActivities(player, outgoing, true);
+    }
+    private void clearActivities(Player player, net.tfminecraft.tlibs.character.CharacterSession outgoing, boolean clearGear) {
         Object holder = player.getOpenInventory().getTopInventory().getHolder();
         MeditationService.cancel(player);
         SacrificeRiteService.cancelForPlayer(player.getUniqueId());
-        GearOrbService.finishForPlayer(player.getUniqueId());
-        GearChargeService.clear(player);
+        var captured = outgoing == null ? null : net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(outgoing);
+        if (clearGear) {
+            if (outgoing == null) { GearOrbService.finishForPlayer(player.getUniqueId()); GearChargeService.clear(player); }
+            else { GearOrbService.finishForSession(player.getUniqueId(), outgoing); GearChargeService.clear(player, captured); }
+        }
         ArtifactFillChestService.clear(player.getUniqueId());
         if (holder instanceof ResonanceGuiHolder) {
             guiManager.close(player);
         }
-        if (holder instanceof AssemblyHolder || holder instanceof PartSelectionHolder
-                || holder instanceof TypeSelectionHolder) {
+        boolean ownMenu = clearGear && holder instanceof net.tfminecraft.magic.gear.gui.GearMenuHolder gear
+                && (captured == null || captured.equals(gear.token()));
+        if (ownMenu) {
             player.closeInventory();
         }
-        OpenStationManager.clear(player);
-        SelectedPartsManager.clear(player);
-        TypeSelectionManager.clear(player);
+        if (clearGear && (captured == null || OpenStationManager.matches(player, captured))) {
+            if (captured == null) OpenStationManager.clear(player); else OpenStationManager.clear(player, captured);
+            SelectedPartsManager.clear(player); TypeSelectionManager.clear(player);
+        }
         Magic.plugin.clearSpellModifiers(player);
         guiManager.getSessionManager().removeStandalone(player.getUniqueId());
+    }
+    private void clearStaleGear(Player player) {
+        GearOrbService.finishStaleForPlayer(player.getUniqueId()); GearChargeService.clearStale(player);
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof net.tfminecraft.magic.gear.gui.GearMenuHolder gear && !gear.current(player)) player.closeInventory();
+        if (OpenStationManager.get(player) == null) {
+            OpenStationManager.clear(player); SelectedPartsManager.clear(player); TypeSelectionManager.clear(player);
+        }
     }
 }

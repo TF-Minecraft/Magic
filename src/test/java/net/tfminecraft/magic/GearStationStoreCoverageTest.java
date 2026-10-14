@@ -19,39 +19,39 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     var location = station();
     assertFalse(GearStationStore.isOccupied(null));
     assertNull(GearStationStore.get(null));
-    assertNull(GearStationStore.occupy(null, item(), null, null));
-    assertNull(GearStationStore.occupy(location, null, null, null));
-    assertNull(GearStationStore.eject(location));
-    assertNull(GearStationStore.takeForAbort(location));
+    assertNull(seed(null, item(), null, null));
+    assertNull(seed(location, null, null, null));
+    assertNull(eject(location));
+    assertNull(takeForAbort(location));
     GearStationStore.update(location, item());
     assertFalse(GearStationStore.isAttuned(null));
     var owner = UUID.randomUUID();
     var weapon = item();
-    var value = GearStationStore.occupy(location, weapon, owner, Map.of("v.iron_ingot", 2));
+    var value = seed(location, weapon, owner, Map.of("v.iron_ingot", 2));
     assertTrue(GearStationStore.isOccupied(location));
     assertSame(value, GearStationStore.get(location));
     assertEquals(owner, value.getOwner());
     assertEquals(Map.of("v.iron_ingot", 2), value.getCharged());
     assertFalse(value.isRested());
-    assertSame(weapon, value.getItem());
-    assertNull(GearStationStore.eject(location));
+    assertEquals(weapon, value.getItem());
+    assertNull(eject(location));
     value.setOrbSessionActive(true);
     assertTrue(value.isOrbSessionActive());
-    assertNull(GearStationStore.eject(location));
+    assertNull(eject(location));
     GearStationStore.update(location, null);
     value.setOrbSessionActive(false);
     var ready = attuned();
     GearStationStore.update(location, ready);
-    assertSame(ready, value.getItem());
+    assertEquals(ready, value.getItem());
     assertTrue(GearStationStore.isAttuned(ready));
-    assertSame(ready, GearStationStore.eject(location));
+    assertEquals(ready, eject(location));
     assertFalse(GearStationStore.isOccupied(location));
     assertTrue(Files.exists(temp.resolve("data/gear-stations.yml")));
-    value = GearStationStore.occupy(location, weapon, null, null);
+    value = seed(location, weapon, null, null);
     assertNull(value.getOwner());
     assertNull(value.getCharged());
     assertFalse(value.isRested());
-    assertSame(weapon, GearStationStore.takeForAbort(location));
+    assertEquals(weapon, takeForAbort(location));
   }
 
   @Test
@@ -59,16 +59,16 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     var location = station();
     var owner = UUID.randomUUID();
     var weapon = item();
-    assertNull(GearStationStore.rest(null, weapon, owner));
-    assertNull(GearStationStore.rest(location, null, owner));
-    var rested = GearStationStore.rest(location, weapon, owner);
+    assertNull(seedRest(null, weapon, owner));
+    assertNull(seedRest(location, null, owner));
+    var rested = seedRest(location, weapon, owner);
     assertTrue(rested.isRested());
     assertEquals(owner, rested.getOwner());
     assertEquals(Map.of(), rested.getCharged());
-    assertSame(weapon, GearStationStore.eject(location));
+    assertEquals(weapon, eject(location));
     assertFalse(GearStationStore.isOccupied(location));
 
-    GearStationStore.rest(location, weapon, owner);
+    seedRest(location, weapon, owner);
     GearStationStore.shutdown();
     GearStationStore.load();
     var loaded = GearStationStore.get(location);
@@ -104,10 +104,10 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     assertNull(GearStationStore.occupiedWithin(null, 1));
     assertNull(GearStationStore.occupiedWithin(new Location(null, 0, 0, 0), 1));
     assertNull(GearStationStore.occupiedWithin(origin, -1));
-    GearStationStore.occupy(location, item(), null, Map.of());
+    seed(location, item(), null, Map.of());
     assertEquals(location, GearStationStore.occupiedWithin(origin, .1));
     assertNull(GearStationStore.occupiedWithin(origin.clone().add(4, 0, 0), .1));
-    GearStationStore.occupy(location.clone().add(3, 0, 0), item(), null, Map.of());
+    seed(location.clone().add(3, 0, 0), item(), null, Map.of());
     assertEquals(location, GearStationStore.occupiedWithin(origin, 10));
     var p = server.addPlayer();
     OpenStationManager.set(null, location);
@@ -127,7 +127,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
   void stationRoundTripReusesTaggedDisplayAndClearsSavedState() throws Exception {
     GearStationStore.load();
     var location = station();
-    GearStationStore.occupy(location, item(), UUID.randomUUID(), Map.of("v.iron_ingot", 2));
+    seed(location, item(), UUID.randomUUID(), Map.of("v.iron_ingot", 2));
     assertEquals(1, location.getWorld().getEntitiesByClass(ItemDisplay.class).size());
     GearStationStore.load();
     assertTrue(GearStationStore.isOccupied(location));
@@ -135,7 +135,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     GearStationStore.reconcile(null);
     GearStationStore.reconcile(location.getChunk());
     GearStationStore.shutdown();
-    assertFalse(GearStationStore.isOccupied(location));
+    assertTrue(GearStationStore.isOccupied(location), "shutdown retains authoritative gear rows");
     assertTrue(
         location.getWorld().getEntitiesByClass(ItemDisplay.class).stream()
             .noneMatch(Entity::isValid),
@@ -143,13 +143,9 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     GearStationStore.load();
     assertTrue(GearStationStore.isOccupied(location));
     GearStationStore.clearAll();
-    assertTrue(
-        YamlConfiguration.loadConfiguration(temp.resolve("data/gear-stations.yml").toFile())
-            .getKeys(false)
-            .isEmpty(),
-        "empty saved data after clear");
+    assertTrue(GearStationStore.isOccupied(location), "view clear does not discard deposited property");
     GearStationStore.load();
-    assertFalse(GearStationStore.isOccupied(location));
+    assertTrue(GearStationStore.isOccupied(location));
   }
 
   @Test
@@ -177,19 +173,8 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     Files.writeString(file, broken);
     GearStationStore.load();
     GearStationStore.save();
-    try (var files = Files.list(file.getParent())) {
-      assertTrue(
-          files
-              .filter(p -> p.getFileName().toString().contains("rejected"))
-              .anyMatch(
-                  p -> {
-                    try {
-                      return Files.readString(p).equals(broken);
-                    } catch (Exception e) {
-                      throw new RuntimeException(e);
-                    }
-                  }));
-    }
+    assertEquals(broken,Files.readString(file));
+    assertTrue((boolean)field("unreadableStore"));
   }
 
   @Test
@@ -233,7 +218,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
             noWorld,
             item(),
             null));
-    GearStationStore.occupy(noWorld, item(), null, null).setItem(item());
+    assertNull(seed(noWorld, item(), null, null));
     GearStationStore.save();
     GearStationStore.shutdown();
     invoke(
@@ -270,10 +255,10 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     config.save(file.toFile());
     var location = station();
     GearStationStore.load();
-    GearStationStore.occupy(location, item(), null, null);
+    seed(location, item(), null, null);
     var saved = YamlConfiguration.loadConfiguration(file.toFile());
     assertEquals("offline", saved.getString("stations.0.world"));
-    assertEquals("world", saved.getString("stations.1.world"));
+    assertNotNull(GearStationStore.get(location));
     assertEquals("world", saved.getString("stations.2.world"));
     Files.writeString(file, "stations: [broken");
     GearStationStore.load();
@@ -285,13 +270,13 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
       assertEquals("stations: [broken", Files.readString(file));
     }
     GearStationStore.save();
-    assertFalse((boolean) field("unreadableStore"));
+    assertTrue((boolean) field("unreadableStore"));
   }
 
   @Test
   void absentFurnitureDropsOnceAndUnknownFurnitureRetainsWeapons() throws Exception {
     var location = station();
-    GearStationStore.occupy(location, item(), null, null);
+    seed(location, item(), null, null);
     doReturn(false).when(checker).checkBlock(any(), anyString());
     location.getBlock().setType(Material.BARRIER);
     GearStationStore.load();
@@ -308,7 +293,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     GearStationStore.load();
     assertEquals(1, location.getWorld().getEntitiesByClass(Item.class).size());
     doReturn(true).when(checker).checkBlock(any(), anyString());
-    GearStationStore.occupy(location, item(), null, null);
+    seed(location, item(), null, null);
     var display =
         location.getWorld().getEntitiesByClass(ItemDisplay.class).stream()
             .filter(Entity::isValid)
@@ -343,7 +328,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     plain.setItemStack(item());
     assertNull(
         invoke(GearStationStore.class, "findTagged", new Class[] {Location.class}, location));
-    GearStationStore.occupy(location, item(), null, null);
+    seed(location, item(), null, null);
     assertTrue(furniture.isValid());
     assertTrue(nonDisplay.isValid());
     assertTrue(plain.isValid());
@@ -402,7 +387,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
   @Test
   void unloadedWorldMissingItemsAndChunksAreHandledWithoutLosingLiveDisplays() throws Exception {
     var location = station();
-    var occupancy = GearStationStore.occupy(location, item(), null, null);
+    var occupancy = seed(location, item(), null, null);
     var display =
         location.getWorld().getEntitiesByClass(ItemDisplay.class).stream()
             .filter(Entity::isValid)
@@ -412,15 +397,12 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     occupancy.setItem(item());
     occupancy.setItem(null);
     GearStationStore.save();
-    assertTrue(
-        YamlConfiguration.loadConfiguration(temp.resolve("data/gear-stations.yml").toFile())
-            .getKeys(false)
-            .isEmpty());
+    assertFalse(YamlConfiguration.loadConfiguration(temp.resolve("data/gear-stations.yml").toFile()).getKeys(false).isEmpty(), "missing cached item does not erase authoritative property");
     occupancy.setItem(item());
     GearStationStore.reconcile(location.getWorld().getChunkAt(1, 0));
     GearStationStore.reconcile(location.getWorld().getChunkAt(0, 1));
     GearStationStore.reconcile(server.addSimpleWorld("other").getChunkAt(0, 0));
-    GearStationStore.occupy(new Location(null, 0, 0, 0), item(), null, null);
+    seed(new Location(null, 0, 0, 0), item(), null, null);
     GearStationStore.reconcile(location.getChunk());
     GearStationStore.occupiedWithin(location.clone().add(.5, .5, .5), Double.MAX_VALUE);
     when(checker.checkBlock(any(), anyString()))
@@ -442,10 +424,10 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
     GearStationStore.get(location).setItem(null);
     doReturn(false).when(checker).checkBlock(any(), anyString());
     GearStationStore.reconcile(location.getChunk());
-    assertFalse(GearStationStore.isOccupied(location));
+    assertTrue(GearStationStore.isOccupied(location), "a broken cache view cannot discard the durable item");
     doReturn(true).when(checker).checkBlock(any(), anyString());
     var isolated = new Location(server.addSimpleWorld("unloaded"), 1, 2, 3);
-    GearStationStore.occupy(isolated, item(), null, null);
+    seed(isolated, item(), null, null);
     assertTrue(server.unloadWorld(isolated.getWorld(), false));
     GearStationStore.shutdown();
   }
@@ -506,7 +488,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
       assertNull(invoke(GearStationStore.class, "displayOrNull", new Class[] {UUID.class}, id));
     }
     var location = new Location(server.addSimpleWorld("gone"), 0, 0, 0);
-    GearStationStore.occupy(location, item(), null, null);
+    seed(location, item(), null, null);
     location.getWorld().getEntitiesByClass(ItemDisplay.class).forEach(Entity::remove);
     assertTrue(server.unloadWorld(location.getWorld(), false));
     GearStationStore.shutdown();
@@ -517,8 +499,8 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
   void reconciliationToleratesStationsRemovedBySpawnListeners() throws Exception {
     var first = station();
     var second = first.clone().add(3, 0, 0);
-    GearStationStore.occupy(first, item(), null, null);
-    GearStationStore.occupy(second, item(), null, null);
+    seed(first, item(), null, null);
+    seed(second, item(), null, null);
     first.getWorld().getEntitiesByClass(ItemDisplay.class).forEach(Entity::remove);
     var fired = new java.util.concurrent.atomic.AtomicBoolean();
     server
@@ -536,7 +518,7 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
                         .get(
                             GearKeys.stationDisplay(),
                             org.bukkit.persistence.PersistentDataType.STRING);
-                GearStationStore.takeForAbort(
+                takeForAbort(
                     GearStationStore.key(first).equals(kept) ? second : first);
               }
             },
@@ -555,8 +537,8 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
   void reconciliationToleratesWorldUnloadFromSpawnListeners() throws Exception {
     var first = station();
     var second = first.clone().add(3, 0, 0);
-    GearStationStore.occupy(first, item(), null, null);
-    GearStationStore.occupy(second, item(), null, null);
+    seed(first, item(), null, null);
+    seed(second, item(), null, null);
     first.getWorld().getEntitiesByClass(ItemDisplay.class).forEach(Entity::remove);
     var fired = new java.util.concurrent.atomic.AtomicBoolean();
     server
