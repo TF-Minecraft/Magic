@@ -3,6 +3,7 @@
 import argparse
 import base64
 import copy
+from datetime import datetime, timezone
 from decimal import Decimal
 import hashlib
 import json
@@ -15,6 +16,11 @@ import tempfile
 import uuid
 
 import yaml
+
+LEGACY_EMPTY_PRODUCERS = {"d864c30aa6c01453e38bc2539d0ccea889b846aa47e9050982026e894a2e8247": "Magic 0.5.2"}
+LEGACY_EMPTY_CANONICAL = b"stations: {}\n"
+LEGACY_EMPTY_STAGING = ".gear-legacy-empty-"
+LEGACY_EMPTY_HISTORY = ("gear-ownership", "gear-returns")
 
 
 class GearLoader(yaml.SafeLoader):
@@ -472,6 +478,155 @@ def backup_gear(root, backup):
     return original
 
 
+def _legacy_empty_read(path, label):
+    info = os.lstat(path)
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
+        raise ValueError(label + " must be a regular nonsymlink file")
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError(label + " must be a regular file")
+        chunks = []
+        while chunk := os.read(descriptor, 65536):
+            chunks.append(chunk)
+        after = os.fstat(descriptor)
+        fields = ("st_dev", "st_ino", "st_size", "st_mode", "st_uid", "st_gid", "st_mtime_ns", "st_ctime_ns", "st_nlink")
+        if any(getattr(before, field) != getattr(after, field) for field in fields):
+            raise ValueError(label + " changed while being read")
+        return after, b"".join(chunks)
+    finally:
+        os.close(descriptor)
+
+
+def _legacy_empty_state(root, legacy_jar, own_staging=None):
+    root = Path(root)
+    if not root.is_absolute() or Path(os.path.realpath(root)) != root or not stat.S_ISDIR(os.lstat(root).st_mode):
+        raise ValueError("--data must be an absolute, symlink-free directory")
+    if legacy_jar is None:
+        raise ValueError("legacy-empty import requires --legacy-jar")
+    _, jar_bytes = _legacy_empty_read(Path(legacy_jar), "legacy JAR")
+    producer = digest(jar_bytes)
+    if producer not in LEGACY_EMPTY_PRODUCERS:
+        raise ValueError("legacy JAR is not a reviewed empty-save producer")
+    for name in sorted(os.listdir(root)):
+        if own_staging is not None and name == own_staging.name:
+            continue
+        if name.startswith("gear-stations") and name != "gear-stations.yml":
+            raise ValueError("station sibling needs staff review")
+        if name.startswith("magic-") and name.endswith(".tmp") or name.startswith(LEGACY_EMPTY_STAGING):
+            raise ValueError("staging evidence needs staff review")
+    for name in LEGACY_EMPTY_HISTORY:
+        try:
+            os.lstat(root / name)
+        except FileNotFoundError:
+            continue
+        raise ValueError("ownership/return history exists (NOFOLLOW): " + name)
+    station = root / "gear-stations.yml"
+    try:
+        info, contents = _legacy_empty_read(station, "station")
+    except FileNotFoundError as error:
+        raise ValueError("station file is absent; legacy-empty import does not apply") from error
+    if info.st_nlink != 1:
+        raise ValueError("station file has other hard links")
+    record = {
+        "data": str(root), "producer": LEGACY_EMPTY_PRODUCERS[producer], "producer-sha256": producer,
+        "station": {"dev": info.st_dev, "ino": info.st_ino, "size": info.st_size, "sha256": digest(contents),
+                    "mode": oct(stat.S_IMODE(info.st_mode)), "uid": info.st_uid, "gid": info.st_gid,
+                    "mtime-ns": info.st_mtime_ns, "ctime-ns": info.st_ctime_ns, "nlink": info.st_nlink},
+        "history-absent": list(LEGACY_EMPTY_HISTORY), "target-sha256": digest(LEGACY_EMPTY_CANONICAL),
+    }
+    if contents == LEGACY_EMPTY_CANONICAL and info.st_size == len(LEGACY_EMPTY_CANONICAL):
+        return record, None, "ALREADY_CANONICAL"
+    if contents != b"" or info.st_size != 0:
+        raise ValueError("station file is not exactly zero bytes; ordinary strict recovery applies")
+    return record, digest(json.dumps(record, sort_keys=True).encode()), "ELIGIBLE_REQUIRES_LINEAGE_ATTESTATION"
+
+
+def legacy_empty_import(root, legacy_jar, apply=False, expect_baseline=None, attest=None, backup=None):
+    """Explicit stopped import; file state cannot establish the required historical lineage."""
+    report, staged, staged_inode, replace_started = {}, None, None, False
+    try:
+        root = Path(root)
+        record, baseline, verdict = _legacy_empty_state(root, legacy_jar)
+        report.update(verdict=verdict, baseline=baseline, record=record)
+        if not apply or verdict == "ALREADY_CANONICAL":
+            return report
+        if attest is None or backup is None or not isinstance(expect_baseline, str) or not re.fullmatch(r"[0-9a-f]{64}", expect_baseline):
+            raise ValueError("apply requires --attest FILE, --expect-baseline HEX and a new --backup")
+        if baseline != expect_baseline:
+            raise ValueError("current state differs from the attested baseline")
+        _, attestation = _legacy_empty_read(Path(attest), "attestation")
+        if not attestation.strip() or not re.search(rb"(?<![0-9a-fA-F])" + baseline.encode() + rb"(?![0-9a-fA-F])", attestation):
+            raise ValueError("attestation must contain the exact baseline digest and lineage evidence")
+        backup_path = Path(backup)
+        if os.path.lexists(backup_path):
+            raise ValueError("recovery backup must be a new directory")
+        backup_path = backup_path.resolve()
+        if backup_path == root or root in backup_path.parents:
+            raise ValueError("recovery backup must be outside Magic data")
+        force(root)
+        original = backup_gear(root, backup_path)
+        if original != {"gear-stations.yml": digest(b"")} or _legacy_empty_state(root, legacy_jar)[1] != baseline:
+            raise ValueError("gear changed during backup; publication refused")
+        durable(backup_path / "LINEAGE-ATTESTATION", attestation)
+        plan = {"baseline": baseline, "record": record, "attestation-sha256": digest(attestation),
+                "attestation-file": "LINEAGE-ATTESTATION", "tool-sha256": digest(Path(__file__).read_bytes()),
+                "created-at-utc": datetime.now(timezone.utc).isoformat()}
+        durable(backup_path / "IMPORT-PLAN.json", json.dumps(plan, indent=2, sort_keys=True).encode())
+        staged = root / (LEGACY_EMPTY_STAGING + baseline[:16] + ".tmp")
+        descriptor = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            info = os.fstat(descriptor)
+            staged_inode = (info.st_dev, info.st_ino)
+            pending = LEGACY_EMPTY_CANONICAL
+            while pending:
+                written = os.write(descriptor, pending)
+                if written <= 0:
+                    raise OSError("incomplete legacy-empty staging write")
+                pending = pending[written:]
+            info = os.fstat(descriptor)
+            if (info.st_uid, info.st_gid) != (record["station"]["uid"], record["station"]["gid"]):
+                os.fchown(descriptor, record["station"]["uid"] if info.st_uid != record["station"]["uid"] else -1,
+                          record["station"]["gid"] if info.st_gid != record["station"]["gid"] else -1)
+            os.fchmod(descriptor, int(record["station"]["mode"], 8))
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        if _legacy_empty_state(root, legacy_jar, staged)[1] != baseline:
+            raise ValueError("station or history changed before publication")
+        info, contents = _legacy_empty_read(staged, "staging")
+        if (info.st_dev, info.st_ino) != staged_inode or info.st_nlink != 1 or contents != LEGACY_EMPTY_CANONICAL or stat.S_IMODE(info.st_mode) != int(record["station"]["mode"], 8) or (info.st_uid, info.st_gid) != (record["station"]["uid"], record["station"]["gid"]):
+            raise ValueError("staging changed before publication")
+        # The final recheck/rename interval requires the stopped server and deployment lock.
+        replace_started = True
+        os.replace(staged, root / "gear-stations.yml")
+        force(root)
+        final, _, verdict = _legacy_empty_state(root, legacy_jar)
+        if verdict != "ALREADY_CANONICAL" or any(final["station"][field] != record["station"][field] for field in ("mode", "uid", "gid")):
+            raise ValueError("post-publication verification failed")
+        report.update(verdict="IMPORTED", published=final["station"])
+        durable(backup_path / "IMPORT-RESULT.json", json.dumps(report, indent=2, sort_keys=True).encode())
+    except (OSError, ValueError) as error:
+        report.update(verdict="PUBLISHED_UNCONFIRMED" if replace_started else "REFUSED", error=str(error))
+        if replace_started:
+            report["recovery"] = "Keep Paper stopped, preserve the backup and rerun preview"
+    finally:
+        if staged_inode is not None:
+            try:
+                info = os.lstat(staged)
+                if (info.st_dev, info.st_ino) != staged_inode:
+                    raise ValueError("staging path changed; preserve it for staff review")
+                os.unlink(staged)
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError) as error:
+                report["verdict"] = "PUBLISHED_UNCONFIRMED" if replace_started else "REFUSED"
+                report["staging-cleanup-error"] = str(error)
+                report["recovery"] = "Keep Paper stopped and preserve staging evidence for staff review"
+    return report
+
+
 def archive(path, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     force(destination.parent)
@@ -549,12 +704,27 @@ def inspect(root, kind="estates", selected=None, apply=False, backup=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True, help="plugins/Magic/data; Paper must be stopped")
-    parser.add_argument("--kind", choices=("migration", "estates"), default="estates")
+    parser.add_argument("--kind", choices=("migration", "estates"))
     parser.add_argument("--journal", help="one migration run or estate death UUID; required with apply")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--backup", type=Path, help="new external gear recovery directory")
+    parser.add_argument("--legacy-empty-import", action="store_true", help="stopped, attested import of an exact old empty save")
+    parser.add_argument("--legacy-jar", type=Path, help="reviewed pre-ownership Magic JAR")
+    parser.add_argument("--expect-baseline", help="exact digest from legacy-empty preview")
+    parser.add_argument("--attest", type=Path, help="file with the baseline digest and checkpoint/lineage evidence")
     args = parser.parse_args()
-    print(json.dumps(inspect(args.data, args.kind, args.journal, args.apply, args.backup), indent=2))
+    if args.legacy_empty_import:
+        if args.kind is not None or args.journal is not None:
+            report = {"verdict": "REFUSED", "error": "--legacy-empty-import cannot be combined with --kind or --journal"}
+        else:
+            report = legacy_empty_import(args.data, args.legacy_jar, args.apply, args.expect_baseline, args.attest, args.backup)
+        print(json.dumps(report, indent=2))
+        if report["verdict"] in ("REFUSED", "PUBLISHED_UNCONFIRMED"):
+            raise SystemExit(2)
+    else:
+        if args.legacy_jar is not None or args.expect_baseline is not None or args.attest is not None:
+            parser.error("--legacy-jar, --expect-baseline and --attest require --legacy-empty-import")
+        print(json.dumps(inspect(args.data, args.kind or "estates", args.journal, args.apply, args.backup), indent=2))
 
 
 if __name__ == "__main__":
