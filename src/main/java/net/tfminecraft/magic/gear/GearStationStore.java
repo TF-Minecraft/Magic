@@ -378,13 +378,16 @@ public final class GearStationStore {
 
     public static void save() {
         if (unreadableStore) return;
+        Map<Object, Object> displays = new HashMap<>();
+        try { for (var row : property().stations()) displays.put(row.raw().get("occupancy-id"), row.raw().get("display")); }
+        catch (IOException ex) { warning(ex); return; }
         for (var entry : new ArrayList<>(OCCUPIED.entrySet())) {
             Occupancy occupancy = entry.getValue();
+            if (occupancy.displayId == null || occupancy.displayId.toString().equals(displays.get(String.valueOf(occupancy.generation())))) continue;
             try {
                 var station = property().station(occupancy.generation());
                 if (!java.util.Objects.equals(occupancy.characterOwner(), ownerOrNull(station.raw()))) continue;
                 if (occupancy.characterOwner() != null) property().requireUnlocked(occupancy.characterOwner());
-                if (occupancy.displayId == null || occupancy.displayId.toString().equals(station.raw().get("display"))) continue;
                 var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
                 after.put("display", occupancy.displayId.toString());
                 property().patch(station, after);

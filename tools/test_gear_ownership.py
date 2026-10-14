@@ -249,6 +249,44 @@ class RecoveryTests(unittest.TestCase):
         self.assertFalse((self.root / entry["target"]).exists())
         self.assertEqual(gear.payload(entry, "after"), (self.backup / "data" / entry["target"]).read_bytes())
 
+    def test_regular_magic_staging_at_both_return_levels_is_retained_and_backed_up(self):
+        entry = self.add_return()
+        staging = [self.root / "gear-returns/magic-outer.tmp",
+                   self.root / "gear-returns" / self.heir / "magic-inner.tmp"]
+        for path in staging:
+            self.write(path, b"\xffpartial staging buffer\x00")
+        self.assertNotIn("error", self.inspect()["journals"][0])
+        self.assertNotIn("error", self.inspect(True)["journals"][0])
+        for path in staging:
+            self.assertEqual(b"\xffpartial staging buffer\x00", path.read_bytes())
+            self.assertEqual(path.read_bytes(), (self.backup / "data" / path.relative_to(self.root)).read_bytes())
+        self.assertEqual(gear.payload(entry, "before"), (self.root / entry["source"]).read_bytes())
+
+    def test_nonregular_magic_staging_and_unknown_files_hold_before_any_backup_or_restore(self):
+        for inner in (False, True):
+            for kind in ("directory", "file-link", "dangling-link", "unknown", "magic-json", "other-tmp"):
+                with self.subTest(inner=inner, kind=kind):
+                    self.setUp()
+                    self.add_return()
+                    folder = self.root / "gear-returns" / self.heir if inner else self.root / "gear-returns"
+                    linked = self.root / "unrelated.bin"
+                    self.write(linked, b"unrelated bytes")
+                    name = {"unknown": "unknown.bin", "magic-json": "magic-buffer.json", "other-tmp": "other.tmp"}.get(kind, "magic-held.tmp")
+                    path = folder / name
+                    if kind == "directory": path.mkdir()
+                    elif kind.endswith("link"): path.symlink_to(linked if kind == "file-link" else self.root / "missing")
+                    else: path.write_bytes(b"unrecognized authoritative bytes")
+                    original = {file.relative_to(self.root): file.read_bytes() for file in self.root.rglob("*") if file.is_file() and not file.is_symlink()}
+                    if kind.endswith("link"):
+                        self.assertRaisesRegex(ValueError, "symlink", self.inspect, True)
+                    else:
+                        result = self.inspect(True)
+                        self.assertIn("error", result["journals"][0])
+                    self.assertFalse(self.backup.exists())
+                    self.assertEqual(original, {file.relative_to(self.root): file.read_bytes() for file in self.root.rglob("*") if file.is_file() and not file.is_symlink()})
+                    if kind == "directory": path.rmdir()
+                    else: path.unlink()
+
     def test_ambiguous_return_effects_or_progress_hold_entire_mixed_journal(self):
         entry = self.add_return(state="held")
         station = self.station_file.read_bytes()

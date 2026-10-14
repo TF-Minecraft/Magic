@@ -107,7 +107,7 @@ public final class GearEffects {
             if (GearStationStore.takeForAbort(station) == null) return false;
             store.createReturn(recipient, operation, items, "held");
             if (!GearStationStore.acknowledgeRelease(station, occupancy.generation())) return false;
-            JsonObject expected = GearPropertyStore.read(store.returnFile(recipient, operation)); JsonObject pending = expected.deepCopy(); pending.addProperty("state", "pending"); store.saveReturn(expected, pending);
+            JsonObject expected = GearPropertyStore.read(store.returnFile(recipient, operation)); JsonObject pending = expected.deepCopy(); pending.addProperty("state", items.isEmpty() ? "delivered" : "pending"); store.saveReturn(expected, pending);
             if (recipient.equals(actor.owner())) deliver(player, actor); return true;
         } catch (IOException | RuntimeException ex) { GearStationStore.warning(ex); return false; }
     }
@@ -117,6 +117,9 @@ public final class GearEffects {
             store.requireUnlocked(token.owner());
             for (JsonObject row : store.returns(token.owner())) {
                 if (!"pending".equals(GearPropertyStore.text(row, "state")) || !store.identity().current(token, player)) continue;
+                if (row.getAsJsonArray("items").isEmpty()) {
+                    JsonObject completed = row.deepCopy(); completed.addProperty("state", "delivered"); store.saveReturn(row, completed); continue;
+                }
                 ItemStack[] after = cloneContents(player.getInventory().getStorageContents()); List<String> remaining = new ArrayList<>();
                 for (var value : row.getAsJsonArray("items")) {
                     ItemStack item = net.tfminecraft.magic.gear.ownership.GearItems.item(GearPropertyStore.bytes(value.getAsString())); int amount = item.getAmount();

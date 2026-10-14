@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import tempfile
 import uuid
 
@@ -381,12 +382,24 @@ def current_plan(root, plans):
     return document
 
 
+def staging(path):
+    if path.name.startswith("magic-") and path.name.endswith(".tmp"):
+        if stat.S_ISREG(path.lstat().st_mode):
+            return True
+        raise ValueError("nonregular gear staging path requires manual recovery")
+    return False
+
+
 def return_inventory(root, plans):
     inventory = {}
     for folder in (root / "gear-returns").glob("*"):
+        if staging(folder):
+            continue
         if not folder.is_dir():
             raise ValueError("invalid return directory inventory")
         for path in folder.glob("*"):
+            if staging(path):
+                continue
             row = raw_json(path.read_bytes())
             key, full_owner = identity(row.get("id")), owner(row, "owner")
             return_row(row, key, full_owner)
