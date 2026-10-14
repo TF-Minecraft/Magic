@@ -585,6 +585,10 @@ def legacy_empty_import(root, legacy_jar, apply=False, expect_baseline=None, att
                 if written <= 0:
                     raise OSError("incomplete legacy-empty staging write")
                 pending = pending[written:]
+            info = os.fstat(descriptor)
+            if (info.st_uid, info.st_gid) != (record["station"]["uid"], record["station"]["gid"]):
+                os.fchown(descriptor, record["station"]["uid"] if info.st_uid != record["station"]["uid"] else -1,
+                          record["station"]["gid"] if info.st_gid != record["station"]["gid"] else -1)
             os.fchmod(descriptor, int(record["station"]["mode"], 8))
             os.fsync(descriptor)
         finally:
@@ -592,14 +596,14 @@ def legacy_empty_import(root, legacy_jar, apply=False, expect_baseline=None, att
         if _legacy_empty_state(root, legacy_jar, staged)[1] != baseline:
             raise ValueError("station or history changed before publication")
         info, contents = _legacy_empty_read(staged, "staging")
-        if (info.st_dev, info.st_ino) != staged_inode or info.st_nlink != 1 or contents != LEGACY_EMPTY_CANONICAL or stat.S_IMODE(info.st_mode) != int(record["station"]["mode"], 8):
+        if (info.st_dev, info.st_ino) != staged_inode or info.st_nlink != 1 or contents != LEGACY_EMPTY_CANONICAL or stat.S_IMODE(info.st_mode) != int(record["station"]["mode"], 8) or (info.st_uid, info.st_gid) != (record["station"]["uid"], record["station"]["gid"]):
             raise ValueError("staging changed before publication")
         # The final recheck/rename interval requires the stopped server and deployment lock.
         replace_started = True
         os.replace(staged, root / "gear-stations.yml")
         force(root)
         final, _, verdict = _legacy_empty_state(root, legacy_jar)
-        if verdict != "ALREADY_CANONICAL" or final["station"]["mode"] != record["station"]["mode"]:
+        if verdict != "ALREADY_CANONICAL" or any(final["station"][field] != record["station"][field] for field in ("mode", "uid", "gid")):
             raise ValueError("post-publication verification failed")
         report.update(verdict="IMPORTED", published=final["station"])
         durable(backup_path / "IMPORT-RESULT.json", json.dumps(report, indent=2, sort_keys=True).encode())

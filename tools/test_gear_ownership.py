@@ -10,6 +10,7 @@ import tempfile
 import time
 import stat
 import sys
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import uuid
@@ -375,6 +376,15 @@ class RecoveryTests(unittest.TestCase):
             self.assertFalse(self.backup.exists())
 
 
+class LegacyEmptyProducerPolicyTests(unittest.TestCase):
+    def test_shipped_allowlist_is_exact_reviewed_preownership_producer(self):
+        unpatched_spec = importlib.util.spec_from_file_location("shipped_gear_ownership", Path(__file__).with_name("gear-ownership.py"))
+        shipped = importlib.util.module_from_spec(unpatched_spec)
+        unpatched_spec.loader.exec_module(shipped)
+        self.assertEqual({"d864c30aa6c01453e38bc2539d0ccea889b846aa47e9050982026e894a2e8247": "Magic 0.5.2"}, shipped.LEGACY_EMPTY_PRODUCERS)
+        self.assertNotIn("fb40f229b4b79fd1a6cd10c196d9a9a7d6dc40db4e97d4a7d6806b1f645002af", shipped.LEGACY_EMPTY_PRODUCERS)
+
+
 class LegacyEmptyImportTests(unittest.TestCase):
     # Exact named output of the retained actual 0.5.2 save probe; no external JAR needed by this suite.
     OLD_0_5_2_EMPTY_SAVE = b""
@@ -488,6 +498,145 @@ class LegacyEmptyImportTests(unittest.TestCase):
             self.assertEqual(0, code)
             self.assertEqual({"journals": []}, report)
 
+    @staticmethod
+    def ownership_view(info, **changed):
+        fields = {name: getattr(info, name) for name in dir(info) if name.startswith("st_")}
+        fields.update(changed)
+        return SimpleNamespace(**fields)
+
+    def test_matching_ownership_never_calls_chown_including_mirrored_views(self):
+        owner = self.station.stat()
+        with patch.object(gear.os, "fchown", side_effect=PermissionError("matching bindfs ownership must not be changed")) as chown:
+            report = self.apply()
+        self.assertEqual("IMPORTED", report["verdict"], report)
+        chown.assert_not_called()
+        self.assertEqual((owner.st_uid, owner.st_gid), (report["published"]["uid"], report["published"]["gid"]))
+        self.assertEqual((owner.st_uid, owner.st_gid), (self.station.stat().st_uid, self.station.stat().st_gid))
+
+    def test_different_staging_owner_is_restored_before_mode_and_fsync(self):
+        real_open, real_stat, real_chown, real_chmod, real_fsync = os.open, os.fstat, os.fchown, os.fchmod, os.fsync
+        for uid_differs, gid_differs in [(True, False), (False, True), (True, True)]:
+            with self.subTest(uid_differs=uid_differs, gid_differs=gid_differs):
+                self.station.write_bytes(b"")
+                self.backup = self.base / ("recovery-" + str(uid_differs) + "-" + str(gid_differs))
+                owner = self.station.stat()
+                inode, observed, events = [], [], []
+                def opened(path, flags, *args):
+                    fd = real_open(path, flags, *args)
+                    if Path(path).name.startswith(gear.LEGACY_EMPTY_STAGING) and flags & os.O_CREAT:
+                        info = real_stat(fd)
+                        inode.append((info.st_dev, info.st_ino))
+                    return fd
+                def statted(fd):
+                    info = real_stat(fd)
+                    if inode and (info.st_dev, info.st_ino) == inode[0] and info.st_size == len(gear.LEGACY_EMPTY_CANONICAL) and not observed:
+                        observed.append(True)
+                        return self.ownership_view(info, st_uid=owner.st_uid + int(uid_differs), st_gid=owner.st_gid + int(gid_differs))
+                    return info
+                def chowned(fd, uid, gid):
+                    self.assertEqual((owner.st_uid if uid_differs else -1, owner.st_gid if gid_differs else -1), (uid, gid))
+                    events.append("chown")
+                    return real_chown(fd, uid, gid)
+                def chmodded(fd, mode):
+                    events.append("chmod")
+                    return real_chmod(fd, mode)
+                def synced(fd):
+                    info = real_stat(fd)
+                    if inode and (info.st_dev, info.st_ino) == inode[0]: events.append("fsync")
+                    return real_fsync(fd)
+                with patch.object(gear.os, "open", side_effect=opened), patch.object(gear.os, "fstat", side_effect=statted), patch.object(gear.os, "fchown", side_effect=chowned), patch.object(gear.os, "fchmod", side_effect=chmodded), patch.object(gear.os, "fsync", side_effect=synced):
+                    report = self.apply()
+                self.assertEqual("IMPORTED", report["verdict"], report)
+                self.assertEqual(["chown", "chmod", "fsync"], events)
+                self.assertEqual((owner.st_uid, owner.st_gid), (report["published"]["uid"], report["published"]["gid"]))
+                self.assertEqual(stat.S_IMODE(owner.st_mode), stat.S_IMODE(self.station.stat().st_mode))
+
+    def test_silently_ignored_chown_cannot_publish_disagreeing_ownership(self):
+        real_stat = os.fstat
+        for field in ["st_uid", "st_gid"]:
+            with self.subTest(field=field):
+                self.backup = self.base / ("ignored-" + field)
+                owner = self.station.stat()
+                good = self.prepared()
+                def statted(fd):
+                    info = real_stat(fd)
+                    if stat.S_ISREG(info.st_mode) and info.st_size == len(gear.LEGACY_EMPTY_CANONICAL):
+                        return self.ownership_view(info, **{field: getattr(info, field) + 1})
+                    return info
+                with patch.object(gear.os, "fstat", side_effect=statted), patch.object(gear.os, "fchown", return_value=None) as chown:
+                    self.refused(lambda: self.preview(**good), "staging changed")
+                chown.assert_called_once()
+                self.assertEqual((owner.st_uid if field == "st_uid" else -1, owner.st_gid if field == "st_gid" else -1), chown.call_args.args[1:])
+                self.assertTrue((self.backup / "IMPORT-PLAN.json").exists())
+                self.assertFalse((self.backup / "IMPORT-RESULT.json").exists())
+                self.assertFalse(list(self.root.glob(gear.LEGACY_EMPTY_STAGING + "*")))
+
+    def test_unavailable_chown_refuses_without_replacing_original(self):
+        good = self.prepared()
+        real_stat = os.fstat
+        def statted(fd):
+            info = real_stat(fd)
+            if stat.S_ISREG(info.st_mode) and info.st_size == len(gear.LEGACY_EMPTY_CANONICAL) and stat.S_IMODE(info.st_mode) == 0o600:
+                return self.ownership_view(info, st_uid=info.st_uid + 1)
+            return info
+        with patch.object(gear.os, "fstat", side_effect=statted), patch.object(gear.os, "fchown", side_effect=PermissionError("ownership is not permitted")) as chown:
+            self.refused(lambda: self.preview(**good), "ownership is not permitted")
+        chown.assert_called_once()
+        self.assertTrue((self.backup / "IMPORT-PLAN.json").is_file())
+        self.assertFalse((self.backup / "IMPORT-RESULT.json").exists())
+        self.assertFalse(list(self.root.glob(gear.LEGACY_EMPTY_STAGING + "*")))
+
+    def test_staged_owner_or_group_disagreement_refuses_before_rename(self):
+        real_read = gear._legacy_empty_read
+        for field in ["st_uid", "st_gid"]:
+            with self.subTest(field=field):
+                import shutil
+                if self.backup.exists(): shutil.rmtree(self.backup)
+                self.station.write_bytes(b"")
+                good = self.prepared()
+                def read(path, label):
+                    info, data = real_read(path, label)
+                    if label == "staging": info = self.ownership_view(info, **{field: getattr(info, field) + 1})
+                    return info, data
+                with patch.object(gear, "_legacy_empty_read", side_effect=read), patch.object(gear.os, "replace", wraps=os.replace) as replace:
+                    self.refused(lambda: self.preview(**good), "staging changed")
+                self.assertFalse(any(call.args[1] == self.station for call in replace.call_args_list))
+                self.assertTrue((self.backup / "IMPORT-PLAN.json").is_file())
+                self.assertFalse((self.backup / "IMPORT-RESULT.json").exists())
+                self.assertFalse(list(self.root.glob(gear.LEGACY_EMPTY_STAGING + "*")))
+                import shutil
+                shutil.rmtree(self.backup)
+
+    def test_published_owner_or_group_disagreement_is_unconfirmed(self):
+        real_read, real_replace = gear._legacy_empty_read, os.replace
+        for field in ["st_uid", "st_gid"]:
+            with self.subTest(field=field):
+                import shutil
+                if self.backup.exists(): shutil.rmtree(self.backup)
+                self.station.write_bytes(b"")
+                good = self.prepared()
+                replaced = []
+                def replace(source, target):
+                    result = real_replace(source, target)
+                    if target == self.station: replaced.append(True)
+                    return result
+                def read(path, label):
+                    info, data = real_read(path, label)
+                    if replaced and label == "station": info = self.ownership_view(info, **{field: getattr(info, field) + 1})
+                    return info, data
+                with patch.object(gear, "_legacy_empty_read", side_effect=read), patch.object(gear.os, "replace", side_effect=replace):
+                    report = self.preview(**good)
+                self.assertEqual("PUBLISHED_UNCONFIRMED", report["verdict"], report)
+                self.assertIn("post-publication verification failed", report["error"])
+                self.assertIn("Keep Paper stopped", report["recovery"])
+                self.assertEqual(gear.LEGACY_EMPTY_CANONICAL, self.station.read_bytes())
+                self.assertTrue((self.backup / "IMPORT-PLAN.json").is_file())
+                self.assertFalse((self.backup / "IMPORT-RESULT.json").exists())
+                self.assertFalse(list(self.root.glob(gear.LEGACY_EMPTY_STAGING + "*")))
+                import shutil
+                shutil.rmtree(self.backup)
+                self.station.write_bytes(b"")
+
     def test_nonempty_or_noncanonical_documents_refuse_without_loosening_yaml(self):
         for data in [b"\n", b" \n\t\n", b"~\n", b"stations:\n", b"{}\n", b"stations: {}", b"stations: {}\nstations: {}\n", b"\xff"]:
             with self.subTest(data=data):
@@ -569,9 +718,12 @@ class LegacyEmptyImportTests(unittest.TestCase):
         self.assertFalse(self.backup.exists())
 
     def test_touch_and_same_bytes_old_writer_restarts_break_the_baseline(self):
-        for mutation in [lambda: os.utime(self.station, ns=(1, 1)), lambda: self.station.write_bytes(b""), lambda: (self.station.unlink(), self.station.write_bytes(b""))]:
+        for mutation in [lambda: os.utime(self.station, ns=(1, 1)), lambda: self.station.write_bytes(b""), lambda: (self.station.unlink(), self.station.write_bytes(b""), self.station.chmod(0o640))]:
+            os.utime(self.station, ns=(2, 2))
             good = self.prepared()
             mutation()
+            self.assertNotEqual(2, self.station.stat().st_mtime_ns)
+            self.assertEqual(0o640, stat.S_IMODE(self.station.stat().st_mode))
             self.refused(lambda: self.preview(**good), "attested baseline")
             self.assertFalse(self.backup.exists())
 
