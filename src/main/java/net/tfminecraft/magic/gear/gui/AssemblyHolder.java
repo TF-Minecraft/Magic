@@ -1,12 +1,8 @@
 package net.tfminecraft.magic.gear.gui;
 
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.entity.Player;
 
-public final class AssemblyHolder implements InventoryHolder {
-
-    @Override
-    public Inventory getInventory() {
-        return null;
-    }
+public final class AssemblyHolder extends GearMenuHolder {
+    public AssemblyHolder() { this(null); }
+    public AssemblyHolder(Player player) { super(player); }
 }

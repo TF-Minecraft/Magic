@@ -31,6 +31,9 @@ public final class GearChargeService {
     private static final class Confirm {
         private final String stationKey;
         private final long expiresAt;
+        private net.tfminecraft.magic.gear.ownership.GearIdentity.Token token;
+        private UUID generation;
+        private String itemHash;
 
         private Confirm(String stationKey, long expiresAt) {
             this.stationKey = stationKey;
@@ -52,7 +55,8 @@ public final class GearChargeService {
             player.sendMessage(Messages.get("gear.charge.blank"));
             return;
         }
-        if (!SessionGuard.ready(player)) {
+        var token = GearStationStore.property().identity().current(player);
+        if (token.isEmpty()) {
             player.sendMessage(Messages.get("gear.charge.no_character"));
             return;
         }
@@ -72,14 +76,16 @@ public final class GearChargeService {
         }
         String stationKey = GearStationStore.key(station);
         List<String> over = overResonance(player, charge);
-        if (!over.isEmpty() && !confirmed(player, stationKey)) {
+        if (!over.isEmpty() && !confirmed(player, stationKey, occupancy, token.orElseThrow())) {
             player.sendMessage(Messages.get("gear.charge.warn"));
             for (String line : over) {
                 player.sendMessage(line);
             }
             player.sendMessage(Messages.get("gear.charge.warn_again"));
-            CONFIRMS.put(player.getUniqueId(), new Confirm(
-                    stationKey, System.currentTimeMillis() + GearCache.confirmMillis));
+            Confirm confirm = new Confirm(stationKey, System.currentTimeMillis() + GearCache.confirmMillis);
+            confirm.token = token.orElseThrow(); confirm.generation = occupancy.generation();
+            confirm.itemHash = net.tfminecraft.magic.gear.ownership.GearPropertyStore.hash(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem()));
+            CONFIRMS.put(player.getUniqueId(), confirm);
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             return;
         }
@@ -91,24 +97,20 @@ public final class GearChargeService {
                 snapshot.put(elementId, fill);
             }
         }
-        // The charge is spent up front. What reaches the weapon is decided by the orbs.
-        occupancy.setOrbSessionActive(true);
-        if (!GearOrbService.begin(player, station, snapshot, charge.primaryElementId(), charge.getTier())) {
-            occupancy.setOrbSessionActive(false);
-            player.sendMessage(Messages.get("gear.orbs.busy"));
-            return;
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.charge(player, token.orElseThrow(), station, hand, snapshot, charge.primaryElementId(), charge.getTier())) {
+            player.sendMessage(Messages.get("gear.orbs.busy")); return;
         }
-        consumeOne(player, hand);
         player.sendMessage(Messages.get("gear.charge.applied"));
         player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1.2f);
     }
 
-    private static boolean confirmed(Player player, String stationKey) {
+    private static boolean confirmed(Player player, String stationKey, GearStationStore.Occupancy occupancy, net.tfminecraft.magic.gear.ownership.GearIdentity.Token token) {
         Confirm confirm = CONFIRMS.get(player.getUniqueId());
         if (confirm == null || System.currentTimeMillis() > confirm.expiresAt) {
             return false;
         }
-        return confirm.stationKey.equals(stationKey);
+        return confirm.stationKey.equals(stationKey) && token.equals(confirm.token) && java.util.Objects.equals(occupancy.generation(), confirm.generation)
+                && net.tfminecraft.magic.gear.ownership.GearPropertyStore.hash(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem())).equals(confirm.itemHash);
     }
 
     private static List<String> overResonance(Player player, Charge charge) {
@@ -138,12 +140,12 @@ public final class GearChargeService {
         return lines;
     }
 
-    private static void consumeOne(Player player, ItemStack hand) {
-        if (hand.getAmount() <= 1) {
-            player.getInventory().setItemInMainHand(null);
-        } else {
-            hand.setAmount(hand.getAmount() - 1);
-        }
-        player.updateInventory();
+    public static void clear(Player player, net.tfminecraft.magic.gear.ownership.GearIdentity.Token outgoing) {
+        Confirm confirm = CONFIRMS.get(player.getUniqueId());
+        if (confirm != null && outgoing.equals(confirm.token)) clear(player);
+    }
+    public static void clearStale(Player player) {
+        Confirm confirm = CONFIRMS.get(player.getUniqueId());
+        if (confirm != null && !GearStationStore.property().identity().current(confirm.token, player)) clear(player);
     }
 }

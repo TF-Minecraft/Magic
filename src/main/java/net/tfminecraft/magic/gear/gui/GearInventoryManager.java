@@ -41,7 +41,7 @@ public final class GearInventoryManager implements Listener {
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.
     @SuppressWarnings("deprecation")
     public void openAssembly(Player player) {
-        Inventory inv = Bukkit.createInventory(new AssemblyHolder(), 27, "§6Mage Assembly");
+        Inventory inv = Bukkit.createInventory(new AssemblyHolder(player), 27, "§6Mage Assembly");
         ItemStack filler = pane();
         for (int i = 0; i < inv.getSize(); i++) {
             inv.setItem(i, filler);
@@ -75,7 +75,7 @@ public final class GearInventoryManager implements Listener {
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.
     @SuppressWarnings("deprecation")
     public void openTypeSelection(Player player) {
-        Inventory inv = Bukkit.createInventory(new TypeSelectionHolder(), 9, "§6Select Archetype");
+        Inventory inv = Bukkit.createInventory(new TypeSelectionHolder(player), 9, "§6Select Archetype");
         int slot = 0;
         for (GearType type : GearType.values()) {
             ArchetypeDef def = ArchetypeRegistry.get(type);
@@ -114,7 +114,7 @@ public final class GearInventoryManager implements Listener {
         List<PartDef> options = PartRegistry.matching(categoryId, type);
         int size = Math.max(9, Math.min(54, ((options.size() + 8) / 9) * 9));
         Inventory inv = Bukkit.createInventory(
-                new PartSelectionHolder(categoryId), size, "§6Select " + partTypeName(categoryId));
+                new PartSelectionHolder(categoryId, player), size, "§6Select " + partTypeName(categoryId));
         if (options.isEmpty()) {
             inv.setItem(size / 2, barrier("No part"));
         } else {
@@ -176,6 +176,9 @@ public final class GearInventoryManager implements Listener {
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
+        }
+        if (event.getInventory().getHolder() instanceof GearMenuHolder holder && !holder.current(player)) {
+            event.setCancelled(true); return;
         }
         if (event.getInventory().getHolder() instanceof AssemblyHolder) {
             event.setCancelled(true);
@@ -260,6 +263,8 @@ public final class GearInventoryManager implements Listener {
     }
 
     private void tryPrepare(Player player) {
+        var token = GearStationStore.property().identity().current(player);
+        if (token.isEmpty()) return;
         org.bukkit.Location station = OpenStationManager.get(player);
         if (station == null || !isStationPresent(station)) {
             player.sendMessage(Messages.get("gear.station.gone"));
@@ -290,9 +295,11 @@ public final class GearInventoryManager implements Listener {
         }
         boolean staffBypass = GearCosts.bypasses(player);
         Map<String, Integer> charged = staffBypass ? Map.of() : GearCosts.total(parts);
-        GearCosts.take(player, parts);
+        List<String> before = net.tfminecraft.magic.gear.ownership.GearEffects.frame(player.getInventory().getContents());
+        ItemStack[] after = GearCosts.plan(player, parts);
+        if (after == null) return;
         GearProvenance.stampInputs(prepared, charged);
-        GearStationStore.occupy(station, prepared, player.getUniqueId(), charged);
+        if (GearStationStore.deposit(player, token.orElseThrow(), station, prepared, charged, false, after, before) == null) return;
         OpenStationManager.clear(player);
         player.closeInventory();
         player.sendMessage(Messages.get("gear.craft.prepared"));

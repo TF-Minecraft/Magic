@@ -220,6 +220,7 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     when(drag.getView()).thenReturn(p.getOpenInventory());
     manager.onInventoryDrag(drag);
     provider.unregister();
+    Bukkit.getServicesManager().unregister(net.tfminecraft.tlibs.character.CharacterIdentity.class, characters);
     assertTrue(manager.tryOpen(p, false));
     manager.refreshOpenInventories();
     manager.close(p);

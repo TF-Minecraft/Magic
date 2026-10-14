@@ -157,6 +157,7 @@ public class Magic extends JavaPlugin {
         getServer().getScheduler().runTask(this, ArtifactDisplayIndex::rebuildFromSaved);
         getServer().getScheduler().runTask(this, GearStationStore::load);
         GearOrbService.start();
+        net.tfminecraft.magic.gear.ownership.GearOwnershipLifecycle.start(this);
         if (ItemScanService.get() != null) {
             ItemScanService.get().subscribe(attuneScanHandler);
         }

@@ -79,6 +79,20 @@ public final class GearOrbService implements Listener {
         }
     }
 
+    public static void finishForSession(UUID playerId, CharacterSession outgoing) {
+        for (GearOrbSession session : new ArrayList<>(SESSIONS.values()))
+            if (playerId.equals(session.getPlayerId()) && session.matches(outgoing)) complete(session, false);
+    }
+    public static void finishStaleForPlayer(UUID playerId) {
+        for (GearOrbSession session : new ArrayList<>(SESSIONS.values()))
+            if (playerId.equals(session.getPlayerId()) && !session.isCurrent()) complete(session, false);
+    }
+    public static boolean touches(net.tfminecraft.magic.gear.ownership.GearIdentity.Owner owner) {
+        for (GearOrbSession session : SESSIONS.values())
+            if (session.occupancy() != null && owner.equals(session.occupancy().characterOwner())) return true;
+        return false;
+    }
+
     public static boolean isActive(Location station) {
         return station != null && SESSIONS.containsKey(GearStationStore.key(station));
     }
@@ -89,6 +103,11 @@ public final class GearOrbService implements Listener {
         }
         GearOrbSession session = SESSIONS.get(GearStationStore.key(station));
         return session == null ? null : session.getPlayerId();
+    }
+    public static net.tfminecraft.magic.gear.ownership.GearIdentity.Token actor(Location station) {
+        if (station == null) return null;
+        GearOrbSession session = SESSIONS.get(GearStationStore.key(station));
+        return session == null ? null : session.actor();
     }
 
     /**
@@ -118,8 +137,14 @@ public final class GearOrbService implements Listener {
             Map<String, Double> snapshot,
             String primaryElement,
             int chargeTier) {
+        var token = GearStationStore.property().identity().current(player);
+        return token.isPresent() && begin(player, station, snapshot, primaryElement, chargeTier, token.orElseThrow());
+    }
+    public static boolean begin(Player player, Location station, Map<String, Double> snapshot, String primaryElement,
+            int chargeTier, net.tfminecraft.magic.gear.ownership.GearIdentity.Token token) {
         CharacterSession identity = Characters.currentSession(player).orElse(null);
-        if (!SessionGuard.isCurrent(identity)) {
+        if (!GearStationStore.property().identity().current(token, player) || identity == null
+                || !net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(identity).equals(token) || !SessionGuard.isCurrent(identity)) {
             return false;
         }
         World world = station == null ? null : station.getWorld();
@@ -127,7 +152,7 @@ public final class GearOrbService implements Listener {
             return false;
         }
         String key = GearStationStore.key(station);
-        if (SESSIONS.containsKey(key)) {
+        if (SESSIONS.containsKey(key) || GearStationStore.get(station) == null) {
             return false;
         }
         GearOrbSession session = new GearOrbSession(
@@ -169,8 +194,8 @@ public final class GearOrbService implements Listener {
         }
         session.end();
         Player player = Bukkit.getPlayer(session.getPlayerId());
-        GearStationStore.Occupancy occupancy = GearStationStore.get(session.getStation());
-        if (occupancy == null) {
+        GearStationStore.Occupancy occupancy = session.occupancy();
+        if (occupancy == null || GearStationStore.get(session.getStation()) != occupancy) {
             return;
         }
         occupancy.setOrbSessionActive(false);
@@ -195,7 +220,9 @@ public final class GearOrbService implements Listener {
         } else {
             weapon = WeaponLore.updateItem(weapon);
         }
-        GearStationStore.update(session.getStation(), weapon);
+        if (!GearStationStore.update(session.getStation(), occupancy, weapon)) {
+            net.tfminecraft.magic.gear.ownership.GearEffects.hold(occupancy.generation()); return;
+        }
         if (player != null && player.isOnline() && session.isCurrent()) {
             Magic.plugin.syncSpellModifiers(
                     player, Magic.plugin.getResonanceGuiManager().getSessionManager().get(player));

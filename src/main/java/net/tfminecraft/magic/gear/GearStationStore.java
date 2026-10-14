@@ -38,6 +38,8 @@ public final class GearStationStore {
     private static boolean loading;
     private static final Map<String, Object> retainedRows = new LinkedHashMap<>();
     private static boolean unreadableStore;
+    private static net.tfminecraft.magic.gear.ownership.GearPropertyStore property;
+    private static Magic propertyPlugin;
 
     private GearStationStore() {}
 
@@ -48,6 +50,8 @@ public final class GearStationStore {
         private final UUID owner;
         private final Map<String, Integer> charged;
         private final boolean rested;
+        private UUID generation;
+        private net.tfminecraft.magic.gear.ownership.GearIdentity.Owner characterOwner;
 
         Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged, boolean rested) {
             this.item = item;
@@ -79,8 +83,11 @@ public final class GearStationStore {
         }
 
         public ItemStack getItem() {
-            return item;
+            return item == null ? null : item.clone();
         }
+
+        public UUID generation() { return generation; }
+        public net.tfminecraft.magic.gear.ownership.GearIdentity.Owner characterOwner() { return characterOwner; }
 
         public void setItem(ItemStack item) {
             this.item = item;
@@ -106,34 +113,56 @@ public final class GearStationStore {
         }
     }
 
+    public static net.tfminecraft.magic.gear.ownership.GearPropertyStore property() {
+        if (property == null || propertyPlugin != Magic.plugin) {
+            propertyPlugin = Magic.plugin;
+            property = new net.tfminecraft.magic.gear.ownership.GearPropertyStore(
+                    Magic.plugin.getDataFolder().toPath().resolve("data"), net.tfminecraft.magic.gear.ownership.GearIdentity.load());
+        }
+        return property;
+    }
+
     public static boolean isOccupied(Location location) {
-        return location != null && OCCUPIED.containsKey(key(location));
+        if (location == null) return false;
+        try { return property().occupied(key(location)); }
+        catch (IOException ex) { warning(ex); return true; }
     }
 
     public static Occupancy get(Location location) {
         return location == null ? null : OCCUPIED.get(key(location));
     }
 
-    public static Occupancy occupy(Location location, ItemStack item, UUID owner, Map<String, Integer> charged) {
-        return place(location, item, owner, charged, false);
+    /** Compatibility entry point still requires the exact current owning character. */
+    public static Occupancy occupy(Location location, ItemStack item, UUID account, Map<String, Integer> charged) {
+        return place(location, item, account, charged, false);
+    }
+    public static Occupancy rest(Location location, ItemStack item, UUID account) {
+        return place(location, item, account, Map.of(), true);
+    }
+    private static Occupancy place(Location location, ItemStack item, UUID account, Map<String, Integer> charged, boolean rested) {
+        org.bukkit.entity.Player player = account == null ? null : Bukkit.getPlayer(account);
+        var token = property().identity().current(player);
+        if (token.isEmpty() || location == null || item == null) return null;
+        return deposit(player, token.orElseThrow(), location, item, charged, rested, player.getInventory().getContents());
     }
 
-    /**
-     * Sets an existing weapon on an empty station so it can take another charge.
-     * Nothing was consumed, so the station records no material cost.
-     */
-    public static Occupancy rest(Location location, ItemStack item, UUID owner) {
-        return place(location, item, owner, Map.of(), true);
+    public static Occupancy deposit(org.bukkit.entity.Player player, net.tfminecraft.magic.gear.ownership.GearIdentity.Token token,
+            Location location, ItemStack item, Map<String, Integer> charged, boolean rested, ItemStack[] afterInventory) {
+        return deposit(player, token, location, item, charged, rested, afterInventory,
+                net.tfminecraft.magic.gear.ownership.GearEffects.frame(player.getInventory().getContents()));
+    }
+    public static Occupancy deposit(org.bukkit.entity.Player player, net.tfminecraft.magic.gear.ownership.GearIdentity.Token token,
+            Location location, ItemStack item, Map<String, Integer> charged, boolean rested, ItemStack[] afterInventory, List<String> beforeInventory) {
+        return net.tfminecraft.magic.gear.ownership.GearEffects.deposit(player, token, location, item, charged, rested, afterInventory, beforeInventory);
     }
 
-    private static Occupancy place(
-            Location location, ItemStack item, UUID owner, Map<String, Integer> charged, boolean rested) {
-        if (location == null || item == null) {
-            return null;
-        }
-        clear(location, false);
+    public static Occupancy install(Location location, ItemStack item, Map<Object, Object> row) throws IOException {
+        UUID owner = row.get("owner") instanceof String text ? uuidOf(text) : null;
         UUID displayId = spawnDisplay(location, item);
-        Occupancy occupancy = new Occupancy(item, displayId, owner, charged, rested);
+        Occupancy occupancy = new Occupancy(item.clone(), displayId, owner, readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
+        occupancy.generation = net.tfminecraft.magic.gear.ownership.GearPropertyStore.id(row);
+        if (row.get("ownership") instanceof Map<?, ?> authority && "CHARACTER".equals(authority.get("kind")))
+            occupancy.characterOwner = net.tfminecraft.magic.gear.ownership.GearPropertyStore.owner(row);
         OCCUPIED.put(key(location), occupancy);
         save();
         return occupancy;
@@ -141,26 +170,43 @@ public final class GearStationStore {
 
     public static ItemStack eject(Location location) {
         Occupancy occupancy = get(location);
-        if (occupancy == null) {
-            return null;
-        }
-        if (occupancy.isOrbSessionActive() || (!isAttuned(occupancy.getItem()) && !occupancy.isRested())) {
-            return null;
-        }
-        ItemStack item = occupancy.getItem();
-        clear(location, true);
-        return item;
+        if (occupancy == null || occupancy.isOrbSessionActive() || (!isAttuned(occupancy.getItem()) && !occupancy.isRested())) return null;
+        return release(location);
     }
-
-    /** Clears the station even if the weapon is unattuned or mid-orb. Does not return the staff. */
-    public static ItemStack takeForAbort(Location location) {
-        Occupancy occupancy = get(location);
-        if (occupancy == null) {
-            return null;
-        }
-        ItemStack item = occupancy.getItem();
-        clear(location, true);
-        return item;
+    /** A durable release intent precedes either inventory settlement or a public world drop. */
+    public static ItemStack takeForAbort(Location location) { return release(location); }
+    private static ItemStack release(Location location) {
+        Occupancy occupancy = get(location); if (occupancy == null) return null;
+        try {
+            if (occupancy.characterOwner() != null) property().requireUnlocked(occupancy.characterOwner());
+            var station = expected(location, occupancy);
+            var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
+            after.put("effect-state", "releasing");
+            after.put("release-intent", Map.of("operation", UUID.randomUUID().toString(), "item", net.tfminecraft.magic.gear.ownership.GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem()))));
+            property().patch(station, after);
+            clear(location);
+            return occupancy.getItem();
+        } catch (IOException ex) { warning(ex); return null; }
+    }
+    public static boolean acknowledgeRelease(Location location, UUID generation) {
+        try {
+            var station = property().station(generation);
+            if (!key(location).equals(net.tfminecraft.magic.gear.ownership.GearPropertyStore.location(station.raw())) || !"releasing".equals(station.raw().get("effect-state"))) throw new IOException("Release target changed");
+            var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw()); after.put("effect-state", "released"); property().patch(station, after); return true;
+        } catch (IOException ex) { warning(ex); return false; }
+    }
+    public static net.tfminecraft.magic.gear.ownership.GearPropertyStore.Station expected(Location location, Occupancy occupancy) throws IOException {
+        if (occupancy.getItem() == null) throw new IOException("Cached gear item is unavailable");
+        var station = property().station(occupancy.generation());
+        if (!java.util.Arrays.asList("active", "charging").contains(station.raw().get("effect-state"))
+                || !key(location).equals(net.tfminecraft.magic.gear.ownership.GearPropertyStore.location(station.raw()))
+                || !java.util.Objects.equals(occupancy.characterOwner(), ownerOrNull(station.raw()))
+                || !java.util.Arrays.equals(net.tfminecraft.magic.gear.ownership.GearItems.bytes(decodeItem(station.raw())), net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem()))) throw new IOException("Occupancy authority or item changed");
+        return station;
+    }
+    private static net.tfminecraft.magic.gear.ownership.GearIdentity.Owner ownerOrNull(Map<?, ?> row) throws IOException {
+        if (row.get("ownership") instanceof Map<?, ?> authority && "OWNERLESS".equals(authority.get("kind")) && Integer.valueOf(1).equals(authority.get("format"))) return null;
+        return net.tfminecraft.magic.gear.ownership.GearPropertyStore.owner(row);
     }
 
     /** An unattuned weapon never leaves the station, so band 0 gear cannot exist in the world. */
@@ -170,11 +216,18 @@ public final class GearStationStore {
 
     public static void update(Location location, ItemStack item) {
         Occupancy occupancy = get(location);
-        if (occupancy == null || item == null) {
-            return;
-        }
-        occupancy.setItem(item);
-        save();
+        if (occupancy == null || item == null) return;
+        update(location, occupancy, item);
+    }
+    public static boolean update(Location location, Occupancy captured, ItemStack item) {
+        if (get(location) != captured || item == null) return false;
+        try {
+            var station = expected(location, captured);
+            var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
+            after.put("item-bytes", net.tfminecraft.magic.gear.ownership.GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(item)));
+            after.put("effect-state", "active"); property().patch(station, after);
+            captured.setItem(item.clone()); captured.setOrbSessionActive(false); return true;
+        } catch (IOException ex) { warning(ex); return false; }
     }
 
     public static void shutdown() {
@@ -200,62 +253,50 @@ public final class GearStationStore {
     }
 
     public static void load() {
-        loading = true;
+        loading = true; OCCUPIED.clear(); retainedRows.clear(); unreadableStore = false;
         try {
-            OCCUPIED.clear();
-            retainedRows.clear();
-            unreadableStore = false;
-            File file = file();
-            if (!file.exists()) {
-                return;
-            }
-            YamlConfiguration config = new YamlConfiguration();
+            property().holdInterrupted(); property().migrate(); loadViews();
+        } catch (IOException ex) { unreadableStore = true; warning(ex); }
+        finally { loading = false; }
+    }
+    public static void loadViews() throws IOException {
+        for (var station : property().stations()) {
+            Map<Object, Object> row = station.raw();
+            if (!java.util.Arrays.asList("active", "charging").contains(row.get("effect-state"))) continue;
             try {
-                config.load(file);
-            } catch (IOException | InvalidConfigurationException ex) {
-                unreadableStore = true;
-                Magic.plugin.getLogger().warning("[Magic] Retaining unreadable gear stations: " + ex.getMessage());
-                return;
-            }
-            ConfigurationSection root = config.getConfigurationSection("stations");
-            if (root == null) {
-                return;
-            }
-            boolean dropped = false;
-            for (String key : root.getKeys(false)) {
-                ConfigurationSection section = root.getConfigurationSection(key);
-                if (section == null) {
-                    retainedRows.put(key, root.get(key));
-                    continue;
-                }
-                Location location = locationOf(section);
-                ItemStack item = section.getItemStack("item");
-                if (location == null || item == null) {
-                    retainedRows.put(key, section.getValues(true));
-                    continue;
-                }
-                UUID savedDisplay = uuidOf(section.getString("display"));
-                UUID owner = uuidOf(section.getString("owner"));
-                Map<String, Integer> charged = readCharged(section);
-                location.getChunk().load();
-                if (furniture(location) == Furniture.ABSENT) {
-                    removeDisplays(location, null, savedDisplay);
-                    drop(location, item);
-                    dropped = true;
-                    Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location)
-                            + " has no furniture. Dropped the weapon and removed its display.");
-                    continue;
-                }
-                UUID displayId = ensureDisplay(location, item, savedDisplay);
-                OCCUPIED.put(key(location), new Occupancy(
-                        item, displayId, owner, charged, section.getBoolean("rested")));
-            }
-            if (dropped) {
-                save();
-            }
-        } finally {
-            loading = false;
+                String key = net.tfminecraft.magic.gear.ownership.GearPropertyStore.location(row);
+                UUID id = net.tfminecraft.magic.gear.ownership.GearPropertyStore.id(row); ownerOrNull(row);
+                Location location = locationFromKey(key); if (location == null) continue;
+                ItemStack item = decodeItem(row); if (item == null || item.getType().isAir()) throw new IOException("Gear item cannot be loaded");
+                Occupancy existing = OCCUPIED.get(key);
+                if (existing != null && id.equals(existing.generation()) && java.util.Objects.equals(existing.characterOwner(), ownerOrNull(row))) continue;
+                if (existing != null) removeDisplays(location, null, existing.displayId);
+                UUID display = ensureDisplay(location, item, uuidOf(row.get("display") instanceof String text ? text : null));
+                Occupancy occupancy = new Occupancy(item, display, uuidOf(row.get("owner") instanceof String text ? text : null), readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
+                occupancy.generation = id; occupancy.characterOwner = ownerOrNull(row); OCCUPIED.put(key, occupancy);
+                if (furniture(location) == Furniture.ABSENT) abandon(location);
+            } catch (IOException | RuntimeException ex) { warning(ex); }
         }
+    }
+    public static ItemStack decodeItem(Map<?, ?> row) throws IOException {
+        try {
+            if (row.containsKey("item-bytes")) return net.tfminecraft.magic.gear.ownership.GearItems.item(net.tfminecraft.magic.gear.ownership.GearPropertyStore.bytes((String) row.get("item-bytes")));
+            YamlConfiguration config = new YamlConfiguration();
+            config.loadFromString(new String(net.tfminecraft.magic.gear.ownership.GearYaml.bytes(Map.of("item", row.get("item"))), java.nio.charset.StandardCharsets.UTF_8));
+            ItemStack item = config.getItemStack("item"); if (item == null) throw new IOException("Missing gear item"); return item;
+        } catch (RuntimeException | InvalidConfigurationException ex) { throw new IOException("Gear item needs recovery", ex); }
+    }
+    private static Map<String, Integer> readChargedRaw(Map<?, ?> row) {
+        if (!(row.get("charged") instanceof Map<?, ?> costs)) return null;
+        Map<String, Integer> result = new HashMap<>();
+        for (Object value : costs.values()) {
+            if (!(value instanceof Map<?, ?> entry) || !(entry.get("path") instanceof String path) || path.isBlank()
+                    || !(entry.get("amount") instanceof Integer amount) || amount <= 0) return null;
+            long total = (long) result.getOrDefault(path, 0) + amount;
+            if (total > Integer.MAX_VALUE) return null;
+            result.put(path, (int) total);
+        }
+        return result;
     }
 
     /**
@@ -282,7 +323,7 @@ public final class GearStationStore {
             Location location = locationFromKey(stationKey);
             Occupancy occupancy = OCCUPIED.get(stationKey);
             // Spawning a preceding display can invoke plugin listeners which remove stations/worlds.
-            if (location == null || occupancy == null) {
+            if (location == null || occupancy == null || occupancy.getItem() == null) {
                 continue;
             }
             if (furniture(location) == Furniture.ABSENT) {
@@ -336,78 +377,39 @@ public final class GearStationStore {
     }
 
     public static void save() {
-        if (unreadableStore) {
-            File file = file();
-            try {
-                Files.move(file.toPath(), file.toPath().resolveSibling(file.getName() + ".rejected-" + UUID.randomUUID()));
-                unreadableStore = false;
-            } catch (IOException ex) {
-                Magic.plugin.getLogger().warning("[Magic] Cannot preserve unreadable gear stations; refusing overwrite: " + ex.getMessage());
-                return;
-            }
-        }
-        YamlConfiguration config = new YamlConfiguration();
-        retainedRows.forEach((key, value) -> config.set("stations." + key, value));
-        int index = 0;
-        for (Map.Entry<String, Occupancy> entry : OCCUPIED.entrySet()) {
+        if (unreadableStore) return;
+        Map<Object, Object> displays = new HashMap<>();
+        try { for (var row : property().stations()) displays.put(row.raw().get("occupancy-id"), row.raw().get("display")); }
+        catch (IOException ex) { warning(ex); return; }
+        for (var entry : new ArrayList<>(OCCUPIED.entrySet())) {
             Occupancy occupancy = entry.getValue();
-            Location location = locationFromKey(entry.getKey());
-            if (location == null || occupancy.getItem() == null) {
-                continue;
-            }
-            while (retainedRows.containsKey(Integer.toString(index))) {
-                index++;
-            }
-            String path = "stations." + index++;
-            config.set(path + ".world", location.getWorld().getName());
-            config.set(path + ".x", location.getBlockX());
-            config.set(path + ".y", location.getBlockY());
-            config.set(path + ".z", location.getBlockZ());
-            config.set(path + ".item", occupancy.getItem());
-            config.set(path + ".display", occupancy.displayId.toString());
-            if (occupancy.getOwner() != null) {
-                config.set(path + ".owner", occupancy.getOwner().toString());
-            }
-            if (occupancy.isRested()) {
-                config.set(path + ".rested", true);
-            }
-            if (occupancy.getCharged() != null) {
-                config.createSection(path + ".charged");
-                int chargedIndex = 0;
-                for (Map.Entry<String, Integer> cost : occupancy.getCharged().entrySet()) {
-                    String costPath = path + ".charged." + chargedIndex++;
-                    config.set(costPath + ".path", cost.getKey());
-                    config.set(costPath + ".amount", cost.getValue());
-                }
-            }
-        }
-        try {
-            File file = file();
-            file.getParentFile().mkdirs();
-            config.save(file);
-        } catch (IOException ex) {
-            Magic.plugin.getLogger().warning("[Magic] Failed to save gear stations: " + ex.getMessage());
+            if (occupancy.displayId == null || occupancy.displayId.toString().equals(displays.get(String.valueOf(occupancy.generation())))) continue;
+            try {
+                var station = property().station(occupancy.generation());
+                if (!java.util.Objects.equals(occupancy.characterOwner(), ownerOrNull(station.raw()))) continue;
+                if (occupancy.characterOwner() != null) property().requireUnlocked(occupancy.characterOwner());
+                var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
+                after.put("display", occupancy.displayId.toString());
+                property().patch(station, after);
+            } catch (IOException ex) { warning(ex); }
         }
     }
+    public static void warning(Exception ex) { Magic.plugin.getLogger().warning("[Magic] Gear property held: " + ex.getMessage()); }
 
-    private static void clear(Location location, boolean save) {
+    private static void clear(Location location) {
         Occupancy occupancy = OCCUPIED.remove(key(location));
         removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
-        if (save) {
-            save();
-        }
     }
 
-    /** Drops the weapon and forgets the station. The display is removed first. */
+    /** Public world release is evidence-backed; an interrupted effect is held at restart. */
     private static void abandon(Location location) {
-        Occupancy occupancy = OCCUPIED.remove(key(location));
-        removeDisplays(location, null, occupancy == null ? null : occupancy.displayId);
-        if (occupancy != null && occupancy.getItem() != null) {
-            drop(location, occupancy.getItem());
-            Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location)
-                    + " has no furniture. Dropped the weapon and removed its display.");
+        Occupancy occupancy = get(location); if (occupancy == null) return;
+        net.tfminecraft.magic.gear.orb.GearOrbService.abort(location);
+        ItemStack item = takeForAbort(location);
+        if (item != null) {
+            drop(location, item); acknowledgeRelease(location, occupancy.generation());
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " has no furniture. Dropped the weapon and removed its display.");
         }
-        save();
     }
 
     private static UUID ensureDisplay(Location location, ItemStack item, UUID savedDisplay) {
@@ -600,10 +602,6 @@ public final class GearStationStore {
         return charged;
     }
 
-    private static File file() {
-        return new File(Magic.plugin.getDataFolder(), "data/gear-stations.yml");
-    }
-
     public static String key(Location location) {
         if (location == null || location.getWorld() == null) {
             return "";
@@ -628,11 +626,4 @@ public final class GearStationStore {
         }
     }
 
-    private static Location locationOf(ConfigurationSection section) {
-        World world = Bukkit.getWorld(section.getString("world", ""));
-        if (world == null) {
-            return null;
-        }
-        return new Location(world, section.getInt("x"), section.getInt("y"), section.getInt("z"));
-    }
 }

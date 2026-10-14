@@ -32,6 +32,7 @@ import net.tfminecraft.magic.util.MagicText;
 public final class GearOrbSession {
 
     private final CharacterSession identity;
+    private final net.tfminecraft.magic.gear.GearStationStore.Occupancy occupancy;
     private final Location station;
     private final UUID playerId;
     private final Map<String, Double> snapshot;
@@ -56,6 +57,7 @@ public final class GearOrbSession {
             OrbCache.Tier tier,
             CharacterSession identity) {
         this.identity = identity;
+        this.occupancy = net.tfminecraft.magic.gear.GearStationStore.get(station);
         this.station = station.clone();
         this.playerId = playerId;
         this.snapshot = new LinkedHashMap<>(snapshot);
@@ -64,8 +66,15 @@ public final class GearOrbSession {
         this.beamColor = resolveBeamColor(this.primaryElement);
     }
 
+    public net.tfminecraft.magic.gear.GearStationStore.Occupancy occupancy() { return occupancy; }
+    public net.tfminecraft.magic.gear.ownership.GearIdentity.Token actor() {
+        return identity == null ? null : net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(identity);
+    }
+    public boolean matches(CharacterSession outgoing) { return java.util.Objects.equals(identity, outgoing); }
+
     public boolean isCurrent() {
-        return SessionGuard.isCurrent(identity);
+        return identity != null && identity.ref().ownerId().equals(playerId)
+                && net.tfminecraft.magic.gear.GearStationStore.property().identity().current(actor(), org.bukkit.Bukkit.getPlayer(playerId));
     }
 
     public Location getStation() {

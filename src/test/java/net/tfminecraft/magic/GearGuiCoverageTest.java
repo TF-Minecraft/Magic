@@ -223,8 +223,10 @@ class GearGuiCoverageTest extends GearCoverageSupport {
     gui.onClick(event(assembly, GearCache.outputSlot, item()));
     var location = new Location(server.addSimpleWorld("world"), 1, 2, 3);
     OpenStationManager.set(p, location);
-    try (var stores = mockStatic(GearStationStore.class);
+    try (var stores = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
         var costs = mockStatic(GearCosts.class)) {
+      costs.when(() -> GearCosts.plan(eq(p), anyCollection())).thenAnswer(a -> p.getInventory().getContents());
+      stores.when(() -> GearStationStore.deposit(eq(p), any(), eq(location), any(), anyMap(), eq(false), any(), anyList())).thenReturn(mock(GearStationStore.Occupancy.class));
       stores.when(() -> GearStationStore.isOccupied(location)).thenReturn(true);
       gui.onClick(event(assembly, GearCache.outputSlot, item()));
       stores.when(() -> GearStationStore.isOccupied(location)).thenReturn(false);
@@ -252,14 +254,23 @@ class GearGuiCoverageTest extends GearCoverageSupport {
         gui.onClick(event(assembly, GearCache.outputSlot, item()));
         assertNull(OpenStationManager.get(p));
       }
-      costs.verify(() -> GearCosts.take(eq(p), anyCollection()), times(2));
+      costs.verify(() -> GearCosts.plan(eq(p), anyCollection()), times(2));
       stores.verify(
           () ->
-              GearStationStore.occupy(
-                  eq(location), any(), eq(p.getUniqueId()), eq(Map.of("v.stone", 2))));
+              GearStationStore.deposit(eq(p), any(), eq(location), any(), eq(Map.of("v.stone", 2)), eq(false), any(), anyList()));
       stores.verify(
-          () -> GearStationStore.occupy(eq(location), any(), eq(p.getUniqueId()), eq(Map.of())));
+          () -> GearStationStore.deposit(eq(p), any(), eq(location), any(), eq(Map.of()), eq(false), any(), anyList()));
     }
+  }
+
+  @Test void staleMenuAndChangedCostPlanCannotCommitPreparation()throws Exception{
+    config();gui.openAssembly(p);var old=top();var current=characters.currentSession(p).orElseThrow();characters.sessions.put(p.getUniqueId(),new net.tfminecraft.tlibs.character.CharacterSession(current.ref(),current.sessionId()+1));var click=event(old,GearCache.outputSlot,item());gui.onClick(click);verify(click).setCancelled(true);
+    var location=p.getLocation();OpenStationManager.set(p,location);gui.openAssembly(p);builder.when(()->GearItemBuilder.prepare(any(),anyCollection())).thenReturn(item());
+    try(var costs=mockStatic(GearCosts.class);var stores=mockStatic(GearStationStore.class,CALLS_REAL_METHODS)){
+      costs.when(()->GearCosts.has(eq(p),anyCollection())).thenReturn(true);gui.onClick(event(top(),GearCache.outputSlot,item()));stores.verify(()->GearStationStore.deposit(any(),any(),any(),any(),any(),anyBoolean(),any(),any()),never());
+      costs.when(()->GearCosts.plan(eq(p),anyCollection())).thenReturn(p.getInventory().getContents());stores.when(()->GearStationStore.deposit(any(),any(),any(),any(),any(),anyBoolean(),any(),any())).thenReturn(null);gui.onClick(event(top(),GearCache.outputSlot,item()));assertEquals(location,OpenStationManager.get(p));
+    }
+    ((org.mockbukkit.mockbukkit.entity.PlayerMock)p).disconnect();invoke(gui,"tryPrepare",new Class[]{Player.class},p);
   }
 
   @Test
@@ -365,7 +376,7 @@ class GearGuiCoverageTest extends GearCoverageSupport {
     OpenStationManager.set(p, location);
     builder.when(() -> GearItemBuilder.prepare(any(), anyCollection())).thenReturn(item());
     try (var costs = mockStatic(GearCosts.class);
-        var store = mockStatic(GearStationStore.class)) {
+        var store = mockStatic(GearStationStore.class, CALLS_REAL_METHODS)) {
       costs.when(() -> GearCosts.has(eq(p), anyCollection())).thenReturn(true);
       when(checker.checkBlock(any(), any())).thenReturn(false);
       gui.onClick(event(top(), GearCache.outputSlot, item()));

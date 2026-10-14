@@ -42,6 +42,18 @@ class GearChargeCoverageTest extends GearCoverageSupport {
     return Charge.fromItem(stack);
   }
 
+  @Test void confirmationsBindFullSessionGenerationAndItemAndOutgoingCleanupPreservesIncoming()throws Exception{
+    var p=server.addPlayer();var q=server.addPlayer();var token=GearStationStore.property().identity().current(p).orElseThrow();var other=GearStationStore.property().identity().current(q).orElseThrow();var occupancy=mock(GearStationStore.Occupancy.class);var generation=UUID.randomUUID();var weapon=item();when(occupancy.generation()).thenReturn(generation);when(occupancy.getItem()).thenReturn(weapon);
+    var type=Class.forName("net.tfminecraft.magic.gear.GearChargeService$Confirm");var ctor=type.getDeclaredConstructor(String.class,long.class);ctor.setAccessible(true);Object confirm=ctor.newInstance("station",System.currentTimeMillis()+100000);
+    for(var entry:Map.of("token",token,"generation",generation,"itemHash",net.tfminecraft.magic.gear.ownership.GearPropertyStore.hash(net.tfminecraft.magic.gear.ownership.GearItems.bytes(weapon))).entrySet()){var f=type.getDeclaredField(entry.getKey());f.setAccessible(true);f.set(confirm,entry.getValue());}
+    var f=GearChargeService.class.getDeclaredField("CONFIRMS");f.setAccessible(true);@SuppressWarnings("unchecked")var confirms=(Map<UUID,Object>)f.get(null);confirms.put(p.getUniqueId(),confirm);
+    Class<?>[] args={Player.class,String.class,GearStationStore.Occupancy.class,net.tfminecraft.magic.gear.ownership.GearIdentity.Token.class};
+    assertEquals(true,invoke(GearChargeService.class,"confirmed",args,p,"station",occupancy,token));assertEquals(false,invoke(GearChargeService.class,"confirmed",args,p,"station",occupancy,other));
+    when(occupancy.generation()).thenReturn(UUID.randomUUID());assertEquals(false,invoke(GearChargeService.class,"confirmed",args,p,"station",occupancy,token));when(occupancy.generation()).thenReturn(generation);when(occupancy.getItem()).thenReturn(new ItemStack(Material.DIAMOND));assertEquals(false,invoke(GearChargeService.class,"confirmed",args,p,"station",occupancy,token));
+    GearChargeService.clear(q,other);GearChargeService.clearStale(q);GearChargeService.clear(p,other);GearChargeService.clearStale(p);assertTrue(confirms.containsKey(p.getUniqueId()));GearChargeService.clear(p,token);assertFalse(confirms.containsKey(p.getUniqueId()));
+    confirms.put(p.getUniqueId(),confirm);var current=characters.currentSession(p).orElseThrow();characters.sessions.put(p.getUniqueId(),new net.tfminecraft.tlibs.character.CharacterSession(current.ref(),current.sessionId()+1));GearChargeService.clearStale(p);assertFalse(confirms.containsKey(p.getUniqueId()));
+  }
+
   @Test
   void guardsRejectInvalidEmptyBusyAndBrokenStations() {
     var player = server.addPlayer();
@@ -50,7 +62,8 @@ class GearChargeCoverageTest extends GearCoverageSupport {
     var charge = charge(1);
     var occupancy = mock(GearStationStore.Occupancy.class);
     try (var charges = mockStatic(Charge.class);
-        var stations = mockStatic(GearStationStore.class);
+        var stations = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
+        var effects = mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class);
         var orbs = mockStatic(GearOrbService.class);
         var broken = mockStatic(GearBrokenMarker.class)) {
       GearChargeService.tryApply(player, loc, hand);
@@ -85,14 +98,15 @@ class GearChargeCoverageTest extends GearCoverageSupport {
     charge.setCap("fire", 5);
     charge.setFill("fire", 5);
     try (var charges = mockStatic(Charge.class);
-        var stations = mockStatic(GearStationStore.class);
+        var stations = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
+        var effects = mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class);
         var orbs = mockStatic(GearOrbService.class)) {
       charges.when(() -> Charge.fromItem(hand)).thenReturn(charge);
       GearChargeService.tryApply(player, loc, hand);
       // Whether messages.yml is loaded depends on test order, so compare against the live lookup.
       assertEquals(org.bukkit.ChatColor.stripColor(Messages.get("gear.charge.no_character")),
           org.bukkit.ChatColor.stripColor(player.nextMessage()));
-      stations.verifyNoInteractions();
+      stations.verify(() -> GearStationStore.get(any()), never());
       orbs.verifyNoInteractions();
     } finally {
       characters.unregister();
@@ -112,19 +126,22 @@ class GearChargeCoverageTest extends GearCoverageSupport {
     charge.setFill("fire", 5);
     var occupancy = mock(GearStationStore.Occupancy.class);
     try (var charges = mockStatic(Charge.class);
-        var stations = mockStatic(GearStationStore.class);
+        var stations = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
+        var effects = mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class);
         var orbs = mockStatic(GearOrbService.class)) {
       charges.when(() -> Charge.fromItem(hand)).thenReturn(charge);
       stations.when(() -> GearStationStore.get(loc)).thenReturn(occupancy);
       GearChargeService.tryApply(p, loc, hand);
       assertEquals(2, hand.getAmount());
-      verify(occupancy).setOrbSessionActive(false);
-      orbs.when(() -> GearOrbService.begin(p, loc, Map.of("fire", 5d), "fire", 2)).thenReturn(true);
+      assertEquals(2, p.getInventory().getItemInMainHand().getAmount());
+      effects.when(() -> net.tfminecraft.magic.gear.ownership.GearEffects.charge(eq(p), any(), eq(loc), eq(hand), eq(Map.of("fire",5d)), eq("fire"), eq(2))).thenAnswer(call -> {
+        var current = p.getInventory().getItemInMainHand(); if(current.getAmount()<=1)p.getInventory().setItemInMainHand(null); else current.setAmount(current.getAmount()-1); return true;
+      });
       GearChargeService.tryApply(p, loc, hand);
-      assertEquals(1, hand.getAmount());
+      assertEquals(1, p.getInventory().getItemInMainHand().getAmount());
       GearChargeService.tryApply(p, loc, hand);
       assertTrue(p.getInventory().getItemInMainHand().getType().isAir());
-      verify(occupancy, times(3)).setOrbSessionActive(true);
+      effects.verify(() -> net.tfminecraft.magic.gear.ownership.GearEffects.charge(eq(p), any(), eq(loc), eq(hand), eq(Map.of("fire",5d)), eq("fire"), eq(2)), times(3));
     }
   }
 
@@ -140,10 +157,13 @@ class GearChargeCoverageTest extends GearCoverageSupport {
     charge.setCap("fire", 10);
     charge.setFill("fire", 10);
     var occupancy = mock(GearStationStore.Occupancy.class);
+    when(occupancy.getItem()).thenReturn(item());
+    when(occupancy.generation()).thenReturn(UUID.randomUUID());
     var sessions = Magic.plugin.getResonanceGuiManager().getSessionManager();
     when(sessions.get(p)).thenReturn(null);
     try (var charges = mockStatic(Charge.class);
-        var stations = mockStatic(GearStationStore.class);
+        var stations = mockStatic(GearStationStore.class, CALLS_REAL_METHODS);
+        var effects = mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class);
         var orbs = mockStatic(GearOrbService.class)) {
       charges.when(() -> Charge.fromItem(hand)).thenReturn(charge);
       stations.when(() -> GearStationStore.get(loc)).thenReturn(occupancy);
@@ -156,7 +176,7 @@ class GearChargeCoverageTest extends GearCoverageSupport {
       GearChargeService.tryApply(p, loc, hand);
       orbs.verify(() -> GearOrbService.begin(any(), any(), any(), any(), anyInt()), never());
       GearChargeService.tryApply(p, loc, hand);
-      orbs.verify(() -> GearOrbService.begin(p, loc, Map.of("fire", 10d), "fire", 1));
+      effects.verify(() -> net.tfminecraft.magic.gear.ownership.GearEffects.charge(eq(p), any(), eq(loc), eq(hand), eq(Map.of("fire",10d)), eq("fire"), eq(1)));
     }
   }
 

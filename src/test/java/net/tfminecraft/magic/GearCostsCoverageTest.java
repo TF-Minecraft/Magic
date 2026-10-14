@@ -59,24 +59,31 @@ class GearCostsCoverageTest extends GearCoverageSupport {
           .thenAnswer(i -> ((ItemStack) i.getArgument(0)).getType() == Material.STONE);
       p.getInventory().setItem(0, new ItemStack(Material.DIRT, 10));
       p.getInventory().setItem(1, new ItemStack(Material.STONE, 2));
+      assertNull(GearCosts.plan(p, parts));
       assertFalse(GearCosts.has(p, parts));
       p.getInventory().setItem(2, new ItemStack(Material.STONE, 4));
       assertTrue(GearCosts.has(p, parts));
+      var planned = GearCosts.plan(p, parts);
+      assertNull(planned[1]); assertEquals(1,planned[2].getAmount());
+      assertEquals(4,p.getInventory().getItem(2).getAmount(), "planning does not consume live inputs");
       GearCosts.take(p, parts);
       assertEquals(1, p.getInventory().getItem(2).getAmount());
       assertEquals(10, p.getInventory().getItem(0).getAmount());
       GearCosts.take(null, parts);
       GearCosts.take(p, List.of(cost("zero", 0)));
       p.setOp(true);
+      assertEquals(1,GearCosts.plan(p,parts)[2].getAmount());
       assertTrue(GearCosts.has(p, parts));
       GearCosts.take(p, parts);
       assertEquals(1, p.getInventory().getItem(2).getAmount());
       p.setOp(false);
+      assertNotNull(GearCosts.plan(p,List.of()));
       var checker = api.getChecker();
       doThrow(new IllegalArgumentException("bad path"))
           .when(checker)
           .checkItemWithPath(any(), any());
       assertFalse(GearCosts.has(p, parts));
+      assertNull(GearCosts.plan(p,parts));
       GearCosts.take(p, parts);
       assertEquals(1, p.getInventory().getItem(2).getAmount());
     }
