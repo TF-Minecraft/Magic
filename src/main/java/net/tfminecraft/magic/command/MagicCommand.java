@@ -669,7 +669,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         boolean give = WeaponGiveCommand.allowed(sender);
         boolean admin = hasAdmin(sender);
-        boolean rune = hasRuneKeybind(sender);
+        boolean isPlayer = sender instanceof Player;
+        boolean rune = isPlayer && hasRuneKeybind(sender);
         if (!admin && !rune && !give) {
             return Collections.emptyList();
         }
@@ -682,7 +683,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                 options.add("rune");
             }
             if (admin) {
-                options.addAll(SUBCOMMANDS);
+                options.addAll(isPlayer ? SUBCOMMANDS : List.of("reload", "artifact", "resonance"));
             }
             return filterPrefix(options, args[0]);
         }
@@ -705,6 +706,9 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return Collections.emptyList();
         }
         if (!admin) {
+            return Collections.emptyList();
+        }
+        if (!isPlayer && List.of("open", "refresh", "rune", "fillchest", "shrine").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Collections.emptyList();
         }
         if ("fillchest".equalsIgnoreCase(args[0])) {
@@ -753,8 +757,15 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 2) {
             return filterPrefix(
-                    List.of("roll", "give", "create", "path", "setfill", "setmuffle", "unmuffle"),
+                    isPlayer ? List.of("roll", "give", "create", "path", "setfill", "setmuffle", "unmuffle")
+                            : List.of("roll", "give", "path"),
                     args[1]);
+        }
+        if (!isPlayer && !List.of("roll", "give", "path").contains(args[1].toLowerCase(Locale.ROOT))) {
+            return Collections.emptyList();
+        }
+        if ("path".equalsIgnoreCase(args[1])) {
+            return args.length == 3 ? ArtifactPathCompletion.complete(args[2]) : Collections.emptyList();
         }
         if ("setfill".equalsIgnoreCase(args[1])) {
             if (args.length == 3) {
@@ -791,9 +802,17 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == elementIndex + 1) {
             List<String> options = new ArrayList<>();
+            String primary = args[elementIndex - 1];
+            boolean random = "random".equalsIgnoreCase(primary);
+            List<ArtifactTypeDef> types = ArtifactTypeRegistry.getAll().stream()
+                    .filter(ArtifactTypeDef::isEnabled)
+                    .filter(type -> random ? type.getWeight() > 0 && Double.isFinite(type.getWeight())
+                            && net.tfminecraft.magic.artifact.config.ArtifactGeneratorCache.inRandomPool(type.getElementId())
+                            : type.getElementId().equalsIgnoreCase(primary)).toList();
+            if (types.isEmpty()) return Collections.emptyList();
             options.add("roll");
             for (ArtifactRarityDef rarity : ArtifactRarityRegistry.getAll()) {
-                options.add(rarity.getId());
+                if (types.stream().anyMatch(type -> type.hasRarity(rarity.getId()))) options.add(rarity.getId());
             }
             return filterPrefix(options, args[elementIndex]);
         }

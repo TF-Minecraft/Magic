@@ -99,10 +99,24 @@ public final class WeaponGiveCommand {
         else if (!"give".equalsIgnoreCase(args[1])) return List.of();
         else if (args.length == 3) Bukkit.getOnlinePlayers().forEach(p -> options.add(p.getName()));
         else if (args.length == 4) ArchetypeRegistry.getAll().keySet().forEach(t -> options.add(t.name().toLowerCase(Locale.ROOT)));
-        else if (args.length == 5) options.addAll(ElementRegistry.getAllIds());
+        else if (args.length == 5) ElementRegistry.getAllIds().stream().filter(ElementVisibility::shownOnCharge).forEach(options::add);
         else if (args.length >= 7) {
             GearType type = GearType.fromId(args[3]);
-            PartRegistry.matching(null, type).forEach(p -> options.add(p.getId()));
+            ArchetypeDef archetype = ArchetypeRegistry.get(type);
+            if (archetype == null) return List.of();
+            Map<String, PartDef> selected = new LinkedHashMap<>();
+            for (int i = 6; i < args.length - 1; i++) {
+                PartDef part = PartRegistry.get(args[i]);
+                if (part == null || part.isDisabled() || !part.supports(type)
+                        || selected.putIfAbsent(part.getPartType(), part) != null) return List.of();
+            }
+            List<String> open = PartSlots.open(archetype, selected.get(PartSlots.CORE));
+            if (!open.containsAll(selected.keySet())) return List.of();
+            PartRegistry.matching(null, type).stream()
+                    .filter(part -> open.contains(part.getPartType()) && !selected.containsKey(part.getPartType()))
+                    .filter(part -> !PartSlots.CORE.equals(part.getPartType())
+                            || PartSlots.open(archetype, part).containsAll(selected.keySet()))
+                    .forEach(part -> options.add(part.getId()));
         }
         String prefix = args[args.length - 1].toLowerCase(Locale.ROOT);
         return options.stream().filter(s -> s.toLowerCase(Locale.ROOT).startsWith(prefix)).sorted().toList();

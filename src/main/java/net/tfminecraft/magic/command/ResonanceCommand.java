@@ -1,14 +1,21 @@
 package net.tfminecraft.magic.command;
 
+import java.util.List;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 
-public final class ResonanceCommand implements CommandExecutor {
+public final class ResonanceCommand implements CommandExecutor, TabCompleter {
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        return List.of();
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
