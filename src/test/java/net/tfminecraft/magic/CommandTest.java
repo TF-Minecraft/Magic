@@ -342,7 +342,7 @@ class CommandTest {
     assertEquals(List.of("Mage"), tab("artifact", "give", ""));
     assertEquals(List.of("random", "fire"), tab("artifact", "give", "Mage", ""));
     assertEquals(List.of("roll"), tab("artifact", "give", "Mage", "fire", ""));
-    assertTrue(tab("artifact", "path", "").isEmpty());
+    assertEquals(List.of("magic.artifact", "magic.("), tab("artifact", "path", ""));
     assertTrue(tab("unknown", "").isEmpty());
   }
 

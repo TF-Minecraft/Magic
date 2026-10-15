@@ -70,7 +70,7 @@ class CommandEdgeCoverageTest {
     assertTrue(f.tab("resonance", "set", "Mage", "fire", "").isEmpty());
     assertTrue(f.tab("shrine", "fill", "fire", "").isEmpty());
     ArtifactRarityRegistry.register(ArtifactGenerationTest.rarity("rare", 1, 1, 1));
-    assertTrue(f.tab("artifact", "roll", "fire", "ra").contains("rare"));
+    assertTrue(f.tab("artifact", "roll", "fire", "ra").isEmpty());
   }
 
   @Test

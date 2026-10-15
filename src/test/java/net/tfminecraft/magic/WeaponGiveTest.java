@@ -100,4 +100,33 @@ class WeaponGiveTest {
         when(sender.hasPermission("custom.staff")).thenReturn(false);
         assertTrue(tab("weapon","give","").isEmpty()); assertTrue(tab("").isEmpty());
     }
+    @Test void elementsAndPartSlotsMatchAssemblyRules() {
+        ElementRegistry.register(DomainTest.element("shadow"));
+        try (var visibility = mockStatic(ElementVisibility.class)) {
+            visibility.when(() -> ElementVisibility.shownOnCharge("fire")).thenReturn(true);
+            assertEquals(List.of("fire"), tab("weapon", "give", "Mage", "staff", ""));
+            assertTrue(tab("weapon", "give", "Mage", "staff", "Sh").isEmpty());
+        }
+        ArchetypeRegistry.register(new ArchetypeDef(GearType.STAFF, "Staff", "v.STICK", "v.STICK", false,
+                List.of("core", "handle", "tome"), Map.of()));
+        PartRegistry.register(new PartDef("limited", "Core", "core", 1, Set.of(GearType.STAFF), "v.STICK",
+                Map.of(), List.of("handle"), Map.of(), Map.of(), List.of(), "", 1, false));
+        PartRegistry.register(part("handle", "handle", false, GearType.STAFF));
+        PartRegistry.register(part("tome", "tome", false, GearType.STAFF));
+        PartRegistry.register(part("extra", "blade", false, GearType.STAFF));
+        PartRegistry.register(part("disabled", "handle", true, GearType.STAFF));
+        PartRegistry.register(part("wand", "handle", false, GearType.WAND));
+        assertEquals(List.of("core", "handle", "limited", "tome"), tab("weapon", "give", "Mage", "staff", "fire", "10", ""));
+        assertEquals(List.of("limited"), tab("weapon", "give", "Mage", "STAFF", "fire", "10", "LIM"));
+        assertEquals(List.of("handle"), tab("weapon", "give", "Mage", "staff", "fire", "10", "limited", "H"));
+        assertTrue(tab("weapon", "give", "Mage", "staff", "fire", "10", "limited", "handle", "").isEmpty());
+        assertEquals(List.of("core"), tab("weapon", "give", "Mage", "staff", "fire", "10", "tome", "c"));
+        assertTrue(tab("weapon", "give", "Mage", "staff", "fire", "10", "tome", "l").isEmpty());
+        for (String previous : List.of("missing", "disabled", "wand", "extra")) {
+            assertTrue(tab("weapon", "give", "Mage", "staff", "fire", "10", previous, "").isEmpty());
+        }
+        assertTrue(tab("weapon", "give", "Mage", "staff", "fire", "10", "handle", "handle", "").isEmpty());
+        assertTrue(tab("weapon", "give", "Mage", "unknown", "fire", "10", "").isEmpty());
+    }
+
 }
