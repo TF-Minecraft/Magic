@@ -156,10 +156,16 @@ public final class GearStationStore {
         return net.tfminecraft.magic.gear.ownership.GearEffects.deposit(player, token, location, item, charged, rested, afterInventory, beforeInventory);
     }
 
-    public static Occupancy install(Location location, ItemStack item, Map<Object, Object> row) throws IOException {
+    /**
+     * Caches the item read back from the row, as a restart would. Paper can write a freshly
+     * built item's components in another order than its re-read copy, so caching the original
+     * would make {@link #expected} refuse the station until the next restart.
+     */
+    public static Occupancy install(Location location, Map<Object, Object> row) throws IOException {
         UUID owner = row.get("owner") instanceof String text ? uuidOf(text) : null;
+        ItemStack item = decodeItem(row);
         UUID displayId = spawnDisplay(location, item);
-        Occupancy occupancy = new Occupancy(item.clone(), displayId, owner, readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
+        Occupancy occupancy = new Occupancy(item, displayId, owner, readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
         occupancy.generation = net.tfminecraft.magic.gear.ownership.GearPropertyStore.id(row);
         if (row.get("ownership") instanceof Map<?, ?> authority && "CHARACTER".equals(authority.get("kind")))
             occupancy.characterOwner = net.tfminecraft.magic.gear.ownership.GearPropertyStore.owner(row);
@@ -225,8 +231,10 @@ public final class GearStationStore {
             var station = expected(location, captured);
             var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
             after.put("item-bytes", net.tfminecraft.magic.gear.ownership.GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(item)));
-            after.put("effect-state", "active"); property().patch(station, after);
-            captured.setItem(item.clone()); captured.setOrbSessionActive(false); return true;
+            after.put("effect-state", "active");
+            ItemStack cached = decodeItem(after); // the re-read copy, as in install
+            property().patch(station, after);
+            captured.setItem(cached); captured.setOrbSessionActive(false); return true;
         } catch (IOException ex) { warning(ex); return false; }
     }
 
