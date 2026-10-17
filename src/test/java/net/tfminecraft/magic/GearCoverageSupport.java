@@ -21,6 +21,8 @@ abstract class GearCoverageSupport {
   org.mockito.MockedStatic<net.tfminecraft.magic.gear.ownership.InventoryCheckpoint> checkpoint;
   org.mockito.MockedStatic<net.tfminecraft.magic.gear.ownership.GearItems> codec;
   Map<java.lang.reflect.Field, Object> orbConfig = new HashMap<>();
+  /** Fixture bytes: equal items always serialize to the same id. */
+  final Map<String, ItemStack> snapshots = new LinkedHashMap<>();
 
   @BeforeEach
   void setupGear() throws Exception {
@@ -34,7 +36,6 @@ abstract class GearCoverageSupport {
     when(Magic.plugin.getDataFolder()).thenReturn(temp.toFile());
     characters = new GearCharacterFixture();
     checkpoint = mockStatic(net.tfminecraft.magic.gear.ownership.InventoryCheckpoint.class);
-    var snapshots = new LinkedHashMap<String, ItemStack>();
     codec = mockStatic(net.tfminecraft.magic.gear.ownership.GearItems.class);
     codec.when(() -> net.tfminecraft.magic.gear.ownership.GearItems.bytes(any())).thenAnswer(call -> {
       ItemStack item = call.getArgument(0);

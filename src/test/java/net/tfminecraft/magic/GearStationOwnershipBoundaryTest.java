@@ -353,7 +353,7 @@ class GearStationOwnershipBoundaryTest extends GearStationCoverageSupport {
         var occupancy = seed(location, item(), null, Map.of());
         patch(occupancy, row -> row.put("owner", 7));
         var ownerless = GearStationStore.property().station(occupancy.generation()).raw();
-        var installed = GearStationStore.install(location, item(), ownerless);
+        var installed = GearStationStore.install(location, ownerless);
         assertNull(installed.getOwner());
         assertNull(installed.characterOwner());
         assertEquals(occupancy.generation(), installed.generation());
@@ -361,7 +361,7 @@ class GearStationOwnershipBoundaryTest extends GearStationCoverageSupport {
         patch(installed, row -> row.put("ownership", "unrecognized-envelope"));
         String held = Files.readString(source());
         var raw = GearStationStore.property().station(installed.generation()).raw();
-        var unknown = GearStationStore.install(location, item(), raw);
+        var unknown = GearStationStore.install(location, raw);
         assertNull(unknown.characterOwner());
         assertThrows(IOException.class, () -> GearStationStore.expected(location, unknown));
         assertFalse(GearStationStore.update(location, unknown, attuned()));

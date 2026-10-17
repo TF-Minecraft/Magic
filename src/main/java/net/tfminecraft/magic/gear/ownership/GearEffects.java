@@ -44,7 +44,7 @@ public final class GearEffects {
             }
             player.getInventory().setContents(cloneContents(inventoryAfter)); player.updateInventory(); InventoryCheckpoint.save(player);
             var expected = store.station(operation); var after = GearYaml.copy(expected.raw()); after.put("effect-state", "active"); store.patch(expected, after);
-            return GearStationStore.install(location, item, after);
+            return GearStationStore.install(location, after);
         } catch (IOException | RuntimeException ex) { hold(operation); GearStationStore.warning(ex); return null; }
     }
     public static boolean charge(Player player, GearIdentity.Token token, Location station, ItemStack hand,
