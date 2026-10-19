@@ -22,8 +22,8 @@ import net.tfminecraft.magic.Magic;
 /**
  * Brings a crafted weapon back in line with the live gear config.
  *
- * Socket colours and part stats are rewritten from the stamped parts. Runes already in
- * the weapon are merged into the new layout; any that no longer fit are held by
+ * Socket colours, part stats and the name are rewritten from the stamped parts. Runes already
+ * in the weapon are merged into the new layout; any that no longer fit are held by
  * {@link GearBrokenMarker} instead of being dropped.
  */
 public final class GearRefresher {
@@ -55,7 +55,8 @@ public final class GearRefresher {
             return broken;
         }
 
-        if (!force && !GearProvenance.isOutdated(stack) && !RuneRefresher.isOutdated(stack)) {
+        if (!force && !GearProvenance.isOutdated(stack) && !RuneRefresher.isOutdated(stack)
+                && !GearName.isOutdated(stack)) {
             int live = MajorityTierResolver.resolve(GearProvenance.resolveParts(stack));
             if (live > 0 && GearProvenance.majorityOf(stack) != live) {
                 ItemStack clone = stack.clone();
@@ -72,15 +73,17 @@ public final class GearRefresher {
         }
         int band = WeaponRequirement.fromItem(stack).highestBand();
         List<String> colours = SocketLayout.colours(archetype, GearProvenance.resolveParts(stack), band);
+        String name = GearName.expected(type, GearProvenance.resolveParts(stack));
 
         List<GemstoneData> orphaned = new ArrayList<>();
         Map<UUID, Integer> runeRevisions = new HashMap<>();
-        ItemStack rebuilt = rewrite(stack, colours, orphaned, runeRevisions);
+        ItemStack rebuilt = rewrite(stack, colours, name, orphaned, runeRevisions);
         if (rebuilt == null) {
             return null;
         }
 
         copyGearPdc(stack, rebuilt);
+        GearName.stamp(rebuilt, name);
         RuneRefresher.stamp(rebuilt, runeRevisions);
         WeaponRequirement.fromItem(stack).persist(rebuilt);
         WeaponRift.copy(stack, rebuilt);
@@ -107,8 +110,8 @@ public final class GearRefresher {
      * this puts every gem it can back into a matching empty socket first, then brings
      * socketed runes up to their current template.
      */
-    private static ItemStack rewrite(ItemStack stack, List<String> colours, List<GemstoneData> orphaned,
-            Map<UUID, Integer> runeRevisions) {
+    private static ItemStack rewrite(ItemStack stack, List<String> colours, String name,
+            List<GemstoneData> orphaned, Map<UUID, Integer> runeRevisions) {
         try {
             LiveMMOItem mmo = new LiveMMOItem(NBTItem.get(stack));
             List<GemstoneData> existing = new ArrayList<>();
@@ -128,6 +131,7 @@ public final class GearRefresher {
             }
             mmo.setData(ItemStats.GEM_SOCKETS, next);
             GearStatApplicator.apply(mmo, GearProvenance.resolveParts(stack));
+            GearName.write(mmo, name);
             runeRevisions.putAll(RuneRefresher.refresh(mmo, stack));
             ItemStack built = mmo.newBuilder().build();
             if (built == null || built.getType().isAir()) {

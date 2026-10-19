@@ -149,20 +149,22 @@ class GearItemCoverageTest extends GearMmoCoverageSupport {
           invoke(
               GearItemBuilder.class,
               "applyMmoData",
-              new Class[] {ItemStack.class, List.class, Collection.class},
+              new Class[] {ItemStack.class, List.class, Collection.class, String.class},
               null,
               List.of(),
-              List.of()));
+              List.of(),
+              null));
       for (List<String> colours : Arrays.asList(null, List.<String>of()))
         assertSame(
             stack,
             invoke(
                 GearItemBuilder.class,
                 "applyMmoData",
-                new Class[] {ItemStack.class, List.class, Collection.class},
+                new Class[] {ItemStack.class, List.class, Collection.class, String.class},
                 stack,
                 colours,
-                List.of()));
+                List.of(),
+                null));
     }
   }
 

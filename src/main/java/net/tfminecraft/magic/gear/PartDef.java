@@ -28,6 +28,7 @@ public final class PartDef {
     private final String schemeId;
     private final int schemeWeight;
     private final boolean disabled;
+    private final String material;
     private int revision = 1;
 
     public PartDef(
@@ -45,8 +46,29 @@ public final class PartDef {
             String schemeId,
             int schemeWeight,
             boolean disabled) {
+        this(id, name, partType, tier, types, itemPath, cost, partLimit, stats, sockets, lore,
+                schemeId, schemeWeight, disabled, "");
+    }
+
+    public PartDef(
+            String id,
+            String name,
+            String partType,
+            int tier,
+            Set<GearType> types,
+            String itemPath,
+            Map<String, Integer> cost,
+            List<String> partLimit,
+            Map<String, Double> stats,
+            Map<String, Integer> sockets,
+            List<String> lore,
+            String schemeId,
+            int schemeWeight,
+            boolean disabled,
+            String material) {
         this.id = id == null ? "" : id.trim().toLowerCase(Locale.ROOT);
         this.name = name == null || name.isBlank() ? this.id : name;
+        this.material = material == null ? "" : material.trim();
         this.partType = partType == null ? "" : partType.trim().toLowerCase(Locale.ROOT);
         this.tier = tier < 1 ? 0 : tier;
         this.types = types == null || types.isEmpty()
@@ -185,6 +207,11 @@ public final class PartDef {
         return disabled;
     }
 
+    /** Coloured material a core puts in the weapon's name, such as "Iron". Empty when unset. */
+    public String getMaterial() {
+        return material;
+    }
+
     public int getRevision() {
         return revision;
     }
@@ -194,8 +221,8 @@ public final class PartDef {
     }
 
     /**
-     * Canonical string of the fields that change gameplay. Name and lore are left out
-     * so cosmetic edits do not bump the revision and refresh every crafted weapon.
+     * Canonical string of the fields that change gameplay. Name, lore and material are left
+     * out so cosmetic edits do not bump the revision and refresh every crafted weapon.
      */
     public String buildRevisionContent() {
         StringBuilder out = new StringBuilder();

@@ -45,9 +45,14 @@ public final class GearItemBuilder {
         }
         List<PartDef> parts = GearProvenance.resolveParts(stack);
         List<String> colours = SocketLayout.colours(archetype, parts, band);
-        ItemStack rewritten = applyMmoData(stack, colours, parts);
+        String name = GearName.expected(type, parts);
+        ItemStack rewritten = applyMmoData(stack, colours, parts, name);
+        boolean named = rewritten != stack;
         rewritten = GearSkin.keep(stack, GearModelResolver.apply(rewritten, type, parts));
         copyGearPdc(stack, rewritten);
+        if (named) {
+            GearName.stamp(rewritten, name);
+        }
         GearProvenance.lockSockets(rewritten);
         WeaponRequirement.fromItem(stack).persist(rewritten);
         WeaponRift.copy(stack, rewritten);
@@ -75,9 +80,14 @@ public final class GearItemBuilder {
             return decoratePreview(base, type, parts);
         }
         List<String> colours = SocketLayout.colours(archetype, parts, band);
-        ItemStack withMmo = applyMmoData(base, colours, parts);
+        String name = GearName.expected(type, parts);
+        ItemStack withMmo = applyMmoData(base, colours, parts, name);
+        boolean named = withMmo != base;
         withMmo = GearModelResolver.apply(withMmo, type, parts);
         GearProvenance.stamp(withMmo, type, parts);
+        if (named) {
+            GearName.stamp(withMmo, name);
+        }
         return WeaponLore.updateItem(withMmo);
     }
 
@@ -111,7 +121,9 @@ public final class GearItemBuilder {
         return true;
     }
 
-    private static ItemStack applyMmoData(ItemStack stack, List<String> colours, Collection<PartDef> parts) {
+    /** The rebuilt item, or the same stack when MMOItems is missing or the rebuild failed. */
+    private static ItemStack applyMmoData(
+            ItemStack stack, List<String> colours, Collection<PartDef> parts, String name) {
         if (stack == null || !mmoItemsPresent()) {
             return stack;
         }
@@ -121,6 +133,7 @@ public final class GearItemBuilder {
                 mmo.setData(ItemStats.GEM_SOCKETS, new GemSocketsData(new ArrayList<>(colours)));
             }
             GearStatApplicator.apply(mmo, parts);
+            GearName.write(mmo, name);
             ItemStack built = mmo.newBuilder().build();
             return built == null || built.getType().isAir() ? stack : built;
         } catch (Exception ex) {
@@ -194,7 +207,10 @@ public final class GearItemBuilder {
             lore.add("§cMMOItems is not loaded");
         }
         meta.setLore(lore);
-        if (meta.getDisplayName().isBlank()) {
+        String name = GearName.expected(type, parts);
+        if (name != null) {
+            meta.setDisplayName(name);
+        } else if (meta.getDisplayName().isBlank()) {
             meta.setDisplayName("§6" + type.getDisplayName());
         }
         stack.setItemMeta(meta);
