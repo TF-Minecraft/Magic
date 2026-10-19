@@ -84,10 +84,10 @@ meditation:
 cast:
   refuse_chat_seconds: 30
 
-# Drift from spending mana on a gated cast. 40 mana -> 0.04 (mana / mana_divisor).
+# Drift from spending mana on a gated cast. 4 mana -> 0.04, 10 mana -> 0.10 (mana / mana_divisor).
 # Surge adds corruption (negative equilibrium). Flow adds tranquility (positive).
 cast_drift:
-  mana_divisor: 1000
+  mana_divisor: 100
   min: 0.01
 
 attunement:
