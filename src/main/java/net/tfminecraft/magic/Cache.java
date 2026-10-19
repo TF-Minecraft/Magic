@@ -30,8 +30,8 @@ public final class Cache {
     public static double artifactAuraCap = 150.0;
     public static boolean loggingEnabled = true;
     public static boolean wipeLog = true;
-    /** Real mana spent divided by this equals drift. 1000 means 40 mana -> 0.04. */
-    public static double castDriftManaDivisor = 1000.0;
+    /** Real mana spent divided by this equals drift. 100 means 4 mana -> 0.04. */
+    public static double castDriftManaDivisor = 100.0;
     public static double castDriftMin = 0.01;
     /** Seconds between repeat chat lines explaining why a weapon refused a spell. */
     public static long refuseChatMillis = 30000L;
