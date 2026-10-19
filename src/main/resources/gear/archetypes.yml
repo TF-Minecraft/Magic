@@ -2,9 +2,12 @@
 # slots: id -> TLibs colour suffix. Prefix comes from socket-colours.yml.
 # By default only the suffix is written, matching the school runes' gem-color.
 # icon: ItemRef path for picker/assembly GUIs (v.MATERIAL, m.TYPE.ID, ia.namespace:id).
+# item-name: crafted weapon name. %material% is the core's material, and the whole name
+#   takes its colour. Defaults to "%material% <name>".
 
 staff:
   name: Staff
+  item-name: "%material% Mage Staff"
   template: m.mage_staffs.mage_custom_staff
   icon: m.mage_staffs.mage_custom_staff
   melee: false
@@ -22,6 +25,7 @@ staff:
 
 wand:
   name: Wand
+  item-name: "%material% Mage Wand"
   template: m.mage_wands.mage_custom_wand
   icon: m.mage_wands.mage_custom_wand
   melee: false
@@ -37,6 +41,7 @@ wand:
 
 sword:
   name: Sword
+  item-name: "%material% Mage Blade"
   template: m.mage_swords.mage_custom_sword
   icon: m.mage_swords.mage_custom_sword
   melee: true

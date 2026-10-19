@@ -117,7 +117,8 @@ public final class GearLoader {
                     section.getString("icon", ""),
                     section.getBoolean("melee", type == GearType.SWORD),
                     section.getStringList("required"),
-                    slots);
+                    slots,
+                    MagicText.format(section.getString("item-name", "")));
             def.setRevision(Magic.getRevisionTracker().resolveArchetype(
                     type.name(), RevisionTracker.sha256(def.buildRevisionContent())));
             ArchetypeRegistry.register(def);
@@ -388,7 +389,8 @@ public final class GearLoader {
                     lore,
                     schemeId,
                     schemeWeight,
-                    section.getBoolean("disabled", false));
+                    section.getBoolean("disabled", false),
+                    MagicText.format(section.getString("material", "")));
             if (def.totalSocketCount() > 4) {
                 Magic.plugin.getLogger().warning("[Magic] part '" + id
                         + "' declares more than 4 sockets; extras are dropped at craft");

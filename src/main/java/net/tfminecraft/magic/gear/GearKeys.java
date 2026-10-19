@@ -41,6 +41,11 @@ public final class GearKeys {
         return new NamespacedKey(Magic.plugin, "gear_archetype_revision");
     }
 
+    /** Name Magic last wrote on the weapon, so a refresh can tell when it is stale. */
+    public static NamespacedKey gearName() {
+        return new NamespacedKey(Magic.plugin, "gear_name");
+    }
+
     public static NamespacedKey majorityTier() {
         return new NamespacedKey(Magic.plugin, "majority_tier");
     }

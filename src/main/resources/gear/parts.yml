@@ -3,9 +3,12 @@
 # part-limit: extra part categories a core unlocks (mandatory once that core is chosen).
 # stats: MMOItems ids with doubles, same shape as cost — attack_damage(4).
 # model-scheme: scheme id, optional weight like iron(10). Looked up in model-schemes.yml.
+# material: what a core names the weapon, colour included. Fills %material% in the
+#   archetype's item-name. Without it a core falls back to its name minus "Magical Core".
 
 iron_staff_core:
   name: "#d8d8d8Iron Magical Core"
+  material: "#d8d8d8Iron"
   part-type: core
   tier: 1
   type:
@@ -25,6 +28,7 @@ iron_staff_core:
 
 steel_staff_core:
   name: "#7f7d80Steel Magical Core"
+  material: "#7f7d80Steel"
   part-type: core
   tier: 2
   type:
@@ -45,6 +49,7 @@ steel_staff_core:
 
 abyssalite_staff_core:
   name: "#3b4e60Abyssalite Magical Core"
+  material: "#3b4e60Abyssalite"
   part-type: core
   tier: 3
   type:
@@ -66,6 +71,7 @@ abyssalite_staff_core:
 
 mythril_staff_core:
   name: "#9be1f3Mythril Magical Core"
+  material: "#9be1f3Mythril"
   part-type: core
   tier: 4
   type:
@@ -88,6 +94,7 @@ mythril_staff_core:
 
 iron_wand_core:
   name: "#d8d8d8Iron Magical Core"
+  material: "#d8d8d8Iron"
   part-type: core
   tier: 1
   type:
@@ -110,6 +117,7 @@ iron_wand_core:
 
 steel_wand_core:
   name: "#7f7d80Steel Magical Core"
+  material: "#7f7d80Steel"
   part-type: core
   tier: 2
   type:
@@ -132,6 +140,7 @@ steel_wand_core:
 
 abyssalite_wand_core:
   name: "#3b4e60Abyssalite Magical Core"
+  material: "#3b4e60Abyssalite"
   part-type: core
   tier: 3
   type:
@@ -155,6 +164,7 @@ abyssalite_wand_core:
 
 mythril_wand_core:
   name: "#9be1f3Mythril Magical Core"
+  material: "#9be1f3Mythril"
   part-type: core
   tier: 4
   type:
@@ -178,6 +188,7 @@ mythril_wand_core:
 
 iron_sword_core:
   name: "#d8d8d8Iron Magical Core"
+  material: "#d8d8d8Iron"
   part-type: core
   tier: 1
   type:
@@ -199,6 +210,7 @@ iron_sword_core:
 
 steel_sword_core:
   name: "#7f7d80Steel Magical Core"
+  material: "#7f7d80Steel"
   part-type: core
   tier: 2
   type:
@@ -220,6 +232,7 @@ steel_sword_core:
 
 abyssalite_sword_core:
   name: "#3b4e60Abyssalite Magical Core"
+  material: "#3b4e60Abyssalite"
   part-type: core
   tier: 3
   type:
@@ -242,6 +255,7 @@ abyssalite_sword_core:
 
 mythril_sword_core:
   name: "#9be1f3Mythril Magical Core"
+  material: "#9be1f3Mythril"
   part-type: core
   tier: 4
   type:

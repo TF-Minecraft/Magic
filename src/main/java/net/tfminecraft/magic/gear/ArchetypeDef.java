@@ -18,6 +18,7 @@ public final class ArchetypeDef {
     private final boolean melee;
     private final List<String> required;
     private final Map<String, String> slots;
+    private final String itemName;
     private int revision = 1;
 
     public ArchetypeDef(
@@ -28,8 +29,23 @@ public final class ArchetypeDef {
             boolean melee,
             List<String> required,
             Map<String, String> slots) {
+        this(type, name, template, icon, melee, required, slots, "");
+    }
+
+    public ArchetypeDef(
+            GearType type,
+            String name,
+            String template,
+            String icon,
+            boolean melee,
+            List<String> required,
+            Map<String, String> slots,
+            String itemName) {
         this.type = type;
         this.name = name == null || name.isBlank() ? type.getDisplayName() : name;
+        this.itemName = itemName == null || itemName.isBlank()
+                ? GearName.MATERIAL + " " + this.name
+                : itemName;
         this.template = template == null ? "" : template.trim();
         this.icon = icon == null ? "" : icon.trim();
         this.melee = melee;
@@ -66,6 +82,11 @@ public final class ArchetypeDef {
         return melee;
     }
 
+    /** Crafted weapon name, with {@link GearName#MATERIAL} standing for the core's material. */
+    public String getItemName() {
+        return itemName;
+    }
+
     public List<String> getRequired() {
         return required;
     }
@@ -93,7 +114,7 @@ public final class ArchetypeDef {
         this.revision = revision;
     }
 
-    /** Canonical string of the fields that change gameplay. Name is left out. */
+    /** Canonical string of the fields that change gameplay. Name and item name are left out. */
     public String buildRevisionContent() {
         StringBuilder out = new StringBuilder();
         out.append("template=").append(template).append(';');
