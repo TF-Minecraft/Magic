@@ -2,6 +2,7 @@ package net.tfminecraft.magic.meditation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +41,7 @@ public final class MeditationSession {
         RUNNING
     }
 
+    static final long WEAR_SAVE_MS = 5000L;
     private static final Color FLOW_FALLBACK = Color.fromRGB(0x5bc4d4);
     private static final Color SURGE_FALLBACK = Color.fromRGB(0xe85d4a);
 
@@ -59,6 +61,7 @@ public final class MeditationSession {
     private final Map<String, Double> attunedByArtifact = new HashMap<>();
     private final Map<UUID, Furniture> furnitureById = new HashMap<>();
     private final Set<Furniture> worn = new LinkedHashSet<>();
+    private long lastWearSaveMs;
     private boolean windingDown;
 
     public MeditationSession(
@@ -147,7 +150,33 @@ public final class MeditationSession {
         despawnOrb(orb);
         applyRewards(player, session, orb, profiles);
         playHitFx(player, orb);
+        return isFinished();
+    }
+
+    /**
+     * True when every artifact this sit drew from is spent, capped or gone from the ring.
+     * An artifact can crumble under another meditator mid-sit, so a missing one counts
+     * as spent here.
+     */
+    public boolean isFinished() {
+        Set<String> present = new HashSet<>();
+        for (Furniture furniture : circle.getArtifactPedestals()) {
+            String artifactId = circle.artifactIdOn(furniture);
+            if (artifactId != null) {
+                present.add(artifactId);
+            }
+        }
+        for (String artifactId : yield.sessionCaps().keySet()) {
+            if (!present.contains(artifactId)) {
+                attunedByArtifact.put(artifactId, yield.sessionCap(artifactId));
+            }
+        }
         return yield.exhausted(attunedByArtifact);
+    }
+
+    /** A running sit with no orbs left and nothing to draw from, which no hit would end. */
+    public boolean isStalledFinished() {
+        return phase == Phase.RUNNING && livingOrbs().isEmpty() && isFinished();
     }
 
     public void tick(Player player, ResonanceSession session) {
@@ -224,6 +253,10 @@ public final class MeditationSession {
         }
         orbs.clear();
         windingDown = false;
+        saveWorn();
+    }
+
+    private void saveWorn() {
         for (Furniture furniture : worn) {
             MeditationCircle.persist(furniture);
         }
@@ -537,8 +570,9 @@ public final class MeditationSession {
 
     /**
      * Every point of resonance an artifact grants wears it. A crumbled artifact is closed
-     * for the rest of the sit and its pedestal is saved straight away; worn ones are saved
-     * when the sit ends.
+     * for the rest of the sit and its pedestal is saved straight away. Worn pedestals are
+     * saved at most every {@link #WEAR_SAVE_MS} and when the sit ends, so a crash loses
+     * only a few seconds of wear while resonance is saved on every hit.
      */
     private void wear(Player player, Furniture furniture, String artifactId, double gain) {
         MeditationCircle.WearOutcome outcome = circle.wearArtifact(furniture, artifactId, gain);
@@ -547,6 +581,11 @@ public final class MeditationSession {
         }
         if (outcome.result() == ArtifactWear.Result.WORN) {
             worn.add(furniture);
+            long now = System.currentTimeMillis();
+            if (now - lastWearSaveMs >= WEAR_SAVE_MS) {
+                lastWearSaveMs = now;
+                saveWorn();
+            }
             return;
         }
         worn.remove(furniture);

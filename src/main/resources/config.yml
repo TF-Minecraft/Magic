@@ -56,9 +56,9 @@ artifacts:
   # Every point of resonance an artifact grants in meditation wears it, whoever gets it.
   # It can grant budget_multiplier x its highest aura cap in total, then it crumbles into
   # a spent husk with no aura that only the Recycler takes. 0 turns wear off.
-  # 2.0: a 20-cap common can raise one character from 0 to 20 twice.
+  # 1.0: a 20-cap common can raise one character from 0 to 20 once, or two sharers to 10.
   wear:
-    budget_multiplier: 2.0
+    budget_multiplier: 1.0
 
 meditation:
   pedestal: pedestal

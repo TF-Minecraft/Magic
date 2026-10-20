@@ -220,18 +220,43 @@ class MeditationSessionTest {
   }
 
   @Test
-  void wornArtifactsAreSavedOnceWhenTheSitEnds() {
+  void wornArtifactsAreSavedAtOnceThenThrottledAndAgainWhenTheSitEnds() {
     when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
         .thenReturn(outcome(ArtifactWear.Result.WORN));
     var session = session(10);
     activate(session);
-    assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
-    assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
     try (var persist = mockStatic(MeditationCircle.class)) {
-      session.end();
-      session.end();
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
       persist.verify(() -> MeditationCircle.persist(post), times(1));
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+      persist.verify(() -> MeditationCircle.persist(post), times(1));
+      session.end();
+      session.end();
+      persist.verify(() -> MeditationCircle.persist(post), times(2));
     }
+  }
+
+  @Test
+  void anArtifactCrumbledUnderAnotherMeditatorFinishesThisSit() {
+    var session = session(10);
+    assertFalse(session.isStalledFinished(), "Not running yet");
+    activate(session);
+    assertFalse(session.isStalledFinished(), "Orbs are still alive");
+    assertFalse(session.isFinished());
+    when(circle.artifactIdOn(post)).thenReturn(null);
+    assertTrue(session.isFinished());
+    for (int i = 0; i < 100 && !session.livingOrbs().isEmpty(); i++) session.tick(player, resonance);
+    assertTrue(session.isStalledFinished());
+    when(circle.artifactIdOn(post)).thenReturn("artifact");
+    var fresh = session(10);
+    activate(fresh);
+    for (int i = 0; i < 100 && !fresh.livingOrbs().isEmpty(); i++) {
+      fresh.livingOrbs().forEach(o -> o.setConsumed(true));
+      fresh.tick(player, resonance);
+    }
+    assertFalse(fresh.isStalledFinished(), "Nothing spent, so not finished");
+    session.end();
+    fresh.end();
   }
 
   @Test

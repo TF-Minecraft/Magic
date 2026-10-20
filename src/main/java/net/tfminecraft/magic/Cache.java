@@ -28,7 +28,7 @@ public final class Cache {
     public static double secondsPerHour = 3600.0;
     public static boolean artifactGlint = true;
     public static double artifactAuraCap = 150.0;
-    public static final double DEFAULT_ARTIFACT_WEAR_MULTIPLIER = 2.0;
+    public static final double DEFAULT_ARTIFACT_WEAR_MULTIPLIER = 1.0;
     /**
      * Lifetime resonance an artifact can grant, as a multiple of its highest aura cap.
      * At that total it crumbles into a spent husk. 0 turns wear off.

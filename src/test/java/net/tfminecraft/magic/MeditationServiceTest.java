@@ -120,9 +120,16 @@ class MeditationServiceTest {
     assertFalse(MeditationService.locksFurniture(other));
     tick();
     verify(session).tick(player, sessions.get(player));
+    verify(session, never()).playComplete(player);
+    when(session.isStalledFinished()).thenReturn(true);
+    tick();
+    verify(session).playComplete(player);
+    verify(session).beginWindDown();
+    assertEquals("meditation.complete", player.nextMessage());
+    when(session.isStalledFinished()).thenReturn(false);
     player.leaveVehicle();
     tick();
-    verify(session).beginWindDown();
+    verify(session, times(2)).beginWindDown();
     verify(session).end();
     verify(profiles).savePlayer(player);
     assertEquals("meditation.stop", player.nextMessage());
