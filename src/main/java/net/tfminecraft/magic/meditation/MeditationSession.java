@@ -3,8 +3,10 @@ package net.tfminecraft.magic.meditation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import net.tfminecraft.tlibs.character.CharacterSession;
@@ -20,7 +22,10 @@ import org.bukkit.entity.Player;
 
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.GuiCache;
+import net.tfminecraft.magic.Messages;
+import net.tfminecraft.magic.artifact.ArtifactWear;
 import net.tfminecraft.magic.attunement.AttunementCaptureService;
+import net.tfminecraft.magic.attunement.AuraLog;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.registry.ElementRegistry;
@@ -53,6 +58,7 @@ public final class MeditationSession {
     private final List<MeditationOrb> orbs = new ArrayList<>();
     private final Map<String, Double> attunedByArtifact = new HashMap<>();
     private final Map<UUID, Furniture> furnitureById = new HashMap<>();
+    private final Set<Furniture> worn = new LinkedHashSet<>();
     private boolean windingDown;
 
     public MeditationSession(
@@ -218,6 +224,10 @@ public final class MeditationSession {
         }
         orbs.clear();
         windingDown = false;
+        for (Furniture furniture : worn) {
+            MeditationCircle.persist(furniture);
+        }
+        worn.clear();
     }
 
     public void playComplete(Player player) {
@@ -514,6 +524,7 @@ public final class MeditationSession {
         }
         attunedByArtifact.put(artifactId, credit + gain);
         AttunementCaptureService.credit(player, session, artifactId, artifact.elementId, gain);
+        wear(player, furniture, artifactId, gain);
         if (MeditationCeiling.allowed(
                 session.getResonance(artifact.elementId),
                 yield.elementShare(artifact.elementId),
@@ -522,6 +533,33 @@ public final class MeditationSession {
             closeElement(artifact.elementId);
         }
         save(player, profiles);
+    }
+
+    /**
+     * Every point of resonance an artifact grants wears it. A crumbled artifact is closed
+     * for the rest of the sit and its pedestal is saved straight away; worn ones are saved
+     * when the sit ends.
+     */
+    private void wear(Player player, Furniture furniture, String artifactId, double gain) {
+        MeditationCircle.WearOutcome outcome = circle.wearArtifact(furniture, artifactId, gain);
+        if (outcome == null || outcome.result() == ArtifactWear.Result.NONE) {
+            return;
+        }
+        if (outcome.result() == ArtifactWear.Result.WORN) {
+            worn.add(furniture);
+            return;
+        }
+        worn.remove(furniture);
+        MeditationCircle.persist(furniture);
+        attunedByArtifact.put(artifactId, yield.sessionCap(artifactId));
+        AuraLog.append("crumbled player=%s artifact=%s", player.getName(), artifactId);
+        String name = outcome.name().isBlank() ? "An artifact" : outcome.name();
+        player.sendMessage(Messages.get("meditation.crumbled", "artifact", name));
+        Location loc = PedestalFx.artifactPoint(furniture);
+        if (loc != null) {
+            loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1.0f, 0.6f);
+            loc.getWorld().spawnParticle(Particle.ASH, loc, 30, 0.2, 0.3, 0.2, 0.01);
+        }
     }
 
     private static void save(Player player, MagicProfileService profiles) {

@@ -28,6 +28,12 @@ public final class Cache {
     public static double secondsPerHour = 3600.0;
     public static boolean artifactGlint = true;
     public static double artifactAuraCap = 150.0;
+    public static final double DEFAULT_ARTIFACT_WEAR_MULTIPLIER = 2.0;
+    /**
+     * Lifetime resonance an artifact can grant, as a multiple of its highest aura cap.
+     * At that total it crumbles into a spent husk. 0 turns wear off.
+     */
+    public static double artifactWearMultiplier = DEFAULT_ARTIFACT_WEAR_MULTIPLIER;
     public static boolean loggingEnabled = true;
     public static boolean wipeLog = true;
     /** Real mana spent divided by this equals drift. 100 means 4 mana -> 0.04. */

@@ -106,6 +106,50 @@ class MeditationCircleTest {
   }
 
   @Test
+  void wearFindsTheArtifactByIdWritesItBackAndSavesThroughFurniture() {
+    ring();
+    var item = artifact();
+    when(slots.getFirst().getCurrentItem()).thenReturn(item);
+    when(slots.get(1).getCurrentItem()).thenReturn(new ItemStack(Material.STONE));
+    var circle = MeditationCircle.detect(center);
+    String id = circle.artifactIdOn(furniture.getFirst());
+    try {
+      Cache.artifactWearMultiplier = 2;
+      assertEquals(ArtifactWear.Result.NONE, circle.wearArtifact(null, id, 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.getFirst(), null, 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE,
+          circle.wearArtifact(furniture.getFirst(), "other", 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.get(1), id, 1).result());
+      verify(slots.getFirst(), never()).setCurrentItem(any());
+      var worn = circle.wearArtifact(furniture.getFirst(), id, 1);
+      assertEquals(ArtifactWear.Result.WORN, worn.result());
+      assertEquals("", worn.name());
+      verify(slots.getFirst()).setCurrentItem(item);
+      Cache.artifactWearMultiplier = 0;
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.getFirst(), id, 1).result());
+      verify(slots.getFirst()).setCurrentItem(item);
+      Cache.artifactWearMultiplier = 2;
+      assertEquals(
+          ArtifactWear.Result.CRUMBLED,
+          circle.wearArtifact(furniture.getFirst(), id, 50).result());
+      verify(slots.getFirst(), times(2)).setCurrentItem(item);
+      assertTrue(ArtifactWear.isHusk(item));
+      assertNull(circle.artifactIdOn(furniture.getFirst()));
+    } finally {
+      Cache.artifactWearMultiplier = Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER;
+    }
+    MeditationCircle.persist(null);
+    MeditationCircle.persist(furniture.getFirst());
+    verify(dependency.getFurnitureManager()).persistFurniture(furniture.getFirst());
+    when(dependency.getFurnitureManager()).thenThrow(new IllegalStateException("disabled"));
+    MeditationCircle.persist(furniture.getFirst());
+  }
+
+  @Test
   void lonePreviewUserGetsFullYieldInsteadOfBeingCountedTwice() {
     ring();
     putArtifact();

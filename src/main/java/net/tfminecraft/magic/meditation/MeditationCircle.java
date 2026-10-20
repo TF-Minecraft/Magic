@@ -25,6 +25,8 @@ import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.artifact.ArtifactCareStore;
 import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.ArtifactLore;
+import net.tfminecraft.magic.artifact.ArtifactWear;
+import net.tfminecraft.magic.attunement.AttunementCaptureService;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
@@ -171,6 +173,43 @@ public final class MeditationCircle {
         }
         List<ItemStack> items = pedestalItems(furniture);
         return items.isEmpty() ? null : items.get(0);
+    }
+
+    /**
+     * Wears the artifact with this id on the pedestal by {@code gain}. A crumbled artifact
+     * becomes a husk in the same slot. Returns the artifact's name as it was before.
+     */
+    public WearOutcome wearArtifact(Furniture furniture, String artifactId, double gain) {
+        if (furniture != null && artifactId != null) {
+            for (PlacedSlot slot : pedestalSlots(furniture)) {
+                ItemStack item = itemFromSlot(slot);
+                UUID id = ArtifactIds.read(item);
+                if (id == null || !artifactId.equals(id.toString())) {
+                    continue;
+                }
+                String name = AttunementCaptureService.displayNameOf(item);
+                ArtifactWear.Result result = ArtifactWear.wear(item, gain);
+                if (result != ArtifactWear.Result.NONE) {
+                    slot.setCurrentItem(item);
+                }
+                return new WearOutcome(result, name);
+            }
+        }
+        return new WearOutcome(ArtifactWear.Result.NONE, "");
+    }
+
+    public record WearOutcome(ArtifactWear.Result result, String name) {}
+
+    /** Saves the pedestal's items through InteractibleFurniture. */
+    public static void persist(Furniture furniture) {
+        if (furniture == null) {
+            return;
+        }
+        try {
+            InteractibleFurniture.getInstance().getFurnitureManager().persistFurniture(furniture);
+        } catch (Exception ignored) {
+            // IF may already be disabled
+        }
     }
 
     public String artifactIdOn(Furniture furniture) {

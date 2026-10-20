@@ -117,6 +117,12 @@ resonance:
 
 artifact:
 
+  husk:
+
+    name: "#8a8a8aSpent {name}"
+
+    lore: "#8a8a8a§oIts aura is spent. Only a recycler has a use for it now."
+
   usage: "#aaaaaaUsage: /magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact path #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic artifact setmuffle #555555| #aaaaaa/magic artifact unmuffle"
 
   path:
@@ -224,6 +230,8 @@ meditation:
   tired: "#aaaaaa§oYou are too tired to meditate now"
 
   stop: "#aaaaaa§oYou stop meditating"
+
+  crumbled: "#aaaaaa§o{artifact} crumbles, its aura spent"
 
 charge:
 

@@ -103,7 +103,11 @@ public final class ConfigLoader implements LoaderInterface {
             if (auraCap > 0) {
                 Cache.artifactAuraCap = auraCap;
             }
+            double wear = artifacts.getDouble(
+                    "wear.budget_multiplier", Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER);
+            Cache.artifactWearMultiplier = Math.max(0.0, wear);
         } else {
+            Cache.artifactWearMultiplier = Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER;
             Cache.artifactGlint = config.getBoolean("artifacts.glint", Cache.artifactGlint);
             double auraCap = config.getDouble("artifacts.aura_cap", Cache.artifactAuraCap);
             if (auraCap > 0) {
