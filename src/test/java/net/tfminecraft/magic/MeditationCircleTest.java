@@ -106,6 +106,73 @@ class MeditationCircleTest {
   }
 
   @Test
+  void wearFindsTheArtifactByIdWritesItBackAndSavesThroughFurniture() {
+    ring();
+    var item = artifact();
+    when(slots.getFirst().getCurrentItem()).thenReturn(item);
+    when(slots.get(1).getCurrentItem()).thenReturn(new ItemStack(Material.STONE));
+    var circle = MeditationCircle.detect(center);
+    String id = circle.artifactIdOn(furniture.getFirst());
+    assertTrue(circle.spentIds().isEmpty());
+    try {
+      Cache.artifactWearMultiplier = 2;
+      assertEquals(ArtifactWear.Result.NONE, circle.wearArtifact(null, id, 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.getFirst(), null, 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE,
+          circle.wearArtifact(furniture.getFirst(), "other", 1).result());
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.get(1), id, 1).result());
+      verify(slots.getFirst(), never()).setCurrentItem(any());
+      var worn = circle.wearArtifact(furniture.getFirst(), id, 1);
+      assertEquals(ArtifactWear.Result.WORN, worn.result());
+      assertEquals("", worn.name());
+      verify(slots.getFirst()).setCurrentItem(item);
+      Cache.artifactWearMultiplier = 0;
+      assertEquals(
+          ArtifactWear.Result.NONE, circle.wearArtifact(furniture.getFirst(), id, 1).result());
+      verify(slots.getFirst()).setCurrentItem(item);
+      Cache.artifactWearMultiplier = 2;
+      assertEquals(
+          ArtifactWear.Result.CRUMBLED,
+          circle.wearArtifact(furniture.getFirst(), id, 50).result());
+      verify(slots.getFirst(), times(2)).setCurrentItem(item);
+      assertTrue(ArtifactWear.isHusk(item));
+      assertNull(circle.artifactIdOn(furniture.getFirst()));
+      assertEquals(Set.of(id), circle.spentIds(), "Only the husk counts; the plain stone does not");
+
+      Cache.artifactWearMultiplier = 1;
+      var nearly = artifact();
+      when(slots.getFirst().getCurrentItem()).thenReturn(nearly);
+      String nearlyId = ArtifactIds.read(nearly).toString();
+      assertEquals(ArtifactWear.Result.WORN, circle.wearArtifact(furniture.getFirst(), nearlyId, 8).result());
+      var last = circle.wearArtifact(furniture.getFirst(), nearlyId, 5);
+      assertEquals(ArtifactWear.Result.CRUMBLED, last.result());
+      assertEquals(2, last.granted(), 1e-9, "Only the 2 left of a 10 budget is granted");
+
+      var spent = artifact();
+      var meta = spent.getItemMeta();
+      meta.getPersistentDataContainer().set(
+          ArtifactKeys.artifactWear(), org.bukkit.persistence.PersistentDataType.DOUBLE, 10.0);
+      spent.setItemMeta(meta);
+      when(slots.getFirst().getCurrentItem()).thenReturn(spent);
+      var none = circle.wearArtifact(furniture.getFirst(), ArtifactIds.read(spent).toString(), 1);
+      assertEquals(ArtifactWear.Result.CRUMBLED, none.result());
+      assertEquals(0, none.granted());
+      assertTrue(ArtifactWear.isHusk(spent));
+      assertEquals(4, circle.wearArtifact(null, nearlyId, 4).granted(), "Nothing found grants in full");
+    } finally {
+      Cache.artifactWearMultiplier = Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER;
+    }
+    MeditationCircle.persist(null);
+    MeditationCircle.persist(furniture.getFirst());
+    verify(dependency.getFurnitureManager()).persistFurniture(furniture.getFirst());
+    when(dependency.getFurnitureManager()).thenThrow(new IllegalStateException("disabled"));
+    MeditationCircle.persist(furniture.getFirst());
+  }
+
+  @Test
   void lonePreviewUserGetsFullYieldInsteadOfBeingCountedTwice() {
     ring();
     putArtifact();

@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import net.tfminecraft.magic.Cache;
+import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.artifact.config.ArtifactRarityDef;
 import net.tfminecraft.magic.artifact.config.ArtifactRarityRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeElementDef;
@@ -144,6 +145,38 @@ public final class ArtifactLore {
         return false;
     }
 
+    /** Whole percent, rounded up so a living artifact never reads 0%. */
+    static String integrityLine(double integrity) {
+        long percent = (long) Math.ceil(Math.max(0.0, Math.min(1.0, integrity)) * 100.0 - 0.0001);
+        return MagicText.format("{color:label_muted}Integrity: " + percent + "%");
+    }
+
+    /**
+     * Replaces the aura block with the spent-husk block and renames the item. The husk
+     * keeps its rarity line, so the Recycler's price is still visible.
+     */
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
+    public static void applyHusk(ItemStack stack) {
+        ItemMeta meta = stack.getItemMeta();
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        lore = stripMagicBlocks(lore);
+        List<String> block = new ArrayList<>();
+        String rarityLine = rarityLine(stack);
+        if (rarityLine != null) {
+            block.add(rarityLine);
+        }
+        block.add(Messages.get("artifact.husk.lore"));
+        block.set(0, BEGIN + block.get(0));
+        lore.addAll(block);
+        meta.setLore(lore);
+        if (meta.hasDisplayName()) {
+            meta.setDisplayName(Messages.get("artifact.husk.name", "name", plain(meta.getDisplayName())));
+        }
+        meta.setEnchantmentGlintOverride(Boolean.FALSE);
+        stack.setItemMeta(meta);
+    }
+
     private static String muffleLine(double muffle) {
         if (muffle <= 0.0001) {
             return "";
@@ -227,6 +260,10 @@ public final class ArtifactLore {
 
     private static List<String> buildAttuneLines(ItemStack stack, Artifact artifact, double muffle) {
         List<String> lines = new ArrayList<>();
+        // Shown once the artifact has been worn, so untouched artifacts keep their lore.
+        if (ArtifactWear.enabled() && ArtifactWear.readWear(stack) > 0.0) {
+            lines.add(integrityLine(ArtifactWear.integrity(stack, artifact)));
+        }
         if (muffle > 0.0001) {
             lines.add(muffleLine(muffle));
         }

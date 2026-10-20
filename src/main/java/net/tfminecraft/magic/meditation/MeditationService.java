@@ -130,6 +130,9 @@ public final class MeditationService implements Listener {
                 continue;
             }
             session.tick(player, session.getResonance());
+            if (session.isStalledFinished()) {
+                complete(player, session);
+            }
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID id = player.getUniqueId();
@@ -255,11 +258,15 @@ public final class MeditationService implements Listener {
         ResonanceSession resonance = session.getResonance();
         boolean complete = session.onOrbHit(player, orb, resonance, profileService);
         if (complete) {
-            session.playComplete(player);
-            player.sendMessage(Messages.get("meditation.complete"));
-            sitNotices.add(player.getUniqueId());
-            session.beginWindDown();
+            complete(player, session);
         }
+    }
+
+    private void complete(Player player, MeditationSession session) {
+        session.playComplete(player);
+        player.sendMessage(Messages.get("meditation.complete"));
+        sitNotices.add(player.getUniqueId());
+        session.beginWindDown();
     }
 
     private MeditationOrb hitscan(Player player, MeditationSession session) {

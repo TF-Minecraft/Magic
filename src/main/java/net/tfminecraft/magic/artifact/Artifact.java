@@ -52,6 +52,10 @@ public final class Artifact implements AuraVessel {
             artifact.primary = readPrimary(stack);
             return artifact;
         }
+        // A husk has no aura data, and its lore must never be read back into an artifact.
+        if (ArtifactWear.isHusk(stack)) {
+            return null;
+        }
         Artifact fromLore = ArtifactLore.readAura(stack);
         if (fromLore != null && !ChargeIds.isCharge(stack)) {
             fromLore.primary = readPrimary(stack);

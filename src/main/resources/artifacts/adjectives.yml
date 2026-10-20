@@ -2,7 +2,6 @@ chance:
   common: 1.0
   uncommon: 1.0
   rare: 0.5
-  epic: 0.25
   legendary: 0.15
 
 global:
@@ -17,13 +16,12 @@ global:
   rare:
     - Steady
     - Keen
-  epic:
-    - Vivid
-    - Prime
   legendary:
     - True
     - Unbound
     - Ancient
+    - Vivid
+    - Prime
 
 by_element:
   arcanum:
@@ -37,12 +35,11 @@ by_element:
     rare:
       - Lucid
       - Unsealed
-    epic:
-      - Living
-      - Prime
     legendary:
       - Primordial
       - Absolute
+      - Living
+      - Prime
   oseni:
     common:
       - Emberless
@@ -53,12 +50,11 @@ by_element:
     rare:
       - Searing
       - Molten
-    epic:
-      - Incandescent
-      - Blazing
     legendary:
       - Primordial
       - Solar
+      - Incandescent
+      - Blazing
   cerrith:
     common:
       - Wilted
@@ -69,12 +65,11 @@ by_element:
     rare:
       - Verdant
       - Sylvan
-    epic:
-      - Canopy
-      - Primeval
     legendary:
       - Mythic
       - Eldest
+      - Canopy
+      - Primeval
   seithr:
     common:
       - Windless
@@ -85,12 +80,11 @@ by_element:
     rare:
       - Howling
       - Aerial
-    epic:
-      - Tempestuous
-      - Roaring
     legendary:
       - Empyrean
       - Unbound
+      - Tempestuous
+      - Roaring
   mitlan:
     common:
       - Brackish
@@ -101,12 +95,11 @@ by_element:
     rare:
       - Surging
       - Pelagic
-    epic:
-      - Abyssal
-      - Flooding
     legendary:
       - Primordial
       - Oceanic
+      - Abyssal
+      - Flooding
   bloodmagic:
     common:
       - Dry
@@ -117,12 +110,11 @@ by_element:
     rare:
       - Vital
       - Crimson
-    epic:
-      - Living
-      - Prime
     legendary:
       - Primordial
       - Sovereign
+      - Living
+      - Prime
   necromancy:
     common:
       - Quiet
@@ -133,12 +125,11 @@ by_element:
     rare:
       - Sepulchral
       - Dire
-    epic:
-      - Dread
-      - Sovereign
     legendary:
       - Primordial
       - Absolute
+      - Dread
+      - Sovereign
   shadowmancy:
     common:
       - Grey
@@ -149,12 +140,11 @@ by_element:
     rare:
       - Tenebrous
       - Deep
-    epic:
-      - Stygian
-      - Prime
     legendary:
       - Absolute
       - Unbound
+      - Stygian
+      - Prime
   illusion:
     common:
       - Paper
@@ -165,12 +155,11 @@ by_element:
     rare:
       - Glamoured
       - Deceptive
-    epic:
-      - Oneiric
-      - Perfect
     legendary:
       - Absolute
       - Unbound
+      - Oneiric
+      - Perfect
   spirit:
     common:
       - Faint
@@ -181,9 +170,8 @@ by_element:
     rare:
       - Numinous
       - Lucid
-    epic:
-      - Living
-      - Transcendent
     legendary:
       - Primordial
       - Absolute
+      - Living
+      - Transcendent

@@ -254,6 +254,29 @@ class ConfigurationTest {
   }
 
   @Test
+  void artifactWearReadsItsMultiplierAndFallsBackToTheDefault() throws Exception {
+    var loader = new ConfigLoader();
+    try {
+      assertTrue(
+          loader.loadSafe(
+              write("wear.yml", "artifacts: {wear: {budget_multiplier: 3.5}}\n").toFile()));
+      assertEquals(3.5, Cache.artifactWearMultiplier);
+      assertTrue(
+          loader.loadSafe(
+              write("negative.yml", "artifacts: {wear: {budget_multiplier: -1}}\n").toFile()));
+      assertEquals(0, Cache.artifactWearMultiplier);
+      assertTrue(loader.loadSafe(write("unset.yml", "artifacts: {glint: false}\n").toFile()));
+      assertEquals(Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER, Cache.artifactWearMultiplier);
+      Cache.artifactWearMultiplier = 0;
+      assertTrue(loader.loadSafe(write("none.yml", "debug: false\n").toFile()));
+      assertEquals(Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER, Cache.artifactWearMultiplier);
+    } finally {
+      Cache.artifactWearMultiplier = Cache.DEFAULT_ARTIFACT_WEAR_MULTIPLIER;
+      Cache.artifactGlint = true;
+    }
+  }
+
+  @Test
   void attunementWithoutMuffledSectionDisablesMuffling() throws Exception {
     assertTrue(
         new ConfigLoader()

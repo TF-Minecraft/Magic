@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.*;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
+import net.tfminecraft.magic.artifact.ArtifactWear;
 import net.tfminecraft.magic.attunement.AuraLog;
 import net.tfminecraft.magic.meditation.*;
 import net.tfminecraft.magic.profile.MagicProfileService;
@@ -150,6 +151,129 @@ class MeditationSessionTest {
     for (int i = 0; i < 50; i++) partial.tick(player, resonance);
     assertTrue(partial.livingOrbs().isEmpty());
     partial.end();
+  }
+
+  MeditationCircle.WearOutcome outcome(ArtifactWear.Result result) {
+    return new MeditationCircle.WearOutcome(result, "Ember Ring", 100);
+  }
+
+  MeditationOrb nextOrb(MeditationSession session) {
+    for (int i = 0; i < 200 && session.livingOrbs().isEmpty(); i++) session.tick(player, resonance);
+    return session.livingOrbs().getFirst();
+  }
+
+  void loadMessages() {
+    Magic.plugin = mock(Magic.class);
+    when(Magic.plugin.getResource("messages.yml"))
+        .thenReturn(getClass().getResourceAsStream("/messages.yml"));
+    Messages.loadFromResources();
+  }
+
+  boolean heard(String text) {
+    String message;
+    while ((message = player.nextMessage()) != null) {
+      if (org.bukkit.ChatColor.stripColor(message).contains(text)) return true;
+    }
+    return false;
+  }
+
+  @Test
+  void everyGainWearsItsArtifactAndACrumbledOneClosesForTheRestOfTheSit() {
+    loadMessages();
+    try {
+      when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
+          .thenReturn(outcome(ArtifactWear.Result.NONE))
+          .thenReturn(outcome(ArtifactWear.Result.WORN))
+          .thenReturn(outcome(ArtifactWear.Result.CRUMBLED));
+      var session = session(10);
+      activate(session);
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+      verify(circle, times(2)).wearArtifact(post, "artifact", 1.0);
+      assertFalse(heard("crumbles"));
+      assertTrue(session.onOrbHit(player, nextOrb(session), resonance, null));
+      assertTrue(heard("Ember Ring crumbles, its aura spent"));
+      assertEquals(3, resonance.getResonance("fire"));
+      for (int i = 0; i < 100; i++) session.tick(player, resonance);
+      assertTrue(session.livingOrbs().isEmpty());
+      session.end();
+      session.end();
+    } finally {
+      Magic.plugin = null;
+    }
+  }
+
+  @Test
+  void aCrumbleWithNoPedestalPointStillClosesWithoutEffects() {
+    when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
+        .thenReturn(outcome(ArtifactWear.Result.WORN))
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.CRUMBLED, "", 100));
+    var session = session(10);
+    activate(session);
+    assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+    var orb = nextOrb(session);
+    when(post.getOriginBlockLocation()).thenReturn(Optional.empty());
+    when(post.getLoc()).thenReturn(null);
+    assertTrue(session.onOrbHit(player, orb, resonance, null));
+    assertNotNull(player.nextMessage());
+    session.end();
+  }
+
+  @Test
+  void anArtifactNearlySpentGrantsOnlyWhatItHasLeft() {
+    when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.WORN, "Ember Ring", .25))
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.CRUMBLED, "Ember Ring", 0));
+    var session = session(10);
+    activate(session);
+    assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+    assertEquals(.25, resonance.getResonance("fire"), 1e-9);
+    assertTrue(session.onOrbHit(player, nextOrb(session), resonance, null));
+    assertEquals(.25, resonance.getResonance("fire"), 1e-9, "A spent artifact grants nothing more");
+    session.end();
+  }
+
+  @Test
+  void wornArtifactsAreSavedAtOnceThenThrottledAndAgainWhenTheSitEnds() {
+    when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
+        .thenReturn(outcome(ArtifactWear.Result.WORN));
+    var session = session(10);
+    activate(session);
+    try (var persist = mockStatic(MeditationCircle.class)) {
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+      persist.verify(() -> MeditationCircle.persist(post), times(1));
+      assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+      persist.verify(() -> MeditationCircle.persist(post), times(1));
+      session.end();
+      session.end();
+      persist.verify(() -> MeditationCircle.persist(post), times(2));
+    }
+  }
+
+  @Test
+  void anArtifactCrumbledUnderAnotherMeditatorFinishesThisSit() {
+    var session = session(10);
+    assertFalse(session.isStalledFinished(), "Not running yet");
+    activate(session);
+    assertFalse(session.isStalledFinished(), "Orbs are still alive");
+    assertFalse(session.isFinished());
+    when(circle.artifactIdOn(post)).thenReturn(null);
+    assertFalse(session.isFinished(), "Lifted off, not spent: it can come back");
+    when(circle.spentIds()).thenReturn(Set.of("artifact"));
+    assertTrue(session.isFinished());
+    for (int i = 0; i < 100 && !session.livingOrbs().isEmpty(); i++) session.tick(player, resonance);
+    assertTrue(session.isStalledFinished());
+    when(circle.spentIds()).thenReturn(Set.of());
+    when(circle.artifactIdOn(post)).thenReturn("artifact");
+    var fresh = session(10);
+    activate(fresh);
+    for (int i = 0; i < 100 && !fresh.livingOrbs().isEmpty(); i++) {
+      fresh.livingOrbs().forEach(o -> o.setConsumed(true));
+      fresh.tick(player, resonance);
+    }
+    assertFalse(fresh.isStalledFinished(), "Nothing spent, so not finished");
+    session.end();
+    fresh.end();
   }
 
   @Test

@@ -2,8 +2,10 @@ package net.tfminecraft.magic.meditation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -25,6 +27,8 @@ import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.artifact.ArtifactCareStore;
 import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.ArtifactLore;
+import net.tfminecraft.magic.artifact.ArtifactWear;
+import net.tfminecraft.magic.attunement.AttunementCaptureService;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
@@ -171,6 +175,66 @@ public final class MeditationCircle {
         }
         List<ItemStack> items = pedestalItems(furniture);
         return items.isEmpty() ? null : items.get(0);
+    }
+
+    /**
+     * Wears the artifact with this id on the pedestal by up to {@code gain}: never more
+     * than it has left, so other meditators sharing it cannot push it past its budget.
+     * A crumbled artifact becomes a husk in the same slot. The outcome carries how much
+     * the artifact actually granted and its name as it was before.
+     */
+    public WearOutcome wearArtifact(Furniture furniture, String artifactId, double gain) {
+        if (furniture != null && artifactId != null) {
+            for (PlacedSlot slot : pedestalSlots(furniture)) {
+                ItemStack item = itemFromSlot(slot);
+                UUID id = ArtifactIds.read(item);
+                if (id == null || !artifactId.equals(id.toString())) {
+                    continue;
+                }
+                String name = AttunementCaptureService.displayNameOf(item);
+                double granted = Math.min(gain, ArtifactWear.remaining(item));
+                ArtifactWear.Result result;
+                if (granted <= 0.0) {
+                    ArtifactWear.crumble(item);
+                    result = ArtifactWear.Result.CRUMBLED;
+                } else {
+                    result = ArtifactWear.wear(item, granted);
+                }
+                if (result != ArtifactWear.Result.NONE) {
+                    slot.setCurrentItem(item);
+                }
+                return new WearOutcome(result, name, granted);
+            }
+        }
+        return new WearOutcome(ArtifactWear.Result.NONE, "", gain);
+    }
+
+    /** Ids of artifacts that crumbled on this ring and now sit on it as husks. */
+    public Set<String> spentIds() {
+        Set<String> spent = new HashSet<>();
+        for (Furniture furniture : pedestals) {
+            for (ItemStack item : pedestalItems(furniture)) {
+                String id = ArtifactWear.spentId(item);
+                if (id != null) {
+                    spent.add(id);
+                }
+            }
+        }
+        return spent;
+    }
+
+    public record WearOutcome(ArtifactWear.Result result, String name, double granted) {}
+
+    /** Saves the pedestal's items through InteractibleFurniture. */
+    public static void persist(Furniture furniture) {
+        if (furniture == null) {
+            return;
+        }
+        try {
+            InteractibleFurniture.getInstance().getFurnitureManager().persistFurniture(furniture);
+        } catch (Exception ignored) {
+            // IF may already be disabled
+        }
     }
 
     public String artifactIdOn(Furniture furniture) {

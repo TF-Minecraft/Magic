@@ -53,6 +53,12 @@ artifacts:
   glint: true
   # Hard ceiling per element. Rarity aura_cap ranges in generator.yml cannot exceed this.
   aura_cap: 150
+  # Every point of resonance an artifact grants in meditation wears it, whoever gets it.
+  # It can grant budget_multiplier x its highest aura cap in total, then it crumbles into
+  # a spent husk with no aura that only the Recycler takes. 0 turns wear off.
+  # 1.0: a 20-cap common can raise one character from 0 to 20 once, or two sharers to 10.
+  wear:
+    budget_multiplier: 1.0
 
 meditation:
   pedestal: pedestal

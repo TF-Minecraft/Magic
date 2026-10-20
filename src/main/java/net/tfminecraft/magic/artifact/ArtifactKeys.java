@@ -28,6 +28,16 @@ public final class ArtifactKeys {
         return new NamespacedKey(Magic.plugin, "artifact_id");
     }
 
+    /** Resonance this artifact has granted in meditation, summed over every user. */
+    public static NamespacedKey artifactWear() {
+        return new NamespacedKey(Magic.plugin, "artifact_wear");
+    }
+
+    /** Set on a spent husk. Holds the id the artifact had before it crumbled. */
+    public static NamespacedKey artifactSpent() {
+        return new NamespacedKey(Magic.plugin, "artifact_spent");
+    }
+
     public static NamespacedKey attuneStart() {
         return new NamespacedKey(Magic.plugin, "attune_start");
     }
