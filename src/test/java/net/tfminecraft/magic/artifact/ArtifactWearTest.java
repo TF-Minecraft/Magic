@@ -153,6 +153,8 @@ class ArtifactWearTest {
     setWear(item, 19.99995);
     assertEquals(ArtifactWear.Result.CRUMBLED, ArtifactWear.wear(item, 0.00001));
     assertTrue(ArtifactWear.isHusk(item));
+    assertEquals(id.toString(), ArtifactWear.spentId(item));
+    assertNull(ArtifactWear.spentId(new ItemStack(Material.STONE)));
     assertNull(Artifact.fromItem(item));
     var pdc = item.getItemMeta().getPersistentDataContainer();
     assertEquals(id.toString(), pdc.get(ArtifactKeys.artifactSpent(), PersistentDataType.STRING));

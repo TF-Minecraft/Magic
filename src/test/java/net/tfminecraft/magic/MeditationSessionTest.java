@@ -258,9 +258,12 @@ class MeditationSessionTest {
     assertFalse(session.isStalledFinished(), "Orbs are still alive");
     assertFalse(session.isFinished());
     when(circle.artifactIdOn(post)).thenReturn(null);
+    assertFalse(session.isFinished(), "Lifted off, not spent: it can come back");
+    when(circle.spentIds()).thenReturn(Set.of("artifact"));
     assertTrue(session.isFinished());
     for (int i = 0; i < 100 && !session.livingOrbs().isEmpty(); i++) session.tick(player, resonance);
     assertTrue(session.isStalledFinished());
+    when(circle.spentIds()).thenReturn(Set.of());
     when(circle.artifactIdOn(post)).thenReturn("artifact");
     var fresh = session(10);
     activate(fresh);

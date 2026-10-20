@@ -101,6 +101,15 @@ public final class ArtifactWear {
         return Result.WORN;
     }
 
+    /** The id the husk had as an artifact, or null when the stack is not a husk. */
+    public static String spentId(ItemStack stack) {
+        if (!isHusk(stack)) {
+            return null;
+        }
+        return stack.getItemMeta().getPersistentDataContainer().get(
+                ArtifactKeys.artifactSpent(), PersistentDataType.STRING);
+    }
+
     public static boolean isHusk(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
             return false;

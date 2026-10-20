@@ -2,7 +2,6 @@ package net.tfminecraft.magic.meditation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -154,20 +153,13 @@ public final class MeditationSession {
     }
 
     /**
-     * True when every artifact this sit drew from is spent, capped or gone from the ring.
-     * An artifact can crumble under another meditator mid-sit, so a missing one counts
-     * as spent here.
+     * True when every artifact this sit drew from is spent or capped. An artifact can
+     * crumble under another meditator mid-sit; its husk on the ring marks it spent here.
      */
     public boolean isFinished() {
-        Set<String> present = new HashSet<>();
-        for (Furniture furniture : circle.getArtifactPedestals()) {
-            String artifactId = circle.artifactIdOn(furniture);
-            if (artifactId != null) {
-                present.add(artifactId);
-            }
-        }
+        Set<String> spent = circle.spentIds();
         for (String artifactId : yield.sessionCaps().keySet()) {
-            if (!present.contains(artifactId)) {
+            if (spent.contains(artifactId)) {
                 attunedByArtifact.put(artifactId, yield.sessionCap(artifactId));
             }
         }

@@ -2,8 +2,10 @@ package net.tfminecraft.magic.meditation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -205,6 +207,20 @@ public final class MeditationCircle {
             }
         }
         return new WearOutcome(ArtifactWear.Result.NONE, "", gain);
+    }
+
+    /** Ids of artifacts that crumbled on this ring and now sit on it as husks. */
+    public Set<String> spentIds() {
+        Set<String> spent = new HashSet<>();
+        for (Furniture furniture : pedestals) {
+            for (ItemStack item : pedestalItems(furniture)) {
+                String id = ArtifactWear.spentId(item);
+                if (id != null) {
+                    spent.add(id);
+                }
+            }
+        }
+        return spent;
     }
 
     public record WearOutcome(ArtifactWear.Result result, String name, double granted) {}

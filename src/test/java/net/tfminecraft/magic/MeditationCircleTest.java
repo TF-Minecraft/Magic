@@ -113,6 +113,7 @@ class MeditationCircleTest {
     when(slots.get(1).getCurrentItem()).thenReturn(new ItemStack(Material.STONE));
     var circle = MeditationCircle.detect(center);
     String id = circle.artifactIdOn(furniture.getFirst());
+    assertTrue(circle.spentIds().isEmpty());
     try {
       Cache.artifactWearMultiplier = 2;
       assertEquals(ArtifactWear.Result.NONE, circle.wearArtifact(null, id, 1).result());
@@ -139,6 +140,7 @@ class MeditationCircleTest {
       verify(slots.getFirst(), times(2)).setCurrentItem(item);
       assertTrue(ArtifactWear.isHusk(item));
       assertNull(circle.artifactIdOn(furniture.getFirst()));
+      assertEquals(Set.of(id), circle.spentIds(), "Only the husk counts; the plain stone does not");
 
       Cache.artifactWearMultiplier = 1;
       var nearly = artifact();
