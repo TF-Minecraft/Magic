@@ -38,7 +38,6 @@ class MeditationSessionTest {
     when(circle.getArtifactPedestals()).thenReturn(List.of(post));
     when(circle.artifactFor(source)).thenReturn(new MeditationCache.ArtifactDef("fire", 5));
     when(circle.artifactIdOn(post)).thenReturn("artifact");
-    when(circle.elementPower("fire")).thenReturn(5.);
     ElementRegistry.clear();
     ElementRegistry.register(DomainTest.element("fire"));
     Cache.defaultEquilibrium = 0;
@@ -72,7 +71,7 @@ class MeditationSessionTest {
     return new MeditationSession(
         player,
         circle,
-        new MeditationSitYield(Map.of("artifact", cap), Map.of("artifact", 1)),
+        new MeditationSitYield(Map.of("artifact", cap), Map.of("artifact", 1), Map.of("fire", 5.)),
         resonance, null);
   }
 
@@ -219,14 +218,14 @@ class MeditationSessionTest {
     }
     when(circle.getPedestals()).thenReturn(posts);
     when(circle.getArtifactPedestals()).thenReturn(posts);
-    when(circle.elementPower("fire")).thenReturn(30d);
+    var shares = Map.of("fire", 30d);
     long oldSpawn = MeditationCache.spawnIntervalTicks;
     int oldLife = MeditationCache.orbLifetimeTicks;
     try {
       MeditationCache.spawnIntervalTicks = 5;
       MeditationCache.orbLifetimeTicks = 100;
       var session =
-          new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance, null);
+          new MeditationSession(player, circle, new MeditationSitYield(caps, null, shares), resonance, null);
       activate(session);
       for (int i = 0; i < 15; i++) session.tick(player, resonance);
       assertEquals(3, session.livingOrbs().size());
@@ -240,7 +239,7 @@ class MeditationSessionTest {
       for (double equilibrium : new double[] {-100, 100}) {
         resonance.setEquilibrium(equilibrium);
         var mixed =
-            new MeditationSession(player, circle, new MeditationSitYield(caps, null), resonance, null);
+            new MeditationSession(player, circle, new MeditationSitYield(caps, null, shares), resonance, null);
         activate(mixed);
         for (int i = 0; i < 15; i++) mixed.tick(player, resonance);
         assertEquals(
@@ -252,6 +251,23 @@ class MeditationSessionTest {
       MeditationCache.spawnIntervalTicks = oldSpawn;
       MeditationCache.orbLifetimeTicks = oldLife;
     }
+  }
+
+  @Test
+  void sittingAgainCannotRaiseResonancePastTheSplitShare() {
+    MeditationCache.resonancePerHit = 10;
+    var shared =
+        new MeditationSitYield(Map.of("artifact", 2.5), Map.of("artifact", 2), Map.of("fire", 2.5));
+    var first = new MeditationSession(player, circle, shared, resonance, null);
+    activate(first);
+    first.onOrbHit(player, first.livingOrbs().getFirst(), resonance, null);
+    assertEquals(2.5, resonance.getResonance("fire"));
+    first.end();
+    var again = new MeditationSession(player, circle, shared, resonance, null);
+    activate(again);
+    assertTrue(again.livingOrbs().isEmpty());
+    assertEquals(2.5, resonance.getResonance("fire"));
+    again.end();
   }
 
   @Test

@@ -13,10 +13,14 @@ import net.tfminecraft.magic.util.MagicNumbers;
 public final class ResonanceSession {
 
     private static final double EPSILON = 0.0001;
+    /** Stored values keep two decimals, so passive drift is applied in hundredths. */
+    private static final double DRIFT_STEP = 0.01;
 
     private String castModeId;
     private double equilibrium;
     private final Map<String, Double> resonance = new HashMap<>();
+    private final Map<String, Double> resonanceDrift = new HashMap<>();
+    private double equilibriumDrift;
     private long modifierRevision;
 
     public ResonanceSession() {
@@ -86,9 +90,78 @@ public final class ResonanceSession {
         setResonance(elementId, getResonance(elementId) + delta);
     }
 
+    /**
+     * Passive drift per tick is far below the two stored decimals, so it is carried here
+     * until it reaches whole hundredths and applied then. Hitting 0 or the element's max
+     * drops the remainder. Only kept in memory: offline time does not drift.
+     *
+     * @return true when the stored resonance changed
+     */
+    public boolean driftResonance(String elementId, double delta) {
+        ElementDef element = ElementRegistry.getById(elementId);
+        if (element == null) {
+            return false;
+        }
+        String id = element.getId();
+        double pending = resonanceDrift.getOrDefault(id, 0.0) + delta;
+        double step = wholeSteps(pending);
+        if (step == 0.0) {
+            resonanceDrift.put(id, pending);
+            return false;
+        }
+        double before = getResonance(id);
+        setResonance(id, before + step);
+        double after = getResonance(id);
+        if (Math.abs(after - before - step) > EPSILON) {
+            resonanceDrift.remove(id);
+        } else {
+            resonanceDrift.put(id, pending - step);
+        }
+        return after != before;
+    }
+
+    public void clearResonanceDrift(String elementId) {
+        ElementDef element = ElementRegistry.getById(elementId);
+        if (element != null) {
+            resonanceDrift.remove(element.getId());
+        }
+    }
+
+    /**
+     * Moves equilibrium down by {@code delta} (negative) without passing {@code floor}, carried
+     * like {@link #driftResonance} until it reaches whole hundredths.
+     */
+    public void driftEquilibrium(double delta, double floor) {
+        double pending = equilibriumDrift + delta;
+        double step = wholeSteps(pending);
+        if (step == 0.0) {
+            equilibriumDrift = pending;
+            return;
+        }
+        double target = equilibrium + step;
+        if (target < floor) {
+            setEquilibrium(floor);
+            equilibriumDrift = 0.0;
+            return;
+        }
+        setEquilibrium(target);
+        equilibriumDrift = pending - step;
+    }
+
+    public void clearEquilibriumDrift() {
+        equilibriumDrift = 0.0;
+    }
+
+    private static double wholeSteps(double pending) {
+        double steps = pending / DRIFT_STEP;
+        double whole = pending > 0.0 ? Math.floor(steps + 1e-9) : Math.ceil(steps - 1e-9);
+        return whole * DRIFT_STEP;
+    }
+
     public void setResonanceMap(Map<String, Double> next) {
         boolean hadValues = !resonance.isEmpty();
         resonance.clear();
+        resonanceDrift.clear();
         if (next != null) {
             for (Map.Entry<String, Double> entry : next.entrySet()) {
                 if (entry.getKey() == null || entry.getValue() == null) {

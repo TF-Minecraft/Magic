@@ -105,7 +105,11 @@ public final class MeditationCircle {
     public MeditationSitYield snapshotYield(long nowMs, String extraCharacterId) {
         Map<String, Double> sessionCaps = new HashMap<>();
         Map<String, Integer> users = new HashMap<>();
+        Map<String, Double> shares = new HashMap<>();
         for (Furniture furniture : artifactPedestals) {
+            for (ItemStack item : pedestalItems(furniture)) {
+                addShares(item, nowMs, extraCharacterId, shares);
+            }
             ItemStack item = itemOn(furniture);
             UUID uuid = ArtifactIds.read(item);
             if (uuid == null) {
@@ -113,11 +117,7 @@ public final class MeditationCircle {
             }
             String artifactId = uuid.toString();
             MeditationCache.ArtifactDef def = artifactByFurniture.get(furniture.getEntityId());
-            int n = ArtifactCareStore.activeUserCount(item, nowMs);
-            if (countsAsExtraUser(item, extraCharacterId, nowMs)) {
-                n++;
-            }
-            n = Math.max(1, n);
+            int n = userCount(item, extraCharacterId, nowMs);
             Artifact aura = Artifact.fromItem(item);
             double fill = aura != null ? aura.getFill(def.elementId) : 0.0;
             double cap = aura != null ? aura.getCap(def.elementId) : 0.0;
@@ -126,7 +126,43 @@ public final class MeditationCircle {
             sessionCaps.put(artifactId, usable / n);
             users.put(artifactId, n);
         }
-        return new MeditationSitYield(sessionCaps, users);
+        return new MeditationSitYield(sessionCaps, users, shares);
+    }
+
+    /**
+     * Adds one pedestal item's usable aura, divided by its users, to each element's share.
+     * Counts the same items as circle power: stored-aura artifacts, never charges.
+     */
+    private static void addShares(
+            ItemStack item, long nowMs, String extraCharacterId, Map<String, Double> shares) {
+        if (ChargeIds.isCharge(item)) {
+            return;
+        }
+        Artifact aura = Artifact.fromItem(item);
+        if (aura == null || !aura.hasStoredAura()) {
+            return;
+        }
+        int n = userCount(item, extraCharacterId, nowMs);
+        double muffle = ArtifactCareStore.readMuffle(item);
+        for (String elementId : aura.getCappedElementIds()) {
+            if (ElementRegistry.getById(elementId) == null) {
+                continue;
+            }
+            double usable = ArtifactCareStore.usableFill(
+                    aura.getFill(elementId), aura.getCap(elementId), muffle);
+            if (usable <= 0.0) {
+                continue;
+            }
+            shares.merge(elementId, usable / n, Double::sum);
+        }
+    }
+
+    private static int userCount(ItemStack item, String extraCharacterId, long nowMs) {
+        int n = ArtifactCareStore.activeUserCount(item, nowMs);
+        if (countsAsExtraUser(item, extraCharacterId, nowMs)) {
+            n++;
+        }
+        return Math.max(1, n);
     }
 
     public ItemStack itemOn(Furniture furniture) {
@@ -153,26 +189,9 @@ public final class MeditationCircle {
         return powerByElement;
     }
 
-    /** Stored fill of one element across every artifact in the circle. */
-    public double elementPower(String elementId) {
-        if (elementId == null || elementId.isBlank()) {
-            return 0.0;
-        }
-        Double exact = powerByElement.get(elementId);
-        if (exact != null) {
-            return exact;
-        }
-        for (Map.Entry<String, Double> entry : powerByElement.entrySet()) {
-            if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(elementId)) {
-                return entry.getValue() != null ? entry.getValue() : 0.0;
-            }
-        }
-        return 0.0;
-    }
-
     /**
      * True when this sit can still raise at least one artifact's element.
-     * The character's resonance in that element must sit below the circle's stored total.
+     * The character's resonance in that element must sit below their share of it.
      */
     public boolean canGainResonance(Player player, ResonanceSession session, MeditationSitYield yield) {
         if (session == null || yield == null) {
@@ -195,7 +214,7 @@ public final class MeditationCircle {
             double elementMax = element != null ? element.getMaxResonance() : Double.MAX_VALUE;
             double allowed = MeditationCeiling.allowed(
                     session.getResonance(def.elementId),
-                    elementPower(def.elementId),
+                    yield.elementShare(def.elementId),
                     elementMax,
                     cap);
             if (allowed > MeditationCeiling.EPSILON) {

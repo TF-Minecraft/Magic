@@ -32,13 +32,14 @@ public final class ResonanceService {
                 continue;
             }
             double current = session.getResonance(element.getId());
-            if (ratePerHour < 0.0 && current <= EPSILON) {
+            if ((ratePerHour < 0.0 && current <= EPSILON)
+                    || (ratePerHour > 0.0 && !element.isUnlocked(player))) {
+                session.clearResonanceDrift(element.getId());
                 continue;
             }
-            if (ratePerHour > 0.0 && !element.isUnlocked(player)) {
+            if (!session.driftResonance(element.getId(), ratePerHour * dtHours)) {
                 continue;
             }
-            session.addResonance(element.getId(), ratePerHour * dtHours);
             dirty = true;
             if (Cache.debug) {
                 Magic.plugin.getLogger().fine("[Magic] Resonance tick for "

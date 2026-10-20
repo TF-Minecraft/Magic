@@ -1,8 +1,9 @@
 package net.tfminecraft.magic.meditation;
 
 /**
- * Meditation cannot raise an element above the aura of that element stored in the circle.
- * A character already at or above that total gains nothing; otherwise the hit is cut to the gap.
+ * Meditation cannot raise an element above the sitter's share of that element's aura in the
+ * circle (see {@link MeditationSitYield#elementShare}). A character already at or above the
+ * share gains nothing; otherwise the hit is cut to the gap.
  */
 public final class MeditationCeiling {
 
@@ -10,11 +11,11 @@ public final class MeditationCeiling {
 
     private MeditationCeiling() {}
 
-    public static double allowed(double current, double circlePower, double elementMax, double offered) {
-        if (offered <= 0.0 || circlePower <= 0.0) {
+    public static double allowed(double current, double share, double elementMax, double offered) {
+        if (offered <= 0.0 || share <= 0.0) {
             return 0.0;
         }
-        double ceiling = Math.min(circlePower, Math.max(0.0, elementMax));
+        double ceiling = Math.min(share, Math.max(0.0, elementMax));
         double headroom = ceiling - current;
         if (headroom <= EPSILON) {
             return 0.0;

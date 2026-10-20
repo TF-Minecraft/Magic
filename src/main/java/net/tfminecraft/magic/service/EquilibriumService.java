@@ -23,6 +23,7 @@ public final class EquilibriumService {
     private static void tickSession(Player player, ResonanceSession session) {
         double eq = session.getEquilibrium();
         if (eq == 0.0) {
+            session.clearEquilibriumDrift();
             return;
         }
 
@@ -30,14 +31,11 @@ public final class EquilibriumService {
 
         if (eq < 0) {
             double ratePerHour = EquilibriumRates.corruptionDriftPerHour(eq);
-            eq -= ratePerHour * dtHours;
-            eq = Math.max(GuiCache.equilibriumMin, eq);
+            session.driftEquilibrium(-ratePerHour * dtHours, GuiCache.equilibriumMin);
         } else {
-            eq -= EquilibriumRates.tranquilityDecayPerHour(eq) * dtHours;
-            eq = Math.max(0.0, eq);
+            session.driftEquilibrium(-EquilibriumRates.tranquilityDecayPerHour(eq) * dtHours, 0.0);
         }
 
-        session.setEquilibrium(eq);
         if (Cache.debug) {
             Magic.plugin.getLogger().fine("[Magic] Equilibrium tick for "
                     + player.getName() + ": " + MagicNumbers.format(session.getEquilibrium()));

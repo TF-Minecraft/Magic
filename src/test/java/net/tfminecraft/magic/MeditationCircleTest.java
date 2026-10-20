@@ -132,11 +132,12 @@ class MeditationCircleTest {
     assertEquals(1, circle.getArtifactPedestals().size());
     assertEquals(5, circle.getTotalPower());
     assertEquals(Map.of("fire", 5.), circle.getPowerByElement());
-    assertEquals(5, circle.elementPower("fire"));
-    assertEquals(5, circle.elementPower("FIRE"));
-    assertEquals(0, circle.elementPower(null));
-    assertEquals(0, circle.elementPower(" "));
-    assertEquals(0, circle.elementPower("missing"));
+    var alone = circle.snapshotYield(1000);
+    assertEquals(5, alone.elementShare("fire"));
+    assertEquals(5, alone.elementShare("FIRE"));
+    assertEquals(0, alone.elementShare(null));
+    assertEquals(0, alone.elementShare(" "));
+    assertEquals(0, alone.elementShare("missing"));
     assertEquals("fire", circle.artifactFor(furniture.getFirst().getEntityId()).elementId);
     assertSame(item, circle.itemOn(furniture.getFirst()));
     assertNull(circle.itemOn(null));
@@ -150,6 +151,7 @@ class MeditationCircleTest {
     assertEquals(1, circle.snapshotYield(1000, "user").users(id));
     assertEquals(2, circle.snapshotYield(1000, "second").users(id));
     assertEquals(2.5, circle.snapshotYield(1000, "second").sessionCap(id));
+    assertEquals(2.5, circle.snapshotYield(1000, "second").elementShare("fire"));
     assertFalse(circle.isFullyAttuned(Map.of(), yield));
     assertTrue(circle.isFullyAttuned(Map.of(id, 5.), yield));
     assertTrue(circle.isFullyAttuned(Map.of(), null));
@@ -157,12 +159,43 @@ class MeditationCircleTest {
     assertFalse(circle.canGainResonance(null, null, yield));
     assertFalse(circle.canGainResonance(null, session, null));
     assertTrue(circle.canGainResonance(null, session, yield));
+    session.setResonance("fire", 3);
+    assertTrue(circle.canGainResonance(null, session, yield));
+    assertFalse(circle.canGainResonance(null, session, circle.snapshotYield(1000, "second")));
     session.setResonance("fire", 5);
     assertFalse(circle.canGainResonance(null, session, yield));
     assertFalse(circle.canGainResonance(null, session, MeditationSitYield.empty()));
     circle.stampArtifacts(null, Long.MAX_VALUE);
     circle.stampArtifacts(" ", Long.MAX_VALUE);
     assertTrue(ArtifactCareStore.readUsers(item).isEmpty());
+  }
+
+  @Test
+  void sharesSplitEachArtifactByItsOwnUsersAndCountOnlyUsableAura() {
+    ring();
+    var shared = artifact();
+    ArtifactCareStore.stampUser(shared, "a", 1000);
+    var own = artifact();
+    when(slots.get(0).getCurrentItem()).thenReturn(shared);
+    when(slots.get(1).getCurrentItem()).thenReturn(own);
+    var circle = MeditationCircle.detect(center);
+    assertEquals(10, circle.getTotalPower());
+    assertEquals(10, circle.snapshotYield(1000, "a").elementShare("fire"));
+    assertEquals(7.5, circle.snapshotYield(1000, "b").elementShare("fire"));
+    var session = new ResonanceSession();
+    session.setResonance("fire", 8);
+    assertTrue(circle.canGainResonance(null, session, circle.snapshotYield(1000, "a")));
+    assertFalse(circle.canGainResonance(null, session, circle.snapshotYield(1000, "b")));
+    ArtifactCareStore.setMuffle(own, .8, 1000);
+    assertEquals(4.5, circle.snapshotYield(1000, "b").elementShare("fire"));
+    var empty = artifact();
+    var aura = Artifact.fromItem(empty);
+    aura.setFill("fire", 0);
+    aura.persistPdc(empty);
+    when(slots.get(1).getCurrentItem()).thenReturn(empty);
+    assertEquals(2.5, circle.snapshotYield(1000, "b").elementShare("fire"));
+    when(slots.get(1).getCurrentItem()).thenReturn(new ItemStack(Material.STONE));
+    assertEquals(2.5, circle.snapshotYield(1000, "b").elementShare("fire"));
   }
 
   @Test
@@ -248,6 +281,11 @@ class MeditationCircleTest {
     when(slots.getFirst().getDisplayStandId()).thenReturn(display.getUniqueId());
     var circle = MeditationCircle.detect(center);
     assertEquals(8, circle.getTotalPower());
+    var shares = circle.snapshotYield(1000);
+    assertEquals(5, shares.elementShare("fire"));
+    assertEquals(3, shares.elementShare("water"));
+    assertEquals(0, shares.elementShare("unknown"));
+    assertEquals(0, shares.elementShare("empty"));
     verify(slots.getFirst(), atLeastOnce()).setModel(item);
     MeditationCache.pedestalSlot = "top";
     circle.stampArtifacts("user", 1000);
@@ -297,10 +335,6 @@ class MeditationCircleTest {
     charge.setItemMeta(meta);
     when(slots.getFirst().getCurrentItem()).thenReturn(charge);
     assertFalse(circle.snapshotYield(1, " ").hasAnyCap());
-    circle.getPowerByElement().put(null, 3d);
-    circle.getPowerByElement().put("Fire", null);
-    circle.getPowerByElement().remove("fire");
-    assertEquals(0, circle.elementPower("FIRE"));
     var alien = mock(Furniture.class);
     var at = furniture.getFirst().getLoc();
     when(alien.getLoc()).thenReturn(at);
