@@ -555,9 +555,15 @@ public final class MeditationSession {
             save(player, profiles);
             return;
         }
-        attunedByArtifact.put(artifactId, credit + gain);
-        AttunementCaptureService.credit(player, session, artifactId, artifact.elementId, gain);
-        wear(player, furniture, artifactId, gain);
+        MeditationCircle.WearOutcome outcome = circle.wearArtifact(furniture, artifactId, gain);
+        if (outcome != null) {
+            gain = Math.min(gain, outcome.granted());
+        }
+        if (gain > 0) {
+            attunedByArtifact.put(artifactId, credit + gain);
+            AttunementCaptureService.credit(player, session, artifactId, artifact.elementId, gain);
+        }
+        afterWear(player, furniture, artifactId, outcome);
         if (MeditationCeiling.allowed(
                 session.getResonance(artifact.elementId),
                 yield.elementShare(artifact.elementId),
@@ -574,8 +580,8 @@ public final class MeditationSession {
      * saved at most every {@link #WEAR_SAVE_MS} and when the sit ends, so a crash loses
      * only a few seconds of wear while resonance is saved on every hit.
      */
-    private void wear(Player player, Furniture furniture, String artifactId, double gain) {
-        MeditationCircle.WearOutcome outcome = circle.wearArtifact(furniture, artifactId, gain);
+    private void afterWear(
+            Player player, Furniture furniture, String artifactId, MeditationCircle.WearOutcome outcome) {
         if (outcome == null || outcome.result() == ArtifactWear.Result.NONE) {
             return;
         }

@@ -54,6 +54,19 @@ public final class ArtifactWear {
         return highest * Cache.artifactWearMultiplier;
     }
 
+    /**
+     * Resonance the artifact can still grant before it crumbles. Infinite when wear is
+     * off or the stack is not an artifact, so callers can always clamp with it.
+     */
+    public static double remaining(ItemStack stack) {
+        Artifact artifact = Artifact.fromItem(stack);
+        double budget = budget(artifact);
+        if (budget <= 0.0) {
+            return Double.POSITIVE_INFINITY;
+        }
+        return Math.max(0.0, budget - readWear(stack));
+    }
+
     /** Share of the budget left, 0-1. Always 1 when wear is off. */
     public static double integrity(ItemStack stack, Artifact artifact) {
         double budget = budget(artifact);

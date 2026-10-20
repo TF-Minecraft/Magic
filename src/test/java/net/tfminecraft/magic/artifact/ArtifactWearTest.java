@@ -93,7 +93,15 @@ class ArtifactWearTest {
     assertEquals(0, ArtifactWear.budget(Artifact.create()));
     assertEquals(1, ArtifactWear.integrity(item, Artifact.create()));
 
+    assertEquals(20, ArtifactWear.remaining(item));
+    setWear(item, 15);
+    assertEquals(5, ArtifactWear.remaining(item));
+    setWear(item, 25);
+    assertEquals(0, ArtifactWear.remaining(item));
+    setWear(item, 0);
+    assertEquals(Double.POSITIVE_INFINITY, ArtifactWear.remaining(new ItemStack(Material.STONE)));
     Cache.artifactWearMultiplier = 0;
+    assertEquals(Double.POSITIVE_INFINITY, ArtifactWear.remaining(item));
     assertFalse(ArtifactWear.enabled());
     assertEquals(0, ArtifactWear.budget(artifact));
     assertEquals(1, ArtifactWear.integrity(item, artifact));

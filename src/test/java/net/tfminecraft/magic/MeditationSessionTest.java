@@ -154,7 +154,7 @@ class MeditationSessionTest {
   }
 
   MeditationCircle.WearOutcome outcome(ArtifactWear.Result result) {
-    return new MeditationCircle.WearOutcome(result, "Ember Ring");
+    return new MeditationCircle.WearOutcome(result, "Ember Ring", 100);
   }
 
   MeditationOrb nextOrb(MeditationSession session) {
@@ -207,7 +207,7 @@ class MeditationSessionTest {
   void aCrumbleWithNoPedestalPointStillClosesWithoutEffects() {
     when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
         .thenReturn(outcome(ArtifactWear.Result.WORN))
-        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.CRUMBLED, ""));
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.CRUMBLED, "", 100));
     var session = session(10);
     activate(session);
     assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
@@ -216,6 +216,20 @@ class MeditationSessionTest {
     when(post.getLoc()).thenReturn(null);
     assertTrue(session.onOrbHit(player, orb, resonance, null));
     assertNotNull(player.nextMessage());
+    session.end();
+  }
+
+  @Test
+  void anArtifactNearlySpentGrantsOnlyWhatItHasLeft() {
+    when(circle.wearArtifact(eq(post), eq("artifact"), anyDouble()))
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.WORN, "Ember Ring", .25))
+        .thenReturn(new MeditationCircle.WearOutcome(ArtifactWear.Result.CRUMBLED, "Ember Ring", 0));
+    var session = session(10);
+    activate(session);
+    assertFalse(session.onOrbHit(player, nextOrb(session), resonance, null));
+    assertEquals(.25, resonance.getResonance("fire"), 1e-9);
+    assertTrue(session.onOrbHit(player, nextOrb(session), resonance, null));
+    assertEquals(.25, resonance.getResonance("fire"), 1e-9, "A spent artifact grants nothing more");
     session.end();
   }
 

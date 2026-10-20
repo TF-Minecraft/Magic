@@ -176,8 +176,10 @@ public final class MeditationCircle {
     }
 
     /**
-     * Wears the artifact with this id on the pedestal by {@code gain}. A crumbled artifact
-     * becomes a husk in the same slot. Returns the artifact's name as it was before.
+     * Wears the artifact with this id on the pedestal by up to {@code gain}: never more
+     * than it has left, so other meditators sharing it cannot push it past its budget.
+     * A crumbled artifact becomes a husk in the same slot. The outcome carries how much
+     * the artifact actually granted and its name as it was before.
      */
     public WearOutcome wearArtifact(Furniture furniture, String artifactId, double gain) {
         if (furniture != null && artifactId != null) {
@@ -188,17 +190,24 @@ public final class MeditationCircle {
                     continue;
                 }
                 String name = AttunementCaptureService.displayNameOf(item);
-                ArtifactWear.Result result = ArtifactWear.wear(item, gain);
+                double granted = Math.min(gain, ArtifactWear.remaining(item));
+                ArtifactWear.Result result;
+                if (granted <= 0.0) {
+                    ArtifactWear.crumble(item);
+                    result = ArtifactWear.Result.CRUMBLED;
+                } else {
+                    result = ArtifactWear.wear(item, granted);
+                }
                 if (result != ArtifactWear.Result.NONE) {
                     slot.setCurrentItem(item);
                 }
-                return new WearOutcome(result, name);
+                return new WearOutcome(result, name, granted);
             }
         }
-        return new WearOutcome(ArtifactWear.Result.NONE, "");
+        return new WearOutcome(ArtifactWear.Result.NONE, "", gain);
     }
 
-    public record WearOutcome(ArtifactWear.Result result, String name) {}
+    public record WearOutcome(ArtifactWear.Result result, String name, double granted) {}
 
     /** Saves the pedestal's items through InteractibleFurniture. */
     public static void persist(Furniture furniture) {
