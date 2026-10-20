@@ -346,6 +346,62 @@ class SessionServiceTest {
   }
 
   @Test
+  void realTimeDriftBuildsUpToWholeHundredthsAndOnlySavesWhenTheValueMoves() {
+    Cache.secondsPerHour = 3600;
+    ElementRegistry.clear();
+    var cfg = new YamlConfiguration();
+    cfg.set("decay_per_hour", -.02);
+    ElementRegistry.register(new ElementDef("fire", cfg));
+    var player = server.addPlayer();
+    service.activate(player, new CharacterTestSupport().start(player, "slow"));
+    var s = sessions.get(player);
+    s.setResonance("fire", 100);
+    s.setEquilibrium(20);
+    clearInvocations(store);
+    for (int i = 0; i < 1199; i++) EquilibriumService.tickOnlineSessions(sessions);
+    assertEquals(20, s.getEquilibrium());
+    EquilibriumService.tickOnlineSessions(sessions);
+    assertEquals(19.99, s.getEquilibrium());
+    for (int i = 0; i < 1799; i++) ResonanceService.tickOnlineSessions(sessions);
+    assertEquals(100, s.getResonance("fire"));
+    verify(store, never()).save(any());
+    ResonanceService.tickOnlineSessions(sessions);
+    assertEquals(99.99, s.getResonance("fire"));
+    verify(store).save(any());
+    for (int i = 0; i < 1800; i++) ResonanceService.tickOnlineSessions(sessions);
+    assertEquals(99.98, s.getResonance("fire"));
+  }
+
+  @Test
+  void driftStopsAtTheElementLimitsAndIgnoresUnknownElements() {
+    ElementRegistry.clear();
+    var cfg = new YamlConfiguration();
+    cfg.set("decay_per_hour", .5);
+    ElementRegistry.register(new ElementDef("grow", cfg));
+    var player = server.addPlayer();
+    service.activate(player, new CharacterTestSupport().start(player, "full"));
+    var s = sessions.get(player);
+    s.setResonance("grow", 100);
+    clearInvocations(store);
+    ResonanceService.tickOnlineSessions(sessions);
+    assertEquals(100, s.getResonance("grow"));
+    verify(store, never()).save(any());
+    s.setResonance("grow", 99.8);
+    assertTrue(s.driftResonance("grow", .5));
+    assertEquals(100, s.getResonance("grow"));
+    assertFalse(s.driftResonance("grow", -.004));
+    assertEquals(100, s.getResonance("grow"));
+    assertTrue(s.driftResonance("grow", -.006));
+    assertEquals(99.99, s.getResonance("grow"));
+    assertFalse(s.driftResonance("grow", -.004));
+    assertFalse(s.driftResonance("missing", -1));
+    s.clearResonanceDrift("missing");
+    s.clearResonanceDrift("grow");
+    assertFalse(s.driftResonance("grow", -.006));
+    assertEquals(99.99, s.getResonance("grow"));
+  }
+
+  @Test
   void activatingCorruptProfilePreservesOriginalBytesBeforeCreatingFreshDefaults() throws Exception {
     String id = CharacterTestSupport.id("corrupt");
     var corrupt = temp.resolve(id + ".json");

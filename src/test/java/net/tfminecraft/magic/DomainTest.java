@@ -88,6 +88,18 @@ class DomainTest {
     assertFalse(MeditationSitYield.empty().hasAnyCap());
     assertTrue(new MeditationSitYield(null, null).exhausted(null));
     assertFalse(new MeditationSitYield(Map.of("a", -.1), null).hasAnyCap());
+    assertEquals(0, yield.elementShare("fire"));
+    var shares = new HashMap<String, Double>();
+    shares.put("Fire", 2.);
+    shares.put(" fire ", 1.);
+    shares.put(null, 5.);
+    shares.put("water", null);
+    shares.put("ice", -1.);
+    var split = new MeditationSitYield(null, null, shares);
+    shares.put("Fire", 20.);
+    assertEquals(3, split.elementShare("FIRE"));
+    assertEquals(0, split.elementShare("water"));
+    assertEquals(0, split.elementShare("ice"));
   }
 
   @Test

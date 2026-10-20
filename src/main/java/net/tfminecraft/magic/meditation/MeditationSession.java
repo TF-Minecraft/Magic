@@ -504,7 +504,7 @@ public final class MeditationSession {
         double offered = Math.min(MeditationCache.resonancePerHit / n, remaining);
         double gain = MeditationCeiling.allowed(
                 session.getResonance(artifact.elementId),
-                circle.elementPower(artifact.elementId),
+                yield.elementShare(artifact.elementId),
                 elementMax(artifact.elementId),
                 offered);
         if (gain <= 0) {
@@ -516,7 +516,7 @@ public final class MeditationSession {
         AttunementCaptureService.credit(player, session, artifactId, artifact.elementId, gain);
         if (MeditationCeiling.allowed(
                 session.getResonance(artifact.elementId),
-                circle.elementPower(artifact.elementId),
+                yield.elementShare(artifact.elementId),
                 elementMax(artifact.elementId),
                 remaining) <= 0) {
             closeElement(artifact.elementId);
@@ -551,7 +551,7 @@ public final class MeditationSession {
             }
             double allowed = MeditationCeiling.allowed(
                     session.getResonance(def.elementId),
-                    circle.elementPower(def.elementId),
+                    yield.elementShare(def.elementId),
                     elementMax(def.elementId),
                     cap);
             if (allowed <= MeditationCeiling.EPSILON) {
