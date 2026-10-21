@@ -84,6 +84,13 @@ class GearChargeCoverageTest extends GearCoverageSupport {
       when(occupancy.getItem()).thenReturn(weapon);
       broken.when(() -> GearBrokenMarker.isBroken(weapon)).thenReturn(true);
       GearChargeService.tryApply(player, loc, hand);
+      broken.when(() -> GearBrokenMarker.isBroken(weapon)).thenReturn(false);
+      when(occupancy.isReattune()).thenReturn(true);
+      GearChargeService.tryApply(player, loc, hand);
+      effects.verify(() -> net.tfminecraft.magic.gear.ownership.GearEffects.charge(any(), any(), any(), any(), any(), any(), anyInt()), never());
+      effects.when(() -> net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, loc, occupancy)).thenReturn(true);
+      GearChargeService.tryApply(player, loc, hand);
+      effects.verify(() -> net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, loc, occupancy), times(2));
       orbs.verify(() -> GearOrbService.begin(any(), any(), any(), any(), anyInt()), never());
     }
   }

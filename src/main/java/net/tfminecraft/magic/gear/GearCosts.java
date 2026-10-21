@@ -36,11 +36,34 @@ public final class GearCosts {
         return player != null && player.hasPermission("magic.bypass_crafting_cost");
     }
 
+    /**
+     * The share of these costs a re-attunement takes, rounded up per material so a
+     * nonzero fraction never makes a material free.
+     */
+    public static Map<String, Integer> fraction(Map<String, Integer> costs, double fraction) {
+        Map<String, Integer> share = new HashMap<>();
+        if (costs == null || !(fraction > 0)) {
+            return share;
+        }
+        for (Map.Entry<String, Integer> entry : costs.entrySet()) {
+            Integer amount = entry.getValue();
+            if (amount == null || amount <= 0) {
+                continue;
+            }
+            // The epsilon keeps float error (10 * 0.3 = 3.0000000000000004) from adding an item.
+            share.put(entry.getKey(), (int) Math.min(Integer.MAX_VALUE, Math.max(1L, (long) Math.ceil(amount * fraction - 1e-9))));
+        }
+        return share;
+    }
+
     public static boolean has(Player player, Collection<PartDef> parts) {
+        return has(player, total(parts));
+    }
+
+    public static boolean has(Player player, Map<String, Integer> costs) {
         if (bypasses(player)) {
             return true;
         }
-        Map<String, Integer> costs = total(parts);
         for (Map.Entry<String, Integer> entry : costs.entrySet()) {
             int remaining = entry.getValue();
             for (ItemStack item : player.getInventory().getContents()) {
@@ -92,9 +115,13 @@ public final class GearCosts {
 
     /** Plans removal on clones; a deposit checks the captured frame again before commit. */
     public static ItemStack[] plan(Player player, Collection<PartDef> parts) {
+        return plan(player, total(parts));
+    }
+
+    public static ItemStack[] plan(Player player, Map<String, Integer> costs) {
         ItemStack[] after = net.tfminecraft.magic.gear.ownership.GearEffects.cloneContents(player.getInventory().getContents());
         if (bypasses(player)) return after;
-        for (var cost : total(parts).entrySet()) {
+        for (var cost : costs.entrySet()) {
             int remaining = cost.getValue();
             for (int i = 0; i < after.length && remaining > 0; i++) {
                 ItemStack item = after[i]; if (item == null) continue;

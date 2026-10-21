@@ -74,6 +74,12 @@ public final class GearChargeService {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
+        // Whoever charges a paid reset picks the weapon's new attunement, so only its owner may.
+        if (occupancy.isReattune() && !net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, station, occupancy)) {
+            player.sendMessage(Messages.get("gear.reattune.not_yours"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
         String stationKey = GearStationStore.key(station);
         List<String> over = overResonance(player, charge);
         if (!over.isEmpty() && !confirmed(player, stationKey, occupancy, token.orElseThrow())) {

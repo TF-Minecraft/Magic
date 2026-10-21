@@ -85,6 +85,7 @@ public final class GearStationListener implements Listener {
         ItemStack weapon = GearStationStore.takeForAbort(station);
         if (weapon != null) {
             station.getWorld().dropItem(station.clone().add(0.5, 1.0, 0.5), weapon);
+            GearStationStore.dropReattuneFee(station, captured);
             GearStationStore.acknowledgeRelease(station, captured.generation());
             Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(station)
                     + " lost its furniture. Dropped the weapon and removed its display.");
@@ -167,6 +168,9 @@ public final class GearStationListener implements Listener {
         }
 
         if (player.isSneaking()) {
+            if (!GearBrokenMarker.isBroken(hand) && GearProvenance.stationCanCreate(hand) && GearStationStore.isAttuned(hand)) {
+                GearReattuneService.request(player, location, hand);
+            }
             return;
         }
         if (GearBrokenMarker.isBroken(hand)) {
@@ -262,6 +266,11 @@ public final class GearStationListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
+        if (occupancy != null && occupancy.isReattune()) {
+            player.sendMessage(Messages.get("gear.reattune.locked"));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
         if (GearStationStore.property().identity().current(player).isEmpty()) return;
         ItemStack item = GearStationStore.eject(location);
         if (item == null) {
@@ -288,6 +297,30 @@ public final class GearStationListener implements Listener {
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
     }
 
+    /**
+     * Calls off a paid reset between runs: the unchanged weapon and the whole fee go back.
+     * A running charge cannot be called off, or the fee would only ever be paid for a
+     * result the owner liked.
+     */
+    private void returnReattune(Player player, Location location, GearStationStore.Occupancy occupancy) {
+        if (occupancy.isOrbSessionActive() || GearOrbService.isActive(location)) {
+            player.sendMessage(Messages.get("gear.orbs.busy")); return;
+        }
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, location, occupancy)) {
+            player.sendMessage(Messages.get("gear.reattune.not_yours")); return;
+        }
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, occupancy.getCharged())) {
+            player.sendMessage(Messages.get("gear.reattune.held"));
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(location)
+                    + " could not return a re-attunement and its fee. Check the gear station data for staff review.");
+            return;
+        }
+        recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
+        recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
+        player.sendMessage(Messages.get("gear.reattune.returned"));
+        player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
+    }
+
     private void tryAbort(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
@@ -311,6 +344,10 @@ public final class GearStationListener implements Listener {
         Location location = block.getLocation();
         GearStationStore.Occupancy occupancy = GearStationStore.get(location);
         if (occupancy == null) {
+            return;
+        }
+        if (occupancy.isReattune()) {
+            returnReattune(player, location, occupancy);
             return;
         }
         if (GearStationStore.isAttuned(occupancy.getItem())) {

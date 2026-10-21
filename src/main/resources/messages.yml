@@ -365,6 +365,32 @@ gear:
 
     not_yours: "#ff5555Only the one who prepared this craft can take it apart."
 
+  # Sneak-right-click an empty station with an attuned weapon to wipe its attunement.
+  # The fee is gear.reattune.cost_fraction of the weapon's part costs (config.yml).
+  reattune:
+
+    warn: "#ff5555Re-attuning wipes this weapon's attunement and Rift once a charge takes hold. It costs:"
+
+    free: "#aaaaaaNo materials"
+
+    confirm: "#aaaaaaSneak-right-click again to commit"
+
+    lacking: "#ff5555You lack the materials to re-attune this weapon."
+
+    placed: "#aaaaaa§oThe weapon rests on the station, waiting to be attuned anew"
+
+    locked: "#aaaaaa§oThe weapon waits to be attuned anew. Its owner can shift-left-click the station to take it and the materials back"
+
+    kept: "#aaaaaaThe old attunement holds. Apply another charge to attune the weapon anew."
+
+    done: "#aaaaaa§oThe old attunement is gone"
+
+    returned: "#aaaaaa§oThe re-attunement breaks off. The weapon and the materials go back to its owner"
+
+    not_yours: "#ff5555Only the weapon's owner can attune it anew or take it back."
+
+    held: "#ff5555The materials for this re-attunement cannot be returned. Ask staff to take it apart."
+
   broken:
 
     charge: "#ff5555This weapon is damaged. Reclaim its runes before charging it again."

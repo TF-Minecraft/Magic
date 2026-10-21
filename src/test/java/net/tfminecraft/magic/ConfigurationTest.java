@@ -254,6 +254,28 @@ class ConfigurationTest {
   }
 
   @Test
+  void reattuneFeeShareFallsBackToHalfWhenMissingNegativeOrNotANumber() throws Exception {
+    var loader = new ConfigLoader();
+    try {
+      assertTrue(loader.loadSafe(write("reattune.yml", "gear: {reattune: {cost_fraction: 0.25}}\n").toFile()));
+      assertEquals(.25, GearCache.reattuneCostFraction);
+      assertTrue(loader.loadSafe(write("free.yml", "gear: {reattune: {cost_fraction: 0}}\n").toFile()));
+      assertEquals(0, GearCache.reattuneCostFraction);
+      assertTrue(loader.loadSafe(write("negative.yml", "gear: {reattune: {cost_fraction: -1}}\n").toFile()));
+      assertEquals(.5, GearCache.reattuneCostFraction);
+      GearCache.reattuneCostFraction = .25;
+      assertTrue(loader.loadSafe(write("nan.yml", "gear: {reattune: {cost_fraction: .nan}}\n").toFile()));
+      assertEquals(.5, GearCache.reattuneCostFraction);
+      GearCache.reattuneCostFraction = .25;
+      assertTrue(loader.loadSafe(write("missing.yml", "gear: {station: 'iaf(test:station)'}\n").toFile()));
+      assertEquals(.5, GearCache.reattuneCostFraction);
+    } finally {
+      loader.load(Path.of("src/main/resources/config.yml").toFile());
+    }
+    assertEquals(.5, GearCache.reattuneCostFraction);
+  }
+
+  @Test
   void artifactWearReadsItsMultiplierAndFallsBackToTheDefault() throws Exception {
     var loader = new ConfigLoader();
     try {

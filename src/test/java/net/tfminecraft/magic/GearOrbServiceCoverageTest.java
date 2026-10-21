@@ -189,6 +189,52 @@ class GearOrbServiceCoverageTest extends GearCoverageSupport {
     }
   }
 
+  @Test
+  void aPaidResetReplacesTheAttunementOnlyWhenTheRunCatchesSomething() throws Exception {
+    var p = server.addPlayer();
+    var weapon = item();
+    var updated = new ItemStack(Material.BLAZE_ROD);
+    var occupancy = mock(GearStationStore.Occupancy.class);
+    when(occupancy.getItem()).thenReturn(weapon);
+    when(occupancy.isReattune()).thenReturn(true);
+    stores.when(() -> GearStationStore.get(station)).thenReturn(occupancy);
+    stores.when(() -> GearStationStore.completeReattune(any(), any(), any())).thenReturn(true);
+    try (var req = mockStatic(WeaponRequirement.class);
+        var rift = mockStatic(WeaponRift.class);
+        var provenance = mockStatic(GearProvenance.class);
+        var lore = mockStatic(WeaponLore.class);
+        var chat = mockStatic(WeaponAttunementChat.class)) {
+      var fresh = mock(WeaponRequirement.class);
+      req.when(WeaponRequirement::empty).thenReturn(fresh);
+      provenance.when(() -> GearProvenance.socketsLocked(weapon)).thenReturn(true);
+      lore.when(() -> WeaponLore.updateItem(weapon)).thenReturn(updated);
+      rift.when(() -> WeaponRift.get(weapon)).thenReturn(40);
+      for (int mode = 0; mode < 3; mode++) {
+        var s = begin(p);
+        when(s.riftDelta()).thenReturn(5);
+        // 0: nothing caught; 1: caught a band that no shown element keeps; 2: caught.
+        req.when(() -> WeaponRequirement.highestBand(anyMap())).thenReturn(mode == 0 ? 0 : 2);
+        when(fresh.highestBand()).thenReturn(mode == 2 ? 2 : 0);
+        invoke(GearOrbService.class, "complete", new Class[] {GearOrbSession.class, boolean.class}, s, true);
+      }
+      verify(fresh, times(3)).mergeAmounts(Map.of("fire", 10d));
+      verify(fresh, times(1)).persist(weapon);
+      req.verify(() -> WeaponRequirement.fromItem(any()), never());
+      rift.verify(() -> WeaponRift.set(weapon, 5), times(1));
+      stores.verify(() -> GearStationStore.update(station, occupancy, weapon), times(2));
+      stores.verify(() -> GearStationStore.completeReattune(station, occupancy, updated), times(1));
+      chat.verify(() -> WeaponAttunementChat.sendPostChargeSummary(p, weapon), times(2));
+      chat.verify(() -> WeaponAttunementChat.sendPostChargeSummary(p, updated), times(1));
+      try (var effects = mockStatic(net.tfminecraft.magic.gear.ownership.GearEffects.class)) {
+        stores.when(() -> GearStationStore.completeReattune(any(), any(), any())).thenReturn(false);
+        var failed = begin(p);
+        invoke(GearOrbService.class, "complete", new Class[] {GearOrbSession.class, boolean.class}, failed, true);
+        effects.verify(() -> net.tfminecraft.magic.gear.ownership.GearEffects.hold(occupancy.generation()));
+        chat.verify(() -> WeaponAttunementChat.sendPostChargeSummary(p, updated), times(1));
+      }
+    }
+  }
+
   GearOrb orb(Location location) {
     var orb = new GearOrb(location, true, 0, 1, 0, 0, 0, 0, 20);
     orb.setLocation(location);

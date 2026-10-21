@@ -48,17 +48,19 @@ public final class GearStationStore {
         private UUID displayId;
         private boolean orbSessionActive;
         private final UUID owner;
-        private final Map<String, Integer> charged;
+        private Map<String, Integer> charged;
         private final boolean rested;
+        private boolean reattune;
         private UUID generation;
         private net.tfminecraft.magic.gear.ownership.GearIdentity.Owner characterOwner;
 
-        Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged, boolean rested) {
+        Occupancy(ItemStack item, UUID displayId, UUID owner, Map<String, Integer> charged, boolean rested, boolean reattune) {
             this.item = item;
             this.displayId = displayId;
             this.owner = owner;
             this.charged = charged == null ? null : Map.copyOf(charged);
             this.rested = rested;
+            this.reattune = rested && reattune;
         }
 
         /** Player who prepared the craft. Null for stations saved before owners were recorded. */
@@ -80,6 +82,14 @@ public final class GearStationStore {
          */
         public boolean isRested() {
             return rested;
+        }
+
+        /**
+         * A rested weapon whose owner paid to wipe its attunement. The old attunement holds
+         * until a run catches something; until then {@link #getCharged()} is the paid fee.
+         */
+        public boolean isReattune() {
+            return reattune;
         }
 
         public ItemStack getItem() {
@@ -165,7 +175,7 @@ public final class GearStationStore {
         UUID owner = row.get("owner") instanceof String text ? uuidOf(text) : null;
         ItemStack item = decodeItem(row);
         UUID displayId = spawnDisplay(location, item);
-        Occupancy occupancy = new Occupancy(item, displayId, owner, readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
+        Occupancy occupancy = new Occupancy(item, displayId, owner, readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")), Boolean.TRUE.equals(row.get("reattune")));
         occupancy.generation = net.tfminecraft.magic.gear.ownership.GearPropertyStore.id(row);
         if (row.get("ownership") instanceof Map<?, ?> authority && "CHARACTER".equals(authority.get("kind")))
             occupancy.characterOwner = net.tfminecraft.magic.gear.ownership.GearPropertyStore.owner(row);
@@ -176,7 +186,7 @@ public final class GearStationStore {
 
     public static ItemStack eject(Location location) {
         Occupancy occupancy = get(location);
-        if (occupancy == null || occupancy.isOrbSessionActive() || (!isAttuned(occupancy.getItem()) && !occupancy.isRested())) return null;
+        if (occupancy == null || occupancy.isOrbSessionActive() || occupancy.isReattune() || (!isAttuned(occupancy.getItem()) && !occupancy.isRested())) return null;
         return release(location);
     }
     /** A durable release intent precedes either inventory settlement or a public world drop. */
@@ -226,14 +236,23 @@ public final class GearStationStore {
         update(location, occupancy, item);
     }
     public static boolean update(Location location, Occupancy captured, ItemStack item) {
+        return update(location, captured, item, false);
+    }
+    /** Writes the re-attuned weapon and spends the paid fee, so it is a plain rested weapon again. */
+    public static boolean completeReattune(Location location, Occupancy captured, ItemStack item) {
+        return captured != null && captured.isReattune() && update(location, captured, item, true);
+    }
+    private static boolean update(Location location, Occupancy captured, ItemStack item, boolean reattuned) {
         if (get(location) != captured || item == null) return false;
         try {
             var station = expected(location, captured);
             var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
             after.put("item-bytes", net.tfminecraft.magic.gear.ownership.GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(item)));
             after.put("effect-state", "active");
+            if (reattuned) { after.remove("reattune"); after.put("charged", new LinkedHashMap<>()); }
             ItemStack cached = decodeItem(after); // the re-read copy, as in install
             property().patch(station, after);
+            if (reattuned) { captured.reattune = false; captured.charged = Map.of(); }
             captured.setItem(cached); captured.setOrbSessionActive(false); return true;
         } catch (IOException ex) { warning(ex); return false; }
     }
@@ -280,7 +299,7 @@ public final class GearStationStore {
                 if (existing != null && id.equals(existing.generation()) && java.util.Objects.equals(existing.characterOwner(), ownerOrNull(row))) continue;
                 if (existing != null) removeDisplays(location, null, existing.displayId);
                 UUID display = ensureDisplay(location, item, uuidOf(row.get("display") instanceof String text ? text : null));
-                Occupancy occupancy = new Occupancy(item, display, uuidOf(row.get("owner") instanceof String text ? text : null), readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")));
+                Occupancy occupancy = new Occupancy(item, display, uuidOf(row.get("owner") instanceof String text ? text : null), readChargedRaw(row), Boolean.TRUE.equals(row.get("rested")), Boolean.TRUE.equals(row.get("reattune")));
                 occupancy.generation = id; occupancy.characterOwner = ownerOrNull(row); OCCUPIED.put(key, occupancy);
                 if (furniture(location) == Furniture.ABSENT) abandon(location);
             } catch (IOException | RuntimeException ex) { warning(ex); }
@@ -415,7 +434,7 @@ public final class GearStationStore {
         net.tfminecraft.magic.gear.orb.GearOrbService.abort(location);
         ItemStack item = takeForAbort(location);
         if (item != null) {
-            drop(location, item); acknowledgeRelease(location, occupancy.generation());
+            drop(location, item); dropReattuneFee(location, occupancy); acknowledgeRelease(location, occupancy.generation());
             Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " has no furniture. Dropped the weapon and removed its display.");
         }
     }
@@ -522,6 +541,27 @@ public final class GearStationStore {
     private static void mark(ItemDisplay display, Location location) {
         display.getPersistentDataContainer().set(
                 GearKeys.stationDisplay(), PersistentDataType.STRING, key(location));
+    }
+
+    /** A station that loses its furniture drops a pending re-attunement's fee with the weapon. */
+    public static void dropReattuneFee(Location location, Occupancy occupancy) {
+        if (location == null || occupancy == null || !occupancy.isReattune()) return;
+        if (occupancy.getCharged() == null) {
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " lost a re-attunement fee with no readable record.");
+            return;
+        }
+        for (Map.Entry<String, Integer> cost : occupancy.getCharged().entrySet()) {
+            int remaining = cost.getValue();
+            while (remaining > 0) {
+                ItemStack stack = net.tfminecraft.magic.util.ItemRef.build(cost.getKey());
+                if (stack == null || stack.getType().isAir()) {
+                    Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " could not drop " + remaining + " " + cost.getKey() + " of a re-attunement fee.");
+                    break;
+                }
+                int amount = Math.min(remaining, stack.getMaxStackSize()); stack.setAmount(amount); remaining -= amount;
+                drop(location, stack);
+            }
+        }
     }
 
     private static void drop(Location location, ItemStack item) {

@@ -204,23 +204,35 @@ public final class GearOrbService implements Listener {
             return;
         }
         Map<String, Double> captured = session.capturedFill();
-        WeaponRequirement requirement = WeaponRequirement.fromItem(weapon);
-        requirement.mergeAmounts(captured);
-        requirement.persist(weapon);
-
-        int oldRift = WeaponRift.get(weapon);
-        // Only a follow-up charge scrubs Rift; the first one has nothing to clean up.
-        int scrub = oldRift > 0 ? OrbCache.riftPerRecharge : 0;
-        int newRift = Math.max(0, Math.min(OrbCache.riftCap, oldRift + session.riftDelta() - scrub));
-        WeaponRift.set(weapon, newRift);
-
         int capturedBand = WeaponRequirement.highestBand(captured);
-        if (capturedBand > 0 && !GearProvenance.socketsLocked(weapon)) {
-            weapon = GearItemBuilder.rewriteSockets(weapon, capturedBand);
-        } else {
-            weapon = WeaponLore.updateItem(weapon);
+        // A paid reset replaces the old attunement only once a run catches something.
+        // Until then the weapon is left exactly as it was, so it never ends up inert.
+        boolean reattune = occupancy.isReattune();
+        WeaponRequirement requirement = reattune ? WeaponRequirement.empty() : WeaponRequirement.fromItem(weapon);
+        requirement.mergeAmounts(captured);
+        boolean replaced = reattune && requirement.highestBand() > 0;
+        // A reset reports the band it keeps; elements a weapon cannot hold do not count.
+        int shownBand = reattune ? requirement.highestBand() : capturedBand;
+        if (!reattune || replaced) {
+            requirement.persist(weapon);
+
+            int oldRift = replaced ? 0 : WeaponRift.get(weapon);
+            // Only a follow-up charge scrubs Rift; the first one has nothing to clean up.
+            int scrub = oldRift > 0 ? OrbCache.riftPerRecharge : 0;
+            int newRift = Math.max(0, Math.min(OrbCache.riftCap, oldRift + session.riftDelta() - scrub));
+            WeaponRift.set(weapon, newRift);
+
+            // A reset never rewrites sockets: that would drop the runes already in them.
+            if (!replaced && capturedBand > 0 && !GearProvenance.socketsLocked(weapon)) {
+                weapon = GearItemBuilder.rewriteSockets(weapon, capturedBand);
+            } else {
+                weapon = WeaponLore.updateItem(weapon);
+            }
         }
-        if (!GearStationStore.update(session.getStation(), occupancy, weapon)) {
+        boolean written = replaced
+                ? GearStationStore.completeReattune(session.getStation(), occupancy, weapon)
+                : GearStationStore.update(session.getStation(), occupancy, weapon);
+        if (!written) {
             net.tfminecraft.magic.gear.ownership.GearEffects.hold(occupancy.generation()); return;
         }
         if (player != null && player.isOnline() && session.isCurrent()) {
@@ -235,13 +247,18 @@ public final class GearOrbService implements Listener {
         if (player == null) {
             return;
         }
-        if (capturedBand <= 0) {
+        if (shownBand <= 0) {
             player.sendMessage(Messages.get("gear.orbs.failed"));
         } else {
             player.sendMessage(Messages.get(
                     "gear.orbs.complete",
                     "percent", String.valueOf((int) Math.round(session.capturedFraction() * 100)),
-                    "band", TierBands.numeral(capturedBand)));
+                    "band", TierBands.numeral(shownBand)));
+        }
+        if (replaced) {
+            player.sendMessage(Messages.get("gear.reattune.done"));
+        } else if (reattune) {
+            player.sendMessage(Messages.get("gear.reattune.kept"));
         }
         WeaponAttunementChat.sendPostChargeSummary(player, weapon);
     }

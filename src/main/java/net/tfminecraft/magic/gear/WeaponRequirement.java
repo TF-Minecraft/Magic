@@ -24,6 +24,11 @@ public final class WeaponRequirement {
                 stack, GearKeys.weaponReqCap(), GearKeys.weaponReqFill(), GearKeys.weaponReq()));
     }
 
+    /** No element at all, for a re-attunement that replaces what the weapon held. */
+    public static WeaponRequirement empty() {
+        return new WeaponRequirement(new AuraData());
+    }
+
     public AuraData aura() {
         return aura;
     }
