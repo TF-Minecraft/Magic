@@ -132,7 +132,7 @@ class GearOpusRegressionTest extends GearStationCoverageSupport {
         assertEquals("delivered", GearPropertyStore.text(returned, "state"));
         assertEquals(original.owner(), GearPropertyStore.returnOwner(returned));
         assertTrue(returned.getAsJsonArray("items").isEmpty());
-        assertEquals("released", store.station(occupancy.generation()).raw().get("effect-state"));
+        assertEquals("released", archived(occupancy.generation()).get("effect-state"));
         assertTrue(store.returns(token(staff).owner()).isEmpty());
         assertTrue(staff.getInventory().isEmpty()); checkpoint.verifyNoInteractions();
         UUID death = UUID.randomUUID();
@@ -163,7 +163,7 @@ class GearOpusRegressionTest extends GearStationCoverageSupport {
         var row = store.returns(original.owner()).getFirst();
         assertEquals("held", GearPropertyStore.text(row, "state"));
         assertEquals(original.owner(), GearPropertyStore.returnOwner(row)); assertTrue(row.getAsJsonArray("items").isEmpty());
-        assertEquals("released", store.station(occupancy.generation()).raw().get("effect-state"));
+        assertEquals("released", archived(occupancy.generation()).get("effect-state"));
         byte[] held = Files.readAllBytes(store.returnFile(original.owner(), UUID.fromString(GearPropertyStore.text(row, "id"))));
         doCallRealMethod().when(store).saveReturn(any(), any());
         GearEffects.deliver(owner, original);

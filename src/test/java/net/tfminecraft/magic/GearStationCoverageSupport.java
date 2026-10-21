@@ -125,6 +125,12 @@ abstract class GearStationCoverageSupport extends GearCoverageSupport {
       GearStationStore.loadViews(); return GearStationStore.get(location);
     }catch(Exception ex){throw new RuntimeException(ex);}
   }
+  /** An acknowledged release leaves the live file; its settled row is kept in the archive. */
+  Map<?, ?> archived(UUID id) throws Exception {
+    var file = temp.resolve("data/gear-stations-archive/" + id + ".yml");
+    var rows = (Map<?, ?>) net.tfminecraft.magic.gear.ownership.GearYaml.read(Files.readAllBytes(file)).get("stations");
+    return (Map<?, ?>) rows.values().iterator().next();
+  }
   ItemStack eject(Location location) {
     var row=GearStationStore.get(location); var item=GearStationStore.eject(location);
     if(item!=null)GearStationStore.acknowledgeRelease(location,row.generation());return item;

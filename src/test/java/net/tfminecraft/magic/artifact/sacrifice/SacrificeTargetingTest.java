@@ -32,6 +32,7 @@ class SacrificeTargetingTest {
   void setup() {
     server = MockBukkit.mock();
     world = server.addSimpleWorld("targeting");
+    for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++) world.loadChunk(x, z); // a live player keeps these loaded
     caster = server.addPlayer();
     victim = server.addPlayer();
     caster.teleport(new Location(world, .5, 65, .5));
@@ -237,5 +238,13 @@ class SacrificeTargetingTest {
     SacrificeRegistry.setGlobals(
         10, 4, null, true, false, 50, 20, true, true, true, "pedestal", "*", null);
     assertTrue(SacrificeTargeting.find(caster, " FIRE ").isOk());
+  }
+
+  @Test
+  void unloadedChunksAreSkippedWithoutLoadingThem() {
+    var unloaded = spy(world);
+    doReturn(false).when(unloaded).isChunkLoaded(anyInt(), anyInt());
+    assertTrue(SacrificeTargeting.collectNearby(unloaded, 0, 0).isEmpty());
+    verify(unloaded, never()).getChunkAt(anyInt(), anyInt());
   }
 }

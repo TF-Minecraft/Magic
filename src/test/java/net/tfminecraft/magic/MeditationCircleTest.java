@@ -30,6 +30,7 @@ class MeditationCircleTest {
   void setup() {
     server = MockBukkit.mock();
     world = server.addSimpleWorld("circle");
+    for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++) world.loadChunk(x, z); // a live player keeps these loaded
     center = new Location(world, .5, 70, .5);
     Magic.plugin = mock(Magic.class);
     when(Magic.plugin.namespace()).thenReturn("magic");
@@ -440,5 +441,13 @@ class MeditationCircleTest {
     assertNull(MeditationCircle.detect(center));
     server.getPluginManager().clearPlugins();
     assertNull(MeditationCircle.detect(center));
+  }
+
+  @Test
+  void unloadedChunksAreSkippedWithoutLoadingThem() {
+    var unloaded = spy(world);
+    doReturn(false).when(unloaded).isChunkLoaded(anyInt(), anyInt());
+    assertNull(MeditationCircle.detect(new Location(unloaded, .5, 70, .5)));
+    verify(unloaded, never()).getChunkAt(anyInt(), anyInt());
   }
 }
