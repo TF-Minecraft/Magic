@@ -163,6 +163,12 @@ artifact:
 
     ok: "#55ff55Gave artifact to {player}."
 
+  sealed:
+
+    opened: "#c9a0ffThe seal breaks, and an artifact is yours."
+
+    failed: "#ff5555The seal will not break. Nothing was used; please tell staff."
+
   create:
 
     usage: "#aaaaaaUsage: /magic artifact create"

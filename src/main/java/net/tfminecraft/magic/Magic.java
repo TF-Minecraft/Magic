@@ -30,6 +30,7 @@ import net.tfminecraft.magic.listener.GearRefreshListener;
 import net.tfminecraft.magic.listener.MagicSessionListener;
 import net.tfminecraft.magic.listener.ResonanceCastListener;
 import net.tfminecraft.magic.listener.SacrificeListener;
+import net.tfminecraft.magic.listener.SealedArtifactListener;
 import net.tfminecraft.magic.loader.ChargesLoader;
 import net.tfminecraft.magic.loader.ConfigLoader;
 import net.tfminecraft.magic.loader.ElementsLoader;
@@ -111,6 +112,7 @@ public class Magic extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ArtifactListener(), this);
         getServer().getPluginManager().registerEvents(new ArtifactFillChestListener(), this);
         getServer().getPluginManager().registerEvents(new SacrificeListener(), this);
+        getServer().getPluginManager().registerEvents(new SealedArtifactListener(), this);
         GearStationListener gearStationListener = new GearStationListener();
         getServer().getPluginManager().registerEvents(gearStationListener, this);
         getServer().getPluginManager().registerEvents(gearStationListener.inventory(), this);
@@ -328,7 +330,8 @@ public class Magic extends JavaPlugin {
             "artifacts/naming-schemes.yml",
             "artifacts/adjectives.yml",
             "artifacts/shrines.yml",
-            "artifacts/sacrifice.yml"
+            "artifacts/sacrifice.yml",
+            "artifacts/sealed.yml"
         };
         for (String path : defaultFiles) {
             copyResourceIfMissing(path);

@@ -10,6 +10,7 @@ Magic connects a character's relationship with the elements to meditation, artif
 - **Flow and Surge** — casting modes interact with equilibrium, tranquility, and corruption to shape a character's magical state over time.
 - **Interactive meditation** — meditate around artifacts and engage with orbiting orbs, spending mental focus to develop resonance.
 - **Artifacts and attunement** — artifacts carry elemental aura, with display, storage, and care affecting how that aura remains available.
+- **Sealed artifacts** — sealed items crafted elsewhere break open into a rolled artifact, with a random or chosen school and weighted rarity set in `artifacts/sealed.yml`.
 - **Crafted mage equipment** — assemble staffs, wands, and swords from parts, then work with charges and orbs to shape their elemental capabilities.
 - **Casting consequences** — insufficient attunement can prevent a cast, while unstable equipment or carrying multiple staffs can cause a spell to fumble.
 
