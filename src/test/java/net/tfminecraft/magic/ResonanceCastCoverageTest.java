@@ -183,12 +183,16 @@ class ResonanceCastCoverageTest {
     var event = mock(PlayerCastSkillEvent.class);
     var skill = mock(Skill.class);
     var p = server.addPlayer();
+    ElementRegistry.register(DomainTest.element("fire"));
+    var session = new ResonanceSession();
+    session.setResonance("fire", 20);
     var weapon = new ItemStack(Material.IRON_SWORD);
     var meta = (org.bukkit.inventory.meta.Damageable) weapon.getItemMeta();
     meta.setDamage(249);
     weapon.setItemMeta(meta);
     when(event.getCast()).thenReturn(skill);
     when(event.getPlayer()).thenReturn(p);
+    when(plugin.getResonanceGuiManager().getSessionManager().get(p)).thenReturn(session);
     SkillElementRegistry.register("fireball", "fire", 1);
     try (var ids = mockStatic(SkillIdResolver.class);
         var hand = mockStatic(GearHand.class)) {
@@ -201,6 +205,7 @@ class ResonanceCastCoverageTest {
       verify(event, times(2)).setCancelled(true);
       verify(skill, never()).whenCast(any());
       assertEquals(249, damage(weapon));
+      assertEquals(20, session.getResonance("fire"));
       assertNotNull(p.nextTitle());
       assertNotNull(p.nextMessage());
       assertNotNull(p.nextTitle());
