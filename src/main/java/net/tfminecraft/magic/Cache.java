@@ -41,6 +41,9 @@ public final class Cache {
     public static double castDriftMin = 0.01;
     /** Seconds between repeat chat lines explaining why a weapon refused a spell. */
     public static long refuseChatMillis = 30000L;
+    public static final int DEFAULT_CAST_WEAR = 1;
+    /** Vanilla durability a spent cast takes from the held mage weapon. 0 turns cast wear off. */
+    public static int castWear = DEFAULT_CAST_WEAR;
     /**
      * Extra MythicLib triggers treated as a cast, from {@code runes.keybinds}.
      * Names are uppercase. {@code CAST} and {@code API} are always included in the check.

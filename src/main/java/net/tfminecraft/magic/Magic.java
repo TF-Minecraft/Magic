@@ -31,6 +31,7 @@ import net.tfminecraft.magic.listener.MagicSessionListener;
 import net.tfminecraft.magic.listener.ResonanceCastListener;
 import net.tfminecraft.magic.listener.SacrificeListener;
 import net.tfminecraft.magic.listener.SealedArtifactListener;
+import net.tfminecraft.magic.listener.WeaponWearListener;
 import net.tfminecraft.magic.loader.ChargesLoader;
 import net.tfminecraft.magic.loader.ConfigLoader;
 import net.tfminecraft.magic.loader.ElementsLoader;
@@ -120,6 +121,7 @@ public class Magic extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GearRefreshListener(), this);
         if (isMmoStackPresent()) {
             getServer().getPluginManager().registerEvents(new ResonanceCastListener(), this);
+            getServer().getPluginManager().registerEvents(new WeaponWearListener(), this);
             getServer().getPluginManager().registerEvents(new CastDriftListener(), this);
             getServer().getPluginManager().registerEvents(new GearAlignmentListener(), this);
         }

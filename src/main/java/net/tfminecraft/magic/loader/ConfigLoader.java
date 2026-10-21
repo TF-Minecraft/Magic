@@ -94,6 +94,9 @@ public final class ConfigLoader implements LoaderInterface {
             long seconds = cast.getLong("refuse_chat_seconds", 30L);
             Cache.refuseChatMillis = Math.max(0L, seconds) * 1000L;
         }
+        Cache.castWear = Math.max(0, cast == null
+                ? Cache.DEFAULT_CAST_WEAR
+                : cast.getInt("wear_per_cast", Cache.DEFAULT_CAST_WEAR));
         loadCastTriggers(config.getStringList("runes.keybinds"));
 
         ConfigurationSection artifacts = config.getConfigurationSection("artifacts");
