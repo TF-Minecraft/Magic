@@ -1,0 +1,37 @@
+# Sealed artifacts. Jar does not overwrite a live copy of this file.
+#
+# Sealed artifacts are MMOItems crafted at the Rune Crafting Station. Right-clicking one
+# breaks the seal and gives an artifact rolled the same way as a Dowsing Artifact Mine
+# drop: same aura caps, secondary schools, wear and Recycler value.
+#
+# rarities -> weight per generator.yml rarity, like the Artifact Mine's add_drop lines.
+#             0 turns a rarity off. An entry below can list its own rarities instead.
+# item     -> TLibs item path of the sealed item
+# element  -> artifact type id, or random for a school from generator.yml random_pool
+#             (picked by type weight). Secondary schools roll as for any artifact.
+# sound    -> played to the player when a seal breaks. Blank for none.
+
+sound: entity.experience_orb.pickup
+
+rarities:
+  common: 65
+  uncommon: 25
+  rare: 7
+  legendary: 3
+
+sealed:
+  random:
+    item: m.loot.sealed_artifact
+    element: random
+  oseni:
+    item: m.loot.sealed_oseni_artifact
+    element: oseni
+  seithr:
+    item: m.loot.sealed_seithr_artifact
+    element: seithr
+  cerrith:
+    item: m.loot.sealed_cerrith_artifact
+    element: cerrith
+  mitlan:
+    item: m.loot.sealed_mitlan_artifact
+    element: mitlan

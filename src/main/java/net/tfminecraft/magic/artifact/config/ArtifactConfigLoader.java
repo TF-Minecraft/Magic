@@ -17,6 +17,8 @@ import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeConfigLoader;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
+import net.tfminecraft.magic.artifact.sealed.SealedArtifactConfigLoader;
+import net.tfminecraft.magic.artifact.sealed.SealedArtifactRegistry;
 import net.tfminecraft.magic.artifact.shrine.ShrineConfigLoader;
 import net.tfminecraft.magic.artifact.shrine.ShrineRegistry;
 import net.tfminecraft.magic.registry.ElementRegistry;
@@ -40,6 +42,7 @@ public final class ArtifactConfigLoader {
         ok &= ArtifactAdjectiveLoader.load(new File(folder, "adjectives.yml"));
         ok &= ShrineConfigLoader.load(new File(folder, "shrines.yml"));
         ok &= SacrificeConfigLoader.load(new File(folder, "sacrifice.yml"));
+        ok &= SealedArtifactConfigLoader.load(new File(folder, "sealed.yml"));
 
         StringBuilder groupSizes = new StringBuilder();
         for (Map.Entry<String, List<String>> entry : ArtifactAffinityRegistry.getGroups().entrySet()) {
@@ -63,7 +66,8 @@ public final class ArtifactConfigLoader {
                 + ", model-schemes=" + ArtifactModelSchemeRegistry.size()
                 + ", naming-schemes=" + ArtifactNamingSchemeRegistry.size()
                 + ", shrines=" + ShrineRegistry.size()
-                + ", sacrifice=" + SacrificeRegistry.size());
+                + ", sacrifice=" + SacrificeRegistry.size()
+                + ", sealed=" + SealedArtifactRegistry.size());
         if (Cache.debug) {
             log.info("[Magic] Debug: artifact types=" + ArtifactTypeRegistry.getAllIds());
             for (ArtifactTypeDef type : ArtifactTypeRegistry.getAll()) {
@@ -84,6 +88,7 @@ public final class ArtifactConfigLoader {
         ArtifactGeneratorCache.reset();
         ShrineRegistry.clear();
         SacrificeRegistry.clear();
+        SealedArtifactRegistry.clear();
     }
 
     private static boolean loadModelSchemes(File file) {
