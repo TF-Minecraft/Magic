@@ -94,6 +94,7 @@ class GearReattuneCoverageTest extends GearStationCoverageSupport {
     assertEquals(Map.of("v.STONE", 2, "v.BOOK", 1073741824), GearCosts.fraction(costs, .5));
     assertEquals(Map.of("v.STONE", 6, "v.BOOK", Integer.MAX_VALUE), GearCosts.fraction(costs, 2));
     assertEquals(Map.of("v.STONE", 3), GearCosts.fraction(Map.of("v.STONE", 10), .3), "float error adds no item");
+    assertEquals(Map.of("v.STONE", 1), GearCosts.fraction(Map.of("v.STONE", 1), 1e-12), "a nonzero share is never free");
     assertEquals(Map.of("v.STONE", 2), GearReattuneService.fee(weapon()));
     GearCache.reattuneCostFraction = 0;
     assertEquals(Map.of(), GearReattuneService.fee(weapon()));

@@ -312,7 +312,7 @@ public final class GearStationListener implements Listener {
         if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, occupancy.getCharged())) {
             player.sendMessage(Messages.get("gear.reattune.held"));
             Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(location)
-                    + " holds a re-attunement whose fee cannot be returned. Left on the station for staff review.");
+                    + " could not return a re-attunement and its fee. Check the gear station data for staff review.");
             return;
         }
         recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);

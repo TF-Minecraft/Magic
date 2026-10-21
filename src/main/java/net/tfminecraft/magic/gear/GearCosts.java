@@ -51,7 +51,7 @@ public final class GearCosts {
                 continue;
             }
             // The epsilon keeps float error (10 * 0.3 = 3.0000000000000004) from adding an item.
-            share.put(entry.getKey(), (int) Math.min(Integer.MAX_VALUE, (long) Math.ceil(amount * fraction - 1e-9)));
+            share.put(entry.getKey(), (int) Math.min(Integer.MAX_VALUE, Math.max(1L, (long) Math.ceil(amount * fraction - 1e-9))));
         }
         return share;
     }
