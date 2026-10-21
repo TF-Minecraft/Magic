@@ -57,14 +57,14 @@ class GearStationArchiveTest {
         assertEquals(new GearPropertyStore.Archived(1, List.of()), store.archiveReleased());
         assertTrue(live().isEmpty()); assertArrayEquals(copy, Files.readAllBytes(archive(id)));
         GearFiles.write(file(), before, true); GearFiles.write(archive(id), "stations: {}\n".getBytes(java.nio.charset.StandardCharsets.UTF_8), true);
-        assertEquals(new GearPropertyStore.Archived(0, List.of(id.toString())), store.archiveReleased());
+        assertEquals(new GearPropertyStore.Archived(0, List.of(id + " (archive copy differs)")), store.archiveReleased());
         assertArrayEquals(before, Files.readAllBytes(file()));
     }
 
     @Test void onlySettledWellFormedReleasedRowsAreArchived() throws Exception {
         var rows = new LinkedHashMap<Object, Object>(); int x = 0;
         for (Object ownership : new Object[] {null, "scalar", Map.of("format", 2, "kind", "CHARACTER"), Map.of("format", 1, "kind", "FUTURE"),
-                Map.of("format", 1, "kind", "CHARACTER", "account", "bad", "character", "bad")}) {
+                Map.of("format", 1, "kind", "CHARACTER", "account", "bad", "character", "bad"), Map.of("format", 1), nullKind()}) {
             UUID id = UUID.randomUUID(); var raw = row(id, x++, "released"); if (ownership == null) raw.remove("ownership"); else raw.put("ownership", ownership); rows.put(id.toString(), raw);
         }
         var badId = row(UUID.randomUUID(), x++, "released"); badId.put("occupancy-id", "not-a-uuid"); rows.put("bad-id", badId);
@@ -74,6 +74,8 @@ class GearStationArchiveTest {
         assertEquals(1, store.archiveReleased().archived());
         assertEquals(rows.size() - 1, live().size()); assertFalse(live().containsKey(held.toString())); assertTrue(Files.exists(archive(held)));
     }
+
+    static Map<Object, Object> nullKind() { var own = new LinkedHashMap<Object, Object>(); own.put("format", 1); own.put("kind", null); return own; }
 
     @Test void rowsNamedByOwnershipEvidenceStayInTheLiveFile() throws Exception {
         UUID estate = UUID.randomUUID(), migration = UUID.randomUUID(), receipt = UUID.randomUUID(), free = UUID.randomUUID();
@@ -106,9 +108,41 @@ class GearStationArchiveTest {
                     call.callRealMethod(); var document = new LinkedHashMap<Object, Object>(); document.put("stations", changed);
                     Files.write(file(), GearYaml.bytes(document)); return null;
                 });
-                assertThrows(GearPropertyStore.Conflict.class, store::archiveReleased);
+                byte[] before = GearYaml.bytes(Map.of("stations", changed));
+                assertEquals(new GearPropertyStore.Archived(0, List.of(id + " (changed while archiving)")), store.archiveReleased());
+                assertArrayEquals(before, Files.readAllBytes(file()));
             }
-            assertEquals(changed.keySet(), live().keySet());
         }
+    }
+
+    @Test void aRowThatCannotBeCopiedOnlySkipsItself() throws Exception {
+        UUID bad = UUID.randomUUID(), good = UUID.randomUUID(); var rows = new LinkedHashMap<Object, Object>();
+        rows.put(bad.toString(), row(bad, 1, "released")); rows.put(good.toString(), row(good, 2, "released")); stations(rows);
+        try (var files = mockStatic(GearFiles.class, CALLS_REAL_METHODS)) {
+            files.when(() -> GearFiles.write(eq(archive(bad)), any(), eq(false))).thenThrow(new java.io.IOException("disk full"));
+            assertEquals(new GearPropertyStore.Archived(1, List.of(bad + " (disk full)")), store.archiveReleased());
+        }
+        assertEquals(Set.of(bad.toString()), live().keySet()); assertFalse(Files.exists(archive(bad))); assertTrue(Files.exists(archive(good)));
+        assertEquals(new GearPropertyStore.Archived(1, List.of()), store.archiveReleased()); assertTrue(live().isEmpty());
+    }
+
+    @Test void aCopyLinkedButNotYetSyncedIsMadeDurableBeforeItsRowLeaves() throws Exception {
+        UUID id = UUID.randomUUID(); var rows = new LinkedHashMap<Object, Object>(); rows.put(id.toString(), row(id, 1, "released")); stations(rows);
+        Path folder = archive(id).getParent();
+        try (var files = mockStatic(GearFiles.class, CALLS_REAL_METHODS)) {
+            files.when(() -> GearFiles.force(folder)).thenThrow(new java.io.IOException("power cut before the archive link was synced"));
+            assertEquals(new GearPropertyStore.Archived(0, List.of(id + " (power cut before the archive link was synced)")), store.archiveReleased());
+        }
+        assertTrue(Files.exists(archive(id))); assertEquals(Set.of(id.toString()), live().keySet());
+        try (var files = mockStatic(GearFiles.class, CALLS_REAL_METHODS)) {
+            files.when(() -> GearFiles.durable(archive(id))).thenThrow(new java.io.IOException("archive sync failed"));
+            assertEquals(new GearPropertyStore.Archived(0, List.of(id + " (archive sync failed)")), store.archiveReleased());
+            assertEquals(Set.of(id.toString()), live().keySet());
+        }
+        try (var files = mockStatic(GearFiles.class, CALLS_REAL_METHODS)) {
+            assertEquals(new GearPropertyStore.Archived(1, List.of()), store.archiveReleased());
+            files.verify(() -> GearFiles.durable(archive(id))); files.verify(() -> GearFiles.force(folder), atLeastOnce());
+        }
+        assertTrue(live().isEmpty());
     }
 }

@@ -104,31 +104,38 @@ public final class GearPropertyStore {
     private Path archiveFile(UUID id) { return root.resolve("gear-stations-archive").resolve(id + ".yml"); }
     /**
      * Released rows are settled history that every station read would otherwise parse again.
-     * Each copy is published no-clobber before its row leaves the live file, so a crash between
-     * the two steps only repeats the removal. Rows any ownership journal or receipt names stay.
+     * Each copy is durable before its row leaves the live file, so a crash between the two steps
+     * only repeats the removal. Rows any ownership journal or receipt names stay, and a row that
+     * cannot be archived stays live without stopping the others.
      */
     public Archived archiveReleased() throws IOException {
         var named = journaledIds(); Map<Object, Map<Object, Object>> archived = new LinkedHashMap<>(); List<String> kept = new ArrayList<>();
         for (Station station : stations()) {
             Map<Object, Object> row = station.raw();
             if (!"released".equals(row.get("effect-state")) || !settledOwnership(row) || named.contains(row.get("occupancy-id"))) continue;
-            UUID id = id(row); Map<Object, Object> rows = new LinkedHashMap<>(); rows.put(station.key(), row);
-            byte[] bytes = GearYaml.bytes(Map.of("stations", rows)); Path file = archiveFile(id);
-            if (!Files.exists(file)) GearFiles.write(file, bytes, false);
-            else if (!java.util.Arrays.equals(Files.readAllBytes(file), bytes)) { kept.add(id.toString()); continue; }
-            archived.put(station.key(), row);
+            String id = (String) row.get("occupancy-id");
+            try {
+                Map<Object, Object> rows = new LinkedHashMap<>(); rows.put(station.key(), row);
+                byte[] bytes = GearYaml.bytes(Map.of("stations", rows)); Path file = archiveFile(id(row));
+                if (!Files.exists(file)) GearFiles.write(file, bytes, false);
+                else if (!java.util.Arrays.equals(Files.readAllBytes(file), bytes)) { kept.add(id + " (archive copy differs)"); continue; }
+                else GearFiles.durable(file);
+                archived.put(station.key(), row);
+            } catch (IOException | RuntimeException ex) { kept.add(id + " (" + ex.getMessage() + ")"); }
         }
         if (archived.isEmpty()) return new Archived(0, kept);
-        Map<Object, Object> document = document();
+        Map<Object, Object> document = document(); int removed = 0;
         for (var entry : archived.entrySet()) {
-            if (!(mapping(document).get(entry.getKey()) instanceof Map<?, ?> current) || !GearYaml.equal(current, entry.getValue())) throw new Conflict("Station changed before archiving");
-            mapping(document).remove(entry.getKey());
+            if (!(mapping(document).get(entry.getKey()) instanceof Map<?, ?> current) || !GearYaml.equal(current, entry.getValue())) { kept.add(entry.getValue().get("occupancy-id") + " (changed while archiving)"); continue; }
+            mapping(document).remove(entry.getKey()); removed++;
         }
-        saveStations(document); return new Archived(archived.size(), kept);
+        if (removed > 0) saveStations(document);
+        return new Archived(removed, kept);
     }
     private static boolean settledOwnership(Map<?, ?> row) {
         if (!(row.get("ownership") instanceof Map<?, ?> own) || !Integer.valueOf(1).equals(own.get("format"))) return false;
-        try { id(row); if ("CHARACTER".equals(own.get("kind"))) owner(row); else if (!List.of("OWNERLESS", "HELD").contains(own.get("kind"))) return false; return true; }
+        Object kind = own.get("kind");
+        try { id(row); if ("CHARACTER".equals(kind)) owner(row); else if (!"OWNERLESS".equals(kind) && !"HELD".equals(kind)) return false; return true; }
         catch (IOException ex) { return false; }
     }
     private java.util.Set<String> journaledIds() throws IOException {

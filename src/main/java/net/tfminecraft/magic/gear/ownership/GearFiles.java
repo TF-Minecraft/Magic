@@ -30,6 +30,11 @@ public final class GearFiles {
     public static void delete(Path file) throws IOException {
         if (Files.deleteIfExists(file)) force(file.toAbsolutePath().getParent());
     }
+    /** Re-acknowledges a file found already published, e.g. after a crash before its links were synced. */
+    static void durable(Path file) throws IOException {
+        try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) { channel.force(true); }
+        for (Path parent = file.toAbsolutePath().getParent(); parent != null; parent = parent.getParent()) force(parent);
+    }
     static void force(Path folder) throws IOException {
         try (FileChannel channel = FileChannel.open(folder, StandardOpenOption.READ)) { channel.force(true); }
     }

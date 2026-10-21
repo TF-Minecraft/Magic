@@ -57,7 +57,7 @@ class GearStationArchiveCoverageTest extends GearStationCoverageSupport {
     GearFiles.write(copy, "stations: {}\n".getBytes(StandardCharsets.UTF_8), false);
     seed(location, attuned(), UUID.randomUUID(), Map.of());
     GearStationStore.load();
-    assertTrue(logged.contains("WARNING [Magic] Kept released gear station rows whose archive copy differs: " + second), logged.toString());
+    assertTrue(logged.contains("WARNING [Magic] Kept released gear station rows in the live file: " + second + " (archive copy differs)"), logged.toString());
     assertTrue(Files.readString(data().resolve("gear-stations.yml")).contains(second.toString()));
 
     logged.clear();

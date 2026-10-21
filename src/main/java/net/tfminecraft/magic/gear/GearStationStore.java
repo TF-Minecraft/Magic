@@ -217,7 +217,7 @@ public final class GearStationStore {
         try {
             var result = property().archiveReleased();
             if (report && result.archived() > 0) Magic.plugin.getLogger().info("[Magic] Archived " + result.archived() + " released gear station rows to data/gear-stations-archive.");
-            if (!result.kept().isEmpty()) Magic.plugin.getLogger().warning("[Magic] Kept released gear station rows whose archive copy differs: " + String.join(", ", result.kept()));
+            if (!result.kept().isEmpty()) Magic.plugin.getLogger().warning("[Magic] Kept released gear station rows in the live file: " + String.join(", ", result.kept()));
         } catch (IOException | RuntimeException ex) { Magic.plugin.getLogger().warning("[Magic] Could not archive released gear stations: " + ex.getMessage()); }
     }
     public static net.tfminecraft.magic.gear.ownership.GearPropertyStore.Station expected(Location location, Occupancy occupancy) throws IOException {
