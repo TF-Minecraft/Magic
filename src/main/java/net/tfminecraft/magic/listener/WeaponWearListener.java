@@ -20,7 +20,9 @@ import net.tfminecraft.magic.gear.WeaponWear;
  * <p>An ArmourShop skin tags the weapon as an ItemsAdder item, and ItemsAdder then wears it
  * on every melee hit through a {@link PlayerItemDamageEvent}. Vanilla never damages a stick
  * or paper base, so on those that event is cancelled. A sword base keeps its vanilla wear,
- * but never loses the last point.
+ * but wear that would reach the last point is cancelled outright: ItemsAdder only checks
+ * whether its event was cancelled and then applies its own amount, so lowering the amount
+ * would not protect the weapon.
  *
  * <p>MMOItems wears a wand by one per shot and deletes it when the durability runs out, so
  * a worn-out wand refuses the shot instead.
@@ -33,12 +35,9 @@ public final class WeaponWearListener implements Listener {
         if (!GearProvenance.isGear(item)) {
             return;
         }
-        int left = WeaponWear.remaining(item);
-        if (item.getType().getMaxDurability() <= 0 || left <= 1) {
+        if (item.getType().getMaxDurability() <= 0 || event.getDamage() >= WeaponWear.remaining(item)) {
             event.setCancelled(true);
-            return;
         }
-        event.setDamage(Math.min(event.getDamage(), left - 1));
     }
 
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.

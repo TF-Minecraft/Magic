@@ -99,7 +99,7 @@ class WeaponWearTest {
   }
 
   @Test
-  void itemDamageIsCancelledOnStickAndPaperGearAndCappedBeforeTheLastPointOnSwords() {
+  void itemDamageIsCancelledOnStickAndPaperGearAndWhenItWouldReachTheLastPointOnSwords() {
     var listener = new WeaponWearListener();
     PlayerMock player = server.addPlayer();
     var plain = new ItemStack(Material.IRON_SWORD);
@@ -117,10 +117,13 @@ class WeaponWearTest {
     var worn = new PlayerItemDamageEvent(player, gear(damaged(Material.IRON_SWORD, 249)), 1);
     listener.onItemDamage(worn);
     assertTrue(worn.isCancelled());
-    var nearlyWorn = new PlayerItemDamageEvent(player, gear(damaged(Material.IRON_SWORD, 240)), 20);
-    listener.onItemDamage(nearlyWorn);
-    assertFalse(nearlyWorn.isCancelled());
-    assertEquals(9, nearlyWorn.getDamage());
+    var tooMuch = new PlayerItemDamageEvent(player, gear(damaged(Material.IRON_SWORD, 240)), 10);
+    listener.onItemDamage(tooMuch);
+    assertTrue(tooMuch.isCancelled());
+    var justFits = new PlayerItemDamageEvent(player, gear(damaged(Material.IRON_SWORD, 240)), 9);
+    listener.onItemDamage(justFits);
+    assertFalse(justFits.isCancelled());
+    assertEquals(9, justFits.getDamage());
     var fresh = new PlayerItemDamageEvent(player, gear(new ItemStack(Material.IRON_SWORD)), 1);
     listener.onItemDamage(fresh);
     assertFalse(fresh.isCancelled());
