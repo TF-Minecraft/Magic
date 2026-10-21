@@ -113,8 +113,13 @@ class SealedArtifactListenerTest {
       listener.onInteract(theirs);
       verify(service).open(player, EquipmentSlot.HAND, seal);
       clearInvocations(service);
-      // And the first player's next click, a tick later, works again.
+      // The first player's click still fires no more seals after the other player's.
       player = other;
+      var late = event(Action.RIGHT_CLICK_AIR, EquipmentSlot.OFF_HAND, sealed, null);
+      listener.onInteract(late);
+      verify(late).setUseItemInHand(Event.Result.DENY);
+      verifyNoInteractions(service);
+      // And the first player's next click, a tick later, works again.
       assertOpened(event(Action.RIGHT_CLICK_AIR, EquipmentSlot.HAND, sealed, null), EquipmentSlot.HAND);
     }
   }

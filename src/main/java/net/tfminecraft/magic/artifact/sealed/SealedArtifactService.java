@@ -37,15 +37,20 @@ public final class SealedArtifactService {
 
     /** Picks a rarity id by weight. Weights must be above zero, as the loader keeps them. */
     String pickRarity(Map<String, Double> weights) {
+        // Each weight is divided by the largest, so huge weights cannot overflow the sum.
+        double maximum = 0.0;
+        for (double weight : weights.values()) {
+            maximum = Math.max(maximum, weight);
+        }
         double total = 0.0;
         for (double weight : weights.values()) {
-            total += weight;
+            total += weight / maximum;
         }
         double pick = rng.nextDouble() * total;
         String last = null;
         for (Map.Entry<String, Double> entry : weights.entrySet()) {
             last = entry.getKey();
-            pick -= entry.getValue();
+            pick -= entry.getValue() / maximum;
             if (pick < 0.0) {
                 return last;
             }

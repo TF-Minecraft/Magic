@@ -1,5 +1,7 @@
 package net.tfminecraft.magic.listener;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -25,8 +27,8 @@ import net.tfminecraft.magic.artifact.sealed.SealedArtifactService;
 public final class SealedArtifactListener implements Listener {
 
     private final Supplier<SealedArtifactService> services;
-    private UUID lastOpener;
-    private int lastOpenTick;
+    private final Set<UUID> openedThisTick = new HashSet<>();
+    private int openTick;
 
     public SealedArtifactListener() {
         this(SealedArtifactService::new);
@@ -54,14 +56,16 @@ public final class SealedArtifactListener implements Listener {
         event.setUseItemInHand(Event.Result.DENY);
         event.setUseInteractedBlock(Event.Result.DENY);
         // One click can fire several interact events (block then air, main then off hand),
-        // all in the same tick. Only the first one breaks a seal.
-        Player player = event.getPlayer();
+        // all in the same tick. Only each player's first one breaks a seal.
         int tick = Bukkit.getCurrentTick();
-        if (player.getUniqueId().equals(lastOpener) && tick == lastOpenTick) {
+        if (tick != openTick) {
+            openTick = tick;
+            openedThisTick.clear();
+        }
+        Player player = event.getPlayer();
+        if (!openedThisTick.add(player.getUniqueId())) {
             return;
         }
-        lastOpener = player.getUniqueId();
-        lastOpenTick = tick;
         services.get().open(player, hand, def);
     }
 

@@ -270,7 +270,7 @@ class SealedArtifactTest {
 
   @Test
   void rarityPickFollowsTheWeights() {
-    var service = new SealedArtifactService(fixed(0.0, 0.649, 0.65, 0.899, 0.9, 0.969, 0.97, 0.999, 1.0), null, null);
+    var service = new SealedArtifactService(fixed(0.0, 0.6499, 0.6501, 0.8999, 0.9001, 0.9699, 0.9701, 0.999, 1.0), null, null);
     var picks = new ArrayList<String>();
     for (int i = 0; i < 9; i++) {
       picks.add(service.pickRarity(weights()));
@@ -279,6 +279,14 @@ class SealedArtifactTest {
         List.of("common", "common", "uncommon", "uncommon", "rare", "rare", "legendary", "legendary", "legendary"),
         picks);
     assertNull(service.pickRarity(Map.of()));
+
+    // Weights too large to add up still split evenly.
+    var huge = new LinkedHashMap<String, Double>();
+    huge.put("common", 1e308);
+    huge.put("legendary", 1e308);
+    var halves = new SealedArtifactService(fixed(0.25, 0.75), null, null);
+    assertEquals("common", halves.pickRarity(huge));
+    assertEquals("legendary", halves.pickRarity(huge));
 
     var seeded = new SealedArtifactService(new Random(7), null, null);
     var counts = new HashMap<String, Integer>();
