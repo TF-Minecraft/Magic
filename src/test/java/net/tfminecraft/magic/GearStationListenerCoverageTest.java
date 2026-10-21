@@ -405,4 +405,99 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     left();
     assertFalse(GearStationStore.isOccupied(loc));
   }
+
+  ItemStack craftable() {
+    ArchetypeRegistry.register(
+        new ArchetypeDef(GearType.STAFF, "Staff", "v.stick", "", false, List.of(), Map.of()));
+    var weapon = attuned();
+    tag(weapon, GearKeys.archetype(), PersistentDataType.STRING, "staff");
+    return weapon;
+  }
+
+  GearStationStore.Occupancy reattuneRow(ItemStack weapon, UUID owner, Map<String, Integer> fee) throws Exception {
+    var occupancy = seed(loc, weapon, owner, fee, true);
+    var store = GearStationStore.property();
+    var row = store.station(occupancy.generation());
+    var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(row.raw());
+    after.put("reattune", true);
+    store.patch(row, after);
+    GearStationStore.load();
+    assertTrue(GearStationStore.get(loc).isReattune());
+    return GearStationStore.get(loc);
+  }
+
+  @Test
+  void sneakClickingAnEmptyStationWithAnAttunedCraftableWeaponAsksForAReset() {
+    try (var service = mockStatic(GearReattuneService.class)) {
+      player.setSneaking(true);
+      var unattuned = craftable();
+      WeaponRequirement.empty().persist(unattuned);
+      player.getInventory().setItemInMainHand(unattuned);
+      right();
+      var foreign = attuned();
+      player.getInventory().setItemInMainHand(foreign);
+      right();
+      var broken = craftable();
+      GearBrokenMarker.mark(broken);
+      player.getInventory().setItemInMainHand(broken);
+      right();
+      service.verifyNoInteractions();
+      var weapon = craftable();
+      player.getInventory().setItemInMainHand(weapon);
+      right();
+      service.verify(() -> GearReattuneService.request(eq(player), eq(loc), eq(weapon)));
+      assertFalse(GearStationStore.isOccupied(loc));
+    }
+  }
+
+  @Test
+  void aPendingResetStaysOnTheStationUntilItsOwnerTakesItAndTheFeeBack() throws Exception {
+    try (var refs = mockStatic(net.tfminecraft.magic.util.ItemRef.class)) {
+      refs.when(() -> net.tfminecraft.magic.util.ItemRef.build("v.stone")).thenReturn(new ItemStack(Material.STONE));
+      var weapon = craftable();
+      reattuneRow(weapon, player.getUniqueId(), Map.of("v.stone", 2));
+      right();
+      assertTrue(GearStationStore.isOccupied(loc), "an empty hand cannot pick up a paid reset");
+      player.setSneaking(true);
+      reattuneRow(weapon, UUID.randomUUID(), Map.of("v.stone", 2));
+      left();
+      assertTrue(GearStationStore.isOccupied(loc), "only the owner calls a reset off");
+      var unrecorded = reattuneRow(weapon, player.getUniqueId(), Map.of("v.stone", 2));
+      var store = GearStationStore.property();
+      var row = store.station(unrecorded.generation());
+      var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(row.raw());
+      after.put("charged", "lost");
+      store.patch(row, after);
+      GearStationStore.load();
+      left();
+      assertTrue(GearStationStore.isOccupied(loc), "a lost fee record is held for staff");
+      reattuneRow(weapon, player.getUniqueId(), Map.of("v.stone", 2));
+      orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(true);
+      aborts().put("old", 0L);
+      aborts().put("fresh", System.currentTimeMillis());
+      left();
+      assertFalse(GearStationStore.isOccupied(loc));
+      orbs.verify(() -> GearOrbService.abort(loc));
+      assertFalse(aborts().containsKey("old"));
+      assertTrue(aborts().containsKey("fresh"));
+      assertTrue(aborts().containsKey(GearStationStore.key(loc)));
+      assertEquals(2, player.getInventory().all(Material.STONE).values().stream().mapToInt(ItemStack::getAmount).sum());
+      assertTrue(player.getInventory().contains(weapon));
+    }
+  }
+
+  @Test
+  void aBrokenStationDropsAPendingResetsFeeWithTheWeapon() throws Exception {
+    try (var refs = mockStatic(net.tfminecraft.magic.util.ItemRef.class)) {
+      refs.when(() -> net.tfminecraft.magic.util.ItemRef.build("v.stone")).thenReturn(new ItemStack(Material.STONE));
+      reattuneRow(craftable(), player.getUniqueId(), Map.of("v.stone", 3));
+      var entity = mock(Entity.class);
+      when(entity.getLocation()).thenReturn(loc.clone().add(.5, .5, .5));
+      listener.onFurnitureBroken(broken("test:station", entity));
+      assertFalse(GearStationStore.isOccupied(loc));
+      assertTrue(
+          loc.getWorld().getEntitiesByClass(Item.class).stream()
+              .anyMatch(dropped -> dropped.getItemStack().getType() == Material.STONE && dropped.getItemStack().getAmount() == 3));
+    }
+  }
 }

@@ -26,6 +26,11 @@ public final class GearEffects {
     }
     public static GearStationStore.Occupancy deposit(Player player, GearIdentity.Token token, Location location, ItemStack item,
             Map<String, Integer> charged, boolean rested, ItemStack[] inventoryAfter, List<String> before) {
+        return deposit(player, token, location, item, charged, rested, false, inventoryAfter, before);
+    }
+    /** A re-attunement is a rested weapon whose {@code charged} is the paid fee. */
+    public static GearStationStore.Occupancy deposit(Player player, GearIdentity.Token token, Location location, ItemStack item,
+            Map<String, Integer> charged, boolean rested, boolean reattune, ItemStack[] inventoryAfter, List<String> before) {
         GearPropertyStore store = GearStationStore.property();
         if (!store.identity().current(token, player) || location == null || location.getWorld() == null || item == null) return null;
         if (!before.equals(frame(player.getInventory().getContents()))) return null;
@@ -33,6 +38,7 @@ public final class GearEffects {
         Map<Object, Object> row = new LinkedHashMap<>(); row.put("world", location.getWorld().getName()); row.put("x", location.getBlockX()); row.put("y", location.getBlockY()); row.put("z", location.getBlockZ());
         row.put("owner", token.owner().account().toString()); row.put("occupancy-id", operation.toString()); row.put("ownership", GearPropertyStore.ownership(token.owner())); row.put("effect-state", "depositing");
         row.put("item-bytes", GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(item))); row.put("rested", rested);
+        if (rested && reattune) row.put("reattune", true);
         if (charged != null) { Map<Object, Object> costs = new LinkedHashMap<>(); charged.forEach((path, amount) -> costs.put(Integer.toString(costs.size()), Map.of("path", path, "amount", amount))); row.put("charged", costs); }
         row.put("deposit-intent", Map.of("operation", operation.toString(), "session", token.session(), "inventory-before", before, "inventory-after", frame(inventoryAfter)));
         try {
@@ -87,10 +93,10 @@ public final class GearEffects {
         GearIdentity.Owner recipient = occupancy.characterOwner();
         if (recipient == null) return false;
         GearIdentity.Token actor = token.orElseThrow();
-        if (!occupancy.isRested() && charged == null) return false;
+        if (charged == null && (!occupancy.isRested() || occupancy.isReattune())) return false;
         List<String> items = new ArrayList<>();
         if (occupancy.isRested()) items.add(GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem())));
-        else for (var cost : charged.entrySet()) {
+        if (charged != null) for (var cost : charged.entrySet()) {
             int remaining = cost.getValue();
             while (remaining > 0) {
                 ItemStack item = ItemRef.build(cost.getKey()); if (item == null || item.getType().isAir()) return false;

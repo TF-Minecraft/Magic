@@ -178,6 +178,10 @@ public final class ConfigLoader implements LoaderInterface {
         net.tfminecraft.magic.gear.GearCache.confirmMillis = Math.max(1L, confirm) * 1000L;
         net.tfminecraft.magic.gear.GearCache.socketRarityPrefix =
                 section.getBoolean("socket_rarity_prefix", false);
+        double fraction = section.getDouble("reattune.cost_fraction",
+                net.tfminecraft.magic.gear.GearCache.DEFAULT_REATTUNE_COST_FRACTION);
+        net.tfminecraft.magic.gear.GearCache.reattuneCostFraction = Double.isFinite(fraction) && fraction >= 0
+                ? fraction : net.tfminecraft.magic.gear.GearCache.DEFAULT_REATTUNE_COST_FRACTION;
         loadAlignment(section.getConfigurationSection("alignment"));
     }
 

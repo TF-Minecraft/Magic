@@ -120,6 +120,13 @@ gear:
   # without the band prefix (Common / Rare / Epic / Legendary). Band still gates attunement.
   socket_rarity_prefix: false
 
+  # Sneak-right-click an empty station with an attuned weapon to re-attune it from scratch.
+  # The fee is this share of the weapon's part costs in gear/parts.yml, rounded up per
+  # material (0.5 = half). It is refunded if the re-attunement is taken back before a
+  # charge takes hold. 0 makes it free. magic.bypass_crafting_cost skips it.
+  reattune:
+    cost_fraction: 0.5
+
   # One-sided bonus for holding a weapon attuned to the element of the spell you cast.
   # Keyed by the weapon's tier band in that element. A weapon with no attunement in an
   # element contributes nothing; there is no penalty side, because a weapon that cannot

@@ -11,6 +11,10 @@ public final class GearCache {
     public static int outputSlot = 16;
     public static long confirmMillis = 5000L;
 
+    /** Share of the weapon's part costs a reset of its attunement takes. */
+    public static final double DEFAULT_REATTUNE_COST_FRACTION = 0.5;
+    public static double reattuneCostFraction = DEFAULT_REATTUNE_COST_FRACTION;
+
     public static boolean alignmentEnabled = false;
 
     /** When false, gem socket colour strings omit Common/Rare/Epic/Legendary prefix. */
