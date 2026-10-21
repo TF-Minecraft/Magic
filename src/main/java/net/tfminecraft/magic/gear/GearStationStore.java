@@ -545,12 +545,19 @@ public final class GearStationStore {
 
     /** A station that loses its furniture drops a pending re-attunement's fee with the weapon. */
     public static void dropReattuneFee(Location location, Occupancy occupancy) {
-        if (location == null || occupancy == null || !occupancy.isReattune() || occupancy.getCharged() == null) return;
+        if (location == null || occupancy == null || !occupancy.isReattune()) return;
+        if (occupancy.getCharged() == null) {
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " lost a re-attunement fee with no readable record.");
+            return;
+        }
         for (Map.Entry<String, Integer> cost : occupancy.getCharged().entrySet()) {
             int remaining = cost.getValue();
             while (remaining > 0) {
                 ItemStack stack = net.tfminecraft.magic.util.ItemRef.build(cost.getKey());
-                if (stack == null || stack.getType().isAir()) break;
+                if (stack == null || stack.getType().isAir()) {
+                    Magic.plugin.getLogger().warning("[Magic] Gear station at " + key(location) + " could not drop " + remaining + " " + cost.getKey() + " of a re-attunement fee.");
+                    break;
+                }
                 int amount = Math.min(remaining, stack.getMaxStackSize()); stack.setAmount(amount); remaining -= amount;
                 drop(location, stack);
             }

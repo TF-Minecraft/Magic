@@ -68,7 +68,7 @@ public final class MagicSessionListener implements Listener {
         var captured = outgoing == null ? null : net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(outgoing);
         if (clearGear) {
             if (outgoing == null) { GearOrbService.finishForPlayer(player.getUniqueId()); GearChargeService.clear(player); net.tfminecraft.magic.gear.GearReattuneService.clear(player); }
-            else { GearOrbService.finishForSession(player.getUniqueId(), outgoing); GearChargeService.clear(player, captured); }
+            else { GearOrbService.finishForSession(player.getUniqueId(), outgoing); GearChargeService.clear(player, captured); net.tfminecraft.magic.gear.GearReattuneService.clear(player); }
         }
         ArtifactFillChestService.clear(player.getUniqueId());
         if (holder instanceof ResonanceGuiHolder) {

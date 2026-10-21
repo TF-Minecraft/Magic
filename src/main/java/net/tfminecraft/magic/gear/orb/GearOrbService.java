@@ -211,6 +211,8 @@ public final class GearOrbService implements Listener {
         WeaponRequirement requirement = reattune ? WeaponRequirement.empty() : WeaponRequirement.fromItem(weapon);
         requirement.mergeAmounts(captured);
         boolean replaced = reattune && requirement.highestBand() > 0;
+        // A reset reports the band it keeps; elements a weapon cannot hold do not count.
+        int shownBand = reattune ? requirement.highestBand() : capturedBand;
         if (!reattune || replaced) {
             requirement.persist(weapon);
 
@@ -220,7 +222,8 @@ public final class GearOrbService implements Listener {
             int newRift = Math.max(0, Math.min(OrbCache.riftCap, oldRift + session.riftDelta() - scrub));
             WeaponRift.set(weapon, newRift);
 
-            if (capturedBand > 0 && !GearProvenance.socketsLocked(weapon)) {
+            // A reset never rewrites sockets: that would drop the runes already in them.
+            if (!replaced && capturedBand > 0 && !GearProvenance.socketsLocked(weapon)) {
                 weapon = GearItemBuilder.rewriteSockets(weapon, capturedBand);
             } else {
                 weapon = WeaponLore.updateItem(weapon);
@@ -244,13 +247,13 @@ public final class GearOrbService implements Listener {
         if (player == null) {
             return;
         }
-        if (capturedBand <= 0) {
+        if (shownBand <= 0) {
             player.sendMessage(Messages.get("gear.orbs.failed"));
         } else {
             player.sendMessage(Messages.get(
                     "gear.orbs.complete",
                     "percent", String.valueOf((int) Math.round(session.capturedFraction() * 100)),
-                    "band", TierBands.numeral(capturedBand)));
+                    "band", TierBands.numeral(shownBand)));
         }
         if (replaced) {
             player.sendMessage(Messages.get("gear.reattune.done"));

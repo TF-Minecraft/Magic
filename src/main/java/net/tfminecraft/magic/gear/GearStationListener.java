@@ -297,12 +297,24 @@ public final class GearStationListener implements Listener {
         player.playSound(location, Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
     }
 
-    /** Calls off a paid reset, running or not: the unchanged weapon and the whole fee go back. */
+    /**
+     * Calls off a paid reset between runs: the unchanged weapon and the whole fee go back.
+     * A running charge cannot be called off, or the fee would only ever be paid for a
+     * result the owner liked.
+     */
     private void returnReattune(Player player, Location location, GearStationStore.Occupancy occupancy) {
-        if (!net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, location, occupancy)) {
-            player.sendMessage(Messages.get("gear.abort.not_yours")); return;
+        if (occupancy.isOrbSessionActive() || GearOrbService.isActive(location)) {
+            player.sendMessage(Messages.get("gear.orbs.busy")); return;
         }
-        if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, occupancy.getCharged())) return;
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.authorize(player, location, occupancy)) {
+            player.sendMessage(Messages.get("gear.reattune.not_yours")); return;
+        }
+        if (!net.tfminecraft.magic.gear.ownership.GearEffects.abortReturn(player, location, occupancy, occupancy.getCharged())) {
+            player.sendMessage(Messages.get("gear.reattune.held"));
+            Magic.plugin.getLogger().warning("[Magic] Gear station at " + GearStationStore.key(location)
+                    + " holds a re-attunement whose fee cannot be returned. Left on the station for staff review.");
+            return;
+        }
         recentAborts.values().removeIf(at -> System.currentTimeMillis() - at >= ABORT_BREAK_GUARD_MILLIS);
         recentAborts.put(GearStationStore.key(location), System.currentTimeMillis());
         player.sendMessage(Messages.get("gear.reattune.returned"));

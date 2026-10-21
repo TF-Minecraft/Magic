@@ -379,15 +379,17 @@ gear:
 
     placed: "#aaaaaa§oThe weapon rests on the station, waiting to be attuned anew"
 
-    locked: "#aaaaaa§oThe weapon waits to be attuned anew. Shift-left-click the station to take it and the materials back"
+    locked: "#aaaaaa§oThe weapon waits to be attuned anew. Its owner can shift-left-click the station to take it and the materials back"
 
     kept: "#aaaaaaThe old attunement holds. Apply another charge to attune the weapon anew."
 
     done: "#aaaaaa§oThe old attunement is gone"
 
-    returned: "#aaaaaa§oThe re-attunement breaks off. The weapon and the materials come back to you"
+    returned: "#aaaaaa§oThe re-attunement breaks off. The weapon and the materials go back to its owner"
 
-    not_yours: "#ff5555Only the weapon's owner can attune it anew."
+    not_yours: "#ff5555Only the weapon's owner can attune it anew or take it back."
+
+    held: "#ff5555The materials for this re-attunement cannot be returned. Ask staff to take it apart."
 
   broken:
 

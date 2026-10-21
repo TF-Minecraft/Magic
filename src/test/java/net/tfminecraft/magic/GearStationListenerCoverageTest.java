@@ -473,11 +473,17 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
       assertTrue(GearStationStore.isOccupied(loc), "a lost fee record is held for staff");
       reattuneRow(weapon, player.getUniqueId(), Map.of("v.stone", 2));
       orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(true);
+      left();
+      assertTrue(GearStationStore.isOccupied(loc), "a running charge cannot be called off for a refund");
+      orbs.when(() -> GearOrbService.isActive(loc)).thenReturn(false);
+      GearStationStore.get(loc).setOrbSessionActive(true);
+      left();
+      assertTrue(GearStationStore.isOccupied(loc));
+      GearStationStore.get(loc).setOrbSessionActive(false);
       aborts().put("old", 0L);
       aborts().put("fresh", System.currentTimeMillis());
       left();
       assertFalse(GearStationStore.isOccupied(loc));
-      orbs.verify(() -> GearOrbService.abort(loc));
       assertFalse(aborts().containsKey("old"));
       assertTrue(aborts().containsKey("fresh"));
       assertTrue(aborts().containsKey(GearStationStore.key(loc)));
