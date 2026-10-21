@@ -89,6 +89,13 @@ cast:
 
   broken_chat: "#ff5555This weapon is damaged. Right-click an empty station to reclaim its runes."
 
+  # Worn out: the weapon is on its last point of durability. Nothing is spent until it is repaired.
+  worn_title: "§7*Worn out*"
+
+  worn_sub: "#aaaaaa§oThis weapon needs repair"
+
+  worn_chat: "#ff5555This weapon is worn out. Repair it with a Magical Repair Kit before casting again."
+
 resonance:
 
   admin:

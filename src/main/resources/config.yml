@@ -89,6 +89,9 @@ meditation:
 # spells out what you are short of, per player, weapon and element.
 cast:
   refuse_chat_seconds: 30
+  # Vanilla durability every spent cast (success or fumble) takes from the held mage weapon.
+  # The last point is never spent: a weapon on it refuses spells until repaired. 0 = off.
+  wear_per_cast: 1
 
 # Drift from spending mana on a gated cast. 4 mana -> 0.04, 10 mana -> 0.10 (mana / mana_divisor).
 # Surge adds corruption (negative equilibrium). Flow adds tranquility (positive).

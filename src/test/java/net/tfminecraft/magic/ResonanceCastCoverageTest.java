@@ -4,11 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import io.lumine.mythic.lib.api.event.skill.PlayerCastSkillEvent;
-import io.lumine.mythic.lib.api.item.NBTItem;
 import io.lumine.mythic.lib.skill.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import net.Indyuce.mmoitems.api.interaction.util.DurabilityItem;
 import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.gear.*;
 import net.tfminecraft.magic.integration.SkillIdResolver;
@@ -125,7 +123,7 @@ class ResonanceCastCoverageTest {
     var skill = mock(Skill.class);
     var metadata = mock(SkillMetadata.class);
     var p = server.addPlayer();
-    var weapon = new ItemStack(Material.STICK);
+    var weapon = new ItemStack(Material.IRON_SWORD);
     when(event.getCast()).thenReturn(skill);
     when(event.getPlayer()).thenReturn(p);
     when(event.getMetadata()).thenReturn(metadata);
@@ -138,34 +136,19 @@ class ResonanceCastCoverageTest {
     var session = mock(ResonanceSession.class);
     when(session.getResonance("fire")).thenReturn(20.);
     when(plugin.getResonanceGuiManager().getSessionManager().get(p)).thenReturn(session);
-    var nbt = mock(NBTItem.class);
-    var durability = mock(DurabilityItem.class);
-    when(durability.decreaseDurability(1)).thenReturn(durability);
-    when(durability.toItem()).thenReturn(weapon);
     try (var ids = mockStatic(SkillIdResolver.class);
         var hand = mockStatic(GearHand.class);
-        var nbtApi = mockStatic(NBTItem.class);
-        var durabilityApi = mockStatic(DurabilityItem.class);
         var rifts = mockStatic(WeaponRift.class);
         var random = mockStatic(ThreadLocalRandom.class)) {
       ids.when(() -> SkillIdResolver.isActiveCast(skill)).thenReturn(true);
       ids.when(() -> SkillIdResolver.resolveSkillId(skill)).thenReturn("fireball");
       hand.when(() -> GearHand.heldSlot(p)).thenReturn(GearHand.HeldSlot.MAIN_HAND);
       hand.when(() -> GearHand.held(p)).thenReturn(weapon);
-      nbtApi.when(() -> NBTItem.get(weapon)).thenReturn(nbt);
       listener.onPlayerCastSkill(event);
       verify(event, never()).setCancelled(true);
-      when(nbt.getInteger("MMOITEMS_MAX_DURABILITY")).thenReturn(10);
-      listener.onPlayerCastSkill(event);
-      durabilityApi
-          .when(() -> DurabilityItem.from(p, nbt, EquipmentSlot.HAND))
-          .thenReturn(durability);
-      listener.onPlayerCastSkill(event);
+      assertEquals(1, damage(weapon));
       hand.verify(() -> GearHand.setHeld(p, GearHand.HeldSlot.MAIN_HAND, weapon));
       hand.when(() -> GearHand.heldSlot(p)).thenReturn(GearHand.HeldSlot.OFF_HAND);
-      durabilityApi
-          .when(() -> DurabilityItem.from(p, nbt, EquipmentSlot.OFF_HAND))
-          .thenReturn(durability);
       hand.when(() -> GearHand.staffCount(p)).thenReturn(2);
       listener.onPlayerCastSkill(event);
       verify(skill).whenCast(metadata);
@@ -179,8 +162,59 @@ class ResonanceCastCoverageTest {
       listener.onPlayerCastSkill(event);
       verify(skill, times(2)).whenCast(metadata);
       verify(event, times(2)).setCancelled(true);
-      verify(durability, times(4)).decreaseDurability(1);
+      assertEquals(4, damage(weapon));
+      p.setGameMode(GameMode.CREATIVE);
+      listener.onPlayerCastSkill(event);
+      assertEquals(4, damage(weapon));
+      p.setGameMode(GameMode.SURVIVAL);
+      Cache.castWear = 0;
+      listener.onPlayerCastSkill(event);
+      assertEquals(4, damage(weapon));
+      Cache.castWear = 3;
+      listener.onPlayerCastSkill(event);
+      assertEquals(7, damage(weapon));
+    } finally {
+      Cache.castWear = Cache.DEFAULT_CAST_WEAR;
     }
+  }
+
+  @Test
+  void wornOutWeaponRefusesForFreeAndThrottlesTheChatLine() {
+    var event = mock(PlayerCastSkillEvent.class);
+    var skill = mock(Skill.class);
+    var p = server.addPlayer();
+    ElementRegistry.register(DomainTest.element("fire"));
+    var session = new ResonanceSession();
+    session.setResonance("fire", 20);
+    var weapon = new ItemStack(Material.IRON_SWORD);
+    var meta = (org.bukkit.inventory.meta.Damageable) weapon.getItemMeta();
+    meta.setDamage(249);
+    weapon.setItemMeta(meta);
+    when(event.getCast()).thenReturn(skill);
+    when(event.getPlayer()).thenReturn(p);
+    when(plugin.getResonanceGuiManager().getSessionManager().get(p)).thenReturn(session);
+    SkillElementRegistry.register("fireball", "fire", 1);
+    try (var ids = mockStatic(SkillIdResolver.class);
+        var hand = mockStatic(GearHand.class)) {
+      ids.when(() -> SkillIdResolver.isActiveCast(skill)).thenReturn(true);
+      ids.when(() -> SkillIdResolver.resolveSkillId(skill)).thenReturn("fireball");
+      hand.when(() -> GearHand.heldSlot(p)).thenReturn(GearHand.HeldSlot.MAIN_HAND);
+      hand.when(() -> GearHand.held(p)).thenReturn(weapon);
+      listener.onPlayerCastSkill(event);
+      listener.onPlayerCastSkill(event);
+      verify(event, times(2)).setCancelled(true);
+      verify(skill, never()).whenCast(any());
+      assertEquals(249, damage(weapon));
+      assertEquals(20, session.getResonance("fire"));
+      assertNotNull(p.nextTitle());
+      assertNotNull(p.nextMessage());
+      assertNotNull(p.nextTitle());
+      assertNull(p.nextMessage());
+    }
+  }
+
+  static int damage(ItemStack stack) {
+    return ((org.bukkit.inventory.meta.Damageable) stack.getItemMeta()).getDamage();
   }
 
   @Test

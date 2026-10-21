@@ -4,19 +4,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import io.lumine.mythic.lib.api.event.skill.PlayerCastSkillEvent;
-import io.lumine.mythic.lib.api.item.NBTItem;
 import io.lumine.mythic.lib.skill.Skill;
-import net.Indyuce.mmoitems.api.interaction.util.DurabilityItem;
 import net.tfminecraft.magic.util.MagicText;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
@@ -28,6 +26,7 @@ import net.tfminecraft.magic.gear.GearHand.HeldSlot;
 import net.tfminecraft.magic.gear.GearProvenance;
 import net.tfminecraft.magic.gear.WeaponRequirement;
 import net.tfminecraft.magic.gear.WeaponRift;
+import net.tfminecraft.magic.gear.WeaponWear;
 import net.tfminecraft.magic.integration.SkillIdResolver;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
@@ -50,8 +49,9 @@ import net.tfminecraft.magic.session.ResonanceSession;
  * is rolled only once refusal and overload have passed, and a failed roll spends mana
  * and cooldown.
  *
- * <p>Every spent cast (success, overload whiff, or rift whiff) also costs one MMOItems
- * durability on the held weapon.
+ * <p>Every spent cast (success, overload whiff, or rift whiff) also costs
+ * {@code cast.wear_per_cast} vanilla durability on the held weapon, never the last point.
+ * A weapon on its last point is worn out: it refuses every spell, for free, until repaired.
  */
 public final class ResonanceCastListener implements Listener {
 
@@ -91,6 +91,11 @@ public final class ResonanceCastListener implements Listener {
             broken(player, weapon, elementId);
             return;
         }
+        if (WeaponWear.isWorn(weapon)) {
+            event.setCancelled(true);
+            worn(player, weapon, elementId);
+            return;
+        }
         if (refuse(player, weapon, elementId, spellTier)) {
             event.setCancelled(true);
             return;
@@ -114,16 +119,11 @@ public final class ResonanceCastListener implements Listener {
     }
 
     private static void wearWeapon(Player player, HeldSlot slot, ItemStack weapon) {
-        NBTItem nbt = NBTItem.get(weapon);
-        if (nbt.getInteger("MMOITEMS_MAX_DURABILITY") <= 0) {
+        if (Cache.castWear <= 0 || player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
-        DurabilityItem durability = DurabilityItem.from(player, nbt,
-                slot == HeldSlot.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);
-        if (durability == null) {
-            return;
-        }
-        GearHand.setHeld(player, slot, durability.decreaseDurability(1).toItem());
+        WeaponWear.wear(weapon, Cache.castWear);
+        GearHand.setHeld(player, slot, weapon);
     }
 
     /** @return true when this spell cannot fire on this weapon for this caster */
@@ -194,6 +194,20 @@ public final class ResonanceCastListener implements Listener {
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, SoundCategory.PLAYERS, 0.7f, 0.6f);
         if (claimChat(player, weapon, elementId)) {
             player.sendMessage(Messages.get("cast.broken_chat"));
+        }
+    }
+
+    /** A worn-out weapon refuses everything, so nothing is spent. Shares the refusal rate limiter. */
+    // Keep the existing legacy text representation, formatting, and exact-string comparisons.
+    @SuppressWarnings("deprecation")
+    private static void worn(Player player, ItemStack weapon, String elementId) {
+        player.sendTitle(
+                Messages.get("cast.worn_title"),
+                Messages.get("cast.worn_sub"),
+                0, 25, 10);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, SoundCategory.PLAYERS, 0.7f, 0.6f);
+        if (claimChat(player, weapon, elementId)) {
+            player.sendMessage(Messages.get("cast.worn_chat"));
         }
     }
 

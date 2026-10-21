@@ -254,6 +254,24 @@ class ConfigurationTest {
   }
 
   @Test
+  void castWearReadsPerCastAmountFloorsAtZeroAndDefaultsToOne() throws Exception {
+    var loader = new ConfigLoader();
+    try {
+      assertTrue(loader.loadSafe(write("wear.yml", "cast: {wear_per_cast: 3}\n").toFile()));
+      assertEquals(3, Cache.castWear);
+      assertTrue(loader.loadSafe(write("wear-negative.yml", "cast: {wear_per_cast: -2}\n").toFile()));
+      assertEquals(0, Cache.castWear);
+      assertTrue(loader.loadSafe(write("wear-missing.yml", "cast: {refuse_chat_seconds: 5}\n").toFile()));
+      assertEquals(1, Cache.castWear);
+      Cache.castWear = 4;
+      assertTrue(loader.loadSafe(write("wear-absent.yml", "{}").toFile()));
+      assertEquals(1, Cache.castWear);
+    } finally {
+      Cache.castWear = Cache.DEFAULT_CAST_WEAR;
+    }
+  }
+
+  @Test
   void reattuneFeeShareFallsBackToHalfWhenMissingNegativeOrNotANumber() throws Exception {
     var loader = new ConfigLoader();
     try {
