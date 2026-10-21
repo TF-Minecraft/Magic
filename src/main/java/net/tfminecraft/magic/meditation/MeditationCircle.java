@@ -422,6 +422,9 @@ public final class MeditationCircle {
         int chunkZ = cz >> 4;
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
+                if (!world.isChunkLoaded(chunkX + dx, chunkZ + dz)) {
+                    continue; // an unloaded chunk holds no live furniture; never load one here
+                }
                 Chunk chunk = world.getChunkAt(chunkX + dx, chunkZ + dz);
                 out.addAll(plugin.getFurnitureManager().getFurnitureInChunk(chunk));
             }

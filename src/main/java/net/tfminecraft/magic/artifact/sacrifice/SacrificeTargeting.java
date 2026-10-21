@@ -276,6 +276,9 @@ public final class SacrificeTargeting {
         int pad = Math.max(1, (ShrineRegistry.getRadius() >> 4) + 1);
         for (int dx = -pad; dx <= pad; dx++) {
             for (int dz = -pad; dz <= pad; dz++) {
+                if (!world.isChunkLoaded(chunkX + dx, chunkZ + dz)) {
+                    continue; // an unloaded chunk holds no live furniture; never load one here
+                }
                 Chunk chunk = world.getChunkAt(chunkX + dx, chunkZ + dz);
                 out.addAll(plugin.getFurnitureManager().getFurnitureInChunk(chunk));
             }

@@ -205,10 +205,7 @@ class GearStationOwnershipBoundaryTest extends GearStationCoverageSupport {
         assertTrue(GearStationStore.acknowledgeRelease(location, occupancy.generation()));
         assertEquals(
                 "released",
-                GearStationStore.property()
-                        .station(occupancy.generation())
-                        .raw()
-                        .get("effect-state"));
+                archived(occupancy.generation()).get("effect-state"));
         assertFalse(GearStationStore.acknowledgeRelease(location, occupancy.generation()));
     }
 

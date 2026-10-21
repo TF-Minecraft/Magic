@@ -50,7 +50,7 @@ class GearReviewRegressionTest extends GearStationCoverageSupport {
         assertEquals(ownerToken.owner(), GearPropertyStore.returnOwner(returned));
         assertEquals("pending", GearPropertyStore.text(returned, "state"));
         assertEquals(weapon, GearItems.item(GearPropertyStore.bytes(returned.getAsJsonArray("items").get(0).getAsString())));
-        assertEquals("released", store.station(occupancy.generation()).raw().get("effect-state"));
+        assertEquals("released", archived(occupancy.generation()).get("effect-state"));
         checkpoint.verifyNoInteractions();
     }
 
