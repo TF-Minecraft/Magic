@@ -18,6 +18,7 @@ import net.tfminecraft.interactiblefurniture.events.FurnitureBreakEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemAddEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemTakeEvent;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
+import net.tfminecraft.interactiblefurniture.furniture.PlacedSlot;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.integration.SessionGuard;
 import net.tfminecraft.tlibs.character.Characters;
@@ -82,9 +83,11 @@ public final class ArtifactListener implements Listener {
         }
         ItemStack item = event.getItem();
         if (ArtifactIds.hasKey(item)) {
+            // The item comes from the player's hand, so the time since its last tick was
+            // spent housed in their inventory.
             ArtifactCareStore.apply(
                     item,
-                    false,
+                    true,
                     System.currentTimeMillis(),
                     ArtifactCareStore.Persist.ALWAYS);
             event.setItem(item);
@@ -152,9 +155,27 @@ public final class ArtifactListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFurnitureBreak(FurnitureBreakEvent event) {
         if (event.getFurniture() != null) {
+            careForDisplayedArtifacts(event.getFurniture());
             ArtifactDisplayIndex.removeFurniture(event.getFurniture());
             ShrineChargeService.stopAll(event.getFurniture().getEntityId());
             SacrificeRiteService.stopAll(event.getFurniture().getEntityId());
+        }
+    }
+
+    /**
+     * Breaking display furniture drops its slot items without a take event. Settle their
+     * displayed time as housed first, or the pickup would count it as unhoused.
+     */
+    private static void careForDisplayedArtifacts(Furniture furniture) {
+        if (!ArtifactDisplayIndex.isDisplayFurniture(furniture)) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        for (PlacedSlot slot : furniture.getActiveSlots().values()) {
+            ItemStack item = slot.getCurrentItem();
+            if (ArtifactIds.hasKey(item)) {
+                ArtifactCareStore.apply(item, true, now, ArtifactCareStore.Persist.ALWAYS);
+            }
         }
     }
 

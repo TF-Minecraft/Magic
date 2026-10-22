@@ -30,9 +30,9 @@ class GearEffectsTest extends GearStationCoverageSupport {
 
     @Test void depositIntentPrecedesRemovalAndExactOutgoingCharacterPersistsAcrossViewClearAndRestart()throws Exception{
         var player=server.addPlayer();var token=token(player);var location=station();var weapon=item();player.getInventory().setItemInMainHand(weapon);
-        var store=spyStore();doAnswer(call->{call.callRealMethod();assertEquals(weapon,player.getInventory().getItemInMainHand());var raw=(Map<?,?>)call.getArgument(0);assertEquals("depositing",raw.get("effect-state"));return null;}).when(store).insert(any());
+        var store=spyStore();doAnswer(call->{call.callRealMethod();assertEquals(weapon,player.getInventory().getItemInMainHand());var raw=(Map<?,?>)call.getArgument(0);assertEquals("depositing",raw.get("effect-state"));assertTrue(raw.containsKey("deposit-intent"));return null;}).when(store).insert(any());
         var occupancy=GearStationStore.deposit(player,token,location,weapon,Map.of(),true,withoutHand(player));assertNotNull(occupancy);assertTrue(player.getInventory().isEmpty());assertEquals(token.owner(),occupancy.characterOwner());
-        checkpoint.verify(()->InventoryCheckpoint.save(player));var row=store.station(occupancy.generation()).raw();assertEquals("active",row.get("effect-state"));
+        checkpoint.verify(()->InventoryCheckpoint.save(player));var row=store.station(occupancy.generation()).raw();assertEquals("active",row.get("effect-state"));assertFalse(row.containsKey("deposit-intent"));
         var extended=GearYaml.copy(row);extended.put("future",GearYaml.read("kept: null\nbinary: !!binary AQID\n".getBytes()));store.patch(store.station(occupancy.generation()),extended);GearStationStore.save();GearStationStore.clearAll();assertTrue(GearStationStore.isOccupied(location));GearStationStore.load();assertEquals(token.owner(),GearStationStore.get(location).characterOwner());assertTrue(((Map<?,?>)store.station(occupancy.generation()).raw().get("future")).containsKey("kept"));
     }
     @Test void staleDepositAndChangedInventoryCancelBeforeEffectsWhilePostEffectFailureIsHeld()throws Exception{
@@ -87,7 +87,7 @@ class GearEffectsTest extends GearStationCoverageSupport {
         });var estates=mockStatic(Estates.class)){
             assertTrue(GearEffects.charge(actor,actorToken,location,hand,Map.of("fire",5d),"fire",1));assertEquals(1,actor.getInventory().getItemInMainHand().getAmount());assertTrue(GearOrbService.touches(ownerToken.owner()));assertFalse(GearOrbService.touches(actorToken.owner()));
             estates.when(()->Estates.guardHolds(any())).thenReturn(true);var decision=decision(characters.ref(owner.getUniqueId()),characters.ref(heir.getUniqueId()));var participant=new CharacterGearEstate(Magic.plugin);assertEquals(Outcome.Kind.RETRY,participant.settle(decision).kind());assertEquals(ownerToken.owner(),GearPropertyStore.owner(GearStationStore.property().station(occupancy.generation()).raw()));
-            var outgoing=session(actor);switchSession(actor);GearOrbService.finishForSession(actor.getUniqueId(),outgoing);assertFalse(GearOrbService.touches(ownerToken.owner()));assertEquals(3,WeaponRequirement.fromItem(GearStationStore.get(location).getItem()).aura().getFill("fire"));assertEquals(Outcome.Kind.DONE,participant.settle(decision).kind());assertEquals(token(heir).owner(),GearStationStore.get(location).characterOwner());
+            var outgoing=session(actor);switchSession(actor);GearOrbService.finishForSession(actor.getUniqueId(),outgoing);assertFalse(GearStationStore.property().station(occupancy.generation()).raw().containsKey("charge-intent"));assertFalse(GearOrbService.touches(ownerToken.owner()));assertEquals(3,WeaponRequirement.fromItem(GearStationStore.get(location).getItem()).aura().getFill("fire"));assertEquals(Outcome.Kind.DONE,participant.settle(decision).kind());assertEquals(token(heir).owner(),GearStationStore.get(location).characterOwner());
         }finally{GearOrbService.stop();}
     }
     @Test void oldOrbCompletionCannotTouchAReplacedOccupancyAndOldMenuCannotCommitForANewSession()throws Exception{
@@ -117,9 +117,9 @@ class GearEffectsTest extends GearStationCoverageSupport {
         assertFalse(GearEffects.charge(p,token,location,hand,Map.of(),"fire",1));assertEquals(hand,p.getInventory().getItemInMainHand());
         occupancy=seed(location,item(),null,Map.of());UUID id=occupancy.generation();
         doAnswer(call->{call.callRealMethod();Map<?,?> row=call.getArgument(1);if("charging".equals(row.get("effect-state")))p.getInventory().setItem(3,new ItemStack(Material.DIAMOND));return null;}).when(store).patch(any(),any());
-        assertFalse(GearEffects.charge(p,token,location,hand,Map.of(),"fire",1));assertEquals(hand,p.getInventory().getItemInMainHand());assertEquals(Material.DIAMOND,p.getInventory().getItem(3).getType());assertEquals("active",store.station(id).raw().get("effect-state"));
+        assertFalse(GearEffects.charge(p,token,location,hand,Map.of(),"fire",1));assertEquals(hand,p.getInventory().getItemInMainHand());assertEquals(Material.DIAMOND,p.getInventory().getItem(3).getType());assertEquals("active",store.station(id).raw().get("effect-state"));assertFalse(store.station(id).raw().containsKey("charge-intent"));
         doCallRealMethod().when(store).patch(any(),any());checkpoint.when(()->InventoryCheckpoint.save(p)).thenThrow(new IllegalStateException("save failed"));
-        assertFalse(GearEffects.charge(p,token,location,hand,Map.of(),"fire",1));assertTrue(p.getInventory().getItemInMainHand().getType().isAir());assertEquals("held",store.station(id).raw().get("effect-state"));
+        assertFalse(GearEffects.charge(p,token,location,hand,Map.of(),"fire",1));assertTrue(p.getInventory().getItemInMainHand().getType().isAir());assertTrue(store.station(id).raw().containsKey("charge-intent"));assertEquals("held",store.station(id).raw().get("effect-state"));
         GearEffects.hold(id);GearEffects.hold(UUID.randomUUID());
     }
     @Test void abortRefundRefusesUnbuildableCostsAndLateSessionChangesAndRetainsHeldEvidenceOnFailure()throws Exception{
