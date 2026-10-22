@@ -61,7 +61,8 @@ public final class CharacterGearEstate implements EstateParticipant {
     /**
      * Decided estates stay decided for good, and each settle reads the station file several times,
      * so a revision this process already reported DONE is not settled again until the next restart.
-     * RETRY and BLOCKED answers, and new revisions, are still settled every hour.
+     * RETRY and BLOCKED answers, and new revisions, are still settled every hour. Gear that reaches a
+     * settled testator later, such as a staff-recovered station, moves at the first pass after a restart.
      */
     void reconcile() {
         try { GearStationStore.property().migrate(); GearStationStore.loadViews(); }
