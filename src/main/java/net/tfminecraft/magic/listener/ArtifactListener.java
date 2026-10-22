@@ -82,9 +82,11 @@ public final class ArtifactListener implements Listener {
         }
         ItemStack item = event.getItem();
         if (ArtifactIds.hasKey(item)) {
+            // The item comes from the player's hand, so the time since its last tick was
+            // spent housed in their inventory.
             ArtifactCareStore.apply(
                     item,
-                    false,
+                    true,
                     System.currentTimeMillis(),
                     ArtifactCareStore.Persist.ALWAYS);
             event.setItem(item);

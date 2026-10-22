@@ -258,6 +258,10 @@ public final class GearStationStore {
             var after = net.tfminecraft.magic.gear.ownership.GearYaml.copy(station.raw());
             after.put("item-bytes", net.tfminecraft.magic.gear.ownership.GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(item)));
             after.put("effect-state", "active");
+            // Intents are only evidence for an interrupted operation (held for review). A
+            // finished one drops them: each holds two inventory snapshots, and every station
+            // click re-reads the whole file.
+            after.remove("deposit-intent"); after.remove("charge-intent");
             if (reattuned) { after.remove("reattune"); after.put("charged", new LinkedHashMap<>()); }
             ItemStack cached = decodeItem(after); // the re-read copy, as in install
             property().patch(station, after);

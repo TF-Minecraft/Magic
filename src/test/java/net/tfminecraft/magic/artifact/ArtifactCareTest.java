@@ -172,6 +172,39 @@ class ArtifactCareTest {
   }
 
   @Test
+  void housedArtifactsWithAuraReanchorTheClockSoLaterStorageOnlyCountsStorageTime() {
+    var item = artifact();
+    var empty = artifact();
+    var emptied = Artifact.fromItem(empty);
+    emptied.setFill("fire", 0);
+    emptied.persistPdc(empty);
+    try (var lore = mockStatic(ArtifactLore.class)) {
+      assertFalse(ArtifactCareStore.apply(item, true, 1000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(0, ArtifactCareStore.readLastTickMs(item));
+      assertTrue(ArtifactCareStore.tick(item, true, 1000));
+      assertFalse(ArtifactCareStore.apply(item, true, 1010, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(1000, ArtifactCareStore.readLastTickMs(item));
+      assertTrue(ArtifactCareStore.apply(item, true, 1017, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(1017, ArtifactCareStore.readLastTickMs(item));
+      assertEquals(0, ArtifactCareStore.readMuffle(item));
+      lore.verify(() -> ArtifactLore.apply(any()), never());
+
+      assertFalse(ArtifactCareStore.apply(item, false, 5000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(1017, ArtifactCareStore.readLastTickMs(item));
+      assertTrue(ArtifactCareStore.tick(item, false, 1117));
+      assertEquals(.01, ArtifactCareStore.readMuffle(item), 1e-10);
+
+      assertTrue(ArtifactCareStore.tick(empty, true, 1000));
+      assertFalse(ArtifactCareStore.apply(empty, true, 9000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(1000, ArtifactCareStore.readLastTickMs(empty));
+
+      ArtifactCareCache.muffledEnabled = false;
+      assertFalse(ArtifactCareStore.apply(item, true, 9000, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(1117, ArtifactCareStore.readLastTickMs(item));
+    }
+  }
+
+  @Test
   void setMuffleClampsTheValueAndResetsTheCareClock() {
     var item = artifact();
     try (var lore = mockStatic(ArtifactLore.class)) {

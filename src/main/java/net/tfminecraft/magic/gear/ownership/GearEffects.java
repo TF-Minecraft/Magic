@@ -49,7 +49,7 @@ public final class GearEffects {
                 var expected = store.station(operation); var cancelled = GearYaml.copy(expected.raw()); cancelled.put("effect-state", "released"); cancelled.put("effect-result", "cancelled-before-removal"); store.patch(expected, cancelled); return null;
             }
             player.getInventory().setContents(cloneContents(inventoryAfter)); player.updateInventory(); InventoryCheckpoint.save(player);
-            var expected = store.station(operation); var after = GearYaml.copy(expected.raw()); after.put("effect-state", "active"); store.patch(expected, after);
+            var expected = store.station(operation); var after = GearYaml.copy(expected.raw()); after.put("effect-state", "active"); after.remove("deposit-intent"); store.patch(expected, after);
             return GearStationStore.install(location, after);
         } catch (IOException | RuntimeException ex) { hold(operation); GearStationStore.warning(ex); return null; }
     }
@@ -70,7 +70,7 @@ public final class GearEffects {
             ItemStack spent = hand.clone(); spent.setAmount(1);
             Map<Object, Object> intent = new LinkedHashMap<>(); intent.put("operation", operation.toString()); intent.put("actor-account", token.owner().account().toString()); intent.put("actor-character", token.owner().character().toString()); intent.put("session", token.session()); intent.put("occupancy-id", occupancy.generation().toString()); intent.put("item-hash", GearPropertyStore.hash(net.tfminecraft.magic.gear.ownership.GearItems.bytes(occupancy.getItem()))); intent.put("owner", expected.raw().get("ownership")); intent.put("charge", GearPropertyStore.b64(net.tfminecraft.magic.gear.ownership.GearItems.bytes(spent))); intent.put("snapshot", snapshot); intent.put("element", element); intent.put("tier", tier); intent.put("inventory-before", before); intent.put("inventory-after", frame(afterInventory));
             after.put("charge-intent", intent); after.put("effect-state", "charging"); store.patch(expected, after);
-            if (!store.identity().current(token, player) || !before.equals(frame(player.getInventory().getContents()))) { var cancelled = store.station(occupancy.generation()); var restored = GearYaml.copy(cancelled.raw()); restored.put("effect-state", "active"); restored.put("charge-result", "cancelled-before-removal"); store.patch(cancelled, restored); return false; }
+            if (!store.identity().current(token, player) || !before.equals(frame(player.getInventory().getContents()))) { var cancelled = store.station(occupancy.generation()); var restored = GearYaml.copy(cancelled.raw()); restored.put("effect-state", "active"); restored.remove("charge-intent"); restored.put("charge-result", "cancelled-before-removal"); store.patch(cancelled, restored); return false; }
             player.getInventory().setContents(afterInventory); player.updateInventory(); InventoryCheckpoint.save(player);
             occupancy.setOrbSessionActive(true);
             if (!GearOrbService.begin(player, station, snapshot, element, tier, token)) { occupancy.setOrbSessionActive(false); hold(occupancy.generation()); return false; }

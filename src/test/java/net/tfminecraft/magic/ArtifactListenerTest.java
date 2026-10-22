@@ -200,7 +200,7 @@ class ArtifactListenerTest {
           () ->
               ArtifactCareStore.apply(
                   eq(artifact),
-                  eq(false),
+                  eq(true),
                   anyLong(),
                   eq(ArtifactCareStore.Persist.ALWAYS)));
 
@@ -212,7 +212,8 @@ class ArtifactListenerTest {
                   eq(artifact),
                   eq(true),
                   anyLong(),
-                  eq(ArtifactCareStore.Persist.ALWAYS)));
+                  eq(ArtifactCareStore.Persist.ALWAYS)),
+          times(2));
       verify(take).setItem(artifact);
 
       display.when(() -> ArtifactDisplayIndex.isDisplayFurniture(furniture)).thenReturn(false);

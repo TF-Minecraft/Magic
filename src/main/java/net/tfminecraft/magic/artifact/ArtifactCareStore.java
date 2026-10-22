@@ -18,6 +18,13 @@ import net.tfminecraft.magic.util.MagicNumbers;
 
 public final class ArtifactCareStore {
 
+    /**
+     * A housed artifact with aura whose lore would not change still re-anchors its clock
+     * after this many (scaled) hours. Without it, the next unhoused tick would muffle it
+     * for all the time it spent housed. One minute bounds that error to about 0.07%.
+     */
+    static final double HOUSED_CLOCK_ANCHOR_HOURS = 1.0 / 60.0;
+
     private ArtifactCareStore() {}
 
     public static double readMuffle(ItemStack stack) {
@@ -120,7 +127,12 @@ public final class ArtifactCareStore {
                 && !storesAura
                 && last > 0L
                 && emptyStorageClockIsStale(dtHours);
-        if (!force && !visible && !anchorEmptyClock) {
+        boolean anchorHousedClock = ArtifactCareCache.muffledEnabled
+                && housed
+                && storesAura
+                && last > 0L
+                && dtHours >= HOUSED_CLOCK_ANCHOR_HOURS;
+        if (!force && !visible && !anchorEmptyClock && !anchorHousedClock) {
             return false;
         }
         if (ArtifactCareCache.muffledEnabled) {
