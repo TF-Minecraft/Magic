@@ -205,6 +205,21 @@ class ArtifactCareTest {
   }
 
   @Test
+  void aClockAnchorDecaysTheElapsedTimeEvenWhenNoLoreChanges() {
+    var item = artifact();
+    var config = new YamlConfiguration();
+    config.set("aura_decay_per_hour", -1);
+    ElementRegistry.register(new ElementDef("fire", config));
+    try (var lore = mockStatic(ArtifactLore.class)) {
+      assertTrue(ArtifactCareStore.tick(item, true, 1000));
+      assertTrue(ArtifactCareStore.apply(item, true, 1017, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(5 - .017, Artifact.fromItem(item).getFill("fire"), 1e-9);
+      lore.verify(() -> ArtifactLore.apply(any()), never());
+      lore.verify(() -> ArtifactLore.updateItem(item));
+    }
+  }
+
+  @Test
   void setMuffleClampsTheValueAndResetsTheCareClock() {
     var item = artifact();
     try (var lore = mockStatic(ArtifactLore.class)) {

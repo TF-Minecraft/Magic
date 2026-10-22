@@ -169,6 +169,40 @@ class ArtifactListenerTest {
   }
 
   @Test
+  void breakingDisplayFurnitureSettlesItsArtifactsAsHousedBeforeTheyDrop() {
+    var listener = new ArtifactListener();
+    var furniture = mock(Furniture.class);
+    when(furniture.getEntityId()).thenReturn(UUID.randomUUID());
+    var artifact = new ItemStack(Material.STONE);
+    ArtifactIds.writeNew(artifact);
+    var withArtifact = mock(PlacedSlot.class);
+    when(withArtifact.getCurrentItem()).thenReturn(artifact);
+    var withPlain = mock(PlacedSlot.class);
+    when(withPlain.getCurrentItem()).thenReturn(new ItemStack(Material.STONE));
+    Map<String, PlacedSlot> slots = new LinkedHashMap<>();
+    slots.put("artifact", withArtifact);
+    slots.put("plain", withPlain);
+    slots.put("empty", mock(PlacedSlot.class));
+    when(furniture.getActiveSlots()).thenReturn(slots);
+    var broken = mock(FurnitureBreakEvent.class);
+    when(broken.getFurniture()).thenReturn(furniture);
+    try (var display = mockStatic(ArtifactDisplayIndex.class);
+        var care = mockStatic(ArtifactCareStore.class);
+        var shrine = mockStatic(ShrineChargeService.class);
+        var sacrifice = mockStatic(SacrificeRiteService.class)) {
+      listener.onFurnitureBreak(broken);
+      care.verifyNoInteractions();
+      display.when(() -> ArtifactDisplayIndex.isDisplayFurniture(furniture)).thenReturn(true);
+      listener.onFurnitureBreak(broken);
+      care.verify(
+          () ->
+              ArtifactCareStore.apply(
+                  eq(artifact), eq(true), anyLong(), eq(ArtifactCareStore.Persist.ALWAYS)));
+      care.verifyNoMoreInteractions();
+    }
+  }
+
+  @Test
   void furnitureSlotTransitionsTickArtifactCareAcrossDisplayCases() {
     var listener = new ArtifactListener();
     var furniture = mock(Furniture.class);

@@ -142,8 +142,9 @@ public final class ArtifactCareStore {
         stack.setItemMeta(meta);
         if (visible) {
             ArtifactLore.apply(stack);
-            decayFill(stack, dtHours);
         }
+        // The clock just moved, so the elapsed time must decay now or it is lost.
+        decayFill(stack, dtHours);
         return true;
     }
 

@@ -8,6 +8,8 @@ import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.tick.MagicTickContext;
 import org.bukkit.*;
 import org.bukkit.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.*;
@@ -49,6 +51,34 @@ class FrameCareTest {
           .thenReturn(true);
       ArtifactFrameCareTicker.tickFrame(frame, ArtifactCareStore.Persist.ALWAYS);
       verify(frame).setItem(item, false);
+    }
+  }
+
+  @Test
+  void punchingOrBreakingAFrameSettlesItsArtifactBeforeItDrops() {
+    var ticker = new ArtifactFrameCareTicker();
+    var frame = mock(ItemFrame.class);
+    when(frame.isValid()).thenReturn(true);
+    var item = new ItemStack(Material.STONE);
+    ArtifactIds.writeNew(item);
+    when(frame.getItem()).thenReturn(item);
+    var damage = mock(EntityDamageEvent.class);
+    var hanging = mock(HangingBreakEvent.class);
+    try (var care = mockStatic(ArtifactCareStore.class)) {
+      when(damage.getEntity()).thenReturn(mock(Zombie.class));
+      ticker.onFrameDamage(damage);
+      when(hanging.getEntity()).thenReturn(mock(Painting.class));
+      ticker.onFrameBreak(hanging);
+      care.verifyNoInteractions();
+      when(damage.getEntity()).thenReturn(frame);
+      ticker.onFrameDamage(damage);
+      when(hanging.getEntity()).thenReturn(frame);
+      ticker.onFrameBreak(hanging);
+      care.verify(
+          () ->
+              ArtifactCareStore.apply(
+                  eq(item), eq(true), anyLong(), eq(ArtifactCareStore.Persist.ALWAYS)),
+          times(2));
     }
   }
 

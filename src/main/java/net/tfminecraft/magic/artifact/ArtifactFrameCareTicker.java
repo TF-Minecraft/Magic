@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -41,6 +43,24 @@ public final class ArtifactFrameCareTicker implements MagicTickHandler, Listener
     public void onFrameInteract(PlayerInteractEntityEvent event) {
         Entity clicked = event.getRightClicked();
         if (clicked instanceof ItemFrame frame) {
+            tickFrame(frame, ArtifactCareStore.Persist.ALWAYS);
+        }
+    }
+
+    /**
+     * Punching an item out of a frame or breaking the frame drops the item without a care
+     * tick, and the pickup would count its framed time as unhoused. Settle it first.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onFrameDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof ItemFrame frame) {
+            tickFrame(frame, ArtifactCareStore.Persist.ALWAYS);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onFrameBreak(HangingBreakEvent event) {
+        if (event.getEntity() instanceof ItemFrame frame) {
             tickFrame(frame, ArtifactCareStore.Persist.ALWAYS);
         }
     }
