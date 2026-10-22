@@ -192,6 +192,29 @@ class CharacterGearEstateTest {
         verify(estates, times(1)).report(eq(death), eq("magic-gear"), eq(1L), any());
     }
 
+    @Test void hourlyReconcileSkipsARevisionAlreadyReportedDoneButSettlesRetriesAndNewRevisions() throws Exception {
+        decision(Recipient.FROZEN, 1);
+        orbs.when(() -> GearOrbService.touches(any())).thenReturn(true);
+        participant.reconcile(); participant.reconcile();
+        orbs.verify(() -> GearOrbService.touches(any()), times(2));
+        verify(estates, times(1)).report(eq(death), eq("magic-gear"), eq(1L), isA(Outcome.Retry.class));
+        orbs.when(() -> GearOrbService.touches(any())).thenReturn(false);
+        participant.reconcile(); participant.reconcile();
+        orbs.verify(() -> GearOrbService.touches(any()), times(3));
+        verify(estates, times(1)).report(eq(death), eq("magic-gear"), eq(1L), isA(Outcome.Done.class));
+        decision(Recipient.FROZEN, 2);
+        participant.reconcile(); participant.reconcile();
+        orbs.verify(() -> GearOrbService.touches(any()), times(4));
+        verify(estates, times(1)).report(eq(death), eq("magic-gear"), eq(2L), isA(Outcome.Done.class));
+        participant = new CharacterGearEstate(plugin);
+        when(characters.deathId(from.characterId())).thenReturn(Optional.of(UUID.randomUUID()));
+        participant.reconcile();
+        orbs.verify(() -> GearOrbService.touches(any()), times(4));
+        when(characters.deathId(from.characterId())).thenReturn(Optional.of(death));
+        participant.reconcile();
+        orbs.verify(() -> GearOrbService.touches(any()), times(5));
+    }
+
     @Test void registeredHourlyReconcileReportsOnlyChangedSuccessfulOutcomesAndSurvivesFailure() throws Exception {
         var value = decision(Recipient.FROZEN, 1);
         Server facade = mock(Server.class);

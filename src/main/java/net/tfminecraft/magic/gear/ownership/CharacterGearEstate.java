@@ -58,16 +58,26 @@ public final class CharacterGearEstate implements EstateParticipant {
             return ids.isEmpty() ? Holdings.NONE : new Holdings(Map.of("gear", ids.size()), ids);
         } catch (IOException | RuntimeException ex) { return new Holdings(Map.of("heldGear", 1), List.of("Magic gear needs review")); }
     }
+    /**
+     * Decided estates stay decided for good, and each settle reads the station file several times,
+     * so a revision this process already reported DONE is not settled again until the next restart.
+     * RETRY and BLOCKED answers, and new revisions, are still settled every hour. Gear that reaches a
+     * settled testator later, such as a staff-recovered station, moves at the first pass after a restart.
+     */
     void reconcile() {
         try { GearStationStore.property().migrate(); GearStationStore.loadViews(); }
         catch (IOException ex) { GearStationStore.warning(ex); }
         for (EstateDecision decision : Estates.decided()) {
             try {
-                if (!Estates.guardHolds(decision)) continue;
+                if (settled(decision) || !Estates.guardHolds(decision)) continue;
                 Outcome outcome = settle(decision); var result = Map.entry(decision.revision(), outcome);
                 if (!result.equals(reported.get(decision.deathId())) && Estates.report(decision.deathId(), id(), decision.revision(), outcome)) reported.put(decision.deathId(), result);
             } catch (RuntimeException ex) { plugin.getLogger().warning("[Magic] Gear estate held: " + decision.deathId() + " " + ex); }
         }
+    }
+    private boolean settled(EstateDecision decision) {
+        var last = reported.get(decision.deathId());
+        return last != null && last.getKey() == decision.revision() && last.getValue() instanceof Outcome.Done;
     }
     private static GearIdentity.Owner owner(CharacterRef ref) { return new GearIdentity.Owner(ref.ownerId(), ref.characterId()); }
 }
