@@ -208,7 +208,8 @@ public final class ArtifactCareStore {
             }
             double next = fill + rate * dtHours;
             artifact.setFill(elementId, next);
-            if (Math.abs(artifact.getFill(elementId) - fill) > 0.0001) {
+            // Any change counts: the clock already moved, so a skipped small step is lost.
+            if (artifact.getFill(elementId) != fill) {
                 dirty = true;
             }
         }

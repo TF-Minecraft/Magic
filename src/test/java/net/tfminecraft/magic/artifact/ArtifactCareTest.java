@@ -216,6 +216,11 @@ class ArtifactCareTest {
       assertEquals(5 - .017, Artifact.fromItem(item).getFill("fire"), 1e-9);
       lore.verify(() -> ArtifactLore.apply(any()), never());
       lore.verify(() -> ArtifactLore.updateItem(item));
+
+      config.set("aura_decay_per_hour", -.001);
+      ElementRegistry.register(new ElementDef("fire", config));
+      assertTrue(ArtifactCareStore.apply(item, true, 1034, ArtifactCareStore.Persist.IF_VISIBLE));
+      assertEquals(5 - .017 - .000017, Artifact.fromItem(item).getFill("fire"), 1e-9);
     }
   }
 
