@@ -18,6 +18,8 @@ Magic keeps resonance profiles tied to roleplay characters through RPCharacters.
 
 ## Documentation
 
+[Staff value commands](ADMIN-COMMANDS.md)
+
 [Project documentation](https://github.com/TF-Minecraft/Docs/blob/main/projects/Magic/README.md)
 
 Technical documentation is maintained in [TF-Minecraft/Docs](https://github.com/TF-Minecraft/Docs).

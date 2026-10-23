@@ -24,7 +24,7 @@ class CompletionRegressionTest {
     }
 
     @Test void consoleOnlySeesExecutableRoutesAtEveryDepth() {
-        assertEquals(List.of("weapon", "reload", "artifact", "resonance"), console(""));
+        assertEquals(List.of("weapon", "reload", "artifact", "resonance", "player", "equilibrium", "castmode"), console(""));
         assertEquals(List.of("reload", "resonance"), console("RE"));
         assertEquals(List.of("roll", "give", "path"), console("artifact", ""));
         for (String root : List.of("open", "refresh", "rune", "fillchest", "shrine")) {
@@ -38,7 +38,7 @@ class CompletionRegressionTest {
         assertEquals(List.of("Mage"), console("artifact", "give", ""));
         assertEquals(List.of("magic.artifact"), console("artifact", "path", "magic.a"));
         assertEquals(List.of("give"), console("weapon", ""));
-        assertEquals(List.of("get", "set", "add", "reset"), console("resonance", ""));
+        assertEquals(List.of("get", "set", "add", "remove", "reset"), console("resonance", ""));
         assertTrue(fixture.tab("artifact", "").contains("create"));
     }
 

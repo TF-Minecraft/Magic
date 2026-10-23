@@ -40,7 +40,7 @@ import net.tfminecraft.magic.attunement.AuraLog;
 import net.tfminecraft.magic.gear.GearRefresher;
 import net.tfminecraft.magic.gear.RuneKeybind;
 import net.tfminecraft.magic.model.ElementDef;
-import net.tfminecraft.magic.profile.MagicProfileService;
+import net.tfminecraft.magic.profile.MagicProfile;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.util.MagicNumbers;
@@ -48,7 +48,8 @@ import net.tfminecraft.magic.util.MagicNumbers;
 public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = List.of(
-            "reload", "open", "artifact", "fillchest", "resonance", "shrine", "refresh");
+            "reload", "open", "artifact", "fillchest", "resonance", "shrine", "refresh",
+            "player", "equilibrium", "castmode", "gear");
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -76,6 +77,13 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         if (!hasAdmin(sender)) {
             sender.sendMessage(Messages.get("admin.no_permission"));
             return true;
+        }
+
+        if (PlayerValuesCommand.handles(args[0])) {
+            return PlayerValuesCommand.execute(sender, args);
+        }
+        if ("gear".equalsIgnoreCase(args[0])) {
+            return HeldValuesCommand.execute(sender, args);
         }
 
         if ("reload".equalsIgnoreCase(args[0])) {
@@ -176,6 +184,9 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Messages.get("artifact.usage"));
             return true;
         }
+        if (HeldValuesCommand.ARTIFACT.contains(args[1].toLowerCase(Locale.ROOT))) {
+            return HeldValuesCommand.execute(sender, args);
+        }
         if ("roll".equalsIgnoreCase(args[1])) {
             return handleArtifactRoll(sender, args);
         }
@@ -229,6 +240,13 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
+        ValueAction parsed = ValueAction.parse(action);
+        if (parsed == null || (parsed == ValueAction.GET && args.length != 3)
+                || (parsed == ValueAction.RESET && args.length > 4)
+                || (parsed.needsAmount() && args.length != 5)) {
+            sender.sendMessage(Messages.get("resonance.admin.usage"));
+            return true;
+        }
         Player target = Bukkit.getPlayerExact(args[2]);
         if (target == null) {
             sender.sendMessage(Messages.get("artifact.give.unknown_player", "player", args[2]));
@@ -240,6 +258,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Messages.get("resonance.admin.no_character", "player", target.getName()));
             return true;
         }
+        MagicProfile before = MagicProfile.fromSession(characterId, target.getUniqueId(), session);
         if ("get".equals(action)) {
             sender.sendMessage(Messages.get(
                     "resonance.admin.get_header",
@@ -259,15 +278,11 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             if (!applyResonance(target, session, elementArg, Cache.defaultResonance, false, sender)) {
                 return true;
             }
-            persistResonance(target, session);
+            if (!PlayerValuesCommand.persist(sender, target, session, before)) return true;
             sender.sendMessage(Messages.get(
                     "resonance.admin.reset_ok",
                     "player", target.getName(),
                     "element", elementArg.toLowerCase(Locale.ROOT)));
-            return true;
-        }
-        if (args.length < 5) {
-            sender.sendMessage(Messages.get("resonance.admin.usage"));
             return true;
         }
         String elementArg = args[3];
@@ -280,7 +295,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
             if (!applyResonance(target, session, elementArg, amount, false, sender)) {
                 return true;
             }
-            persistResonance(target, session);
+            if (!PlayerValuesCommand.persist(sender, target, session, before)) return true;
             sender.sendMessage(Messages.get(
                     "resonance.admin.set_ok",
                     "player", target.getName(),
@@ -288,11 +303,18 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                     "value", MagicNumbers.format(amount)));
             return true;
         }
-        if ("add".equals(action)) {
+        {
+            if ("remove".equals(action)) {
+                if (amount < 0) {
+                    sender.sendMessage(Messages.get("resonance.admin.invalid_amount"));
+                    return true;
+                }
+                amount = -amount;
+            }
             if (!applyResonance(target, session, elementArg, amount, true, sender)) {
                 return true;
             }
-            persistResonance(target, session);
+            if (!PlayerValuesCommand.persist(sender, target, session, before)) return true;
             sender.sendMessage(Messages.get(
                     "resonance.admin.add_ok",
                     "player", target.getName(),
@@ -300,8 +322,6 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                     "delta", MagicNumbers.format(amount)));
             return true;
         }
-        sender.sendMessage(Messages.get("resonance.admin.usage"));
-        return true;
     }
 
     private static boolean handleShrine(CommandSender sender, String[] args) {
@@ -356,6 +376,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                 double current = session.getResonance(element.getId());
                 double next = add ? current + amount : amount;
                 session.setResonance(element.getId(), next);
+                session.clearResonanceDrift(element.getId());
             }
             return true;
         }
@@ -367,15 +388,8 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         double current = session.getResonance(element.getId());
         double next = add ? current + amount : amount;
         session.setResonance(element.getId(), next);
+        session.clearResonanceDrift(element.getId());
         return true;
-    }
-
-    private static void persistResonance(Player target, ResonanceSession session) {
-        MagicProfileService profiles = Magic.plugin.getProfileService();
-        if (profiles != null) {
-            profiles.savePlayer(target);
-        }
-        Magic.plugin.syncSpellModifiers(target, session);
     }
 
     private static Double parseAmount(String raw) {
@@ -683,7 +697,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                 options.add("rune");
             }
             if (admin) {
-                options.addAll(isPlayer ? SUBCOMMANDS : List.of("reload", "artifact", "resonance"));
+                options.addAll(isPlayer ? SUBCOMMANDS : List.of("reload", "artifact", "resonance", "player", "equilibrium", "castmode"));
             }
             return filterPrefix(options, args[0]);
         }
@@ -708,6 +722,12 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         if (!admin) {
             return Collections.emptyList();
         }
+        if (PlayerValuesCommand.handles(args[0])) {
+            return filterPrefix(PlayerValuesCommand.complete(args), args[args.length - 1]);
+        }
+        if ("gear".equalsIgnoreCase(args[0])) {
+            return isPlayer ? filterPrefix(HeldValuesCommand.complete(args), args[args.length - 1]) : Collections.emptyList();
+        }
         if (!isPlayer && List.of("open", "refresh", "rune", "fillchest", "shrine").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Collections.emptyList();
         }
@@ -727,7 +747,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if ("resonance".equalsIgnoreCase(args[0])) {
             if (args.length == 2) {
-                return filterPrefix(List.of("get", "set", "add", "reset"), args[1]);
+                return filterPrefix(ValueAction.NAMES, args[1]);
             }
             if (args.length == 3) {
                 List<String> names = new ArrayList<>();
@@ -757,12 +777,15 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 2) {
             return filterPrefix(
-                    isPlayer ? List.of("roll", "give", "create", "path", "setfill", "setmuffle", "unmuffle")
+                    isPlayer ? List.of("roll", "give", "create", "path", "setfill", "setmuffle", "unmuffle", "inspect", "fill", "muffle", "wear")
                             : List.of("roll", "give", "path"),
                     args[1]);
         }
         if (!isPlayer && !List.of("roll", "give", "path").contains(args[1].toLowerCase(Locale.ROOT))) {
             return Collections.emptyList();
+        }
+        if (HeldValuesCommand.ARTIFACT.contains(args[1].toLowerCase(Locale.ROOT))) {
+            return filterPrefix(HeldValuesCommand.complete(args), args[args.length - 1]);
         }
         if ("path".equalsIgnoreCase(args[1])) {
             return args.length == 3 ? ArtifactPathCompletion.complete(args[2]) : Collections.emptyList();

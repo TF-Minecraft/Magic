@@ -76,13 +76,18 @@ public final class MagicProfileStore {
     }
 
     public void save(MagicProfile profile) {
+        saveChecked(profile);
+    }
+
+    /** Reports whether the profile reached disk, for synchronous administrative edits. */
+    public boolean saveChecked(MagicProfile profile) {
         if (profile == null || profile.getCharacterId() == null || profile.getCharacterId().isBlank()) {
-            return;
+            return false;
         }
         if (unreadableProfiles.contains(profile.getCharacterId())) {
             Magic.plugin.getLogger().severe("[Magic] Refusing to overwrite unreadable profile "
                     + profile.getCharacterId());
-            return;
+            return false;
         }
         if (!folder.exists()) {
             folder.mkdirs();
@@ -95,14 +100,16 @@ public final class MagicProfileStore {
         } catch (IOException ex) {
             Magic.plugin.getLogger().severe("[Magic] Failed to write profile "
                     + profile.getCharacterId() + ": " + ex.getMessage());
-            return;
+            return false;
         }
         try {
             Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             Magic.plugin.getLogger().severe("[Magic] Failed to replace profile "
                     + profile.getCharacterId() + ": " + ex.getMessage());
+            return false;
         }
+        return true;
     }
 
     private File fileFor(String characterId) {

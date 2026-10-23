@@ -20,7 +20,24 @@ admin:
 
   no_permission: "#ff5555You do not have permission to use this command."
 
-  usage: "#aaaaaaUsage: /magic rune keybind <trigger> #555555| #aaaaaa/magic reload #555555| #aaaaaa/magic open #555555| #aaaaaa/magic resonance #555555| #aaaaaa/magic artifact roll #555555| #aaaaaa/magic artifact give #555555| #aaaaaa/magic artifact create #555555| #aaaaaa/magic artifact setfill #555555| #aaaaaa/magic artifact setmuffle #555555| #aaaaaa/magic artifact unmuffle #555555| #aaaaaa/magic fillchest #555555| #aaaaaa/magic shrine fill"
+  usage: "#aaaaaaUsage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh>"
+
+values:
+  save_failed: "#ff5555Could not save this Magic edit. The character values were restored; check console."
+  player_usage: "#aaaaaaUsage: /magic player <get|reset> <player> | /magic equilibrium <get|set|add|remove|reset> <player> [amount] | /magic castmode <get|set|reset> <player> [mode]"
+  item_usage: "#aaaaaaUsage: /magic artifact inspect | /magic artifact fill <get|set|add|remove|reset> <element|all> [amount] | /magic artifact <muffle|wear> <get|set|add|remove|reset> [amount] | /magic gear inspect | /magic gear <rift|durability> <get|set|add|remove|reset> [amount]"
+  players_only: "#ff5555This command edits the item in a player's main hand."
+  wrong_item: "#ff5555Hold an identified artifact or a Magic weapon, as appropriate. Spent husks cannot be edited."
+  single_item: "#ff5555Hold exactly one item before editing it."
+  invalid_amount: "#ff5555Use a finite amount. Removal needs a nonnegative magnitude; gear values need whole numbers within the integer range."
+  invalid_mode: "#ff5555Unknown casting mode. Use a mode from tab completion."
+  player: "#aaaaaa{player} (character {character}): equilibrium {equilibrium}, casting {mode}."
+  focus: "#aaaaaaFocus: {value} (managed with /focus)."
+  item_id: "#aaaaaaArtifact: {id}"
+  item: "#aaaaaa{field}: {value}"
+  fill: "#aaaaaa{element} aura: {value}/{max}"
+  no_durability: "#ff5555This weapon has no editable durability."
+  wear_disabled: "#ff5555Artifact wear is disabled in config."
 
 rune:
 
@@ -100,7 +117,7 @@ resonance:
 
   admin:
 
-    usage: "#aaaaaaUsage: /magic resonance get <player> #555555| #aaaaaa/magic resonance set <player> <element|all> <amount> #555555| #aaaaaa/magic resonance add <player> <element|all> <delta> #555555| #aaaaaa/magic resonance reset <player> [element|all]"
+    usage: "#aaaaaaUsage: /magic resonance get <player> #555555| #aaaaaa/magic resonance <set|add|remove> <player> <element|all> <amount> #555555| #aaaaaa/magic resonance reset <player> [element|all]"
 
     no_character: "#ff5555{player} has no loaded character."
 
