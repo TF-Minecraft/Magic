@@ -39,6 +39,7 @@ class CommandTest {
     when(Magic.plugin.namespace()).thenReturn("magic");
     sessions = new ResonanceSessionManager();
     when(Magic.plugin.getResonanceGuiManager().getSessionManager()).thenReturn(sessions);
+    when(Magic.plugin.getProfileService().savePlayerChecked(any())).thenReturn(true);
     messages = mockStatic(Messages.class, i -> i.getArgument(0));
     ElementRegistry.clear();
     ElementRegistry.register(DomainTest.element("fire"));
@@ -170,8 +171,9 @@ class CommandTest {
     assertEquals("resonance.admin.get_line", player.nextMessage());
     expect("resonance.admin.usage", "resonance", "set", "Mage");
     expect("resonance.admin.invalid_amount", "resonance", "set", "Mage", "fire", "oops");
-    for (String action : List.of("set", "add", "reset"))
+    for (String action : List.of("set", "add"))
       expect("resonance.admin.unknown_element", "resonance", action, "Mage", "missing", "2");
+    expect("resonance.admin.unknown_element", "resonance", "reset", "Mage", "missing");
     expect("resonance.admin.set_ok", "resonance", "set", "Mage", "fire", "12");
     assertEquals(12, s.getResonance("fire"));
     expect("resonance.admin.add_ok", "resonance", "add", "Mage", "fire", "3");
@@ -182,7 +184,7 @@ class CommandTest {
     expect("resonance.admin.reset_ok", "resonance", "reset", "Mage");
     assertEquals(0, s.getResonance("fire"));
     when(Magic.plugin.getProfileService()).thenReturn(null);
-    expect("resonance.admin.reset_ok", "resonance", "reset", "Mage", "fire");
+    expect("values.save_failed", "resonance", "reset", "Mage", "fire");
     expect("resonance.admin.usage", "resonance", "bogus", "Mage", "fire", "2");
   }
 
@@ -326,14 +328,14 @@ class CommandTest {
     assertTrue(tab("rune", "keybind", "", "extra").isEmpty());
     assertEquals(List.of("random", "all", "fire"), tab("fillchest", ""));
     assertTrue(tab("fillchest", "all", "").isEmpty());
-    assertEquals(List.of("get", "set", "add", "reset"), tab("resonance", ""));
+    assertEquals(List.of("get", "set", "add", "remove", "reset"), tab("resonance", ""));
     assertEquals(List.of("Mage"), tab("resonance", "get", ""));
     assertTrue(tab("resonance", "set", "Mage", "").containsAll(List.of("all", "fire", "water")));
     assertTrue(tab("resonance", "get", "Mage", "").isEmpty());
     assertEquals(List.of("fill"), tab("shrine", ""));
     assertEquals(2, tab("shrine", "fill", "").size());
     assertTrue(tab("shrine", "other", "").isEmpty());
-    assertEquals(7, tab("artifact", "").size());
+    assertEquals(11, tab("artifact", "").size());
     assertEquals(2, tab("artifact", "setfill", "").size());
     assertTrue(tab("artifact", "setfill", "fire", "").isEmpty());
     assertEquals(List.of("random", "fire"), tab("artifact", "roll", ""));

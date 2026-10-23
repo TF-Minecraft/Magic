@@ -75,6 +75,14 @@ public final class MagicProfileService {
         });
     }
 
+    public boolean savePlayerChecked(Player player) {
+        return Characters.currentSession(player).map(identity -> {
+            ResonanceSession session = sessionManager.getSession(identity);
+            return session != null && store.saveChecked(MagicProfile.fromSession(
+                    identity.ref().characterId().toString(), identity.ref().ownerId(), session));
+        }).orElse(false);
+    }
+
     private void save(CharacterSession identity, ResonanceSession session) {
         // End events invalidate the token before delivery. Flush the captured value directly.
         store.save(MagicProfile.fromSession(identity.ref().characterId().toString(),

@@ -283,10 +283,16 @@ class SessionServiceTest {
     clearInvocations(store);
     service.savePlayer(player);
     service.savePlayer(empty);
+    assertFalse(service.savePlayerChecked(player));
+    assertFalse(service.savePlayerChecked(empty));
     verify(store, never()).save(any());
     service.activate(player, bob);
     sessions.get(player).setResonance("fire", 34);
     oldValue.setResonance("fire", 99);
+    assertTrue(service.savePlayerChecked(player));
+    doReturn(false).when(store).saveChecked(any());
+    assertFalse(service.savePlayerChecked(player));
+    doCallRealMethod().when(store).saveChecked(any());
     service.savePlayer(player);
     assertEquals(34, store.load(CharacterTestSupport.id("bob")).getResonance().get("fire"));
     assertEquals(12, store.load(CharacterTestSupport.id("alice")).getResonance().get("fire"));

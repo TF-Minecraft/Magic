@@ -14,7 +14,7 @@ commands:
     permission: magic.use
   magic:
     description: Magic plugin commands
-    usage: /magic <rune|reload|open|resonance|artifact|fillchest|shrine|refresh|weapon>
+    usage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh>
 
 permissions:
   magic.use:
@@ -24,7 +24,7 @@ permissions:
     description: Allows /magic rune keybind on a held rune
     default: true
   magic.admin:
-    description: Allows /magic admin commands (reload, open)
+    description: Allows Magic administration, character values and held-item editing
     default: op
     children:
       magic.admin.reload: true
