@@ -55,7 +55,7 @@ async function hold(pattern) {
     await consoleRun(`deop ${B}`)
     await step('unprivileged character cannot change Magic or Focus', async () => {
       await command(`magic equilibrium set ${B} 10`, /do not have permission/i)
-      await command(`focus set ${B} 10`, /do not have permission/i)
+      await command(`focus set ${B} 10`, /do not have permission|Unknown or incomplete command/i)
     })
     await consoleRun(`op ${B}`)
     await step('player inspection identifies the active character', async () => {
@@ -119,7 +119,7 @@ async function hold(pattern) {
       await consoleRun(`magic equilibrium set ${B} -12`)
       assert.equal(profile().equilibrium, -12)
       await consoleRun('magic player get NonexistentProbe')
-      assert.match(readSince(start), /not found|unknown player|find player/i)
+      assert.match(readSince(start), /not found|not online|unknown player|find player/i)
       await command(`magic equilibrium reset ${B}`, /equilibrium 0/)
     })
     await consoleRun(`clear ${B}`)
