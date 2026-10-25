@@ -492,11 +492,11 @@ blood:
 
       not_species: "#8c8c8c§oThe stone does not hunger for that"
 
-      known: "#8a0303§oWe have tasted that kind already. Bring us another"
+      known: "#8a0303§oI have tasted that kind already, child. Bring me another"
 
-      cooldown: "#8a0303§oNot yet. The stone is still drinking the last one"
+      cooldown: "#8a0303§oNot yet, child. The stone is still drinking the last one"
 
-      not_stolen: "#8a0303§oNot that one. A gift costs nothing. Take what others keep"
+      not_stolen: "#8a0303§oNot that one. A gift that costs nothing is no gift. Take what others keep"
 
       too_far: "#8a0303§oToo far. Lead it down to the stone"
 
@@ -544,7 +544,7 @@ blood:
 
       busy: "#8c8c8c§oOne at a time"
 
-    dread: "#8a0303§oCold stone under your back. A blade above you. And below, something vast and patient opens its mouth"
+    dread: "#8a0303§oCold stone under your back. A blade above you. And below, something old and patient opens its mouth"
 
     broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"
 
@@ -564,15 +564,15 @@ blood:
 
   hunt:
 
-    complete: "#7a7a7a§oSeven measures of blood. Something in you closes like a fist. The stone knows your name now, and no god gave it"
+    complete: "#7a7a7a§oSeven measures of blood. Something in you closes like a fist. The stone knows your name now, and no father gave it"
 
   final:
 
-    named_god: "We have chosen. {target}. Bring us {target}"
+    named_god: "I have chosen, child. {target}. Bring me {target}"
 
     named_self: "{target}. It has to be {target}. I think I always knew"
 
-    nobody_god: "No one is close enough to you yet. Love someone, little one. Then bring them to us"
+    nobody_god: "No one is close enough to you yet. Love someone, child. Then bring them to your father"
 
     nobody_self: "There is no one close enough yet. I will have to let someone in"
 
@@ -580,15 +580,15 @@ blood:
 
     ascended: "#5c0202§oThe last of them is gone. Nothing holds you now. Nothing ever will again"
 
-    failed_god: "Someone else spilled what was ours, and you let them. You will bleed for it"
+    failed_god: "Someone else spilled what was mine, and you let them. You will bleed for it, child"
 
     failed_self: "Someone else got to them first. Everything I put into them, wasted"
 
   choice:
 
-    devoted: "#8a0303§oSomething of you stays on the stone, and something of the stone comes with you. It hurts. It will always hurt"
+    devoted: "#8a0303§oSomething of you stays on the stone, and something of the Blood Father comes with you. It hurts. It will always hurt"
 
-    refused: "#7a7a7a§oThe voices fall silent. For the first time in weeks you are alone with your own thoughts. They are not kind"
+    refused: "#7a7a7a§oLorvear falls silent. For the first time in weeks you are alone with your own thoughts. They are not kind"
 
   armour:
 

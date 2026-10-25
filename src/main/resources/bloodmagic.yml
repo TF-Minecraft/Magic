@@ -1,6 +1,6 @@
 # Blood Magic progression. Hidden content: never document it on the wiki.
 # Jar does not overwrite an existing live copy. Copy new keys by hand after updates.
-# Names (the god, the blade, the classes) are placeholders until the lore is settled.
+# The god is Lorvear, the first vampire, the Blood Father. The blade and class names are placeholders.
 
 enabled: true
 
@@ -25,7 +25,7 @@ items:
     path: ia.tfmc_blood:blood_knife
     name: "#8a0303Vein-Reaver"
     lore:
-      - "#5c0202§oCurved like a cupped hand."
+      - "#5c0202§oCurved like a fang, and as old as one."
       - "#5c0202§oIt is warm to the touch,"
       - "#5c0202§oand if you hold it still, it beats."
 
@@ -150,8 +150,9 @@ whispers:
     corruption_below: -40
   animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
 
-# The two voices. The god is a choir: everything that ever bled on the stone, speaking as "we", red and
-# hungry. A mage who refuses it hears only their own dark self: "I", grey and cold, their own thoughts.
+# The two voices. The god is Lorvear, the first vampire, the Blood Father: ancient, regal and paternal,
+# he speaks in red and calls the mage "child". A mage who refuses him hears only their own dark self:
+# grey, cold, never speaking to anyone but themself.
 # whispered lines are said in order and end with the knife and altar; other stages pick at random.
 voices:
   # Minutes between lines, picked at random in this range.
@@ -165,45 +166,46 @@ voices:
     pitch: 0.5
     lines:
       whispered:
-        - "...there. You felt it, didn't you? Under the floor. Under the stone. Something listening back."
-        - "Hush. Do not be afraid, little one. We have waited so long for someone who listens."
-        - "So much warm blood walks the roads above us. Spilled in ditches, in brawls, in childbeds. Wasted."
-        - "We could teach you to waste none of it. We could teach you to grow."
-        - "Go down, deep, where the sky cannot follow. No lord's banner, no warden's eye. Lay our stone there."
+        - "...there. You heard it. A heartbeat under the stone that is not your own."
+        - "Hush, child. I am Lorvear. The first to drink, and father to all who drank after. Some still call me the Blood Father."
+        - "So much warm blood walks the roads of Cerrith. Spilled in ditches and brawls and childbeds. Wasted on the ground."
+        - "I could teach you to waste none of it. I taught Alaric. I taught a hundred before him. I can teach you."
+        - "Go down, deep, where the sky cannot follow. No lord's banner, no warden's eye. Lay my stone there."
         - "Bring living beasts down to the stone. Hold them still with the plain knife, and open them while they breathe."
-        - "Not beasts of your own. A gift costs nothing. Lead them from another's pen while the keeper sleeps."
-        - "Seven kinds of beast, one each day and no sooner. We like to savour."
-        - "Look in your pack, little one. We have been generous. Do not make us regret it."
+        - "Not beasts of your own, child. A gift that costs nothing is no gift. Lead them from another's pen while the keeper sleeps."
+        - "Seven kinds of beast, one each day and no sooner. I was old before the first kingdom rose. I can be patient."
+        - "Look in your pack. Your father has been generous. Do not make him regret it."
       animal:
-        - "The stone is thirsty. Can you not hear it?"
+        - "The stone is thirsty, child. Can you not hear it?"
         - "Every pen in the valley is full, and every shepherd sleeps."
         - "Lead it down gently. Fear sours the blood."
-        - "Look into its eyes when you do it. We want to see what you see."
-        - "We remember the taste of the last one. Bring us a kind we have not had."
-        - "Wash your hands before you go up. They can smell it on you."
-        - "Count with us. How many kinds now? Not enough. Never enough."
+        - "Look into its eyes when you do it. I want to see what you see."
+        - "I remember the taste of the last one. Bring me a kind I have not had."
+        - "Wash your hands before you climb back up. They can smell it on you."
+        - "The Lady in her tower would call this wickedness. Let her. She has never been hungry."
       choice:
-        - "Seven kinds have bled. Come down to the stone, and bring the new blade. We have a question for you."
-        - "The stone is red to its heart. Kneel at it with the curved blade in your hand."
-        - "Do not keep us waiting. Nothing has ever made us wait."
+        - "Seven kinds have bled. Come down to the stone, and bring the curved blade. Your father has a question."
+        - "The stone is red to its heart. Kneel at it with the blade in your hand, child."
+        - "Do not keep me waiting. Nothing in all of Cerrith has ever kept me waiting."
       final:
-        - "You are ours, little one, and so are they. We will tell you who."
-        - "We have chosen for you. You need not think any more. Only go to the stone."
+        - "You are my child now, and so are they. I will tell you which of them."
+        - "I have chosen for you. You need not think any more. Only go to the stone."
         - "Do you remember their laugh? Remember it on the stone. It makes them sweeter."
         - "They trust you. That is what makes it holy."
-        - "Every drop you gave us, we remember. Every drop you give, we repay."
+        - "The Reaper hoards the dead. I prefer them warm, and given freely by someone they loved."
+        - "Every drop you give me, I remember. Every drop, I repay."
       ascended:
-        - "All of them, given. Sleep now, little one. We will wake you when we are hungry."
-        - "You walk among them and none of them know. We love that about you."
-        - "We are always beneath you. Always listening. Always fed."
+        - "All of them, given. Sleep now, my child. Your father will wake you when he is hungry."
+        - "You walk among them and none of them know. You are more mine than Alaric ever was."
+        - "Let the Lady send her hunters. I have outlived every one of them."
   self:
     style: "#7a7a7a§o"
     sound: minecraft:entity.warden.heartbeat
     pitch: 1.2
     lines:
       hunt:
-        - "I don't need a god to tell me what I want."
-        - "The stone went quiet. Good. Now I can hear myself think."
+        - "I don't need a father to tell me what I want."
+        - "Lorvear went quiet. Let him sulk under his stone. I can hear myself think."
         - "Strangers are cheap. The ones I know are worth more. I knew that before anyone told me."
         - "Nobody notices one more empty chair. Not at first."
         - "Seven measures. I keep counting, even when I pretend I'm not."
@@ -216,8 +218,8 @@ voices:
         - "Their name keeps coming back. Of course it does."
       ascended:
         - "There is no one left I would miss. So this is what freedom feels like."
-        - "Quiet. So quiet. And I did it all myself."
-        - "I could start again. Learn new names. Let new people close. Just in case."
+        - "The Lady would call me evil. She'd be right. And far too late."
+        - "Quiet. So quiet. No god, no father. I did it all myself."
 
 # Animal sacrifices: bind a living animal on the altar with the ritual knife, then kill it with that knife.
 animal:
@@ -269,23 +271,23 @@ corruption:
 
 # The god's question: right-click your altar with your blood knife once the seventh kind is given.
 choice:
-  title: "#5c0202What will you give?"
+  title: "#5c0202The Blood Father asks"
   question:
-    - "#8a0303§oSeven kinds have bled for us, and you did not flinch."
-    - "#8a0303§oGive yourself to us, and we will carry you all the way."
-    - "#8a0303§oOr keep yourself, and carry the weight alone. Forever."
+    - "#8a0303§oSeven kinds have bled for me, child, and you did not flinch."
+    - "#8a0303§oKneel, and be my child. I will carry you all the way."
+    - "#8a0303§oOr stand alone, and carry the weight yourself. Forever."
   devotee:
     item: v.red_dye
-    name: "#8a0303I give myself"
+    name: "#8a0303I kneel to Lorvear"
     lore:
       - "#8c8c8c§oPart of you stays on the stone,"
       - "#8c8c8c§oa wound that will never close."
-      - "#8c8c8c§oThe god walks with you, and chooses for you."
+      - "#8c8c8c§oThe Blood Father walks with you, and chooses for you."
   "true":
     item: v.iron_sword
-    name: "#bfbfbfI take for myself"
+    name: "#bfbfbfI kneel to no one"
     lore:
-      - "#8c8c8c§oNo god. No voices. No one to blame."
+      - "#8c8c8c§oNo father. No voices. No one to blame."
       - "#8c8c8c§oOnly you, and what you take"
       - "#8c8c8c§ofrom the people who love you."
   confirm:
@@ -297,7 +299,7 @@ choice:
     item: v.barrier
     name: "#aaaaaaNot yet"
     lore:
-      - "#8c8c8c§oIt will wait. It is very good at waiting."
+      - "#8c8c8c§oHe will wait. He is very good at waiting."
   # Permanent injuries a devotee keeps as the mark of what they gave.
   devotee_injuries: 2
 
