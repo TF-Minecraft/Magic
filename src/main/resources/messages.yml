@@ -450,79 +450,79 @@ blood:
 
   altar:
 
-    placed: "#8c8c8c§oThe stone settles. The air around it grows still and close"
+    placed: "#8c8c8c§oThe stone settles into the dark as if it had always been there. Somewhere below, something sighs"
 
-    not_yours: "#8c8c8c§oThe stone will not settle for you"
+    not_yours: "#8c8c8c§oThe stone is cold and heavy in your hands. It will not be laid down by you"
 
-    inert: "#8c8c8c§oIt is only a stone"
+    inert: "#8c8c8c§oIt is only a stone. Nothing listens to it yet"
 
-    already: "#8c8c8c§oYou already keep an altar"
+    already: "#8c8c8c§oYou already keep a stone. It would not share you"
 
-    unbreakable: "#8c8c8c§oThe stone does not yield"
+    unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
 
-    owner_touch: "#8a0303§oThe stone is warm, like skin"
+    owner_touch: "#8a0303§oThe stone is warm under your palm, like skin. You feel it breathe"
 
-    stranger_touch: "#8c8c8c§oA cold, carved stone. Something about it makes you uneasy"
+    stranger_touch: "#8c8c8c§oCold carved stone, dark in the seams. The longer you look at it, the less you want to touch it"
 
     place:
 
-      world: "#8c8c8c§oThis is no place for it"
+      world: "#8c8c8c§oNot here. The ground itself refuses it"
 
       occupied: "#8c8c8c§oThere is no room for the stone here"
 
-      no_floor: "#8c8c8c§oThe stone needs solid ground beneath it"
+      no_floor: "#8c8c8c§oIt needs firm rock beneath it"
 
-      sky: "#8c8c8c§oIt must not see the sky"
+      sky: "#8c8c8c§oNot under the open sky. It must never see the sun"
 
-      shallow: "#8c8c8c§oNot deep enough. It must lie far beneath the earth"
+      shallow: "#8c8c8c§oNot deep enough. Take it further down, under more rock"
 
-      region: "#8c8c8c§oThis ground is watched. Find somewhere forgotten"
+      region: "#8c8c8c§oThis ground is claimed and watched. Find somewhere forgotten"
 
   animal:
 
     bind:
 
-      ok: "#8a0303§oIt goes still on the stone. Its heart hammers. Now"
+      ok: "#8a0303§oThe beast goes rigid on the stone. Its heart hammers against the blade. Now"
 
-      not_stage: "#8c8c8c§oThe stone wants nothing from it"
+      not_stage: "#8c8c8c§oThe stone wants nothing from it. Not yet"
 
-      not_knife: "#8c8c8c§oIt is only a knife in your hand"
+      not_knife: "#8c8c8c§oThis blade means nothing to the stone. Use the plain knife"
 
       no_altar: "#8c8c8c§oThere is no stone to lay it on"
 
-      not_species: "#8c8c8c§oThe stone does not want that"
+      not_species: "#8c8c8c§oThe stone does not hunger for that"
 
-      known: "#8a0303§oWe have tasted that kind. Bring another"
+      known: "#8a0303§oWe have tasted that kind already. Bring us another"
 
-      cooldown: "#8a0303§oNot yet. The stone is still drinking"
+      cooldown: "#8a0303§oNot yet. The stone is still drinking the last one"
 
-      not_stolen: "#8a0303§oNot that one. Take what others keep"
+      not_stolen: "#8a0303§oNot that one. A gift costs nothing. Take what others keep"
 
-      too_far: "#8a0303§oBring it closer to the stone"
+      too_far: "#8a0303§oToo far. Lead it down to the stone"
 
-      busy: "#8a0303§oOne at a time"
+      busy: "#8a0303§oOne at a time. Finish what lies on the stone"
 
-    spoiled: "#8c8c8c§oThe blood spills wasted. The stone did not drink"
+    spoiled: "#8c8c8c§oThe blood runs into the dirt, wasted. The stone did not drink"
 
-    escaped: "#8c8c8c§oThe beast tears free of the stone"
+    escaped: "#8c8c8c§oThe beast thrashes free of the stone and bolts into the dark"
 
-    accepted: "#8a0303§oThe stone drinks. It is warmer than before"
+    accepted: "#8a0303§oThe stone drinks. When you take your hand away, it is warmer than before"
 
-    complete: "#8a0303§oSeven kinds. The stone is red to its heart. Something new rests in your hand"
+    complete: "#8a0303§oSeven kinds. The stone is red to its heart, and something cold and curved rests in your hand that was not there before"
 
-    note: "#aaaaaa§oSomething took {animal} while no one was watching. Drag marks lead {direction}"
+    note: "#aaaaaa§oSomething has taken {animal} from the pen. The rope was cut clean, and faint drag marks lead off to the {direction}"
 
-    note_lost: "#aaaaaa§oSomething took {animal} while no one was watching"
+    note_lost: "#aaaaaa§oSomething has taken {animal} from the pen. The rope was cut clean, and no one saw a thing"
 
   rite:
 
     bind:
 
-      ok: "#8a0303§oYou drag them onto the stone. It is already warm"
+      ok: "#8a0303§oYou haul them onto the stone. It is already warm. Already waiting"
 
       not_stage: "#8c8c8c§oThe stone does not want them. Not yet"
 
-      not_knife: "#8c8c8c§oThat blade will not open the way"
+      not_knife: "#8c8c8c§oThat blade will not open the way. Use the one the stone gave you"
 
       no_altar: "#8c8c8c§oThere is no stone to lay them on"
 
@@ -530,63 +530,69 @@ blood:
 
       not_down: "#8c8c8c§oThey still fight. Bring them down first"
 
-      too_far: "#8c8c8c§oThe stone is too far. Crouch and take hold of them, and drag them closer"
+      too_far: "#8c8c8c§oThe stone is too far. Crouch, take hold of them, and drag them closer"
 
-      too_new: "#8c8c8c§oThin blood. The stone would not drink it"
+      too_new: "#8c8c8c§oThin, new blood. The stone would spit it out"
 
-      repeat: "#8c8c8c§oThat blood is still on the stone. Find another"
+      repeat: "#8c8c8c§oThat blood is still drying on the stone. Find someone else"
 
       reserved: "#7a7a7a§oNot them. Not yet. They are for later"
 
-      waiting: "#8c8c8c§oThe stone is sullen. It will not take anyone yet"
+      waiting: "#8c8c8c§oThe stone sulks over what was stolen from it. It will take no one yet"
 
-      not_target: "#8c8c8c§oNot this one. You know who it must be"
+      not_target: "#8c8c8c§oNot this one. You know whose name it whispered"
 
       busy: "#8c8c8c§oOne at a time"
 
-    dread: "#8a0303§oStone under your back. A blade above you. Something below is hungry"
+    dread: "#8a0303§oCold stone under your back. A blade above you. And below, something vast and patient opens its mouth"
 
-    broken: "#8c8c8c§oThe rite comes apart"
+    broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"
 
     refused: "#8c8c8c§oThe stone will not take them"
 
-    taken: "#7a7a7a§oIt is done. You feel heavier, and stronger"
+    taken: "#7a7a7a§oIt is done. You feel heavier, and stronger, and very far from who you were"
 
   carry:
 
-    start: "#8a0303§oYou take hold of them. Heavy. The stone is waiting"
+    start: "#8a0303§oYou take hold of them. Heavy, limp and warm. The stone is waiting"
 
-    dragged: "#8c8c8c§oHands on you. You are being dragged somewhere"
+    dragged: "#8c8c8c§oHands on you. You are being dragged over the ground, and you cannot stop it"
 
     released: "#8c8c8c§oYou let them fall"
 
-    broken: "#8c8c8c§oYour grip is gone"
+    broken: "#8c8c8c§oYour grip slips. They are out of your hands"
 
   hunt:
 
-    complete: "#7a7a7a§oSeven measures of blood. You are something else now, and the stone knows your name"
+    complete: "#7a7a7a§oSeven measures of blood. Something in you closes like a fist. The stone knows your name now, and no god gave it"
 
   final:
 
-    named: "{target}. It has to be {target}"
+    named_god: "We have chosen. {target}. Bring us {target}"
 
-    nobody: "There is no one close enough yet"
+    named_self: "{target}. It has to be {target}. I think I always knew"
 
-    taken: "#7a7a7a§oA hollow opens in you where they were, and something cold fills it"
+    nobody_god: "No one is close enough to you yet. Love someone, little one. Then bring them to us"
 
-    ascended: "#5c0202§oThe last of them is gone. Nothing holds you now"
+    nobody_self: "There is no one close enough yet. I will have to let someone in"
 
-    failed: "Someone else spilled what was yours. You will pay for that"
+    taken: "#7a7a7a§oA hollow opens where they used to be, and something cold flows in to fill it"
+
+    ascended: "#5c0202§oThe last of them is gone. Nothing holds you now. Nothing ever will again"
+
+    failed_god: "Someone else spilled what was ours, and you let them. You will bleed for it"
+
+    failed_self: "Someone else got to them first. Everything I put into them, wasted"
 
   choice:
 
-    devoted: "#8a0303§oSomething of you stays on the stone, and something of the stone goes with you"
+    devoted: "#8a0303§oSomething of you stays on the stone, and something of the stone comes with you. It hurts. It will always hurt"
 
-    refused: "#7a7a7a§oThe voice falls silent. For the first time in days you are alone with your thoughts. They are not kind"
+    refused: "#7a7a7a§oThe voices fall silent. For the first time in weeks you are alone with your own thoughts. They are not kind"
 
   armour:
 
-    refuses: "#8c8c8c§oIt will not sit on you"
+    refuses: "#8c8c8c§oIt will not sit on you. It knows whose blood it was made for"
 
     crumbles: "#8c8c8c§oIt crumbles to rust and dried blood in your hands"
 

@@ -58,7 +58,7 @@ public final class StolenClues {
         long now = clock.getAsLong();
         Origin origin = LEASHED.remove(animal.getUniqueId());
         String name = animal.getCustomName() != null ? animal.getCustomName()
-                : animal.getType().name().toLowerCase(Locale.ROOT).replace('_', ' ');
+                : "your " + animal.getType().name().toLowerCase(Locale.ROOT).replace('_', ' ');
         String text;
         if (origin != null && origin.location().getWorld() == altar.getWorld()) {
             trace(origin.location(), now);

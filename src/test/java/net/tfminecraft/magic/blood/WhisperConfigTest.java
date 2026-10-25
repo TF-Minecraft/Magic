@@ -43,7 +43,7 @@ class WhisperConfigTest {
     assertTrue(WhisperConfig.requireAlone());
     assertEquals(24, WhisperConfig.aloneRadius());
     var god = WhisperConfig.voice(WhisperConfig.Speaker.GOD);
-    assertEquals(7, god.lines(BloodStage.WHISPERED).size());
+    assertEquals(9, god.lines(BloodStage.WHISPERED).size());
     assertTrue(god.lines(BloodStage.HUNT).isEmpty());
     assertEquals("minecraft:ambient.cave", god.sound());
     assertEquals(0.5f, god.pitch());

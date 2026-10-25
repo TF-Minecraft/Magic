@@ -88,7 +88,7 @@ class ChoiceTest {
 
   @Test
   void bundledQuestionClassesAndArmourLoad() {
-    assertEquals("#5c0202Will you give yourself?", ChoiceConfig.title());
+    assertEquals("#5c0202What will you give?", ChoiceConfig.title());
     assertEquals(3, ChoiceConfig.button(ChoiceConfig.Slot.QUESTION).lore().size());
     assertEquals("v.iron_sword", ChoiceConfig.button(ChoiceConfig.Slot.TRUE).item());
     assertEquals(2, ChoiceConfig.devoteeInjuries());

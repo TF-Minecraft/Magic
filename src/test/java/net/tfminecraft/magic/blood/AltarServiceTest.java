@@ -64,7 +64,7 @@ class AltarServiceTest {
       BloodConfig.load(new java.io.File("src/main/resources/bloodmagic.yml"), fx.logger);
       ItemStack named = BloodItems.create(BloodItemKind.ALTAR, "c1");
       assertTrue(named.getItemMeta().hasDisplayName());
-      assertEquals(1, named.getItemMeta().getLore().size());
+      assertEquals(3, named.getItemMeta().getLore().size());
     }
   }
 

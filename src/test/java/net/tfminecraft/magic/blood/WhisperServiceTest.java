@@ -162,6 +162,9 @@ class WhisperServiceTest {
     assertNotNull(player.nextMessage());
     record.setStage(BloodStage.ASCENDED);
     WhisperService.speakNext(player, record);
+    assertNotNull(player.nextMessage());
+    record.setStage(BloodStage.CHOICE);
+    WhisperService.speakNext(player, record);
     assertNull(player.nextMessage());
 
     Files.writeString(temp.resolve("quiet.yml"),

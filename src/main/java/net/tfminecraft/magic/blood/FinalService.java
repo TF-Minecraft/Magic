@@ -87,11 +87,16 @@ public final class FinalService {
         String target = record.currentTarget();
         WhisperConfig.Speaker speaker = WhisperService.speaker(record);
         if (target == null) {
-            WhisperService.speak(mage, speaker, Messages.getRaw("blood.final.nobody"));
+            WhisperService.speak(mage, speaker, Messages.getRaw(voiced("blood.final.nobody", speaker)));
             return;
         }
-        WhisperService.speak(mage, speaker, Messages.getRaw("blood.final.named").replace("{target}", nameOf(target)));
+        WhisperService.speak(mage, speaker, Messages.getRaw(voiced("blood.final.named", speaker)).replace("{target}", nameOf(target)));
         BloodFx.play("target_named", mage.getLocation(), mage);
+    }
+
+    /** The god and the dark self say the same thing in their own words: key_god or key_self. */
+    static String voiced(String key, WhisperConfig.Speaker speaker) {
+        return key + (speaker == WhisperConfig.Speaker.SELF ? "_self" : "_god");
     }
 
     static String nameOf(String character) {
@@ -161,7 +166,7 @@ public final class FinalService {
         record.setPendingBacklash(false);
         RpCharactersBridge.applyHealingInjury(mage);
         BloodFx.play("backlash", mage.getLocation(), mage);
-        WhisperService.speak(mage, WhisperService.speaker(record), Messages.getRaw("blood.final.failed"));
+        WhisperService.speak(mage, WhisperService.speaker(record), Messages.getRaw(voiced("blood.final.failed", WhisperService.speaker(record))));
         BloodRecords.save(record);
     }
 

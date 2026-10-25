@@ -1,6 +1,6 @@
 # Blood Magic progression. Hidden content: never document it on the wiki.
 # Jar does not overwrite an existing live copy. Copy new keys by hand after updates.
-# Names here are placeholders until the lore is settled.
+# Names (the god, the blade, the classes) are placeholders until the lore is settled.
 
 enabled: true
 
@@ -12,17 +12,22 @@ items:
     path: ia.tfmc_blood:altar_0
     name: "#bfbfbfWeathered Altar Stone"
     lore:
-      - "#8c8c8c§oA plain slab of carved stone."
+      - "#8c8c8c§oA slab of old carved stone, worn smooth"
+      - "#8c8c8c§oby hands that are long gone."
+      - "#5c5c5c§oIt is heavier than it should be."
   ritual_knife:
     path: ia.tfmc_blood:ritual_knife
     name: "#bfbfbfSkinning Knife"
     lore:
-      - "#8c8c8c§oAn ordinary knife, kept very sharp."
+      - "#8c8c8c§oA plain knife with a well-worn grip."
+      - "#8c8c8c§oKept very, very sharp."
   blood_knife:
     path: ia.tfmc_blood:blood_knife
     name: "#8a0303Vein-Reaver"
     lore:
-      - "#5c0202§oIt is warm to the touch."
+      - "#5c0202§oCurved like a cupped hand."
+      - "#5c0202§oIt is warm to the touch,"
+      - "#5c0202§oand if you hold it still, it beats."
 
 altar:
   # The altar is a barrier block (unbreakable, piston and blast proof) with a display on it.
@@ -145,7 +150,8 @@ whispers:
     corruption_below: -40
   animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
 
-# The two voices. The god speaks until a mage refuses it; then only the mage's own dark self.
+# The two voices. The god is a choir: everything that ever bled on the stone, speaking as "we", red and
+# hungry. A mage who refuses it hears only their own dark self: "I", grey and cold, their own thoughts.
 # whispered lines are said in order and end with the knife and altar; other stages pick at random.
 voices:
   # Minutes between lines, picked at random in this range.
@@ -159,36 +165,59 @@ voices:
     pitch: 0.5
     lines:
       whispered:
-        - "...can you hear it? Beneath the floor. Beneath the stone."
-        - "So much warm blood walks above us. All of it wasted."
-        - "Listen, little one. We will teach you, if you are hungry enough."
-        - "Lay a stone deep in the earth, where no sky can see it."
-        - "Bring beasts to the stone while they still breathe. Hold them, and open them with a plain blade."
-        - "Not your own beasts. Take what others keep. Seven kinds, one each day."
-        - "Look in your pack. We have been generous."
+        - "...there. You felt it, didn't you? Under the floor. Under the stone. Something listening back."
+        - "Hush. Do not be afraid, little one. We have waited so long for someone who listens."
+        - "So much warm blood walks the roads above us. Spilled in ditches, in brawls, in childbeds. Wasted."
+        - "We could teach you to waste none of it. We could teach you to grow."
+        - "Go down, deep, where the sky cannot follow. No lord's banner, no warden's eye. Lay our stone there."
+        - "Bring living beasts down to the stone. Hold them still with the plain knife, and open them while they breathe."
+        - "Not beasts of your own. A gift costs nothing. Lead them from another's pen while the keeper sleeps."
+        - "Seven kinds of beast, one each day and no sooner. We like to savour."
+        - "Look in your pack, little one. We have been generous. Do not make us regret it."
       animal:
-        - "The stone is thirsty."
-        - "Another kind. We have tasted that one."
-        - "Their pens are full and their owners sleep."
-        - "Lead it down to the stone. Hold it still."
+        - "The stone is thirsty. Can you not hear it?"
+        - "Every pen in the valley is full, and every shepherd sleeps."
+        - "Lead it down gently. Fear sours the blood."
+        - "Look into its eyes when you do it. We want to see what you see."
+        - "We remember the taste of the last one. Bring us a kind we have not had."
+        - "Wash your hands before you go up. They can smell it on you."
+        - "Count with us. How many kinds now? Not enough. Never enough."
       choice:
-        - "Come to the stone. We have something to ask of you."
+        - "Seven kinds have bled. Come down to the stone, and bring the new blade. We have a question for you."
+        - "The stone is red to its heart. Kneel at it with the curved blade in your hand."
+        - "Do not keep us waiting. Nothing has ever made us wait."
       final:
-        - "You are ours now. Feed us."
-        - "We remember every drop you give."
-        - "We have chosen for you. Go to the stone."
+        - "You are ours, little one, and so are they. We will tell you who."
+        - "We have chosen for you. You need not think any more. Only go to the stone."
+        - "Do you remember their laugh? Remember it on the stone. It makes them sweeter."
+        - "They trust you. That is what makes it holy."
+        - "Every drop you gave us, we remember. Every drop you give, we repay."
+      ascended:
+        - "All of them, given. Sleep now, little one. We will wake you when we are hungry."
+        - "You walk among them and none of them know. We love that about you."
+        - "We are always beneath you. Always listening. Always fed."
   self:
     style: "#7a7a7a§o"
     sound: minecraft:entity.warden.heartbeat
     pitch: 1.2
     lines:
       hunt:
-        - "We need no god. Only more."
-        - "Who would miss them? Better: who would we miss?"
-        - "The stone is quiet now. It is only us."
+        - "I don't need a god to tell me what I want."
+        - "The stone went quiet. Good. Now I can hear myself think."
+        - "Strangers are cheap. The ones I know are worth more. I knew that before anyone told me."
+        - "Nobody notices one more empty chair. Not at first."
+        - "Seven measures. I keep counting, even when I pretend I'm not."
+        - "They smiled at me today. They have no idea."
       final:
-        - "It has to be them. You know it does."
-        - "The closer they are, the more it gives."
+        - "It has to be them. I've known it for days."
+        - "The closer they are, the more it gives. That's the whole trick, isn't it?"
+        - "I'll be quick. I owe them that much."
+        - "If I stop now, everything before was for nothing."
+        - "Their name keeps coming back. Of course it does."
+      ascended:
+        - "There is no one left I would miss. So this is what freedom feels like."
+        - "Quiet. So quiet. And I did it all myself."
+        - "I could start again. Learn new names. Let new people close. Just in case."
 
 # Animal sacrifices: bind a living animal on the altar with the ritual knife, then kill it with that knife.
 animal:
@@ -240,27 +269,35 @@ corruption:
 
 # The god's question: right-click your altar with your blood knife once the seventh kind is given.
 choice:
-  title: "#5c0202Will you give yourself?"
+  title: "#5c0202What will you give?"
   question:
-    - "#8a0303§oSeven kinds have bled for us."
-    - "#8a0303§oGive us yourself, and we will carry you."
-    - "#8a0303§oOr keep yourself, and carry it all alone."
+    - "#8a0303§oSeven kinds have bled for us, and you did not flinch."
+    - "#8a0303§oGive yourself to us, and we will carry you all the way."
+    - "#8a0303§oOr keep yourself, and carry the weight alone. Forever."
   devotee:
     item: v.red_dye
     name: "#8a0303I give myself"
     lore:
-      - "#8c8c8c§oPart of you stays on the stone."
+      - "#8c8c8c§oPart of you stays on the stone,"
+      - "#8c8c8c§oa wound that will never close."
+      - "#8c8c8c§oThe god walks with you, and chooses for you."
   "true":
     item: v.iron_sword
     name: "#bfbfbfI take for myself"
     lore:
-      - "#8c8c8c§oNo god. Only you, and what you take."
+      - "#8c8c8c§oNo god. No voices. No one to blame."
+      - "#8c8c8c§oOnly you, and what you take"
+      - "#8c8c8c§ofrom the people who love you."
   confirm:
     item: v.redstone
     name: "#ff5555There is no going back"
+    lore:
+      - "#8c8c8c§oThe stone will remember what you chose."
   back:
     item: v.barrier
     name: "#aaaaaaNot yet"
+    lore:
+      - "#8c8c8c§oIt will wait. It is very good at waiting."
   # Permanent injuries a devotee keeps as the mark of what they gave.
   devotee_injuries: 2
 
