@@ -47,7 +47,7 @@ public final class CharacterRiteService {
     }
 
     private record Rite(UUID victim, String mageCharacter, String victimCharacter, String victimAccount,
-            int points, long endsAt) {}
+            int points, int rank, long endsAt) {}
 
     private static final Map<UUID, Rite> RITES = new HashMap<>();
     private static final Set<String> SACRIFICING = new HashSet<>();
@@ -96,13 +96,14 @@ public final class CharacterRiteService {
             return Bind.BUSY;
         }
         String victimAccount = victim.getUniqueId().toString();
-        int points = record.getStage() == BloodStage.HUNT ? HuntConfig.points(BondService.rank(mage, victimCharacter)) : 0;
+        int rank = record.getStage() == BloodStage.HUNT ? BondService.rank(mage, victimCharacter) : 0;
+        int points = record.getStage() == BloodStage.HUNT ? HuntConfig.points(rank) : 0;
         if (!RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0))) {
             return Bind.BLOCKED;
         }
         CarryService.release(mage, false);
         RITES.put(mage.getUniqueId(), new Rite(victim.getUniqueId(), character, victimCharacter, victimAccount,
-                points, clock.getAsLong() + HuntConfig.riteSeconds() * 1000L));
+                points, rank, clock.getAsLong() + HuntConfig.riteSeconds() * 1000L));
         victim.sendMessage(Messages.get("blood.rite.dread"));
         BloodFx.play("rite_bound", top, victim);
         return Bind.OK;
@@ -263,7 +264,7 @@ public final class CharacterRiteService {
         }
         BloodStage stage = record.getStage();
         record.getSacrifices().add(new BloodRecord.Sacrifice(key, rite.victimAccount(), stage.name(),
-                rite.points(), clock.getAsLong()));
+                rite.points(), clock.getAsLong(), rite.rank()));
         record.setLastVictimAccount(rite.victimAccount());
         BloodFx.play("rite_complete", altar.center(), mage);
         Magic.plugin.getLogger().info("[Magic] Character " + rite.mageCharacter() + " sacrificed character "

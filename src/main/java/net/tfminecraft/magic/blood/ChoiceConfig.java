@@ -53,8 +53,15 @@ public final class ChoiceConfig {
         ARMOUR.clear();
     }
 
-    /** One bound armour piece: the item (TLibs path) and an optional look (TLibs ia. path) put over it. */
-    public record Piece(String item, String look) {}
+    /**
+     * One bound armour piece: the item (TLibs path), an optional look (TLibs ia. path) put over it, and an
+     * optional name with {victim} for the true path's pieces made from the people they took.
+     */
+    public record Piece(String item, String look, String name) {
+        public Piece(String item, String look) {
+            this(item, look, null);
+        }
+    }
 
     static void load(ConfigurationSection choice, ConfigurationSection classes, ConfigurationSection armour) {
         reset();
@@ -91,13 +98,14 @@ public final class ChoiceConfig {
         }
     }
 
-    /** A plain item path, or { item: ..., look: ... }; null when there is no item. */
+    /** A plain item path, or { item: ..., look: ..., name: ... }; null when there is no item. */
     private static Piece piece(Object entry) {
         if (entry instanceof String item && !item.isBlank()) {
             return new Piece(item.trim(), null);
         }
         if (entry instanceof Map<?, ?> map && map.get("item") instanceof String item && !item.isBlank()) {
-            return new Piece(item.trim(), map.get("look") instanceof String look && !look.isBlank() ? look.trim() : null);
+            return new Piece(item.trim(), map.get("look") instanceof String look && !look.isBlank() ? look.trim() : null,
+                    map.get("name") instanceof String name && !name.isBlank() ? name : null);
         }
         return null;
     }

@@ -1,6 +1,7 @@
 package net.tfminecraft.magic.blood;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.util.ItemRef;
+import net.tfminecraft.magic.util.MagicText;
 
 /**
  * Armour the blood path grants: unbreakable and bound to one character. Nobody else can wear it,
@@ -28,14 +30,54 @@ public final class BloodArmour {
 
     /** Builds the path's armour pieces bound to the character. Unknown paths in config are skipped. */
     public static List<ItemStack> create(BloodPath path, String characterId) {
+        return create(path, characterId, List.of());
+    }
+
+    /**
+     * As above, and every piece with a name is named after a victim (character ids, most important
+     * first): the first named piece takes the first victim and so on down the body, wrapping round
+     * to the first again when there were fewer victims than pieces.
+     */
+    public static List<ItemStack> create(BloodPath path, String characterId, List<String> victims) {
         List<ItemStack> out = new ArrayList<>();
+        int named = 0;
         for (ChoiceConfig.Piece piece : ChoiceConfig.armourFor(path)) {
             ItemStack item = ItemRef.build(piece.item());
-            if (item != null) {
-                out.add(bind(BloodLooks.apply(item, piece.look()), characterId));
+            if (item == null) {
+                continue;
             }
+            item = BloodLooks.apply(item, piece.look());
+            if (piece.name() != null && !victims.isEmpty()) {
+                rename(item, piece.name(), victims.get(named++ % victims.size()));
+            }
+            out.add(bind(item, characterId));
         }
         return out;
+    }
+
+    /**
+     * The hunt's victims, most important first: the most points, then the closest rank (strangers and
+     * older records without a rank last), then the earliest taken.
+     */
+    static List<String> victims(BloodRecord record) {
+        return record.getSacrifices().stream()
+                .filter(sacrifice -> BloodStage.HUNT.name().equals(sacrifice.stage()))
+                .sorted(Comparator.comparingInt(BloodRecord.Sacrifice::points).reversed()
+                        .thenComparingInt(sacrifice -> sacrifice.rank() > 0 ? sacrifice.rank() : Integer.MAX_VALUE)
+                        .thenComparingLong(BloodRecord.Sacrifice::at))
+                .map(BloodRecord.Sacrifice::character)
+                .toList();
+    }
+
+    /** Names the piece after the victim; keeps the item's own name when the victim is unknown. */
+    private static void rename(ItemStack item, String format, String victim) {
+        String name = FinalService.nameOf(victim);
+        if ("?".equals(name)) {
+            return;
+        }
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(MagicText.format(format.replace("{victim}", name.replace("\u00a7", ""))));
+        item.setItemMeta(meta);
     }
 
     static ItemStack bind(ItemStack item, String characterId) {
@@ -58,7 +100,12 @@ public final class BloodArmour {
 
     /** Hands the path's armour to the player; whatever does not fit drops at their feet. */
     public static void give(Player player, BloodPath path, String characterId) {
-        for (ItemStack piece : create(path, characterId)) {
+        give(player, path, characterId, List.of());
+    }
+
+    /** As above, with the pieces named after these victims (see {@link #create(BloodPath, String, List)}). */
+    public static void give(Player player, BloodPath path, String characterId, List<String> victims) {
+        for (ItemStack piece : create(path, characterId, victims)) {
             WhisperService.give(player, piece);
         }
         BloodFx.play("armour_given", player.getLocation(), player);

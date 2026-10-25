@@ -36,7 +36,7 @@ public final class FinalService {
         record.setStage(BloodStage.FINAL);
         if (record.getPath() == BloodPath.TRUE) {
             ClassUnlockBridge.unlock(mage, ChoiceConfig.classFor(BloodPath.TRUE));
-            BloodArmour.give(mage, BloodPath.TRUE, record.getCharacterId());
+            BloodArmour.give(mage, BloodPath.TRUE, record.getCharacterId(), BloodArmour.victims(record));
             mage.sendMessage(Messages.get("blood.hunt.complete"));
             BloodFx.play("hunt_complete", mage.getLocation(), mage);
         }

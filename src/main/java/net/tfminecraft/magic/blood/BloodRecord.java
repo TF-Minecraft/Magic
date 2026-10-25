@@ -32,8 +32,15 @@ public final class BloodRecord {
     /** A failed sacrifice whose backlash waits for the mage to come online. */
     private boolean pendingBacklash;
 
-    /** One character sacrificed at the altar. */
-    public record Sacrifice(String character, String account, String stage, int points, long at) {}
+    /**
+     * One character sacrificed at the altar. rank: the victim's closeness rank when taken (1 = closest),
+     * 0 for a stranger or a record from before ranks were kept.
+     */
+    public record Sacrifice(String character, String account, String stage, int points, long at, int rank) {
+        public Sacrifice(String character, String account, String stage, int points, long at) {
+            this(character, account, stage, points, at, 0);
+        }
+    }
 
     public BloodRecord() {}
 
