@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -26,16 +28,19 @@ public final class BloodStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type ALTAR_LIST = new TypeToken<List<BloodAltar>>() {}.getType();
     private static final Type NOTE_LIST = new TypeToken<List<BloodNotes.Note>>() {}.getType();
+    private static final Type BOND_MAP = new TypeToken<Map<String, Integer>>() {}.getType();
 
     private final File characters;
     private final File altars;
     private final File notes;
+    private final File bonds;
     private final Logger log;
 
     public BloodStore(File root, Logger log) {
         this.characters = new File(root, "characters");
         this.altars = new File(root, "altars.json");
         this.notes = new File(root, "notes.json");
+        this.bonds = new File(root, "bonds");
         this.log = log;
     }
 
@@ -115,6 +120,28 @@ public final class BloodStore {
 
     public boolean saveNotes(List<BloodNotes.Note> list) {
         return write(notes, GSON.toJson(list, NOTE_LIST));
+    }
+
+    /** Minutes the character spent near each other character; empty when there is no file yet. */
+    public Map<String, Integer> loadBonds(String characterId) {
+        File file = new File(bonds, characterId + ".json");
+        Map<String, Integer> out = new HashMap<>();
+        if (!file.isFile()) {
+            return out;
+        }
+        Map<String, Integer> loaded = read(file, BOND_MAP);
+        if (loaded != null) {
+            loaded.forEach((other, minutes) -> {
+                if (minutes != null && minutes > 0) {
+                    out.put(other, minutes);
+                }
+            });
+        }
+        return out;
+    }
+
+    public boolean saveBonds(String characterId, Map<String, Integer> minutes) {
+        return write(new File(bonds, characterId + ".json"), GSON.toJson(minutes, BOND_MAP));
     }
 
     private <T> T read(File file, Type type) {

@@ -13,7 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.proc>full</maven.compiler.proc>
         <interactiblefurniture.version>0.2.0</interactiblefurniture.version>
-        <rpcharacters.version>2.16.0</rpcharacters.version>
+        <rpcharacters.version>2.31.0</rpcharacters.version>
         <tlibs.version>2.6.0</tlibs.version>
     </properties>
 

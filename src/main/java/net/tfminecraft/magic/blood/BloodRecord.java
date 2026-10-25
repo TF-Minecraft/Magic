@@ -21,6 +21,19 @@ public final class BloodRecord {
     private String altarId;
     private int huntPoints;
     private int finalsDone;
+    /** Account of the last character sacrificed, so the same player is never taken twice in a row. */
+    private String lastVictimAccount;
+    /** Every character sacrificed at the altar, oldest first. */
+    private List<Sacrifice> sacrifices = new ArrayList<>();
+    /** Final targets still to come, least close first; the first is the one named now. */
+    private List<String> finalTargets = new ArrayList<>();
+    /** No final target is named before this time (after a failed sacrifice). */
+    private long nextFinalAt;
+    /** A failed sacrifice whose backlash waits for the mage to come online. */
+    private boolean pendingBacklash;
+
+    /** One character sacrificed at the altar. */
+    public record Sacrifice(String character, String account, String stage, int points, long at) {}
 
     public BloodRecord() {}
 
@@ -41,6 +54,12 @@ public final class BloodRecord {
         }
         if (species == null) {
             species = new ArrayList<>();
+        }
+        if (sacrifices == null) {
+            sacrifices = new ArrayList<>();
+        }
+        if (finalTargets == null) {
+            finalTargets = new ArrayList<>();
         }
         if (whisper < 0 || Double.isNaN(whisper)) {
             whisper = 0;
@@ -147,9 +166,47 @@ public final class BloodRecord {
         this.finalsDone = Math.max(0, finalsDone);
     }
 
+    public String getLastVictimAccount() {
+        return lastVictimAccount;
+    }
+
+    public void setLastVictimAccount(String lastVictimAccount) {
+        this.lastVictimAccount = lastVictimAccount;
+    }
+
+    public List<Sacrifice> getSacrifices() {
+        return sacrifices;
+    }
+
+    public List<String> getFinalTargets() {
+        return finalTargets;
+    }
+
+    /** The final target named now, or null. */
+    public String currentTarget() {
+        return finalTargets.isEmpty() ? null : finalTargets.get(0);
+    }
+
+    public long getNextFinalAt() {
+        return nextFinalAt;
+    }
+
+    public void setNextFinalAt(long nextFinalAt) {
+        this.nextFinalAt = nextFinalAt;
+    }
+
+    public boolean isPendingBacklash() {
+        return pendingBacklash;
+    }
+
+    public void setPendingBacklash(boolean pendingBacklash) {
+        this.pendingBacklash = pendingBacklash;
+    }
+
     /** True when the record carries nothing worth keeping on disk. */
     public boolean isEmpty() {
         return stage == BloodStage.NONE && path == BloodPath.NONE && whisper <= 0
-                && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0;
+                && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
+                && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash;
     }
 }

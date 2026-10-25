@@ -37,11 +37,10 @@ public final class BloodChoice {
                     marks++;
                 }
             }
-            record.setStage(BloodStage.FINAL);
-            BloodRecords.save(record);
             ClassUnlockBridge.unlock(player, ChoiceConfig.classFor(BloodPath.DEVOTEE));
             BloodArmour.give(player, BloodPath.DEVOTEE, character);
             player.sendMessage(Messages.get("blood.choice.devoted"));
+            FinalService.begin(player, record);
             Magic.plugin.getLogger().info("[Magic] Character " + character + " gave themself to the god ("
                     + marks + " permanent injuries)");
         } else {

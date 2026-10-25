@@ -36,6 +36,7 @@ import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
 import net.tfminecraft.tlibs.character.CharacterRef;
+import net.tfminecraft.tlibs.character.CharacterSessionEndEvent;
 import net.tfminecraft.tlibs.character.CharacterSessionStartEvent;
 
 /** Altar placement, protection, looks on chunk load, dark deeds for the whisper meter, and deaths. */
@@ -75,9 +76,18 @@ public final class BloodListener implements Listener {
     /** The ritual knife binds a living animal onto its owner's altar. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || !(event.getRightClicked() instanceof LivingEntity animal)
-                || animal instanceof Player
-                || !BloodItems.is(event.getPlayer().getInventory().getItemInMainHand(), BloodItemKind.RITUAL_KNIFE)) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+        ItemStack held = event.getPlayer().getInventory().getItemInMainHand();
+        if (event.getRightClicked() instanceof Player victim && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE)) {
+            event.setCancelled(true);
+            CharacterRiteService.Bind result = CharacterRiteService.bind(event.getPlayer(), victim);
+            event.getPlayer().sendMessage(Messages.get("blood.rite.bind." + result.name().toLowerCase(Locale.ROOT)));
+            return;
+        }
+        if (!(event.getRightClicked() instanceof LivingEntity animal) || animal instanceof Player
+                || !BloodItems.is(held, BloodItemKind.RITUAL_KNIFE)) {
             return;
         }
         event.setCancelled(true);
@@ -170,7 +180,11 @@ public final class BloodListener implements Listener {
 
     @EventHandler
     public void onCharacterDeath(CharacterDeathEvent event) {
-        AltarService.onCharacterDeath(event.getCharacter().characterId().toString());
+        String dead = event.getCharacter().characterId().toString();
+        AltarService.onCharacterDeath(dead);
+        if (!CharacterRiteService.isBeingSacrificed(dead)) {
+            FinalService.onDeath(dead);
+        }
         CharacterRef killer = event.getKillerCharacter();
         if (killer == null || killer.characterId().equals(event.getCharacter().characterId())) {
             return;
@@ -203,6 +217,16 @@ public final class BloodListener implements Listener {
         BloodNotes.deliver(event.getPlayer(), event.getSession().ref().characterId().toString(),
                 System.currentTimeMillis(), true);
         BloodArmour.enforce(event.getPlayer());
+        String character = event.getSession().ref().characterId().toString();
+        BondService.load(character);
+        BloodBoons.apply(event.getPlayer());
+        FinalService.check(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onSessionEnd(CharacterSessionEndEvent event) {
+        BondService.unload(event.getSession().ref().characterId().toString());
+        BloodBoons.clear(event.getPlayer());
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

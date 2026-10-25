@@ -12,15 +12,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Messages;
+import net.tfminecraft.tlibs.character.CharacterInfo;
+import net.tfminecraft.tlibs.character.Characters;
 
 /**
- * Staff tools: /magic blood &lt;list|info|stage|path|give|whisper|voice|altar|reset&gt;.
+ * Staff tools: /magic blood &lt;list|info|stage|path|give|whisper|voice|target|bonds|altar|reset&gt;.
  * Player targets must be online on the character being edited; altars can also be named by id.
  */
 public final class BloodCommand {
 
     static final List<String> SUBCOMMANDS = List.of(
-            "list", "info", "stage", "path", "give", "whisper", "voice", "altar", "reset");
+            "list", "info", "stage", "path", "give", "whisper", "voice", "target", "bonds", "altar", "reset");
+    private static final List<String> TARGET_ACTIONS = List.of("list", "reroll", "set", "skip");
     private static final List<String> ALTAR_ACTIONS = List.of("info", "tp", "refresh", "purify");
 
     private BloodCommand() {}
@@ -35,6 +38,8 @@ public final class BloodCommand {
             case "give" -> withTarget(sender, args, 4, (player, character) -> give(sender, player, character, args[3]));
             case "whisper" -> whisper(sender, args);
             case "voice" -> withTarget(sender, args, 3, (player, character) -> voice(sender, player, character));
+            case "target" -> target(sender, args);
+            case "bonds" -> withTarget(sender, args, 3, (player, character) -> bonds(sender, player));
             case "altar" -> altar(sender, args);
             case "reset" -> withTarget(sender, args, 3, (player, character) -> reset(sender, player, character));
             default -> sender.sendMessage(Messages.get("blood.admin.usage"));
@@ -178,6 +183,62 @@ public final class BloodCommand {
         sender.sendMessage(Messages.get("blood.admin.voiced", "player", player.getName()));
     }
 
+    /** target &lt;player&gt; list|reroll|skip, or target &lt;player&gt; set &lt;character name&gt;. */
+    private static void target(CommandSender sender, String[] args) {
+        String action = args.length >= 4 ? args[3].toLowerCase(Locale.ROOT) : "";
+        boolean set = action.equals("set");
+        if (!TARGET_ACTIONS.contains(action) || args.length != (set ? 5 : 4)) {
+            sender.sendMessage(Messages.get("blood.admin.usage"));
+            return;
+        }
+        withTarget(sender, Arrays.copyOf(args, 3), 3, (player, character) -> {
+            BloodRecord record = BloodRecords.get(character);
+            if (record == null || record.getStage() != BloodStage.FINAL) {
+                sender.sendMessage(Messages.get("blood.admin.not_final", "player", player.getName()));
+                return;
+            }
+            switch (action) {
+                case "reroll" -> FinalService.reroll(player, record);
+                case "skip" -> FinalService.skip(player, record);
+                case "set" -> {
+                    String id = livingCharacter(args[4]);
+                    if (id == null) {
+                        sender.sendMessage(Messages.get("blood.admin.no_character_named", "name", args[4]));
+                        return;
+                    }
+                    FinalService.set(player, record, id);
+                }
+                default -> { }
+            }
+            List<String> names = new ArrayList<>();
+            for (String id : record.getFinalTargets()) {
+                names.add(FinalService.nameOf(id));
+            }
+            sender.sendMessage(Messages.get("blood.admin.targets", "player", player.getName(),
+                    "done", String.valueOf(record.getFinalsDone()), "targets", String.join(" > ", names)));
+        });
+    }
+
+    private static String livingCharacter(String name) {
+        for (CharacterInfo info : Characters.findByName(name)) {
+            if (info.alive()) {
+                return info.ref().characterId().toString();
+            }
+        }
+        return null;
+    }
+
+    private static void bonds(CommandSender sender, Player player) {
+        List<BondService.Ranked> ranking = BondService.ranking(player);
+        sender.sendMessage(Messages.get("blood.admin.bonds_header", "player", player.getName(),
+                "count", String.valueOf(ranking.size())));
+        for (int i = 0; i < Math.min(10, ranking.size()); i++) {
+            sender.sendMessage(Messages.get("blood.admin.bonds_line", "rank", String.valueOf(i + 1),
+                    "name", FinalService.nameOf(ranking.get(i).character()),
+                    "score", String.format(Locale.ROOT, "%.1f", ranking.get(i).score())));
+        }
+    }
+
     private static void reset(CommandSender sender, Player player, String character) {
         BloodAltar altar = BloodAltars.ofCharacter(character);
         if (altar != null) {
@@ -252,6 +313,7 @@ public final class BloodCommand {
                 case "path" -> lower(BloodPath.values());
                 case "give" -> Arrays.stream(BloodItemKind.values()).map(BloodItemKind::key).toList();
                 case "altar" -> altarTargets();
+                case "target" -> TARGET_ACTIONS;
                 default -> List.of();
             };
         }

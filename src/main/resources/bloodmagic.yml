@@ -48,6 +48,59 @@ altar:
 hunt:
   # True path: points of character sacrifices needed for the True class.
   points_required: 7
+  # A knocked-out character this close to the altar can be dragged onto it with the blood knife.
+  drag_range: 8
+  # Seconds the rite takes. Once it starts, the character dies for good when it ends.
+  rite_seconds: 10
+  victims:
+    # Characters of the same account never count. These keep fresh alts out too.
+    min_playtime_hours: 10
+    min_age_days: 7
+    # The same player (any of their characters) may not be taken twice in a row.
+    no_repeat_player: true
+  # Hunt points by how close the victim was (rank 1 = closest). The closest finals.count are kept
+  # for the final sacrifices and cannot be taken in the hunt. Strangers (no bond at all) are worth "stranger".
+  points:
+    stranger: 1
+    default: 1
+    ranks:
+      - { up_to: 10, points: 3 }
+      - { up_to: 25, points: 2 }
+
+# Hidden closeness between characters. Never shown to players.
+bonds:
+  # Every sample, characters within near_radius of each other add the sample's minutes together.
+  sample_minutes: 5
+  near_radius: 16
+  # Score = conversation_weight x counted RP exchanges (RPCharacters) + hour_weight x hours near each other.
+  conversation_weight: 3.0
+  hour_weight: 2.0
+  # A will heir adds this, only if the heir is another player's character the two really spent time with.
+  heir_bonus: 40
+  heir_min_hours: 10
+  heir_min_conversations: 20
+
+# The final sacrifices: the closest characters, named one at a time from least close to closest.
+finals:
+  count: 5
+  # A named target that dies any other lethal way: backlash and this wait before the next is named.
+  fail_cooldown_hours: 72
+  # A named target not seen for this long is quietly replaced.
+  inactive_days: 21
+  # MythicLib stat boons per final sacrifice (they add up). Placeholder values.
+  boons:
+    devotee:
+      1: { MAX_HEALTH: 1 }
+      2: { MAX_MANA: 10 }
+      3: { MAX_HEALTH: 1 }
+      4: { SPELL_DAMAGE: 2 }
+      5: { MAX_HEALTH: 2 }
+    "true":
+      1: { MAX_HEALTH: 2 }
+      2: { MAX_MANA: 20 }
+      3: { MAX_HEALTH: 2 }
+      4: { SPELL_DAMAGE: 4 }
+      5: { MAX_HEALTH: 4 }
 
 placement:
   # Worlds where an altar may stand. Empty = every world.

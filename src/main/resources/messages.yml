@@ -514,6 +514,60 @@ blood:
 
     note_lost: "#aaaaaa§oSomething took {animal} while no one was watching"
 
+  rite:
+
+    bind:
+
+      ok: "#8a0303§oYou drag them onto the stone. It is already warm"
+
+      not_stage: "#8c8c8c§oThe stone does not want them. Not yet"
+
+      not_knife: "#8c8c8c§oThat blade will not open the way"
+
+      no_altar: "#8c8c8c§oThere is no stone to lay them on"
+
+      no_character: "#8c8c8c§oThere is nothing in them to take"
+
+      not_down: "#8c8c8c§oThey still fight. Bring them down first"
+
+      too_far: "#8c8c8c§oThe stone is too far. Bring them closer"
+
+      too_new: "#8c8c8c§oThin blood. The stone would not drink it"
+
+      repeat: "#8c8c8c§oThat blood is still on the stone. Find another"
+
+      reserved: "#7a7a7a§oNot them. Not yet. They are for later"
+
+      waiting: "#8c8c8c§oThe stone is sullen. It will not take anyone yet"
+
+      not_target: "#8c8c8c§oNot this one. You know who it must be"
+
+      busy: "#8c8c8c§oOne at a time"
+
+    dread: "#8a0303§oStone under your back. A blade above you. Something below is hungry"
+
+    broken: "#8c8c8c§oYou step away and the rite comes apart"
+
+    refused: "#8c8c8c§oThe stone will not take them"
+
+    taken: "#7a7a7a§oIt is done. You feel heavier, and stronger"
+
+  hunt:
+
+    complete: "#7a7a7a§oSeven measures of blood. You are something else now, and the stone knows your name"
+
+  final:
+
+    named: "{target}. It has to be {target}"
+
+    nobody: "There is no one close enough yet"
+
+    taken: "#7a7a7a§oA hollow opens in you where they were, and something cold fills it"
+
+    ascended: "#5c0202§oThe last of them is gone. Nothing holds you now"
+
+    failed: "Someone else spilled what was yours. You will pay for that"
+
   choice:
 
     devoted: "#8a0303§oSomething of you stays on the stone, and something of the stone goes with you"
@@ -546,7 +600,7 @@ blood:
 
   admin:
 
-    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | whisper <player> [amount] | voice <player> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
+    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | whisper <player> [amount] | voice <player> | target <player> <list|reroll|skip|set <name>> | bonds <player> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
 
     no_record: "#aaaaaa{player} ({character}) has no blood path."
 
@@ -587,3 +641,13 @@ blood:
     no_voices: "#ff5555{player} does not hear any voices."
 
     voiced: "#55ff55{player} heard the next line."
+
+    not_final: "#ff5555{player} is not at the final sacrifices."
+
+    no_character_named: "#ff5555No living character is called {name}."
+
+    targets: "#d10202{player} #aaaaaafinals done #ffffff{done}#aaaaaa, targets #ffffff{targets}"
+
+    bonds_header: "#d10202{player} #aaaaaahas bonds with #ffffff{count} #aaaaaacharacter(s):"
+
+    bonds_line: "#aaaaaa{rank}. #ffffff{name} #555555({score})"

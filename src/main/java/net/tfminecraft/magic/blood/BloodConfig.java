@@ -105,6 +105,8 @@ public final class BloodConfig {
         CorruptionConfig.load(config.getConfigurationSection("corruption"), log);
         ChoiceConfig.load(config.getConfigurationSection("choice"), config.getConfigurationSection("classes"),
                 config.getConfigurationSection("armour"));
+        HuntConfig.load(config.getConfigurationSection("hunt"), config.getConfigurationSection("bonds"),
+                config.getConfigurationSection("finals"), log);
         return ok;
     }
 
@@ -162,6 +164,7 @@ public final class BloodConfig {
         AnimalConfig.reset();
         CorruptionConfig.reset();
         ChoiceConfig.reset();
+        HuntConfig.reset();
     }
 
     public static boolean isEnabled() {

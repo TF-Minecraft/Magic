@@ -1,5 +1,8 @@
 package net.tfminecraft.magic.integration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.bukkit.entity.Player;
 
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
@@ -35,6 +38,47 @@ public final class RpCharactersBridge {
             return "";
         }
         return DisplayIdentityService.colourPlain(character.getName(), character.getNameColour());
+    }
+
+    /** Counted RP exchanges of the player's active character with each other character id. */
+    public static Map<String, Integer> conversationCounts(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null ? new HashMap<>(character.getConversationCounts()) : Map.of();
+    }
+
+    /** The character id the active character's will names as heir, or null. */
+    public static String willHeir(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null && character.getWill().named() ? character.getWill().heir().toString() : null;
+    }
+
+    /** Whether the player lies knocked out. */
+    public static boolean isDown(Player player) {
+        var knockouts = RPCharacters.getPvpKnockoutManager();
+        return knockouts != null && knockouts.isDown(player);
+    }
+
+    /** Seconds since the active character was created, and its online playtime; 0 without one. */
+    public static long characterAgeSeconds(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null ? RPCharacters.getCharacterAgeSeconds(character) : 0;
+    }
+
+    public static long playtimeSeconds(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null ? character.getOnlinePlaytimeSeconds() : 0;
+    }
+
+    /** Kills the victim's active character for good as a sacrifice by the mage. */
+    public static boolean sacrifice(Player victim, Player mage) {
+        RPCharacter character = getActiveCharacter(victim);
+        return character != null && PermadeathService.killCharacter(victim, character, PermakillCause.SACRIFICE, mage);
+    }
+
+    /** Gives the player's active character a random healable injury; false without one. */
+    public static boolean applyHealingInjury(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null && PermadeathService.applyRandomInjury(player, character);
     }
 
     /** Gives the player's active character a random permanent injury; false without one. */

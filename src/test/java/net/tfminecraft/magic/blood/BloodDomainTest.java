@@ -31,7 +31,7 @@ class BloodDomainTest {
   @Test
   void recordNormalizesBrokenFieldsAndKnowsWhenItIsEmpty() throws Exception {
     BloodRecord record = new BloodRecord();
-    for (String field : new String[] {"stage", "path", "species"}) {
+    for (String field : new String[] {"stage", "path", "species", "sacrifices", "finalTargets"}) {
       var f = BloodRecord.class.getDeclaredField(field);
       f.setAccessible(true);
       f.set(record, null);
@@ -114,6 +114,17 @@ class BloodDomainTest {
     assertFalse(r.isEmpty());
     r = BloodRecord.create("x", "o");
     r.setFinalsDone(1);
+    assertFalse(r.isEmpty());
+    r = BloodRecord.create("x", "o");
+    r.getSacrifices().add(new BloodRecord.Sacrifice("c", "a", "HUNT", 1, 0));
+    assertFalse(r.isEmpty());
+    r = BloodRecord.create("x", "o");
+    r.getFinalTargets().add("c");
+    assertFalse(r.isEmpty());
+    assertEquals("c", r.currentTarget());
+    r = BloodRecord.create("x", "o");
+    assertNull(r.currentTarget());
+    r.setPendingBacklash(true);
     assertFalse(r.isEmpty());
   }
 

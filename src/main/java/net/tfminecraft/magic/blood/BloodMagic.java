@@ -3,6 +3,8 @@ package net.tfminecraft.magic.blood;
 import java.io.File;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import net.tfminecraft.magic.manager.MagicTickService;
@@ -19,6 +21,7 @@ public final class BloodMagic {
         BloodRecords.init(store);
         BloodAltars.init(store);
         BloodNotes.init(store);
+        BondService.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
         MagicTickService.register(BloodMagic::tick);
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
@@ -38,6 +41,16 @@ public final class BloodMagic {
         }
         WhisperService.tick(context);
         AnimalRiteService.tick();
+        CharacterRiteService.tick();
+        if (context.everyMinutes(HuntConfig.sampleMinutes())) {
+            BondService.sample();
+        }
+        if (context.everyMinutes(10)) {
+            BondService.flush();
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                FinalService.check(player);
+            }
+        }
         if (context.everyMinutes(1)) {
             AltarCorruption.ambient();
             BloodNotes.tick(System.currentTimeMillis());
@@ -50,6 +63,8 @@ public final class BloodMagic {
     }
 
     public static void stop() {
+        CharacterRiteService.clear();
+        BondService.clear();
         AnimalRiteService.releaseAll();
         StolenClues.clear();
         BloodNotes.clear();
