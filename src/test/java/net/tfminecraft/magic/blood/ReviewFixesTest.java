@@ -81,13 +81,19 @@ class ReviewFixesTest {
   @Test
   void theRiteNeedsAClearLineAndAFreeBody() {
     victim.teleport(new Location(fx.world, 3.5, 10, 0.5));
-    fx.world.getBlockAt(2, 10, 0).setType(Material.BONE_BLOCK);
+    fx.world.getBlockAt(2, 10, 0).setType(Material.OAK_STAIRS);
     assertTrue(CharacterRiteService.clearPath(victim.getLocation(), BloodAltars.ofCharacter(mageId).center()));
     fx.world.getBlockAt(2, 11, 0).setType(Material.STONE);
     assertEquals(CharacterRiteService.Bind.BLOCKED, CharacterRiteService.bind(mage, victim));
-    fx.world.getBlockAt(2, 10, 0).setType(Material.AIR);
     fx.world.getBlockAt(2, 11, 0).setType(Material.AIR);
+    // A window: a full wall at floor level with only the layer above open is still a wall.
+    fx.world.getBlockAt(2, 10, 0).setType(Material.STONE);
+    assertEquals(CharacterRiteService.Bind.BLOCKED, CharacterRiteService.bind(mage, victim));
+    fx.world.getBlockAt(2, 10, 0).setType(Material.OAK_SLAB);
+    assertTrue(CharacterRiteService.clearPath(victim.getLocation(), BloodAltars.ofCharacter(mageId).center()));
+    fx.world.getBlockAt(2, 10, 0).setType(Material.AIR);
     // A body lying a step below the altar: the line clips the altar's own block, which never counts.
+    fx.world.getBlockAt(2, 9, 0).setType(Material.AIR);
     assertTrue(CharacterRiteService.clearPath(new Location(fx.world, 2.5, 9, 0.5), BloodAltars.ofCharacter(mageId).center()));
     bridge.when(() -> RpCharactersBridge.moveDowned(any(), any())).thenReturn(false);
     assertEquals(CharacterRiteService.Bind.BLOCKED, CharacterRiteService.bind(mage, victim));

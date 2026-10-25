@@ -11,6 +11,7 @@ import java.util.function.LongSupplier;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.block.Block;
@@ -53,6 +54,7 @@ public final class CharacterRiteService {
     private static final double LEAVE_SLACK = 4;
     private static final double ESCAPE = 2.5;
     private static final double BODY_HEIGHT = 1.2;
+    private static final double LOW_HEIGHT = 0.7;
     private static final double ALTAR_TOP = 0.6;
     static LongSupplier clock = System::currentTimeMillis;
 
@@ -130,18 +132,25 @@ public final class CharacterRiteService {
     }
 
     /**
-     * No wall between the body and the altar: the rite never pulls anyone through stone. The line runs
-     * a body's height above the floor to the top of the altar, so slabs, pews, chests and the altar's own
-     * bone blocks do not count; walls and ceilings do.
+     * No wall between the body and the altar: the rite never pulls anyone through stone. Two lines run
+     * to the altar top: one at chest height above the floor, where any solid block counts, and one just
+     * above slab and bed height, where only full blocks count. Slabs, stairs, pews and beds do not stop
+     * it; walls, windows, full blocks and ceilings do. Doors count as solid even when open, so a body goes
+     * through a door, or around a block in the way, by being dragged.
      */
     static boolean clearPath(Location from, Location altarCenter) {
-        Location start = from.clone().add(0, BODY_HEIGHT, 0);
+        return clearLine(from.clone().add(0, BODY_HEIGHT, 0), altarCenter, false)
+                && clearLine(from.clone().add(0, LOW_HEIGHT, 0), altarCenter, true);
+    }
+
+    private static boolean clearLine(Location start, Location altarCenter, boolean fullBlocksOnly) {
         Vector line = altarCenter.clone().add(0, ALTAR_TOP, 0).toVector().subtract(start.toVector());
         int samples = (int) Math.ceil(line.length() / 0.25);
         Block altarBlock = altarCenter.getBlock();
         for (int i = 1; i < samples; i++) {
             Block block = start.clone().add(line.clone().multiply((double) i / samples)).getBlock();
-            if (!block.equals(altarBlock) && block.getType().isSolid()) {
+            Material type = block.getType();
+            if (!block.equals(altarBlock) && (fullBlocksOnly ? type.isOccluding() : type.isSolid())) {
                 return false;
             }
         }
