@@ -149,6 +149,29 @@ class WhisperServiceTest {
   }
 
   @Test
+  void atTheQuestionTheVoidSpeaksBackHalfTheTime() throws Exception {
+    PlayerMock player = fx.player("mage");
+    BloodRecord record = fx.record("mage", BloodStage.CHOICE);
+    String self = net.tfminecraft.magic.util.MagicText.format(WhisperConfig.voice(WhisperConfig.Speaker.SELF).style());
+    String god = net.tfminecraft.magic.util.MagicText.format(WhisperConfig.voice(WhisperConfig.Speaker.GOD).style());
+    WhisperService.random = new java.util.Random() {
+      boolean flip;
+      @Override public boolean nextBoolean() { return flip = !flip; }
+    };
+    WhisperService.speakNext(player, record);
+    assertTrue(player.nextMessage().startsWith(self));
+    WhisperService.speakNext(player, record);
+    assertTrue(player.nextMessage().startsWith(god));
+    Files.writeString(temp.resolve("godonly.yml"),
+        "enabled: true\nvoices:\n  god:\n    style: '#111111'\n    lines:\n      choice: [kneel]\n");
+    BloodConfig.load(temp.resolve("godonly.yml").toFile(), fx.logger);
+    WhisperService.speakNext(player, record);
+    WhisperService.speakNext(player, record);
+    assertTrue(player.nextMessage().endsWith("kneel"));
+    assertTrue(player.nextMessage().endsWith("kneel"));
+  }
+
+  @Test
   void laterStagesPickALineAndTheTruePathHearsOnlyItself() throws Exception {
     PlayerMock player = fx.player("mage");
     BloodRecord record = fx.record("mage", BloodStage.ANIMAL);
@@ -163,7 +186,8 @@ class WhisperServiceTest {
     record.setStage(BloodStage.ASCENDED);
     WhisperService.speakNext(player, record);
     assertNotNull(player.nextMessage());
-    record.setStage(BloodStage.CHOICE);
+    record.setPath(BloodPath.NONE);
+    record.setStage(BloodStage.HUNT);
     WhisperService.speakNext(player, record);
     assertNull(player.nextMessage());
 

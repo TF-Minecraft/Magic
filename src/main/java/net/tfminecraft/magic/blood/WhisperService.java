@@ -172,6 +172,12 @@ public final class WhisperService {
     /** Says the next line for the record's stage. The teaching lines end in the gift. */
     public static void speakNext(Player player, BloodRecord record) {
         WhisperConfig.Speaker speaker = speaker(record);
+        // At the question the mage's "own" voice starts arguing back: the Void Reaper, unseen.
+        if (record.getStage() == BloodStage.CHOICE
+                && !WhisperConfig.voice(WhisperConfig.Speaker.SELF).lines(BloodStage.CHOICE).isEmpty()
+                && random.nextBoolean()) {
+            speaker = WhisperConfig.Speaker.SELF;
+        }
         List<String> lines = WhisperConfig.voice(speaker).lines(record.getStage());
         if (record.getStage() == BloodStage.WHISPERED) {
             int index = record.getWhisperLine();

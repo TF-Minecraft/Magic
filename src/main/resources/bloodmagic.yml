@@ -151,8 +151,10 @@ whispers:
   animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
 
 # The two voices. The god is Lorvear, the first vampire, the Blood Father: ancient, regal and paternal,
-# he speaks in red and calls the mage "child". A mage who refuses him hears only their own dark self:
-# grey, cold, never speaking to anyone but themself.
+# he speaks in red and calls the mage "child". The other voice sounds like the mage's own thoughts, but it
+# is the Void Reaper, working on them unseen: it argues against kneeling at the question (choice lines,
+# half the time) and is all a mage hears once they refuse. It never names itself; it only hints at the
+# quiet, the cold and the empty. Grey with a touch of the void.
 # whispered lines are said in order and end with the knife and altar; other stages pick at random.
 voices:
   # Minutes between lines, picked at random in this range.
@@ -199,10 +201,16 @@ voices:
         - "You walk among them and none of them know. You are more mine than Alaric ever was."
         - "Let the Lady send her hunters. I have outlived every one of them."
   self:
-    style: "#7a7a7a§o"
+    style: "#6e6878§o"
     sound: minecraft:entity.warden.heartbeat
     pitch: 1.2
     lines:
+      choice:
+        - "Kneel? To him? I have never knelt to anyone."
+        - "Father. As if I need another one."
+        - "Everything he gives, he owns. What if I took it, and owed no one?"
+        - "He wants a child on its knees. I could be so much more than his child."
+        - "Listen past his voice. Underneath it there is a quiet. The quiet is honest."
       hunt:
         - "I don't need a father to tell me what I want."
         - "Lorvear went quiet. Let him sulk under his stone. I can hear myself think."
@@ -210,16 +218,19 @@ voices:
         - "Nobody notices one more empty chair. Not at first."
         - "Seven measures. I keep counting, even when I pretend I'm not."
         - "They smiled at me today. They have no idea."
+        - "Warm, he wanted them. Why warm? Cold keeps."
       final:
         - "It has to be them. I've known it for days."
         - "The closer they are, the more it gives. That's the whole trick, isn't it?"
         - "I'll be quick. I owe them that much."
         - "If I stop now, everything before was for nothing."
         - "Their name keeps coming back. Of course it does."
+        - "Afterwards it is so still. I could live in that stillness."
       ascended:
         - "There is no one left I would miss. So this is what freedom feels like."
         - "The Lady would call me evil. She'd be right. And far too late."
         - "Quiet. So quiet. No god, no father. I did it all myself."
+        - "...and in the quiet, something old and patient is smiling. It sounds like me."
 
 # Animal sacrifices: bind a living animal on the altar with the ritual knife, then kill it with that knife.
 animal:
@@ -287,6 +298,7 @@ choice:
     item: v.iron_sword
     name: "#bfbfbfI kneel to no one"
     lore:
+      - "#6e6878§oI never needed him. I never did."
       - "#8c8c8c§oNo father. No voices. No one to blame."
       - "#8c8c8c§oOnly you, and what you take"
       - "#8c8c8c§ofrom the people who love you."
@@ -514,6 +526,8 @@ fx:
       - { sound: ambient.crimson_forest.mood, volume: 0.25, pitch: 0.6, private: true }
     voice_self:
       - { particle: SMOKE, count: 8, spread: [0.4, 0.3, 0.4], y: 1.6, speed: 0.005, private: true }
+      - { particle: REVERSE_PORTAL, count: 4, spread: [0.3, 0.2, 0.3], y: 1.7, speed: 0.01, private: true }
+      - { sound: block.portal.ambient, volume: 0.12, pitch: 1.8, private: true }
     gift:
       - { sound: entity.warden.nearby_closer, volume: 0.6, pitch: 0.6, private: true }
       - { particle: DUST, color: "#4a0000", size: 1.5, shape: ring, radius: 0.8, points: 12, y: 0.2, private: true }

@@ -536,7 +536,7 @@ blood:
 
       repeat: "#8c8c8c§oThat blood is still drying on the stone. Find someone else"
 
-      reserved: "#7a7a7a§oNot them. Not yet. They are for later"
+      reserved: "#6e6878§oNot them. Not yet. They are for later"
 
       waiting: "#8c8c8c§oThe stone sulks over what was stolen from it. It will take no one yet"
 
@@ -588,7 +588,7 @@ blood:
 
     devoted: "#8a0303§oSomething of you stays on the stone, and something of the Blood Father comes with you. It hurts. It will always hurt"
 
-    refused: "#7a7a7a§oLorvear falls silent. For the first time in weeks you are alone with your own thoughts. They are not kind"
+    refused: "#6e6878§oLorvear falls silent. For the first time in weeks you are alone with your own thoughts. You are almost sure they are your own"
 
   armour:
 
