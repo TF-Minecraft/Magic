@@ -45,6 +45,9 @@ public final class BloodMagic {
             AltarService.sweepDead();
         }
         if (!BloodConfig.isEnabled()) {
+            // Switched off: rites end without a death, bound animals wake, drags let go.
+            CharacterRiteService.clear();
+            AnimalRiteService.releaseAll();
             return;
         }
         if (context.every(AMBIENT_SECONDS)) {

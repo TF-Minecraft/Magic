@@ -17,7 +17,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.EnumSet;
 import java.util.Set;
 import org.bukkit.Material;
-import org.bukkit.block.BlockFace;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
@@ -50,7 +51,12 @@ public final class CarryService {
     private static final int DRAG_FX_EVERY = 3;
     private static final Set<Material> UNSAFE = EnumSet.of(Material.WATER, Material.LAVA, Material.FIRE,
             Material.SOUL_FIRE, Material.POWDER_SNOW, Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.SWEET_BERRY_BUSH,
-            Material.CACTUS, Material.WITHER_ROSE);
+            Material.CACTUS, Material.WITHER_ROSE, Material.KELP, Material.KELP_PLANT, Material.SEAGRASS,
+            Material.TALL_SEAGRASS, Material.BUBBLE_COLUMN);
+    private static final Set<Material> HOT = EnumSet.of(Material.LAVA, Material.MAGMA_BLOCK, Material.CAMPFIRE,
+            Material.SOUL_CAMPFIRE, Material.FIRE, Material.SOUL_FIRE);
+    /** Trail points are the mage's feet; on slabs, paths or soul sand those lie inside the ground block. */
+    private static final double BODY_HEIGHT = 0.6;
     private static BukkitTask task;
 
     private CarryService() {}
@@ -135,6 +141,10 @@ public final class CarryService {
     }
 
     static void tick() {
+        if (!BloodConfig.isEnabled()) {
+            CARRIES.clear();
+            return;
+        }
         for (Iterator<Map.Entry<UUID, Carry>> it = CARRIES.entrySet().iterator(); it.hasNext();) {
             Map.Entry<UUID, Carry> entry = it.next();
             Carry carry = entry.getValue();
@@ -201,9 +211,14 @@ public final class CarryService {
 
     /** The body is never laid in liquid, fire or a wall; the drag waits until the trail is safe again. */
     static boolean safe(Location spot) {
-        Material feet = spot.getBlock().getType();
-        Material below = spot.getBlock().getRelative(BlockFace.DOWN).getType();
-        return !feet.isSolid() && !UNSAFE.contains(feet) && below != Material.LAVA && below != Material.MAGMA_BLOCK;
+        Block body = spot.clone().add(0, BODY_HEIGHT, 0).getBlock();
+        Block ground = spot.clone().subtract(0, 0.1, 0).getBlock();
+        return !body.getType().isSolid() && !hazard(body) && !hazard(spot.getBlock()) && !HOT.contains(ground.getType());
+    }
+
+    private static boolean hazard(Block block) {
+        return UNSAFE.contains(block.getType())
+                || (block.getBlockData() instanceof Waterlogged wet && wet.isWaterlogged());
     }
 
     public static void clear() {

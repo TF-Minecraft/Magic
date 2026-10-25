@@ -58,6 +58,7 @@ class HuntAndFinalsTest {
     bridge.when(() -> RpCharactersBridge.playtimeSeconds(any())).thenReturn(100L * 3600);
     bridge.when(() -> RpCharactersBridge.characterAgeSeconds(any())).thenReturn(100L * 86_400);
     bridge.when(() -> RpCharactersBridge.sacrifice(any(), any())).thenReturn(true);
+    bridge.when(() -> RpCharactersBridge.moveDowned(any(), any())).thenReturn(true);
     bridge.when(() -> RpCharactersBridge.conversationCounts(any())).thenAnswer(i -> new HashMap<>(talks));
     chars = mockStatic(Characters.class, CALLS_REAL_METHODS);
     chars.when(() -> Characters.info(any())).thenAnswer(i -> {

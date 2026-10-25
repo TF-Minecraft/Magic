@@ -81,9 +81,21 @@ class ReviewFixesTest {
   @Test
   void theRiteNeedsAClearLineAndAFreeBody() {
     victim.teleport(new Location(fx.world, 3.5, 10, 0.5));
-    fx.world.getBlockAt(2, 10, 0).setType(Material.STONE);
+    fx.world.getBlockAt(2, 10, 0).setType(Material.BONE_BLOCK);
+    assertTrue(CharacterRiteService.clearPath(victim.getLocation(), BloodAltars.ofCharacter(mageId).center()));
+    fx.world.getBlockAt(2, 11, 0).setType(Material.STONE);
     assertEquals(CharacterRiteService.Bind.BLOCKED, CharacterRiteService.bind(mage, victim));
     fx.world.getBlockAt(2, 10, 0).setType(Material.AIR);
+    fx.world.getBlockAt(2, 11, 0).setType(Material.AIR);
+    // A body lying a step below the altar: the line clips the altar's own block, which never counts.
+    assertTrue(CharacterRiteService.clearPath(new Location(fx.world, 2.5, 9, 0.5), BloodAltars.ofCharacter(mageId).center()));
+    bridge.when(() -> RpCharactersBridge.moveDowned(any(), any())).thenReturn(false);
+    assertEquals(CharacterRiteService.Bind.BLOCKED, CharacterRiteService.bind(mage, victim));
+    assertFalse(CharacterRiteService.hasRite(mage.getUniqueId()));
+    bridge.when(() -> RpCharactersBridge.moveDowned(any(), any())).thenAnswer(i -> {
+      Player body = i.getArgument(0);
+      return body.teleport((Location) i.getArgument(1));
+    });
 
     PlayerMock rival = fx.player("rival");
     String rivalId = BloodFixture.id("rival");
@@ -130,6 +142,23 @@ class ReviewFixesTest {
     CharacterRiteService.onQuit(third);
     assertEquals(1, record.getSacrifices().size());
 
+    PlayerMock fled = fx.player("fled");
+    fled.teleport(new Location(fx.world, 1.5, 10, 0.5));
+    PlayerMock back = fx.player("mage");
+    back.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, mageId));
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(back, fled));
+    fled.teleport(new Location(fx.world, 9.5, 10, 0.5));
+    CharacterRiteService.onQuit(fled);
+    assertEquals(1, record.getSacrifices().size());
+    PlayerMock late = fx.player("late");
+    late.teleport(new Location(fx.world, 1.5, 10, 0.5));
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(back, late));
+    BloodConfig.setEnabled(false);
+    CharacterRiteService.onQuit(late);
+    BloodConfig.setEnabled(true);
+    assertEquals(1, record.getSacrifices().size());
+    back.disconnect();
+
     PlayerMock again = fx.player("mage");
     again.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, mageId));
     PlayerMock fourth = fx.player("fourth");
@@ -154,6 +183,17 @@ class ReviewFixesTest {
     assertFalse(CarryService.safe(spot));
     feet.getRelative(org.bukkit.block.BlockFace.DOWN).setType(Material.MAGMA_BLOCK);
     assertFalse(CarryService.safe(spot));
+    feet.getRelative(org.bukkit.block.BlockFace.DOWN).setType(Material.STONE);
+    feet.setType(Material.STONE_SLAB);
+    Location onSlab = spot.clone().add(0, 0.5, 0);
+    assertTrue(CarryService.safe(onSlab));
+    org.bukkit.block.data.type.Slab wet = (org.bukkit.block.data.type.Slab) Material.STONE_SLAB.createBlockData();
+    wet.setWaterlogged(true);
+    feet.setBlockData(wet);
+    assertFalse(CarryService.safe(onSlab));
+    feet.setType(Material.KELP_PLANT);
+    assertFalse(CarryService.safe(spot));
+    feet.setType(Material.AIR);
 
     fx.world.getBlockAt(7, 9, 0).setType(Material.LAVA);
     victim.teleport(new Location(fx.world, 6.5, 10, 0.5));
@@ -164,9 +204,10 @@ class ReviewFixesTest {
     CarryService.tick();
     mage.teleport(new Location(fx.world, 5.5, 10, 0.5));
     CarryService.tick();
+    assertEquals(6.5, victim.getLocation().getX(), 1e-9);
     mage.teleport(new Location(fx.world, 4.0, 10, 0.5));
     CarryService.tick();
-    assertEquals(6.5, victim.getLocation().getX(), 1e-9);
+    assertEquals(5.5, victim.getLocation().getX(), 1e-9);
   }
 
   @Test
@@ -204,7 +245,14 @@ class ReviewFixesTest {
     Files.writeString(temp.resolve("off.yml"), "enabled: false\n");
     BloodConfig.load(temp.resolve("off.yml").toFile(), fx.logger);
     assertEquals(CharacterRiteService.Bind.NOT_STAGE, CharacterRiteService.bind(mage, victim));
+    BloodConfig.setEnabled(true);
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, victim));
+    assertEquals(CharacterRiteService.Bind.OK, CarryService.start(mage, fx.player("dragged")));
+    BloodConfig.setEnabled(false);
     BloodMagic.tick(MagicTickContext.between(599, 600));
+    assertFalse(CharacterRiteService.hasRite(mage.getUniqueId()));
+    CarryService.tick();
+    assertNull(CarryService.carried(mage));
     BloodMagic.stop();
     assertNull(BloodRecords.get(mageId));
   }

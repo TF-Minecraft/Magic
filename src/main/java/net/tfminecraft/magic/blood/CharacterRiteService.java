@@ -52,6 +52,8 @@ public final class CharacterRiteService {
     private static final Set<String> SACRIFICING = new HashSet<>();
     private static final double LEAVE_SLACK = 4;
     private static final double ESCAPE = 2.5;
+    private static final double BODY_HEIGHT = 1.2;
+    private static final double ALTAR_TOP = 0.6;
     static LongSupplier clock = System::currentTimeMillis;
 
     private CharacterRiteService() {}
@@ -93,8 +95,10 @@ public final class CharacterRiteService {
         }
         String victimAccount = victim.getUniqueId().toString();
         int points = record.getStage() == BloodStage.HUNT ? HuntConfig.points(BondService.rank(mage, victimCharacter)) : 0;
+        if (!RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0))) {
+            return Bind.BLOCKED;
+        }
         CarryService.release(mage, false);
-        RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0));
         RITES.put(mage.getUniqueId(), new Rite(victim.getUniqueId(), character, victimCharacter, victimAccount,
                 points, clock.getAsLong() + HuntConfig.riteSeconds() * 1000L));
         victim.sendMessage(Messages.get("blood.rite.dread"));
@@ -125,10 +129,14 @@ public final class CharacterRiteService {
         return victimCharacter.equalsIgnoreCase(record.currentTarget()) ? null : Bind.NOT_TARGET;
     }
 
-    /** No wall or floor between the body and the altar: the rite never pulls anyone through stone. */
+    /**
+     * No wall between the body and the altar: the rite never pulls anyone through stone. The line runs
+     * a body's height above the floor to the top of the altar, so slabs, pews, chests and the altar's own
+     * bone blocks do not count; walls and ceilings do.
+     */
     static boolean clearPath(Location from, Location altarCenter) {
-        Location start = from.clone().add(0, 0.5, 0);
-        Vector line = altarCenter.toVector().subtract(start.toVector());
+        Location start = from.clone().add(0, BODY_HEIGHT, 0);
+        Vector line = altarCenter.clone().add(0, ALTAR_TOP, 0).toVector().subtract(start.toVector());
         int samples = (int) Math.ceil(line.length() / 0.25);
         Block altarBlock = altarCenter.getBlock();
         for (int i = 1; i < samples; i++) {
@@ -155,11 +163,20 @@ public final class CharacterRiteService {
             it.remove();
             Player mage = Bukkit.getPlayer(entry.getKey());
             BloodAltar altar = BloodAltars.ofCharacter(entry.getValue().mageCharacter());
-            if (mage != null && altar != null) {
+            if (BloodConfig.isEnabled() && altar != null && holds(mage, player, entry.getValue(), altar.center())) {
                 complete(mage, player, entry.getValue(), altar);
             }
             return;
         }
+    }
+
+    /** Mage near the altar, body on it, both still the same characters. */
+    private static boolean holds(Player mage, Player victim, Rite rite, Location top) {
+        return mage != null && victim != null && top != null && mage.getWorld() == top.getWorld()
+                && mage.getLocation().distance(top) <= HuntConfig.dragRange() + LEAVE_SLACK
+                && victim.getWorld() == top.getWorld() && victim.getLocation().distance(top) <= ESCAPE
+                && rite.mageCharacter().equalsIgnoreCase(AltarService.currentCharacter(mage))
+                && rite.victimCharacter().equalsIgnoreCase(AltarService.currentCharacter(victim));
     }
 
     /** NOT_STAGE or NOT_KNIFE when the mage may not take anyone now, else null. */
@@ -199,11 +216,7 @@ public final class CharacterRiteService {
             Player victim = Bukkit.getPlayer(rite.victim());
             BloodAltar altar = BloodAltars.ofCharacter(rite.mageCharacter());
             Location top = altar != null ? altar.center() : null;
-            if (mage == null || victim == null || top == null || mage.getWorld() != top.getWorld()
-                    || mage.getLocation().distance(top) > HuntConfig.dragRange() + LEAVE_SLACK
-                    || victim.getWorld() != top.getWorld() || victim.getLocation().distance(top) > ESCAPE
-                    || !rite.mageCharacter().equalsIgnoreCase(AltarService.currentCharacter(mage))
-                    || !rite.victimCharacter().equalsIgnoreCase(AltarService.currentCharacter(victim))) {
+            if (!holds(mage, victim, rite, top)) {
                 it.remove();
                 if (mage != null) {
                     mage.sendMessage(Messages.get("blood.rite.broken"));
