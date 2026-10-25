@@ -216,6 +216,14 @@ class CarryTest {
     CarryService.drop(mage.getUniqueId());
     assertNull(CarryService.carrier(victim.getUniqueId()));
     CarryService.drop(mage.getUniqueId());
+    PlayerMock gone = fx.player("gone");
+    assertEquals(CharacterRiteService.Bind.OK, CarryService.start(mage, gone));
+    gone.disconnect();
+    while (mage.nextMessage() != null) {
+      // drain earlier lines
+    }
+    CarryService.release(mage, true);
+    assertEquals("blood.carry.released", mage.nextMessage());
     assertEquals(CharacterRiteService.Bind.OK, CarryService.start(mage, victim));
     mage.disconnect();
     CarryService.drop(victim.getUniqueId());

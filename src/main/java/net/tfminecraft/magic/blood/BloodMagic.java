@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -12,6 +13,9 @@ import net.tfminecraft.magic.tick.MagicTickContext;
 
 /** Starts and stops the blood path: data, listener, and the dead-owner sweep. */
 public final class BloodMagic {
+
+    private static final long AMBIENT_SECONDS = 3;
+    private static final double AMBIENT_RANGE = 24;
 
     private BloodMagic() {}
 
@@ -40,6 +44,9 @@ public final class BloodMagic {
         if (context.everyMinutes(BloodConfig.purifyCheckMinutes())) {
             AltarService.sweepDead();
         }
+        if (context.every(AMBIENT_SECONDS)) {
+            ambient();
+        }
         WhisperService.tick(context);
         AnimalRiteService.tick();
         CharacterRiteService.tick();
@@ -56,6 +63,22 @@ public final class BloodMagic {
             AltarCorruption.ambient();
             BloodNotes.tick(System.currentTimeMillis());
             StolenClues.tick();
+        }
+    }
+
+    /** Altars breathe while someone is near: per-level drips, mist and sounds (fx altar_ambient_N). */
+    static void ambient() {
+        for (BloodAltar altar : BloodAltars.all()) {
+            Location center = altar.center();
+            if (center == null || !center.isChunkLoaded()) {
+                continue;
+            }
+            for (Player player : center.getWorld().getPlayers()) {
+                if (player.getLocation().distanceSquared(center) <= AMBIENT_RANGE * AMBIENT_RANGE) {
+                    BloodFx.play("altar_ambient_" + altar.getLevel(), center);
+                    break;
+                }
+            }
         }
     }
 

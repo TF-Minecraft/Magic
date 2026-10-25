@@ -144,6 +144,7 @@ public final class BloodListener implements Listener {
     public void onPickup(EntityPickupItemEvent event) {
         if (BloodArmour.crumbles(event.getItem().getItemStack())) {
             event.setCancelled(true);
+            BloodFx.play("armour_crumbles", event.getItem().getLocation());
             event.getItem().remove();
         }
     }

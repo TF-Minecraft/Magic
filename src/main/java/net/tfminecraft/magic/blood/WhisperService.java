@@ -201,6 +201,7 @@ public final class WhisperService {
         if (!voice.sound().isBlank()) {
             player.playSound(player.getLocation(), voice.sound(), 0.6f, voice.pitch());
         }
+        BloodFx.play(speaker == WhisperConfig.Speaker.SELF ? "voice_self" : "voice_god", player.getLocation(), player);
     }
 
     /** The voices hand over the ritual knife and, unless one stands already, the altar. */
@@ -210,6 +211,7 @@ public final class WhisperService {
             give(player, BloodItems.create(BloodItemKind.ALTAR, record.getCharacterId()));
         }
         record.setStage(BloodStage.ANIMAL);
+        BloodFx.play("gift", player.getLocation(), player);
         Magic.plugin.getLogger().info("[Magic] Character " + record.getCharacterId()
                 + " was given the ritual knife and altar");
     }

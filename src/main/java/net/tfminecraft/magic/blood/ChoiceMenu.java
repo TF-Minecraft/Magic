@@ -44,6 +44,7 @@ public final class ChoiceMenu implements InventoryHolder {
 
     /** Opens the question for the player. */
     public static void open(Player player) {
+        BloodFx.play("question", player.getLocation(), player);
         show(player, BloodPath.NONE);
     }
 

@@ -38,6 +38,7 @@ public final class FinalService {
             ClassUnlockBridge.unlock(mage, ChoiceConfig.classFor(BloodPath.TRUE));
             BloodArmour.give(mage, BloodPath.TRUE, record.getCharacterId());
             mage.sendMessage(Messages.get("blood.hunt.complete"));
+            BloodFx.play("hunt_complete", mage.getLocation(), mage);
         }
         refill(mage, record);
         BloodRecords.save(record);
@@ -90,6 +91,7 @@ public final class FinalService {
             return;
         }
         WhisperService.speak(mage, speaker, Messages.getRaw("blood.final.named").replace("{target}", nameOf(target)));
+        BloodFx.play("target_named", mage.getLocation(), mage);
     }
 
     static String nameOf(String character) {
@@ -110,9 +112,11 @@ public final class FinalService {
             record.setStage(BloodStage.ASCENDED);
             record.getFinalTargets().clear();
             mage.sendMessage(Messages.get("blood.final.ascended"));
+            BloodFx.play("ascended", mage.getLocation(), mage);
         } else {
             refill(mage, record);
             mage.sendMessage(Messages.get("blood.final.taken"));
+            BloodFx.play("final_taken", mage.getLocation(), mage);
         }
         BloodRecords.save(record);
         BloodBoons.apply(mage);
@@ -156,6 +160,7 @@ public final class FinalService {
         }
         record.setPendingBacklash(false);
         RpCharactersBridge.applyHealingInjury(mage);
+        BloodFx.play("backlash", mage.getLocation(), mage);
         WhisperService.speak(mage, WhisperService.speaker(record), Messages.getRaw("blood.final.failed"));
         BloodRecords.save(record);
     }

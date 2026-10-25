@@ -31,6 +31,7 @@ public final class CarryService {
         private final String mageCharacter;
         private final String victimCharacter;
         private final Deque<Location> trail = new ArrayDeque<>();
+        private int steps;
 
         private Carry(UUID victim, String mageCharacter, String victimCharacter) {
             this.victim = victim;
@@ -42,6 +43,7 @@ public final class CarryService {
     private static final Map<UUID, Carry> CARRIES = new HashMap<>();
     private static final int TRAIL_LIMIT = 40;
     private static final double STEP = 0.3;
+    private static final int DRAG_FX_EVERY = 3;
     private static BukkitTask task;
 
     private CarryService() {}
@@ -75,6 +77,7 @@ public final class CarryService {
         }
         CARRIES.put(mage.getUniqueId(), new Carry(victim.getUniqueId(), character, victimCharacter));
         mage.sendMessage(Messages.get("blood.carry.start"));
+        BloodFx.play("carry_start", victim.getLocation(), victim);
         victim.sendMessage(Messages.get("blood.carry.dragged"));
         return CharacterRiteService.Bind.OK;
     }
@@ -97,8 +100,11 @@ public final class CarryService {
 
     /** Lets go of the body; told tells the mage. */
     public static void release(Player mage, boolean told) {
-        if (CARRIES.remove(mage.getUniqueId()) != null && told) {
+        Carry carry = CARRIES.remove(mage.getUniqueId());
+        if (carry != null && told) {
             mage.sendMessage(Messages.get("blood.carry.released"));
+            Player body = Bukkit.getPlayer(carry.victim);
+            BloodFx.play("carry_released", body != null ? body.getLocation() : mage.getLocation());
         }
     }
 
@@ -175,6 +181,9 @@ public final class CarryService {
         to.setYaw(body.getYaw());
         to.setPitch(body.getPitch());
         RpCharactersBridge.moveDowned(victim, to);
+        if (++carry.steps % DRAG_FX_EVERY == 0) {
+            BloodFx.play("carry_drag", to);
+        }
     }
 
     public static void clear() {

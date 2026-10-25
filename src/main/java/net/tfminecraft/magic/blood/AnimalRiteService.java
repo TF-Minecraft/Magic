@@ -10,7 +10,6 @@ import java.util.function.LongSupplier;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -89,6 +88,7 @@ public final class AnimalRiteService {
         }
         animal.setAI(false);
         animal.teleport(top.clone().add(0, 0.5, 0));
+        BloodFx.play("animal_bound", top, player);
         BOUND.put(animal.getUniqueId(), new Bound(player.getUniqueId(), character, altar.getId(),
                 now + AnimalConfig.bindSeconds() * 1000L, owners, stolen));
         return Bind.OK;
@@ -157,8 +157,10 @@ public final class AnimalRiteService {
         AltarCorruption.spread(altar, CorruptionConfig.blocksPerSacrifice());
         BloodAltars.save();
         Location center = altar.center();
-        center.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, center.clone().add(0, 0.6, 0), 14, 0.3, 0.2, 0.3, 0.05);
-        center.getWorld().playSound(center, "minecraft:entity.warden.heartbeat", 1f, 0.6f);
+        BloodFx.play("animal_sacrificed", center, mage);
+        if (done) {
+            BloodFx.play("blood_knife_given", center, mage);
+        }
         if (bound.stolen()) {
             StolenClues.leave(animal, bound.owners(), center);
         }
@@ -184,9 +186,10 @@ public final class AnimalRiteService {
                 if (mage != null) {
                     mage.sendMessage(Messages.get("blood.animal.escaped"));
                 }
+                BloodFx.play("animal_escaped", animal.getLocation());
                 continue;
             }
-            animal.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, animal.getLocation().clone().add(0, 0.5, 0), 2, 0.2, 0.2, 0.2, 0);
+            BloodFx.play("animal_binding", animal.getLocation());
         }
     }
 

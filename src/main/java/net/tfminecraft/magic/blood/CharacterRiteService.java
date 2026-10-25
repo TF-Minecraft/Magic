@@ -11,7 +11,6 @@ import java.util.function.LongSupplier;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -108,6 +107,7 @@ public final class CharacterRiteService {
         RITES.put(mage.getUniqueId(), new Rite(victim.getUniqueId(), character, victimCharacter, victimAccount,
                 points, clock.getAsLong() + HuntConfig.riteSeconds() * 1000L));
         victim.sendMessage(Messages.get("blood.rite.dread"));
+        BloodFx.play("rite_bound", top, victim);
         return Bind.OK;
     }
 
@@ -156,11 +156,13 @@ public final class CharacterRiteService {
                 if (mage != null) {
                     mage.sendMessage(Messages.get("blood.rite.broken"));
                 }
+                if (top != null) {
+                    BloodFx.play("rite_broken", top);
+                }
                 continue;
             }
             if (now < rite.endsAt()) {
-                top.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, top.clone().add(0, 1, 0), 6, 0.3, 0.4, 0.3, 0);
-                victim.playSound(victim.getLocation(), "minecraft:entity.warden.heartbeat", 1f, 1f);
+                BloodFx.play("rite_beat", top, victim);
                 continue;
             }
             it.remove();
@@ -189,8 +191,7 @@ public final class CharacterRiteService {
         record.getSacrifices().add(new BloodRecord.Sacrifice(key, rite.victimAccount(), stage.name(),
                 rite.points(), clock.getAsLong()));
         record.setLastVictimAccount(rite.victimAccount());
-        Location top = altar.center();
-        top.getWorld().playSound(top, "minecraft:entity.warden.sonic_boom", 0.6f, 0.6f);
+        BloodFx.play("rite_complete", altar.center(), mage);
         Magic.plugin.getLogger().info("[Magic] Character " + rite.mageCharacter() + " sacrificed character "
                 + key + " in stage " + stage + " for " + rite.points() + " point(s)");
         if (stage == BloodStage.HUNT) {

@@ -4,7 +4,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -58,7 +57,7 @@ public final class AltarService {
         record.setAltarId(altar.getId());
         BloodRecords.save(record);
         hand.setAmount(hand.getAmount() - 1);
-        target.getWorld().playSound(target.getLocation(), Sound.BLOCK_STONE_PLACE, 1f, 0.6f);
+        BloodFx.play("altar_placed", altar.center(), player);
         Magic.plugin.getLogger().info("[Magic] Blood altar " + altar.getId() + " placed by character "
                 + character + " at " + altar.blockKey());
         return "blood.altar.placed";
@@ -68,6 +67,9 @@ public final class AltarService {
     public static void refresh(BloodAltar altar) {
         int level = BloodProgress.level(BloodRecords.get(altar.getOwnerCharacter()));
         boolean changed = level != altar.getLevel();
+        if (level > altar.getLevel()) {
+            BloodFx.play("altar_awakens", altar.center());
+        }
         altar.setLevel(level);
         changed |= AltarDisplays.ensure(altar);
         if (changed) {
@@ -85,6 +87,7 @@ public final class AltarService {
 
     /** Removes the altar from the world and from its owner's record. */
     public static void purify(BloodAltar altar, String reason) {
+        BloodFx.play("altar_purified", altar.center());
         AltarCorruption.restore(altar);
         AltarDisplays.remove(altar);
         BloodAltars.remove(altar);
@@ -143,8 +146,8 @@ public final class AltarService {
     /** The player-facing line for an altar a player touched. */
     public static String touch(Player player, BloodAltar altar) {
         String character = currentCharacter(player);
-        return character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
-                ? Messages.get("blood.altar.owner_touch")
-                : Messages.get("blood.altar.stranger_touch");
+        boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
+        BloodFx.play(owner ? "altar_touch_owner" : "altar_touch_stranger", altar.center(), player);
+        return owner ? Messages.get("blood.altar.owner_touch") : Messages.get("blood.altar.stranger_touch");
     }
 }

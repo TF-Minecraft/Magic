@@ -61,6 +61,7 @@ public final class BloodArmour {
         for (ItemStack piece : create(path, characterId)) {
             WhisperService.give(player, piece);
         }
+        BloodFx.play("armour_given", player.getLocation(), player);
     }
 
     /**
@@ -80,6 +81,7 @@ public final class BloodArmour {
             if (AltarService.isDead(owner)) {
                 inventory.setItem(slot, null);
                 player.sendMessage(Messages.get("blood.armour.crumbles"));
+                BloodFx.play("armour_crumbles", player.getLocation(), player);
                 removed++;
             } else if (character == null || !character.equalsIgnoreCase(owner)) {
                 inventory.setItem(slot, null);

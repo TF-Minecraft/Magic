@@ -105,6 +105,7 @@ public final class AltarCorruption {
             block.setBlockData(lightable, false);
         }
         journal.add(new BloodAltar.CorruptedBlock(block.getX(), block.getY(), block.getZ(), original, to.name()));
+        BloodFx.play("corruption", block.getLocation().clone().add(0.5, 0.5, 0.5));
     }
 
     /** Puts back every journalled block that still is what the altar made it, newest first. */
