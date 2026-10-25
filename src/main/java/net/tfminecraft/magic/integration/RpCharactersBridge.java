@@ -2,7 +2,9 @@ package net.tfminecraft.magic.integration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
@@ -16,6 +18,8 @@ import net.tfminecraft.tlibs.character.CharacterSession;
 import net.tfminecraft.tlibs.character.Characters;
 
 public final class RpCharactersBridge {
+
+    static Supplier<Object> knockoutManager = RPCharacters::getPvpKnockoutManager;
 
     private RpCharactersBridge() {}
 
@@ -56,6 +60,24 @@ public final class RpCharactersBridge {
     public static boolean isDown(Player player) {
         var knockouts = RPCharacters.getPvpKnockoutManager();
         return knockouts != null && knockouts.isDown(player);
+    }
+
+    /**
+     * Moves a knocked-out player and keeps them down there. RPCharacters without moveDowned holds a
+     * knockout where it happened; there the player is only teleported and its freeze pulls them back.
+     */
+    public static boolean moveDowned(Player player, Location to) {
+        Object knockouts = knockoutManager.get();
+        if (knockouts != null) {
+            try {
+                Object moved = knockouts.getClass().getMethod("moveDowned", Player.class, Location.class)
+                        .invoke(knockouts, player, to);
+                return Boolean.TRUE.equals(moved);
+            } catch (ReflectiveOperationException ex) {
+                // Older RPCharacters: a plain teleport below.
+            }
+        }
+        return player.teleport(to);
     }
 
     /** Seconds since the active character was created, and its online playtime; 0 without one. */

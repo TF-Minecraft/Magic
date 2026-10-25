@@ -51,6 +51,7 @@ public final class BloodItems {
         pdc.set(kindKey(), PersistentDataType.STRING, kind.key());
         pdc.set(ownerKey(), PersistentDataType.STRING, characterId);
         item.setItemMeta(meta);
+        BloodLooks.protect(item);
         return item;
     }
 

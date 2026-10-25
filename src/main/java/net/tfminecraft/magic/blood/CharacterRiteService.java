@@ -49,6 +49,7 @@ public final class CharacterRiteService {
     private static final Map<UUID, Rite> RITES = new HashMap<>();
     private static final Set<String> SACRIFICING = new HashSet<>();
     private static final double LEAVE_SLACK = 4;
+    private static final double ESCAPE = 2.5;
     static LongSupplier clock = System::currentTimeMillis;
 
     private CharacterRiteService() {}
@@ -57,12 +58,9 @@ public final class CharacterRiteService {
     public static Bind bind(Player mage, Player victim) {
         String character = AltarService.currentCharacter(mage);
         BloodRecord record = BloodRecords.get(character);
-        if (record == null || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL)) {
-            return Bind.NOT_STAGE;
-        }
-        ItemStack knife = mage.getInventory().getItemInMainHand();
-        if (!BloodItems.is(knife, BloodItemKind.BLOOD_KNIFE) || !character.equalsIgnoreCase(BloodItems.owner(knife))) {
-            return Bind.NOT_KNIFE;
+        Bind ready = readiness(mage, character, record);
+        if (ready != null) {
+            return ready;
         }
         BloodAltar altar = BloodAltars.ofCharacter(character);
         Location top = altar != null ? altar.center() : null;
@@ -105,11 +103,24 @@ public final class CharacterRiteService {
         if (RITES.containsKey(mage.getUniqueId()) || isVictim(victim.getUniqueId())) {
             return Bind.BUSY;
         }
-        victim.teleport(top.clone().add(0, 0.5, 0));
+        CarryService.release(mage, false);
+        RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0));
         RITES.put(mage.getUniqueId(), new Rite(victim.getUniqueId(), character, victimCharacter, victimAccount,
                 points, clock.getAsLong() + HuntConfig.riteSeconds() * 1000L));
         victim.sendMessage(Messages.get("blood.rite.dread"));
         return Bind.OK;
+    }
+
+    /** NOT_STAGE or NOT_KNIFE when the mage may not take anyone now, else null. */
+    static Bind readiness(Player mage, String character, BloodRecord record) {
+        if (record == null || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL)) {
+            return Bind.NOT_STAGE;
+        }
+        ItemStack knife = mage.getInventory().getItemInMainHand();
+        if (!BloodItems.is(knife, BloodItemKind.BLOOD_KNIFE) || !character.equalsIgnoreCase(BloodItems.owner(knife))) {
+            return Bind.NOT_KNIFE;
+        }
+        return null;
     }
 
     static boolean isVictim(UUID player) {
@@ -138,6 +149,7 @@ public final class CharacterRiteService {
             Location top = altar != null ? altar.center() : null;
             if (mage == null || victim == null || top == null || mage.getWorld() != top.getWorld()
                     || mage.getLocation().distance(top) > HuntConfig.dragRange() + LEAVE_SLACK
+                    || victim.getWorld() != top.getWorld() || victim.getLocation().distance(top) > ESCAPE
                     || !rite.mageCharacter().equalsIgnoreCase(AltarService.currentCharacter(mage))
                     || !rite.victimCharacter().equalsIgnoreCase(AltarService.currentCharacter(victim))) {
                 it.remove();

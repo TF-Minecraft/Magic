@@ -32,11 +32,11 @@ class BloodConfigTest {
     File bundled = new File("src/main/resources/bloodmagic.yml");
     assertTrue(BloodConfig.load(bundled, log));
     assertTrue(BloodConfig.isEnabled());
-    assertEquals("m.lore_weapons.bloodmagic_dagger", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());
+    assertEquals("ia.tfmc_blood:blood_knife", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());
     assertFalse(BloodConfig.item(BloodItemKind.ALTAR).lore().isEmpty());
     assertEquals(Material.BARRIER, BloodConfig.altarBlock());
-    assertEquals("v.chiseled_stone_bricks", BloodConfig.model(0));
-    assertEquals("v.crimson_nylium", BloodConfig.model(9));
+    assertEquals("ia.tfmc_blood:altar_0", BloodConfig.model(0));
+    assertEquals("ia.tfmc_blood:altar_5", BloodConfig.model(9));
     assertEquals(1.0f, BloodConfig.displayScale());
     assertEquals(0, BloodConfig.level(1));
     assertEquals(2, BloodConfig.level(5));

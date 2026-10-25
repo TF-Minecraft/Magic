@@ -1,5 +1,6 @@
 package net.tfminecraft.magic.blood;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +34,7 @@ public final class ChoiceConfig {
     private static final Map<Slot, Button> BUTTONS = new EnumMap<>(Slot.class);
     private static int devoteeInjuries;
     private static final Map<BloodPath, String> CLASSES = new EnumMap<>(BloodPath.class);
-    private static final Map<BloodPath, List<String>> ARMOUR = new EnumMap<>(BloodPath.class);
+    private static final Map<BloodPath, List<Piece>> ARMOUR = new EnumMap<>(BloodPath.class);
 
     static {
         reset();
@@ -51,6 +52,9 @@ public final class ChoiceConfig {
         CLASSES.clear();
         ARMOUR.clear();
     }
+
+    /** One bound armour piece: the item (TLibs path) and an optional look (TLibs ia. path) put over it. */
+    public record Piece(String item, String look) {}
 
     static void load(ConfigurationSection choice, ConfigurationSection classes, ConfigurationSection armour) {
         reset();
@@ -75,9 +79,27 @@ public final class ChoiceConfig {
                 CLASSES.put(path, classes.getString(key).trim());
             }
             if (armour != null) {
-                ARMOUR.put(path, List.copyOf(armour.getStringList(key)));
+                List<Piece> pieces = new ArrayList<>();
+                for (Object entry : armour.getList(key, List.of())) {
+                    Piece piece = piece(entry);
+                    if (piece != null) {
+                        pieces.add(piece);
+                    }
+                }
+                ARMOUR.put(path, List.copyOf(pieces));
             }
         }
+    }
+
+    /** A plain item path, or { item: ..., look: ... }; null when there is no item. */
+    private static Piece piece(Object entry) {
+        if (entry instanceof String item && !item.isBlank()) {
+            return new Piece(item.trim(), null);
+        }
+        if (entry instanceof Map<?, ?> map && map.get("item") instanceof String item && !item.isBlank()) {
+            return new Piece(item.trim(), map.get("look") instanceof String look && !look.isBlank() ? look.trim() : null);
+        }
+        return null;
     }
 
     public static String title() {
@@ -97,8 +119,8 @@ public final class ChoiceConfig {
         return CLASSES.get(path);
     }
 
-    /** TLibs item paths of the bound armour a path receives. */
-    public static List<String> armourFor(BloodPath path) {
+    /** The bound armour pieces a path receives. */
+    public static List<Piece> armourFor(BloodPath path) {
         return ARMOUR.getOrDefault(path, List.of());
     }
 }

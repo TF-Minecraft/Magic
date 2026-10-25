@@ -60,6 +60,11 @@ public final class BloodListener implements Listener {
                 ChoiceMenu.open(player);
                 return;
             }
+            Player carried = CarryService.carried(player);
+            if (carried != null && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE)) {
+                layDown(player, carried);
+                return;
+            }
             player.sendMessage(AltarService.touch(player, altar));
             return;
         }
@@ -82,8 +87,23 @@ public final class BloodListener implements Listener {
         ItemStack held = event.getPlayer().getInventory().getItemInMainHand();
         if (event.getRightClicked() instanceof Player victim && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE)) {
             event.setCancelled(true);
-            CharacterRiteService.Bind result = CharacterRiteService.bind(event.getPlayer(), victim);
-            event.getPlayer().sendMessage(Messages.get("blood.rite.bind." + result.name().toLowerCase(Locale.ROOT)));
+            Player mage = event.getPlayer();
+            if (victim.equals(CarryService.carried(mage))) {
+                if (mage.isSneaking()) {
+                    CarryService.release(mage, true);
+                } else {
+                    layDown(mage, victim);
+                }
+                return;
+            }
+            if (mage.isSneaking() && HuntConfig.carryEnabled()) {
+                CharacterRiteService.Bind start = CarryService.start(mage, victim);
+                if (start != CharacterRiteService.Bind.OK) {
+                    mage.sendMessage(Messages.get("blood.rite.bind." + start.name().toLowerCase(Locale.ROOT)));
+                }
+                return;
+            }
+            layDown(mage, victim);
             return;
         }
         if (!(event.getRightClicked() instanceof LivingEntity animal) || animal instanceof Player
@@ -93,6 +113,11 @@ public final class BloodListener implements Listener {
         event.setCancelled(true);
         AnimalRiteService.Bind result = AnimalRiteService.bind(event.getPlayer(), animal);
         event.getPlayer().sendMessage(Messages.get("blood.animal.bind." + result.name().toLowerCase(Locale.ROOT)));
+    }
+
+    private static void layDown(Player mage, Player victim) {
+        CharacterRiteService.Bind result = CharacterRiteService.bind(mage, victim);
+        mage.sendMessage(Messages.get("blood.rite.bind." + result.name().toLowerCase(Locale.ROOT)));
     }
 
     @EventHandler
@@ -209,6 +234,7 @@ public final class BloodListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         WhisperService.forget(event.getPlayer().getUniqueId());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
+        CarryService.drop(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

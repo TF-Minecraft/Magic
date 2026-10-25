@@ -233,7 +233,7 @@ class HuntAndFinalsTest {
 
     assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, victim));
     assertEquals("blood.rite.dread", victim.nextMessage());
-    assertEquals(11.0, victim.getLocation().getY(), 0.01);
+    bridge.verify(() -> RpCharactersBridge.moveDowned(eq(victim), argThat(at -> at.getY() == 11.0)));
     assertTrue(CharacterRiteService.hasRite(mage.getUniqueId()));
     assertEquals(CharacterRiteService.Bind.BUSY, CharacterRiteService.bind(mage, victim));
     PlayerMock second = fx.player("second-mage");

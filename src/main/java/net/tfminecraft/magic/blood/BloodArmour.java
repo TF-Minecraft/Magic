@@ -29,10 +29,10 @@ public final class BloodArmour {
     /** Builds the path's armour pieces bound to the character. Unknown paths in config are skipped. */
     public static List<ItemStack> create(BloodPath path, String characterId) {
         List<ItemStack> out = new ArrayList<>();
-        for (String ref : ChoiceConfig.armourFor(path)) {
-            ItemStack item = ItemRef.build(ref);
+        for (ChoiceConfig.Piece piece : ChoiceConfig.armourFor(path)) {
+            ItemStack item = ItemRef.build(piece.item());
             if (item != null) {
-                out.add(bind(item, characterId));
+                out.add(bind(BloodLooks.apply(item, piece.look()), characterId));
             }
         }
         return out;
@@ -44,6 +44,7 @@ public final class BloodArmour {
         meta.getPersistentDataContainer().set(BloodItems.kindKey(), PersistentDataType.STRING, KIND);
         meta.getPersistentDataContainer().set(BloodItems.ownerKey(), PersistentDataType.STRING, characterId);
         item.setItemMeta(meta);
+        BloodLooks.protect(item);
         return item;
     }
 

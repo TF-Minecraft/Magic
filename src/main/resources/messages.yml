@@ -530,7 +530,7 @@ blood:
 
       not_down: "#8c8c8c§oThey still fight. Bring them down first"
 
-      too_far: "#8c8c8c§oThe stone is too far. Bring them closer"
+      too_far: "#8c8c8c§oThe stone is too far. Crouch and take hold of them, and drag them closer"
 
       too_new: "#8c8c8c§oThin blood. The stone would not drink it"
 
@@ -546,11 +546,21 @@ blood:
 
     dread: "#8a0303§oStone under your back. A blade above you. Something below is hungry"
 
-    broken: "#8c8c8c§oYou step away and the rite comes apart"
+    broken: "#8c8c8c§oThe rite comes apart"
 
     refused: "#8c8c8c§oThe stone will not take them"
 
     taken: "#7a7a7a§oIt is done. You feel heavier, and stronger"
+
+  carry:
+
+    start: "#8a0303§oYou take hold of them. Heavy. The stone is waiting"
+
+    dragged: "#8c8c8c§oHands on you. You are being dragged somewhere"
+
+    released: "#8c8c8c§oYou let them fall"
+
+    broken: "#8c8c8c§oYour grip is gone"
 
   hunt:
 

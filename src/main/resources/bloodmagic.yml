@@ -5,20 +5,21 @@
 enabled: true
 
 # Items the voices hand to the character. TLibs item paths (v., ia., m.).
-# Each item is bound to the character that received it.
+# Each item is bound to the character that received it. The ia.tfmc_blood items come from the
+# tfmc_blood ItemsAdder pack (ServerAssets); load it before this config, a missing IA id builds dirt.
 items:
   altar:
-    path: v.chiseled_stone_bricks
+    path: ia.tfmc_blood:altar_0
     name: "#bfbfbfWeathered Altar Stone"
     lore:
       - "#8c8c8c§oA plain slab of carved stone."
   ritual_knife:
-    path: v.iron_sword
+    path: ia.tfmc_blood:ritual_knife
     name: "#bfbfbfSkinning Knife"
     lore:
       - "#8c8c8c§oAn ordinary knife, kept very sharp."
   blood_knife:
-    path: m.lore_weapons.bloodmagic_dagger
+    path: ia.tfmc_blood:blood_knife
     name: "#8a0303Vein-Reaver"
     lore:
       - "#5c0202§oIt is warm to the touch."
@@ -29,12 +30,12 @@ altar:
   # Altar look per level. Level rises with the owner's progress (see levels below).
   # model is a TLibs item path shown by the display entity.
   models:
-    0: v.chiseled_stone_bricks
-    1: v.cracked_stone_bricks
-    2: v.chiseled_polished_blackstone
-    3: v.red_nether_bricks
-    4: v.chiseled_nether_bricks
-    5: v.crimson_nylium
+    0: ia.tfmc_blood:altar_0
+    1: ia.tfmc_blood:altar_1
+    2: ia.tfmc_blood:altar_2
+    3: ia.tfmc_blood:altar_3
+    4: ia.tfmc_blood:altar_4
+    5: ia.tfmc_blood:altar_5
   display_scale: 1.0
   # Progress needed for each altar level. Animal sacrifices count 1 each,
   # the god's question +1, hunt points 1 each, final sacrifices 2 each.
@@ -52,6 +53,16 @@ hunt:
   drag_range: 8
   # Seconds the rite takes. Once it starts, the character dies for good when it ends.
   rite_seconds: 10
+  # Sneak and right-click a knocked-out character with the blood knife to drag the body along behind you.
+  # Right-click your altar (or the body) with the knife to lay it on the altar; sneak-click the body to let go.
+  carry:
+    enabled: true
+    # Blocks the body trails behind you.
+    distance: 1.2
+    # Slowness level while dragging (0 = none).
+    slowness: 1
+    # The drag breaks if the body ends up further away than this (teleports, pearls).
+    break_distance: 6
   victims:
     # Characters of the same account never count. These keep fresh alts out too.
     min_playtime_hours: 10
@@ -195,7 +206,7 @@ animal:
   species: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
   # Where a stolen animal was led away from, a small trace stays this long.
   trace:
-    model: v.redstone
+    model: ia.tfmc_blood:trace
     hours: 6
   # The owner hears about it this many minutes later, or on their next login.
   note_delay_minutes: 30
@@ -258,16 +269,17 @@ classes:
   devotee: bloodsworn
   "true": sanguinar
 
-# Bound, unbreakable armour (TLibs item paths). Devotees get theirs at the question; the true path
-# when the hunt is done. Placeholder pieces until the real sets exist.
+# Bound, unbreakable armour. Devotees get theirs at the question; the true path when the hunt is done.
+# Each piece is a TLibs item path (the stats), optionally with an ia. look put over it:
+#   - m.type.id    or    - { item: m.type.id, look: ia.namespace:id }
 armour:
   devotee:
-    - m.mage_armors.bloodmagic_mage_helmet
-    - m.mage_armors.bloodmagic_mage_chestplate
-    - m.mage_armors.bloodmagic_mage_leggings
-    - m.mage_armors.bloodmagic_mage_boots
+    - { item: m.mage_armors.bloodsworn_helmet, look: ia.tfmc_blood:bloodsworn_helmet }
+    - { item: m.mage_armors.bloodsworn_chestplate, look: ia.tfmc_blood:bloodsworn_chestplate }
+    - { item: m.mage_armors.bloodsworn_leggings, look: ia.tfmc_blood:bloodsworn_leggings }
+    - { item: m.mage_armors.bloodsworn_boots, look: ia.tfmc_blood:bloodsworn_boots }
   "true":
-    - m.mage_armors.bloodmagic_mage_helmet
-    - m.mage_armors.bloodmagic_mage_chestplate
-    - m.mage_armors.bloodmagic_mage_leggings
-    - m.mage_armors.bloodmagic_mage_boots
+    - { item: m.mage_armors.sanguinar_helmet, look: ia.tfmc_blood:sanguinar_helmet }
+    - { item: m.mage_armors.sanguinar_chestplate, look: ia.tfmc_blood:sanguinar_chestplate }
+    - { item: m.mage_armors.sanguinar_leggings, look: ia.tfmc_blood:sanguinar_leggings }
+    - { item: m.mage_armors.sanguinar_boots, look: ia.tfmc_blood:sanguinar_boots }

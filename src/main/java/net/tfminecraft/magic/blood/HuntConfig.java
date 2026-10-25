@@ -20,6 +20,10 @@ public final class HuntConfig {
 
     private static double dragRange;
     private static int riteSeconds;
+    private static boolean carryEnabled;
+    private static double carryDistance;
+    private static int carrySlowness;
+    private static double carryBreakDistance;
     private static double minPlaytimeHours;
     private static double minAgeDays;
     private static boolean noRepeatPlayer;
@@ -49,6 +53,10 @@ public final class HuntConfig {
     static void reset() {
         dragRange = 8;
         riteSeconds = 10;
+        carryEnabled = true;
+        carryDistance = 1.2;
+        carrySlowness = 1;
+        carryBreakDistance = 6;
         minPlaytimeHours = 10;
         minAgeDays = 7;
         noRepeatPlayer = true;
@@ -73,6 +81,10 @@ public final class HuntConfig {
         if (hunt != null) {
             dragRange = Math.max(1, hunt.getDouble("drag_range", 8));
             riteSeconds = Math.max(1, hunt.getInt("rite_seconds", 10));
+            carryEnabled = hunt.getBoolean("carry.enabled", true);
+            carryDistance = Math.max(0.5, hunt.getDouble("carry.distance", 1.2));
+            carrySlowness = Math.max(0, hunt.getInt("carry.slowness", 1));
+            carryBreakDistance = Math.max(carryDistance + 1, hunt.getDouble("carry.break_distance", 6));
             minPlaytimeHours = Math.max(0, hunt.getDouble("victims.min_playtime_hours", 10));
             minAgeDays = Math.max(0, hunt.getDouble("victims.min_age_days", 7));
             noRepeatPlayer = hunt.getBoolean("victims.no_repeat_player", true);
@@ -135,6 +147,25 @@ public final class HuntConfig {
 
     public static double dragRange() {
         return dragRange;
+    }
+
+    public static boolean carryEnabled() {
+        return carryEnabled;
+    }
+
+    /** Blocks the dragged body trails behind the mage. */
+    public static double carryDistance() {
+        return carryDistance;
+    }
+
+    /** Slowness level while dragging; 0 for none. */
+    public static int carrySlowness() {
+        return carrySlowness;
+    }
+
+    /** The drag breaks once the body is further away than this (teleports, pearls). */
+    public static double carryBreakDistance() {
+        return carryBreakDistance;
     }
 
     public static int riteSeconds() {

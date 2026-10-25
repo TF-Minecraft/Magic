@@ -164,6 +164,7 @@ class ChoiceTest {
       ItemAPI api = mock(ItemAPI.class, RETURNS_DEEP_STUBS);
       libs.when(TLibs::getItemAPI).thenReturn(api);
       when(api.getCreator().getItemFromPath(anyString())).thenAnswer(i -> new ItemStack(Material.LEATHER_HELMET));
+      when(api.getArmorMerger().merge(any(), any(), anyString())).thenAnswer(i -> i.getArgument(0));
       assertTrue(BloodChoice.answer(mage, BloodPath.DEVOTEE));
     }
     bridge.verify(() -> RpCharactersBridge.applyPermanentInjury(mage), times(2));

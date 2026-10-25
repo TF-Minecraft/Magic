@@ -24,6 +24,7 @@ public final class BloodMagic {
         BondService.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
         MagicTickService.register(BloodMagic::tick);
+        CarryService.startTicking(plugin);
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
     }
 
@@ -63,6 +64,7 @@ public final class BloodMagic {
     }
 
     public static void stop() {
+        CarryService.clear();
         CharacterRiteService.clear();
         BondService.clear();
         AnimalRiteService.releaseAll();
