@@ -1,0 +1,146 @@
+package net.tfminecraft.magic.blood;
+
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.Messages;
+import net.tfminecraft.tlibs.character.CharacterInfo;
+import net.tfminecraft.tlibs.character.CharacterSession;
+import net.tfminecraft.tlibs.character.CharacterStatus;
+import net.tfminecraft.tlibs.character.Characters;
+
+/** Placing, refreshing and purifying altars. */
+public final class AltarService {
+
+    private AltarService() {}
+
+    /** The id of the player's current character, or null without one. */
+    public static String currentCharacter(Player player) {
+        CharacterSession session = Characters.currentSession(player).orElse(null);
+        return session != null ? session.ref().characterId().toString() : null;
+    }
+
+    /**
+     * Tries to set the altar item in the player's hand down on the target block.
+     * Returns the message path that tells the player the outcome.
+     */
+    public static String place(Player player, ItemStack hand, Block target) {
+        if (!BloodConfig.isEnabled()) {
+            return "blood.altar.inert";
+        }
+        String character = currentCharacter(player);
+        if (character == null || !character.equalsIgnoreCase(BloodItems.owner(hand))) {
+            return "blood.altar.not_yours";
+        }
+        BloodRecord record = BloodRecords.get(character);
+        if (record == null || !record.getStage().atLeast(BloodStage.ANIMAL)) {
+            return "blood.altar.inert";
+        }
+        if (BloodAltars.ofCharacter(character) != null) {
+            return "blood.altar.already";
+        }
+        AltarPlacement.Result result = AltarPlacement.check(target);
+        if (result != AltarPlacement.Result.OK) {
+            return "blood.altar.place." + result.name().toLowerCase(Locale.ROOT);
+        }
+        BloodAltar altar = BloodAltar.create(character, player.getUniqueId().toString(), target,
+                player.getLocation().getYaw() + 180f, System.currentTimeMillis());
+        altar.setLevel(BloodProgress.level(record));
+        AltarDisplays.ensure(altar);
+        BloodAltars.add(altar);
+        record.setAltarId(altar.getId());
+        BloodRecords.save(record);
+        hand.setAmount(hand.getAmount() - 1);
+        target.getWorld().playSound(target.getLocation(), Sound.BLOCK_STONE_PLACE, 1f, 0.6f);
+        Magic.plugin.getLogger().info("[Magic] Blood altar " + altar.getId() + " placed by character "
+                + character + " at " + altar.blockKey());
+        return "blood.altar.placed";
+    }
+
+    /** Re-reads the owner's progress into the altar's level and look. */
+    public static void refresh(BloodAltar altar) {
+        int level = BloodProgress.level(BloodRecords.get(altar.getOwnerCharacter()));
+        boolean changed = level != altar.getLevel();
+        altar.setLevel(level);
+        changed |= AltarDisplays.ensure(altar);
+        if (changed) {
+            BloodAltars.save();
+        }
+    }
+
+    /** Refreshes the character's altar, if it has one. */
+    public static void refreshFor(String characterId) {
+        BloodAltar altar = BloodAltars.ofCharacter(characterId);
+        if (altar != null) {
+            refresh(altar);
+        }
+    }
+
+    /** Removes the altar from the world and from its owner's record. */
+    public static void purify(BloodAltar altar, String reason) {
+        AltarDisplays.remove(altar);
+        BloodAltars.remove(altar);
+        BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());
+        if (record != null && altar.getId().equals(record.getAltarId())) {
+            record.setAltarId(null);
+            BloodRecords.save(record);
+        }
+        Magic.plugin.getLogger().info("[Magic] Blood altar " + altar.getId() + " of character "
+                + altar.getOwnerCharacter() + " at " + altar.blockKey() + " purified (" + reason + ")");
+    }
+
+    /** A dead character keeps nothing: the altar purifies itself and the path is forgotten. */
+    public static void onCharacterDeath(String characterId) {
+        BloodAltar altar = BloodAltars.ofCharacter(characterId);
+        if (altar != null) {
+            purify(altar, "owner died");
+        }
+        if (BloodRecords.get(characterId) != null) {
+            BloodRecords.delete(characterId);
+            Magic.plugin.getLogger().info("[Magic] Blood path of dead character " + characterId + " cleared");
+        }
+    }
+
+    /** Catches deaths missed while Magic was not listening, e.g. during a restart. */
+    public static void sweepDead() {
+        if (!Characters.available()) {
+            return;
+        }
+        for (BloodAltar altar : BloodAltars.all()) {
+            if (isDead(altar.getOwnerCharacter())) {
+                onCharacterDeath(altar.getOwnerCharacter());
+            }
+        }
+        for (BloodRecord record : BloodRecords.all()) {
+            if (isDead(record.getCharacterId())) {
+                onCharacterDeath(record.getCharacterId());
+            }
+        }
+    }
+
+    static boolean isDead(String characterId) {
+        UUID id;
+        try {
+            id = UUID.fromString(characterId);
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+        Optional<CharacterInfo> info = Characters.info(id);
+        return info.isPresent() && info.get().status() == CharacterStatus.DEAD;
+    }
+
+    /** The player-facing line for an altar a player touched. */
+    public static String touch(Player player, BloodAltar altar) {
+        String character = currentCharacter(player);
+        return character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
+                ? Messages.get("blood.altar.owner_touch")
+                : Messages.get("blood.altar.stranger_touch");
+    }
+}

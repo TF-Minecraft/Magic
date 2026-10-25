@@ -20,7 +20,7 @@ admin:
 
   no_permission: "#ff5555You do not have permission to use this command."
 
-  usage: "#aaaaaaUsage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh>"
+  usage: "#aaaaaaUsage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh|blood>"
 
 values:
   save_failed: "#ff5555Could not save this Magic edit. The character values were restored; check console."
@@ -444,3 +444,70 @@ gear:
     failed: "#ff5555Could not refresh that weapon. Check console."
 
     ok: "#55ff55Weapon refreshed against the live gear config."
+
+# Blood path. Hidden content: keep these lines vague and never quote them on the wiki.
+blood:
+
+  altar:
+
+    placed: "#8c8c8c§oThe stone settles. The air around it grows still and close"
+
+    not_yours: "#8c8c8c§oThe stone will not settle for you"
+
+    inert: "#8c8c8c§oIt is only a stone"
+
+    already: "#8c8c8c§oYou already keep an altar"
+
+    unbreakable: "#8c8c8c§oThe stone does not yield"
+
+    owner_touch: "#8a0303§oThe stone is warm, like skin"
+
+    stranger_touch: "#8c8c8c§oA cold, carved stone. Something about it makes you uneasy"
+
+    place:
+
+      world: "#8c8c8c§oThis is no place for it"
+
+      occupied: "#8c8c8c§oThere is no room for the stone here"
+
+      no_floor: "#8c8c8c§oThe stone needs solid ground beneath it"
+
+      sky: "#8c8c8c§oIt must not see the sky"
+
+      shallow: "#8c8c8c§oNot deep enough. It must lie far beneath the earth"
+
+      region: "#8c8c8c§oThis ground is watched. Find somewhere forgotten"
+
+  admin:
+
+    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
+
+    no_record: "#aaaaaa{player} ({character}) has no blood path."
+
+    info: "#d10202{player} #aaaaaa({character}) stage #ffffff{stage}#aaaaaa, path #ffffff{path}#aaaaaa, whisper #ffffff{whisper}#aaaaaa, species #ffffff{species_count}/7 #555555[{species}]#aaaaaa, hunt #ffffff{hunt}#aaaaaa, finals #ffffff{finals}#aaaaaa, progress #ffffff{progress}#aaaaaa, altar #ffffff{altar}"
+
+    list_header: "#d10202Blood altars: #ffffff{count}"
+
+    list_line: "#aaaaaa- #ffffff{id} #aaaaaacharacter #ffffff{character} #aaaaaaat #ffffff{where} #aaaaaalevel #ffffff{level}"
+
+    bad_stage: "#ff5555Unknown stage. Use one of: {stages}"
+
+    bad_path: "#ff5555Unknown path. Use one of: {paths}"
+
+    bad_item: "#ff5555Unknown item. Use altar, ritual_knife or blood_knife."
+
+    stage_set: "#55ff55{player} is now at stage {stage}."
+
+    path_set: "#55ff55{player} is now on path {path}."
+
+    given: "#55ff55Gave {player} a bound {item}."
+
+    reset: "#55ff55{player}'s blood path was cleared and any altar purified."
+
+    no_altar: "#ff5555No altar found for {target}."
+
+    altar_refreshed: "#55ff55Altar refreshed at level {level}."
+
+    altar_purified: "#55ff55Altar at {where} purified."
+
+    tp_unavailable: "#ff5555Only in-game staff can teleport, and the altar's world must be loaded."

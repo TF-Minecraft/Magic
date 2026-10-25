@@ -1,0 +1,226 @@
+package net.tfminecraft.magic.blood;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import net.tfminecraft.magic.Messages;
+
+/**
+ * Staff tools: /magic blood &lt;list|info|stage|path|give|altar|reset&gt;.
+ * Player targets must be online on the character being edited; altars can also be named by id.
+ */
+public final class BloodCommand {
+
+    static final List<String> SUBCOMMANDS = List.of("list", "info", "stage", "path", "give", "altar", "reset");
+    private static final List<String> ALTAR_ACTIONS = List.of("info", "tp", "refresh", "purify");
+
+    private BloodCommand() {}
+
+    public static boolean execute(CommandSender sender, String[] args) {
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "";
+        switch (sub) {
+            case "list" -> list(sender);
+            case "info" -> withTarget(sender, args, 3, (player, character) -> info(sender, player, character));
+            case "stage" -> withTarget(sender, args, 4, (player, character) -> stage(sender, player, character, args[3]));
+            case "path" -> withTarget(sender, args, 4, (player, character) -> path(sender, player, character, args[3]));
+            case "give" -> withTarget(sender, args, 4, (player, character) -> give(sender, player, character, args[3]));
+            case "altar" -> altar(sender, args);
+            case "reset" -> withTarget(sender, args, 3, (player, character) -> reset(sender, player, character));
+            default -> sender.sendMessage(Messages.get("blood.admin.usage"));
+        }
+        return true;
+    }
+
+    private interface TargetAction {
+        void run(Player player, String character);
+    }
+
+    private static void withTarget(CommandSender sender, String[] args, int length, TargetAction action) {
+        if (args.length != length) {
+            sender.sendMessage(Messages.get("blood.admin.usage"));
+            return;
+        }
+        Player player = Bukkit.getPlayerExact(args[2]);
+        if (player == null) {
+            sender.sendMessage(Messages.get("artifact.give.unknown_player", "player", args[2]));
+            return;
+        }
+        String character = AltarService.currentCharacter(player);
+        if (character == null) {
+            sender.sendMessage(Messages.get("resonance.admin.no_character", "player", player.getName()));
+            return;
+        }
+        action.run(player, character);
+    }
+
+    private static void list(CommandSender sender) {
+        List<BloodAltar> altars = BloodAltars.all();
+        sender.sendMessage(Messages.get("blood.admin.list_header", "count", String.valueOf(altars.size())));
+        for (BloodAltar altar : altars) {
+            sender.sendMessage(Messages.get("blood.admin.list_line", "id", altar.getId(),
+                    "character", altar.getOwnerCharacter(), "where", altar.blockKey(),
+                    "level", String.valueOf(altar.getLevel())));
+        }
+    }
+
+    private static void info(CommandSender sender, Player player, String character) {
+        BloodRecord record = BloodRecords.get(character);
+        if (record == null) {
+            sender.sendMessage(Messages.get("blood.admin.no_record", "player", player.getName(), "character", character));
+            return;
+        }
+        BloodAltar altar = BloodAltars.ofCharacter(character);
+        sender.sendMessage(Messages.get("blood.admin.info", "player", player.getName(), "character", character,
+                "stage", record.getStage().name(), "path", record.getPath().name(),
+                "whisper", String.format(Locale.ROOT, "%.1f", record.getWhisper()),
+                "species", String.join(", ", record.getSpecies()),
+                "species_count", String.valueOf(record.getSpecies().size()),
+                "hunt", String.valueOf(record.getHuntPoints()),
+                "finals", String.valueOf(record.getFinalsDone()),
+                "progress", String.valueOf(BloodProgress.of(record)),
+                "altar", altar != null ? altar.blockKey() + " L" + altar.getLevel() : "-"));
+    }
+
+    private static void stage(CommandSender sender, Player player, String character, String raw) {
+        BloodStage stage = BloodStage.parse(raw);
+        if (stage == null) {
+            sender.sendMessage(Messages.get("blood.admin.bad_stage", "stages", names(BloodStage.values())));
+            return;
+        }
+        BloodRecord record = BloodRecords.getOrCreate(character, player.getUniqueId().toString());
+        record.setStage(stage);
+        saved(sender, record);
+        AltarService.refreshFor(character);
+        sender.sendMessage(Messages.get("blood.admin.stage_set", "player", player.getName(), "stage", stage.name()));
+    }
+
+    private static void path(CommandSender sender, Player player, String character, String raw) {
+        BloodPath path = BloodPath.parse(raw);
+        if (path == null) {
+            sender.sendMessage(Messages.get("blood.admin.bad_path", "paths", names(BloodPath.values())));
+            return;
+        }
+        BloodRecord record = BloodRecords.getOrCreate(character, player.getUniqueId().toString());
+        record.setPath(path);
+        saved(sender, record);
+        AltarService.refreshFor(character);
+        sender.sendMessage(Messages.get("blood.admin.path_set", "player", player.getName(), "path", path.name()));
+    }
+
+    private static void give(CommandSender sender, Player player, String character, String raw) {
+        BloodItemKind kind = BloodItemKind.parse(raw);
+        if (kind == null) {
+            sender.sendMessage(Messages.get("blood.admin.bad_item"));
+            return;
+        }
+        ItemStack item = BloodItems.create(kind, character);
+        for (ItemStack left : player.getInventory().addItem(item).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), left);
+        }
+        sender.sendMessage(Messages.get("blood.admin.given", "player", player.getName(), "item", kind.key()));
+    }
+
+    private static void reset(CommandSender sender, Player player, String character) {
+        BloodAltar altar = BloodAltars.ofCharacter(character);
+        if (altar != null) {
+            AltarService.purify(altar, "reset by " + sender.getName());
+        }
+        BloodRecords.delete(character);
+        sender.sendMessage(Messages.get("blood.admin.reset", "player", player.getName()));
+    }
+
+    private static void altar(CommandSender sender, String[] args) {
+        if (args.length != 4 || !ALTAR_ACTIONS.contains(args[2].toLowerCase(Locale.ROOT))) {
+            sender.sendMessage(Messages.get("blood.admin.usage"));
+            return;
+        }
+        BloodAltar altar = BloodAltars.byId(args[3]);
+        if (altar == null) {
+            Player player = Bukkit.getPlayerExact(args[3]);
+            String character = player != null ? AltarService.currentCharacter(player) : null;
+            altar = BloodAltars.ofCharacter(character);
+        }
+        if (altar == null) {
+            sender.sendMessage(Messages.get("blood.admin.no_altar", "target", args[3]));
+            return;
+        }
+        switch (args[2].toLowerCase(Locale.ROOT)) {
+            case "info" -> sender.sendMessage(Messages.get("blood.admin.list_line", "id", altar.getId(),
+                    "character", altar.getOwnerCharacter(), "where", altar.blockKey(),
+                    "level", String.valueOf(altar.getLevel())));
+            case "tp" -> teleport(sender, altar);
+            case "refresh" -> {
+                AltarService.refresh(altar);
+                sender.sendMessage(Messages.get("blood.admin.altar_refreshed", "level", String.valueOf(altar.getLevel())));
+            }
+            default -> {
+                AltarService.purify(altar, "purified by " + sender.getName());
+                sender.sendMessage(Messages.get("blood.admin.altar_purified", "where", altar.blockKey()));
+            }
+        }
+    }
+
+    private static void teleport(CommandSender sender, BloodAltar altar) {
+        Location center = altar.center();
+        if (!(sender instanceof Player staff) || center == null) {
+            sender.sendMessage(Messages.get("blood.admin.tp_unavailable"));
+            return;
+        }
+        staff.teleport(center.add(0, 1, 0));
+    }
+
+    private static void saved(CommandSender sender, BloodRecord record) {
+        if (!BloodRecords.save(record)) {
+            sender.sendMessage(Messages.get("values.save_failed"));
+        }
+    }
+
+    private static String names(Enum<?>[] values) {
+        return String.join(", ", Arrays.stream(values).map(value -> value.name().toLowerCase(Locale.ROOT)).toList());
+    }
+
+    public static List<String> complete(String[] args) {
+        if (args.length == 2) {
+            return SUBCOMMANDS;
+        }
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        if (args.length == 3) {
+            return sub.equals("altar") ? ALTAR_ACTIONS
+                    : sub.equals("list") ? List.of() : onlineNames();
+        }
+        if (args.length == 4) {
+            return switch (sub) {
+                case "stage" -> lower(BloodStage.values());
+                case "path" -> lower(BloodPath.values());
+                case "give" -> Arrays.stream(BloodItemKind.values()).map(BloodItemKind::key).toList();
+                case "altar" -> altarTargets();
+                default -> List.of();
+            };
+        }
+        return List.of();
+    }
+
+    private static List<String> onlineNames() {
+        return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    }
+
+    private static List<String> lower(Enum<?>[] values) {
+        return Arrays.stream(values).map(value -> value.name().toLowerCase(Locale.ROOT)).toList();
+    }
+
+    private static List<String> altarTargets() {
+        List<String> out = new ArrayList<>(onlineNames());
+        for (BloodAltar altar : BloodAltars.all()) {
+            out.add(altar.getId());
+        }
+        return out;
+    }
+}

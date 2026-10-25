@@ -1,0 +1,63 @@
+# Blood Magic progression. Hidden content: never document it on the wiki.
+# Jar does not overwrite an existing live copy. Copy new keys by hand after updates.
+# Names here are placeholders until the lore is settled.
+
+enabled: true
+
+# Items the voices hand to the character. TLibs item paths (v., ia., m.).
+# Each item is bound to the character that received it.
+items:
+  altar:
+    path: v.chiseled_stone_bricks
+    name: "#bfbfbfWeathered Altar Stone"
+    lore:
+      - "#8c8c8c§oA plain slab of carved stone."
+  ritual_knife:
+    path: v.iron_sword
+    name: "#bfbfbfSkinning Knife"
+    lore:
+      - "#8c8c8c§oAn ordinary knife, kept very sharp."
+  blood_knife:
+    path: m.lore_weapons.bloodmagic_dagger
+    name: "#8a0303Vein-Reaver"
+    lore:
+      - "#5c0202§oIt is warm to the touch."
+
+altar:
+  # The altar is a barrier block (unbreakable, piston and blast proof) with a display on it.
+  block: BARRIER
+  # Altar look per level. Level rises with the owner's progress (see levels below).
+  # model is a TLibs item path shown by the display entity.
+  models:
+    0: v.chiseled_stone_bricks
+    1: v.cracked_stone_bricks
+    2: v.chiseled_polished_blackstone
+    3: v.red_nether_bricks
+    4: v.chiseled_nether_bricks
+    5: v.crimson_nylium
+  display_scale: 1.0
+  # Progress needed for each altar level. Animal sacrifices count 1 each,
+  # the god's question +1, hunt points 1 each, final sacrifices 2 each.
+  levels:
+    1: 2
+    2: 5
+    3: 8
+    4: 12
+    5: 18
+
+hunt:
+  # True path: points of character sacrifices needed for the True class.
+  points_required: 7
+
+placement:
+  # Worlds where an altar may stand. Empty = every world.
+  worlds: []
+  # Underground: no sky light at the altar and at least min_cover solid blocks above it.
+  require_underground: true
+  min_cover: 3
+  cover_scan_height: 48
+  # Refuse any WorldGuard region except the ids listed here (needs WorldGuard).
+  deny_regions: true
+  allowed_regions: []
+  # How often (minutes) altars of dead owners are checked and purified.
+  purify_check_minutes: 10
