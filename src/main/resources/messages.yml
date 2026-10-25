@@ -514,6 +514,18 @@ blood:
 
     note_lost: "#aaaaaa§oSomething took {animal} while no one was watching"
 
+  choice:
+
+    devoted: "#8a0303§oSomething of you stays on the stone, and something of the stone goes with you"
+
+    refused: "#7a7a7a§oThe voice falls silent. For the first time in days you are alone with your thoughts. They are not kind"
+
+  armour:
+
+    refuses: "#8c8c8c§oIt will not sit on you"
+
+    crumbles: "#8c8c8c§oIt crumbles to rust and dried blood in your hands"
+
   direction:
 
     north: "north"

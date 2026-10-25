@@ -244,4 +244,73 @@ class BloodListenerTest {
       BloodNotes.clear();
     }
   }
+
+  @Test
+  void theBloodKnifeOpensTheQuestionAndArmourIsPoliced() {
+    try (BloodFixture fx = new BloodFixture(temp)) {
+      PlayerMock mage = fx.player("mage");
+      String id = BloodFixture.id("mage");
+      Block target = fx.pocket(0, 10, 0);
+      BloodAltars.add(BloodAltar.create(id, "o", target, 0f, 1L));
+      fx.record("mage", BloodStage.CHOICE);
+      PlayerInteractEvent touch = click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND);
+      listener.onInteract(touch);
+      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, "someone"));
+      listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, id));
+      listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, id));
+      BloodRecords.get(id).setStage(BloodStage.HUNT);
+      listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      BloodRecords.get(id).setStage(BloodStage.CHOICE);
+      listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertInstanceOf(ChoiceMenu.class, mage.getOpenInventory().getTopInventory().getHolder());
+      PlayerMock stranger = fx.player("stranger");
+      stranger.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, BloodFixture.id("stranger")));
+      listener.onInteract(click(stranger, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertEquals("blood.altar.stranger_touch", stranger.nextMessage());
+      PlayerMock bare = fx.server.addPlayer();
+      listener.onInteract(click(bare, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
+      assertEquals("blood.altar.stranger_touch", bare.nextMessage());
+
+      var view = mage.getOpenInventory();
+      var menuClick = new org.bukkit.event.inventory.InventoryClickEvent(view,
+          org.bukkit.event.inventory.InventoryType.SlotType.CONTAINER, 0,
+          org.bukkit.event.inventory.ClickType.LEFT, org.bukkit.event.inventory.InventoryAction.PICKUP_ALL);
+      listener.onMenuClick(menuClick);
+      assertTrue(menuClick.isCancelled());
+      var drag = mock(org.bukkit.event.inventory.InventoryDragEvent.class);
+      when(drag.getInventory()).thenReturn(view.getTopInventory());
+      listener.onMenuDrag(drag);
+      verify(drag).setCancelled(true);
+
+      ItemStack foreign = BloodArmour.bind(new ItemStack(Material.LEATHER_HELMET), id);
+      stranger.getInventory().setHelmet(foreign);
+      listener.onArmourChange(new com.destroystokyo.paper.event.player.PlayerArmorChangeEvent(stranger,
+          com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType.HEAD, new ItemStack(Material.AIR), foreign));
+      when(net.tfminecraft.magic.Magic.plugin.isEnabled()).thenReturn(true);
+      fx.server.getScheduler().performOneTick();
+      listener.onArmourChange(new com.destroystokyo.paper.event.player.PlayerArmorChangeEvent(stranger,
+          com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType.HEAD, foreign, new ItemStack(Material.AIR)));
+
+      var dropped = fx.world.dropItem(stranger.getLocation(), foreign);
+      var pickup = new org.bukkit.event.entity.EntityPickupItemEvent(stranger, dropped, 0);
+      listener.onPickup(pickup);
+      assertFalse(pickup.isCancelled());
+      String dead = UUID.randomUUID().toString();
+      var relic = fx.world.dropItem(stranger.getLocation(), BloodArmour.bind(new ItemStack(Material.LEATHER_BOOTS), dead));
+      try (var chars = mockStatic(net.tfminecraft.tlibs.character.Characters.class, CALLS_REAL_METHODS)) {
+        chars.when(() -> net.tfminecraft.tlibs.character.Characters.info(UUID.fromString(dead)))
+            .thenReturn(AltarServiceTest.info(dead, net.tfminecraft.tlibs.character.CharacterStatus.DEAD));
+        var relicPickup = new org.bukkit.event.entity.EntityPickupItemEvent(stranger, relic, 0);
+        listener.onPickup(relicPickup);
+        assertTrue(relicPickup.isCancelled());
+        assertFalse(relic.isValid());
+      }
+    }
+  }
 }

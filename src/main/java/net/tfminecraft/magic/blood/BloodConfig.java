@@ -103,6 +103,8 @@ public final class BloodConfig {
         WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
         AnimalConfig.load(config.getConfigurationSection("animal"), log);
         CorruptionConfig.load(config.getConfigurationSection("corruption"), log);
+        ChoiceConfig.load(config.getConfigurationSection("choice"), config.getConfigurationSection("classes"),
+                config.getConfigurationSection("armour"));
         return ok;
     }
 
@@ -159,6 +161,7 @@ public final class BloodConfig {
         WhisperConfig.reset();
         AnimalConfig.reset();
         CorruptionConfig.reset();
+        ChoiceConfig.reset();
     }
 
     public static boolean isEnabled() {

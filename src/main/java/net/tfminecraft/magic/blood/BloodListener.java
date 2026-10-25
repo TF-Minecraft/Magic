@@ -18,6 +18,9 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -27,6 +30,9 @@ import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
+
+import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
 import net.tfminecraft.tlibs.character.CharacterRef;
@@ -44,7 +50,16 @@ public final class BloodListener implements Listener {
         BloodAltar altar = BloodAltars.at(clicked);
         if (altar != null) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(AltarService.touch(event.getPlayer(), altar));
+            Player player = event.getPlayer();
+            ItemStack held = player.getInventory().getItemInMainHand();
+            String character = AltarService.currentCharacter(player);
+            if (character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
+                    && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE) && character.equalsIgnoreCase(BloodItems.owner(held))
+                    && BloodChoice.canAnswer(player)) {
+                ChoiceMenu.open(player);
+                return;
+            }
+            player.sendMessage(AltarService.touch(player, altar));
             return;
         }
         ItemStack hand = event.getItem();
@@ -68,6 +83,34 @@ public final class BloodListener implements Listener {
         event.setCancelled(true);
         AnimalRiteService.Bind result = AnimalRiteService.bind(event.getPlayer(), animal);
         event.getPlayer().sendMessage(Messages.get("blood.animal.bind." + result.name().toLowerCase(Locale.ROOT)));
+    }
+
+    @EventHandler
+    public void onMenuClick(InventoryClickEvent event) {
+        ChoiceMenu.onClick(event);
+    }
+
+    @EventHandler
+    public void onMenuDrag(InventoryDragEvent event) {
+        ChoiceMenu.onDrag(event);
+    }
+
+    /** Blood armour stays on its own character only; checked a tick after any armour change. */
+    @EventHandler
+    public void onArmourChange(PlayerArmorChangeEvent event) {
+        if (BloodArmour.is(event.getNewItem())) {
+            Player player = event.getPlayer();
+            Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, () -> BloodArmour.enforce(player));
+        }
+    }
+
+    /** A dead owner's blood armour crumbles when someone tries to pick it up. */
+    @EventHandler(ignoreCancelled = true)
+    public void onPickup(EntityPickupItemEvent event) {
+        if (BloodArmour.crumbles(event.getItem().getItemStack())) {
+            event.setCancelled(true);
+            event.getItem().remove();
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -159,6 +202,7 @@ public final class BloodListener implements Listener {
         WhisperService.forget(event.getPlayer().getUniqueId());
         BloodNotes.deliver(event.getPlayer(), event.getSession().ref().characterId().toString(),
                 System.currentTimeMillis(), true);
+        BloodArmour.enforce(event.getPlayer());
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

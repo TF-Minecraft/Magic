@@ -127,6 +127,9 @@ public final class AltarService {
     }
 
     static boolean isDead(String characterId) {
+        if (characterId == null) {
+            return false;
+        }
         UUID id;
         try {
             id = UUID.fromString(characterId);

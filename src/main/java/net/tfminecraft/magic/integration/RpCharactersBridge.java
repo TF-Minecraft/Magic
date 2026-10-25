@@ -37,6 +37,12 @@ public final class RpCharactersBridge {
         return DisplayIdentityService.colourPlain(character.getName(), character.getNameColour());
     }
 
+    /** Gives the player's active character a random permanent injury; false without one. */
+    public static boolean applyPermanentInjury(Player player) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null && PermadeathService.applyRandomPermanentInjury(player, character);
+    }
+
     /**
      * @return false when required consequences are unavailable or permanent death was refused
      */

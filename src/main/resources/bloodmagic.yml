@@ -173,3 +173,48 @@ corruption:
     - { min_level: 3, at: ceiling, to: [WEEPING_VINES] }
     - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, CRIMSON_FUNGUS] }
     - { min_level: 4, at: floor, to: [SKELETON_SKULL, BONE_BLOCK] }
+
+# The god's question: right-click your altar with your blood knife once the seventh kind is given.
+choice:
+  title: "#5c0202Will you give yourself?"
+  question:
+    - "#8a0303§oSeven kinds have bled for us."
+    - "#8a0303§oGive us yourself, and we will carry you."
+    - "#8a0303§oOr keep yourself, and carry it all alone."
+  devotee:
+    item: v.red_dye
+    name: "#8a0303I give myself"
+    lore:
+      - "#8c8c8c§oPart of you stays on the stone."
+  "true":
+    item: v.iron_sword
+    name: "#bfbfbfI take for myself"
+    lore:
+      - "#8c8c8c§oNo god. Only you, and what you take."
+  confirm:
+    item: v.redstone
+    name: "#ff5555There is no going back"
+  back:
+    item: v.barrier
+    name: "#aaaaaaNot yet"
+  # Permanent injuries a devotee keeps as the mark of what they gave.
+  devotee_injuries: 2
+
+# Hidden MMOCore classes (options.display: false) unlocked for the character through RPCharacters.
+classes:
+  devotee: bloodsworn
+  "true": sanguinar
+
+# Bound, unbreakable armour (TLibs item paths). Devotees get theirs at the question; the true path
+# when the hunt is done. Placeholder pieces until the real sets exist.
+armour:
+  devotee:
+    - m.mage_armors.bloodmagic_mage_helmet
+    - m.mage_armors.bloodmagic_mage_chestplate
+    - m.mage_armors.bloodmagic_mage_leggings
+    - m.mage_armors.bloodmagic_mage_boots
+  "true":
+    - m.mage_armors.bloodmagic_mage_helmet
+    - m.mage_armors.bloodmagic_mage_chestplate
+    - m.mage_armors.bloodmagic_mage_leggings
+    - m.mage_armors.bloodmagic_mage_boots
