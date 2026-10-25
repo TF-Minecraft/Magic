@@ -111,6 +111,18 @@ final class BloodFixture implements AutoCloseable {
     return block;
   }
 
+  /** Hollows out the stone between the corners, so bodies have open air between them and the altar. */
+  void open(int x1, int y1, int z1, int x2, int y2, int z2) {
+    for (int x = x1; x <= x2; x++) {
+      for (int z = z1; z <= z2; z++) {
+        world.loadChunk(x >> 4, z >> 4);
+        for (int y = y1; y <= y2; y++) {
+          world.getBlockAt(x, y, z).setType(Material.AIR);
+        }
+      }
+    }
+  }
+
   BloodRecord record(String label, BloodStage stage) {
     BloodRecord record = BloodRecords.getOrCreate(id(label), UUID.randomUUID().toString());
     record.setStage(stage);

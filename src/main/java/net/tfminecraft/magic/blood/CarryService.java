@@ -14,6 +14,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+import java.util.EnumSet;
+import java.util.Set;
+import org.bukkit.Material;
+import org.bukkit.block.BlockFace;
 
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
@@ -44,6 +48,9 @@ public final class CarryService {
     private static final int TRAIL_LIMIT = 40;
     private static final double STEP = 0.3;
     private static final int DRAG_FX_EVERY = 3;
+    private static final Set<Material> UNSAFE = EnumSet.of(Material.WATER, Material.LAVA, Material.FIRE,
+            Material.SOUL_FIRE, Material.POWDER_SNOW, Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.SWEET_BERRY_BUSH,
+            Material.CACTUS, Material.WITHER_ROSE);
     private static BukkitTask task;
 
     private CarryService() {}
@@ -70,6 +77,12 @@ public final class CarryService {
         }
         if (!RpCharactersBridge.isDown(victim)) {
             return CharacterRiteService.Bind.NOT_DOWN;
+        }
+        // Only someone the stone would take may be dragged: no hauling bystanders into traps.
+        CharacterRiteService.Bind eligible = CharacterRiteService.eligibility(mage, BloodRecords.get(character),
+                victim, victimCharacter);
+        if (eligible != null) {
+            return eligible;
         }
         if (CARRIES.containsKey(mage.getUniqueId()) || carrier(victim.getUniqueId()) != null
                 || CharacterRiteService.isVictim(victim.getUniqueId())) {
@@ -169,7 +182,7 @@ public final class CarryService {
         for (Iterator<Location> back = carry.trail.descendingIterator(); back.hasNext();) {
             Location point = back.next();
             if (point.distance(here) >= HuntConfig.carryDistance()) {
-                spot = point;
+                spot = safe(point) ? point : null;
                 break;
             }
         }
@@ -184,6 +197,13 @@ public final class CarryService {
         if (++carry.steps % DRAG_FX_EVERY == 0) {
             BloodFx.play("carry_drag", to);
         }
+    }
+
+    /** The body is never laid in liquid, fire or a wall; the drag waits until the trail is safe again. */
+    static boolean safe(Location spot) {
+        Material feet = spot.getBlock().getType();
+        Material below = spot.getBlock().getRelative(BlockFace.DOWN).getType();
+        return !feet.isSolid() && !UNSAFE.contains(feet) && below != Material.LAVA && below != Material.MAGMA_BLOCK;
     }
 
     public static void clear() {

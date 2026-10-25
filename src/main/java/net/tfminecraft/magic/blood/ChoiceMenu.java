@@ -13,6 +13,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.util.ItemRef;
 import net.tfminecraft.magic.util.MagicText;
 
@@ -91,18 +92,26 @@ public final class ChoiceMenu implements InventoryHolder {
         }
         Player player = (Player) event.getWhoClicked();
         int slot = event.getRawSlot();
+        // Inventories are not opened, closed or filled inside a click event; it all happens a tick later.
         if (menu.pending == BloodPath.NONE) {
             if (slot == LEFT_SLOT || slot == RIGHT_SLOT) {
-                show(player, slot == LEFT_SLOT ? BloodPath.DEVOTEE : BloodPath.TRUE);
+                later(() -> show(player, slot == LEFT_SLOT ? BloodPath.DEVOTEE : BloodPath.TRUE));
             }
             return;
         }
         if (slot == RIGHT_SLOT) {
-            show(player, BloodPath.NONE);
+            later(() -> show(player, BloodPath.NONE));
         } else if (slot == LEFT_SLOT) {
-            player.closeInventory();
-            BloodChoice.answer(player, menu.pending);
+            BloodPath pending = menu.pending;
+            later(() -> {
+                player.closeInventory();
+                BloodChoice.answer(player, pending);
+            });
         }
+    }
+
+    private static void later(Runnable action) {
+        Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, action);
     }
 
     public static void onDrag(InventoryDragEvent event) {

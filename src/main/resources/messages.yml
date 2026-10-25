@@ -544,6 +544,8 @@ blood:
 
       busy: "#8c8c8c§oOne at a time"
 
+      blocked: "#8c8c8c§oStone lies between them and the altar. Drag them to it"
+
     dread: "#8a0303§oCold stone under your back. A blade above you. And below, something old and patient opens its mouth"
 
     broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"

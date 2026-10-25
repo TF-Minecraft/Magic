@@ -61,6 +61,7 @@ class CarryTest {
     record = BloodRecords.getOrCreate(mageId, mage.getUniqueId().toString());
     record.setStage(BloodStage.HUNT);
     record.setPath(BloodPath.TRUE);
+    fx.open(-30, 10, -3, 45, 12, 4);
     altarBlock = fx.pocket(0, 10, 0);
     BloodAltars.add(BloodAltar.create(mageId, mage.getUniqueId().toString(), altarBlock, 0f, 1L));
     mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, mageId));
@@ -109,6 +110,8 @@ class CarryTest {
     String secondId = BloodFixture.id("second-mage");
     BloodRecords.getOrCreate(secondId, "o").setStage(BloodStage.FINAL);
     second.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, secondId));
+    assertEquals(CharacterRiteService.Bind.NOT_TARGET, CarryService.start(second, victim));
+    BloodRecords.get(secondId).setStage(BloodStage.HUNT);
     assertEquals(CharacterRiteService.Bind.BUSY, CarryService.start(second, victim));
 
     CarryService.release(mage, true);

@@ -39,10 +39,13 @@ public final class AltarDisplays {
         if (block.getType() != BloodConfig.altarBlock()) {
             block.setType(BloodConfig.altarBlock(), false);
         }
+        // Remembered so purifying clears it even after altar.block changes in the config.
+        boolean recorded = !BloodConfig.altarBlock().name().equals(altar.getBlockType());
+        altar.setBlockType(BloodConfig.altarBlock().name());
         Entity existing = altar.getDisplayId() != null ? Bukkit.getEntity(altar.getDisplayId()) : null;
         if (existing instanceof ItemDisplay display) {
             display.setItemStack(model(altar.getLevel()));
-            return false;
+            return recorded;
         }
         ItemDisplay display = spawn(altar);
         altar.setDisplayId(display.getUniqueId());
@@ -90,7 +93,8 @@ public final class AltarDisplays {
             }
         }
         Block block = altar.block();
-        if (block != null && block.getType() == BloodConfig.altarBlock()) {
+        Material placed = altar.getBlockType() != null ? Material.matchMaterial(altar.getBlockType()) : null;
+        if (block != null && block.getType() == (placed != null ? placed : BloodConfig.altarBlock())) {
             block.setType(Material.AIR, false);
         }
     }

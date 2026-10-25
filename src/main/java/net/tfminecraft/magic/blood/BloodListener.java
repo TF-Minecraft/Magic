@@ -197,6 +197,7 @@ public final class BloodListener implements Listener {
     @EventHandler
     public void onEntitiesLoad(EntitiesLoadEvent event) {
         AltarDisplays.removeStrays(event.getEntities());
+        AnimalRiteService.wakeLoaded(event.getEntities());
         StolenClues.removeExpired(event.getEntities());
         for (BloodAltar altar : BloodAltars.inChunk(event.getWorld().getName(),
                 event.getChunk().getX(), event.getChunk().getZ())) {
@@ -231,8 +232,10 @@ public final class BloodListener implements Listener {
         }
     }
 
-    @EventHandler
+    /** LOW: before RPCharacters closes the character session on quit. */
+    @EventHandler(priority = EventPriority.LOW)
     public void onQuit(PlayerQuitEvent event) {
+        CharacterRiteService.onQuit(event.getPlayer());
         WhisperService.forget(event.getPlayer().getUniqueId());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
         CarryService.drop(event.getPlayer().getUniqueId());
@@ -254,6 +257,7 @@ public final class BloodListener implements Listener {
     public void onSessionEnd(CharacterSessionEndEvent event) {
         BondService.unload(event.getSession().ref().characterId().toString());
         BloodBoons.clear(event.getPlayer());
+        AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

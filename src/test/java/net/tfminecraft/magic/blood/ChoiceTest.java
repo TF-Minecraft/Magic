@@ -121,19 +121,23 @@ class ChoiceTest {
     assertSame(mage.getOpenInventory().getTopInventory(), menu.getInventory());
     ChoiceMenu.onClick(click(0));
     ChoiceMenu.onClick(click(ChoiceMenu.RIGHT_SLOT));
+    fx.server.getScheduler().performTicks(1);
     menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
     assertEquals(BloodPath.TRUE, menu.pending());
     ChoiceMenu.onClick(click(0));
     ChoiceMenu.onClick(click(ChoiceMenu.RIGHT_SLOT));
+    fx.server.getScheduler().performTicks(1);
     menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
     assertEquals(BloodPath.NONE, menu.pending());
     ChoiceMenu.onClick(click(ChoiceMenu.LEFT_SLOT));
+    fx.server.getScheduler().performTicks(1);
     menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
     assertEquals(BloodPath.DEVOTEE, menu.pending());
     InventoryClickEvent below = click(40);
     ChoiceMenu.onClick(below);
     assertTrue(below.isCancelled());
     ChoiceMenu.onClick(click(ChoiceMenu.LEFT_SLOT));
+    fx.server.getScheduler().performTicks(1);
     assertEquals(BloodPath.DEVOTEE, record.getPath());
 
     InventoryDragEvent drag = mock(InventoryDragEvent.class);

@@ -277,7 +277,7 @@ corruption:
     - { min_level: 1, at: floor, to: [COBWEB] }
     - { min_level: 2, at: floor, to: [WITHER_ROSE] }
     - { min_level: 3, at: ceiling, to: [WEEPING_VINES] }
-    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, CRIMSON_FUNGUS] }
+    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, NETHER_SPROUTS] }
     - { min_level: 4, at: floor, to: [SKELETON_SKULL, BONE_BLOCK] }
 
 # The god's question: right-click your altar with your blood knife once the seventh kind is given.

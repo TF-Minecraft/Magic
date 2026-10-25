@@ -16,6 +16,8 @@ public final class BloodAltar {
     private String ownerCharacter;
     private String ownerUuid;
     private String world;
+    /** The block the altar was placed as; null on altars saved before this was recorded. */
+    private String blockType;
     private int x;
     private int y;
     private int z;
@@ -62,6 +64,14 @@ public final class BloodAltar {
 
     public String getOwnerUuid() {
         return ownerUuid;
+    }
+
+    public String getBlockType() {
+        return blockType;
+    }
+
+    public void setBlockType(String blockType) {
+        this.blockType = blockType;
     }
 
     public String getWorld() {

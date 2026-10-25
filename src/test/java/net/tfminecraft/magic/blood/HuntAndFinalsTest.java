@@ -70,6 +70,7 @@ class HuntAndFinalsTest {
     record = BloodRecords.getOrCreate(mageId, mage.getUniqueId().toString());
     record.setStage(BloodStage.HUNT);
     record.setPath(BloodPath.TRUE);
+    fx.open(-30, 10, -3, 45, 12, 4);
     target = fx.pocket(0, 10, 0);
     BloodAltars.add(BloodAltar.create(mageId, mage.getUniqueId().toString(), target, 0f, 1L));
     mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, mageId));

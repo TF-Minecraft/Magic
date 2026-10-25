@@ -15,6 +15,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import java.util.Collection;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
@@ -51,7 +54,7 @@ public final class AnimalRiteService {
     public static Bind bind(Player player, LivingEntity animal) {
         String character = AltarService.currentCharacter(player);
         BloodRecord record = BloodRecords.get(character);
-        if (record == null || record.getStage() != BloodStage.ANIMAL) {
+        if (!BloodConfig.isEnabled() || record == null || record.getStage() != BloodStage.ANIMAL) {
             return Bind.NOT_STAGE;
         }
         ItemStack knife = player.getInventory().getItemInMainHand();
@@ -83,14 +86,19 @@ public final class AnimalRiteService {
                 || animal.getLocation().distance(top) > AnimalConfig.bindRange()) {
             return Bind.TOO_FAR;
         }
-        if (bindingOf(player.getUniqueId()) != null) {
+        if (bindingOf(player.getUniqueId()) != null || isBound(animal.getUniqueId())) {
             return Bind.BUSY;
         }
+        if (!animal.teleport(top.clone().add(0, 0.5, 0))) {
+            return Bind.TOO_FAR;
+        }
+        long expires = now + AnimalConfig.bindSeconds() * 1000L;
         animal.setAI(false);
-        animal.teleport(top.clone().add(0, 0.5, 0));
+        // Saved on the animal so an unload, crash or restart can never leave it frozen for good.
+        animal.getPersistentDataContainer().set(boundKey(), PersistentDataType.LONG, expires);
         BloodFx.play("animal_bound", top, player);
         BOUND.put(animal.getUniqueId(), new Bound(player.getUniqueId(), character, altar.getId(),
-                now + AnimalConfig.bindSeconds() * 1000L, owners, stolen));
+                expires, owners, stolen));
         return Bind.OK;
     }
 
@@ -175,13 +183,21 @@ public final class AnimalRiteService {
         for (Iterator<Map.Entry<UUID, Bound>> it = BOUND.entrySet().iterator(); it.hasNext();) {
             Map.Entry<UUID, Bound> entry = it.next();
             Entity entity = Bukkit.getEntity(entry.getKey());
-            if (!(entity instanceof LivingEntity animal) || animal.isDead()) {
+            if (entity == null) {
+                // Unloaded: keep the binding until it runs out; the animal wakes from its tag when it loads.
+                if (now >= entry.getValue().expiresAt()) {
+                    it.remove();
+                }
+                continue;
+            }
+            LivingEntity animal = (LivingEntity) entity;
+            if (animal.isDead()) {
                 it.remove();
                 continue;
             }
             if (now >= entry.getValue().expiresAt()) {
                 it.remove();
-                animal.setAI(true);
+                wake(animal);
                 Player mage = Bukkit.getPlayer(entry.getValue().mage());
                 if (mage != null) {
                     mage.sendMessage(Messages.get("blood.animal.escaped"));
@@ -197,10 +213,33 @@ public final class AnimalRiteService {
     public static void releaseAll() {
         for (UUID id : BOUND.keySet()) {
             if (Bukkit.getEntity(id) instanceof LivingEntity animal) {
-                animal.setAI(true);
+                wake(animal);
             }
         }
         BOUND.clear();
+    }
+
+    /** Freshly loaded animals still tagged from a binding that is over get their AI back. */
+    public static void wakeLoaded(Collection<? extends Entity> entities) {
+        long now = clock.getAsLong();
+        for (Entity entity : entities) {
+            if (entity instanceof LivingEntity animal && animal.getPersistentDataContainer().has(boundKey())) {
+                Bound bound = BOUND.get(animal.getUniqueId());
+                if (bound == null || now >= bound.expiresAt()) {
+                    BOUND.remove(animal.getUniqueId());
+                    wake(animal);
+                }
+            }
+        }
+    }
+
+    private static void wake(LivingEntity animal) {
+        animal.setAI(true);
+        animal.getPersistentDataContainer().remove(boundKey());
+    }
+
+    static NamespacedKey boundKey() {
+        return new NamespacedKey(Magic.plugin, "blood_bound");
     }
 
     /** Lets this mage's animal go, e.g. when they leave. */
@@ -211,7 +250,7 @@ public final class AnimalRiteService {
         }
         BOUND.remove(animal);
         if (Bukkit.getEntity(animal) instanceof LivingEntity living) {
-            living.setAI(true);
+            wake(living);
         }
     }
 }

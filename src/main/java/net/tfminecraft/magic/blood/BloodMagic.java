@@ -44,6 +44,9 @@ public final class BloodMagic {
         if (context.everyMinutes(BloodConfig.purifyCheckMinutes())) {
             AltarService.sweepDead();
         }
+        if (!BloodConfig.isEnabled()) {
+            return;
+        }
         if (context.every(AMBIENT_SECONDS)) {
             ambient();
         }
@@ -87,6 +90,9 @@ public final class BloodMagic {
     }
 
     public static void stop() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            BloodBoons.clear(player);
+        }
         CarryService.clear();
         CharacterRiteService.clear();
         BondService.clear();

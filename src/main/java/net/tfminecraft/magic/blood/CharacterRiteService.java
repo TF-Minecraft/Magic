@@ -13,6 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.block.Block;
+import org.bukkit.util.Vector;
 
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
@@ -39,7 +41,8 @@ public final class CharacterRiteService {
         RESERVED,
         WAITING,
         NOT_TARGET,
-        BUSY
+        BUSY,
+        BLOCKED
     }
 
     private record Rite(UUID victim, String mageCharacter, String victimCharacter, String victimAccount,
@@ -76,32 +79,20 @@ public final class CharacterRiteService {
         if (victim.getWorld() != top.getWorld() || victim.getLocation().distance(top) > HuntConfig.dragRange()) {
             return Bind.TOO_FAR;
         }
-        String victimAccount = victim.getUniqueId().toString();
-        if (RpCharactersBridge.playtimeSeconds(victim) < HuntConfig.minPlaytimeHours() * 3600
-                || RpCharactersBridge.characterAgeSeconds(victim) < HuntConfig.minAgeDays() * 86_400) {
-            return Bind.TOO_NEW;
+        if (!clearPath(victim.getLocation(), top)) {
+            return Bind.BLOCKED;
         }
-        if (HuntConfig.noRepeatPlayer() && victimAccount.equalsIgnoreCase(record.getLastVictimAccount())) {
-            return Bind.REPEAT;
+        Bind eligible = eligibility(mage, record, victim, victimCharacter);
+        if (eligible != null) {
+            return eligible;
         }
-        int points = 0;
-        if (record.getStage() == BloodStage.HUNT) {
-            int rank = BondService.rank(mage, victimCharacter);
-            if (rank >= 1 && rank <= HuntConfig.finalCount()) {
-                return Bind.RESERVED;
-            }
-            points = HuntConfig.points(rank);
-        } else {
-            if (clock.getAsLong() < record.getNextFinalAt()) {
-                return Bind.WAITING;
-            }
-            if (!victimCharacter.equalsIgnoreCase(record.currentTarget())) {
-                return Bind.NOT_TARGET;
-            }
-        }
-        if (RITES.containsKey(mage.getUniqueId()) || isVictim(victim.getUniqueId())) {
+        UUID carrier = CarryService.carrier(victim.getUniqueId());
+        if (RITES.containsKey(mage.getUniqueId()) || isVictim(victim.getUniqueId())
+                || (carrier != null && !carrier.equals(mage.getUniqueId()))) {
             return Bind.BUSY;
         }
+        String victimAccount = victim.getUniqueId().toString();
+        int points = record.getStage() == BloodStage.HUNT ? HuntConfig.points(BondService.rank(mage, victimCharacter)) : 0;
         CarryService.release(mage, false);
         RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0));
         RITES.put(mage.getUniqueId(), new Rite(victim.getUniqueId(), character, victimCharacter, victimAccount,
@@ -111,9 +102,70 @@ public final class CharacterRiteService {
         return Bind.OK;
     }
 
+    /**
+     * Whether this victim may be taken now: TOO_NEW, REPEAT (hunt only; a named final target must stay
+     * takeable), RESERVED (the closest are kept for the finals), WAITING, NOT_TARGET; null when they may.
+     */
+    static Bind eligibility(Player mage, BloodRecord record, Player victim, String victimCharacter) {
+        if (RpCharactersBridge.playtimeSeconds(victim) < HuntConfig.minPlaytimeHours() * 3600
+                || RpCharactersBridge.characterAgeSeconds(victim) < HuntConfig.minAgeDays() * 86_400) {
+            return Bind.TOO_NEW;
+        }
+        if (record.getStage() == BloodStage.HUNT) {
+            if (HuntConfig.noRepeatPlayer()
+                    && victim.getUniqueId().toString().equalsIgnoreCase(record.getLastVictimAccount())) {
+                return Bind.REPEAT;
+            }
+            int rank = BondService.rank(mage, victimCharacter);
+            return rank >= 1 && rank <= HuntConfig.finalCount() ? Bind.RESERVED : null;
+        }
+        if (clock.getAsLong() < record.getNextFinalAt()) {
+            return Bind.WAITING;
+        }
+        return victimCharacter.equalsIgnoreCase(record.currentTarget()) ? null : Bind.NOT_TARGET;
+    }
+
+    /** No wall or floor between the body and the altar: the rite never pulls anyone through stone. */
+    static boolean clearPath(Location from, Location altarCenter) {
+        Location start = from.clone().add(0, 0.5, 0);
+        Vector line = altarCenter.toVector().subtract(start.toVector());
+        int samples = (int) Math.ceil(line.length() / 0.25);
+        Block altarBlock = altarCenter.getBlock();
+        for (int i = 1; i < samples; i++) {
+            Block block = start.clone().add(line.clone().multiply((double) i / samples)).getBlock();
+            if (!block.equals(altarBlock) && block.getType().isSolid()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * A victim who logs out on the altar does not escape: the rite finishes as they leave (their
+     * character session is still open at this point). A mage who logs out simply breaks the rite.
+     */
+    static void onQuit(Player player) {
+        UUID id = player.getUniqueId();
+        RITES.remove(id);
+        for (Iterator<Map.Entry<UUID, Rite>> it = RITES.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<UUID, Rite> entry = it.next();
+            if (!entry.getValue().victim().equals(id)) {
+                continue;
+            }
+            it.remove();
+            Player mage = Bukkit.getPlayer(entry.getKey());
+            BloodAltar altar = BloodAltars.ofCharacter(entry.getValue().mageCharacter());
+            if (mage != null && altar != null) {
+                complete(mage, player, entry.getValue(), altar);
+            }
+            return;
+        }
+    }
+
     /** NOT_STAGE or NOT_KNIFE when the mage may not take anyone now, else null. */
     static Bind readiness(Player mage, String character, BloodRecord record) {
-        if (record == null || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL)) {
+        if (!BloodConfig.isEnabled() || record == null
+                || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL)) {
             return Bind.NOT_STAGE;
         }
         ItemStack knife = mage.getInventory().getItemInMainHand();

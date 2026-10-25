@@ -1,6 +1,9 @@
 package net.tfminecraft.magic.blood;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -18,6 +21,7 @@ import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Pig;
+import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -79,6 +83,50 @@ class AnimalRiteTest {
     }
     List<ItemStack> drops = new ArrayList<>(List.of(new ItemStack(Material.BEEF)));
     return new EntityDeathEvent(animal, DamageSource.builder(DamageType.GENERIC).build(), drops, 5);
+  }
+
+  @Test
+  void animalsAreTaggedSoTheyAlwaysWakeAndCannotBeTakenTwice() throws Exception {
+    UUID keeper = UUID.randomUUID();
+    Cow cow = animal(Cow.class, keeper);
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, cow));
+    assertTrue(cow.getPersistentDataContainer().has(AnimalRiteService.boundKey()));
+    PlayerMock rival = fx.player("rival");
+    String rivalId = BloodFixture.id("rival");
+    fx.record("rival", BloodStage.ANIMAL);
+    BloodAltars.add(BloodAltar.create(rivalId, rival.getUniqueId().toString(), fx.pocket(2, 10, 0), 0f, 1L));
+    rival.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, rivalId));
+    assertEquals(AnimalRiteService.Bind.BUSY, AnimalRiteService.bind(rival, cow));
+
+    AnimalRiteService.wakeLoaded(List.of(cow, fx.world.spawn(new Location(fx.world, 1, 10, 1),
+        org.bukkit.entity.ItemDisplay.class), animal(Cow.class, null)));
+    assertFalse(cow.hasAI());
+    AnimalRiteService.releaseAll();
+    assertTrue(cow.hasAI());
+    assertFalse(cow.getPersistentDataContainer().has(AnimalRiteService.boundKey()));
+
+    Cow stale = animal(Cow.class, keeper);
+    stale.setAI(false);
+    stale.getPersistentDataContainer().set(AnimalRiteService.boundKey(),
+        org.bukkit.persistence.PersistentDataType.LONG, now.get() + 5000);
+    AnimalRiteService.wakeLoaded(List.of(stale));
+    assertTrue(stale.hasAI());
+
+    Sheep sheep = animal(Sheep.class, keeper);
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, sheep));
+    now.addAndGet(21_000L);
+    AnimalRiteService.wakeLoaded(List.of(sheep));
+    assertTrue(sheep.hasAI());
+    assertFalse(AnimalRiteService.isBound(sheep.getUniqueId()));
+
+    Pig pig = spy(animal(Pig.class, keeper));
+    doReturn(false).when(pig).teleport(any(Location.class));
+    assertEquals(AnimalRiteService.Bind.TOO_FAR, AnimalRiteService.bind(mage, pig));
+    assertTrue(pig.hasAI());
+
+    java.nio.file.Files.writeString(temp.resolve("off.yml"), "enabled: false\n");
+    BloodConfig.load(temp.resolve("off.yml").toFile(), fx.logger);
+    assertEquals(AnimalRiteService.Bind.NOT_STAGE, AnimalRiteService.bind(mage, animal(Cow.class, keeper)));
   }
 
   @Test
@@ -256,6 +304,9 @@ class AnimalRiteTest {
     Cow third = animal(Cow.class, keeper);
     AnimalRiteService.bind(again, third);
     third.remove();
+    AnimalRiteService.tick();
+    assertTrue(AnimalRiteService.isBound(third.getUniqueId()));
+    now.addAndGet(21_000L);
     AnimalRiteService.tick();
     assertFalse(AnimalRiteService.isBound(third.getUniqueId()));
 

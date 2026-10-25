@@ -12,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Lightable;
+import org.bukkit.block.data.Ageable;
 
 /**
  * The room around an altar slowly turns. Only listed blocks change: exposed stone-like blocks
@@ -58,7 +59,8 @@ public final class AltarCorruption {
             Block block = center.getRelative(random.nextInt(2 * radius + 1) - radius,
                     random.nextInt(2 * height + 1) - height, random.nextInt(2 * radius + 1) - radius);
             if (block.equals(center) || block.equals(above)
-                    || !block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) {
+                    || !block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)
+                    || AltarRegions.blocked(block.getLocation())) {
                 continue;
             }
             CorruptionConfig.Rule rule = rules.get(random.nextInt(rules.size()));
@@ -103,6 +105,10 @@ public final class AltarCorruption {
         if (data instanceof Lightable lightable) {
             lightable.setLit(true);
             block.setBlockData(lightable, false);
+        } else if (data instanceof Ageable ageable) {
+            // Fully grown: vines and the like never spread beyond what the journal can undo.
+            ageable.setAge(ageable.getMaximumAge());
+            block.setBlockData(ageable, false);
         }
         journal.add(new BloodAltar.CorruptedBlock(block.getX(), block.getY(), block.getZ(), original, to.name()));
         BloodFx.play("corruption", block.getLocation().clone().add(0.5, 0.5, 0.5));

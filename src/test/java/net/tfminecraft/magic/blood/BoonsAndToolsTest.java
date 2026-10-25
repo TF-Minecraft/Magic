@@ -78,7 +78,7 @@ class BoonsAndToolsTest {
       StatMap map = mock(StatMap.class);
       StatInstance instance = mock(StatInstance.class);
       when(data.getStatMap()).thenReturn(map);
-      when(map.getInstance(any())).thenReturn(instance);
+      when(map.getInstances()).thenReturn(List.of(instance));
       players.when(() -> MMOPlayerData.getOrNull(mage)).thenReturn(data);
       BloodBoons.apply(mage);
       assertEquals(2, modifiers.constructed().size());

@@ -7,6 +7,10 @@ import java.util.UUID;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
+import org.bukkit.block.BlockFace;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
@@ -48,6 +52,13 @@ public final class AltarService {
         AltarPlacement.Result result = AltarPlacement.check(target);
         if (result != AltarPlacement.Result.OK) {
             return "blood.altar.place." + result.name().toLowerCase(Locale.ROOT);
+        }
+        // Claims, factions and other protections get their say, and loggers see the altar block placed.
+        BlockPlaceEvent probe = new BlockPlaceEvent(target, target.getState(), target.getRelative(BlockFace.DOWN),
+                new ItemStack(BloodConfig.altarBlock()), player, true, EquipmentSlot.HAND);
+        Bukkit.getPluginManager().callEvent(probe);
+        if (probe.isCancelled() || !probe.canBuild()) {
+            return "blood.altar.place.region";
         }
         BloodAltar altar = BloodAltar.create(character, player.getUniqueId().toString(), target,
                 player.getLocation().getYaw() + 180f, System.currentTimeMillis());
