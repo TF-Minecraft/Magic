@@ -480,7 +480,7 @@ blood:
 
   admin:
 
-    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
+    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | whisper <player> [amount] | voice <player> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
 
     no_record: "#aaaaaa{player} ({character}) has no blood path."
 
@@ -511,3 +511,13 @@ blood:
     altar_purified: "#55ff55Altar at {where} purified."
 
     tp_unavailable: "#ff5555Only in-game staff can teleport, and the altar's world must be loaded."
+
+    whispered: "#55ff55The voices now speak to {player}. The first line comes within a minute."
+
+    already_whispered: "#ff5555{player} already hears the voices."
+
+    whisper_added: "#55ff55{player}'s whisper meter is now {value} (voices woke: {woke})."
+
+    no_voices: "#ff5555{player} does not hear any voices."
+
+    voiced: "#55ff55{player} heard the next line."

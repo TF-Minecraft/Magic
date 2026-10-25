@@ -154,4 +154,49 @@ class BloodListenerTest {
       assertNull(BloodAltars.at(target));
     }
   }
+
+  @Test
+  void killsFeedTheKillersMeterAndSessionsResetVoiceTimers() {
+    try (BloodFixture fx = new BloodFixture(temp)) {
+      PlayerMock killer = fx.player("killer");
+      String killerId = BloodFixture.id("killer");
+      CharacterRef victim = new CharacterRef(UUID.randomUUID(), UUID.randomUUID());
+      listener.onCharacterDeath(new CharacterDeathEvent(victim, UUID.randomUUID(), Instant.EPOCH, null, null, "x"));
+      listener.onCharacterDeath(new CharacterDeathEvent(victim, UUID.randomUUID(), Instant.EPOCH, victim.ownerId(), victim, "x"));
+      assertNull(BloodRecords.get(victim.characterId().toString()));
+      CharacterRef killerRef = new CharacterRef(killer.getUniqueId(), UUID.fromString(killerId));
+      listener.onCharacterDeath(new CharacterDeathEvent(victim, UUID.randomUUID(), Instant.EPOCH,
+          killer.getUniqueId(), killerRef, "x"));
+      assertEquals(15, BloodRecords.get(killerId).getWhisper());
+      CharacterRef otherOfSameOwner = new CharacterRef(killer.getUniqueId(), UUID.randomUUID());
+      listener.onCharacterDeath(new CharacterDeathEvent(victim, UUID.randomUUID(), Instant.EPOCH,
+          killer.getUniqueId(), otherOfSameOwner, "x"));
+      assertEquals(15, BloodRecords.get(otherOfSameOwner.characterId().toString()).getWhisper());
+      CharacterRef offline = new CharacterRef(UUID.randomUUID(), UUID.randomUUID());
+      listener.onCharacterDeath(new CharacterDeathEvent(victim, UUID.randomUUID(), Instant.EPOCH,
+          offline.ownerId(), offline, "x"));
+      assertEquals(15, BloodRecords.get(offline.characterId().toString()).getWhisper());
+
+      BloodConfig.load(new java.io.File("src/main/resources/bloodmagic.yml"), fx.logger);
+      BloodConfig.setEnabled(true);
+      var cow = fx.world.spawn(killer.getLocation(), org.bukkit.entity.Cow.class);
+      killer.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
+      listener.onAnimalDeath(new org.bukkit.event.entity.EntityDeathEvent(cow,
+          org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
+      cow.setKiller(killer);
+      fx.world.setTime(1000);
+      listener.onAnimalDeath(new org.bukkit.event.entity.EntityDeathEvent(cow,
+          org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
+      assertEquals(19, BloodRecords.get(killerId).getWhisper());
+
+      WhisperService.voiceSoon(killer);
+      listener.onQuit(new org.bukkit.event.player.PlayerQuitEvent(killer, "bye"));
+      assertNull(WhisperService.nextVoice(killer.getUniqueId()));
+      WhisperService.voiceSoon(killer);
+      listener.onSessionStart(new net.tfminecraft.tlibs.character.CharacterSessionStartEvent(killer,
+          new net.tfminecraft.tlibs.character.CharacterSession(killerRef, 99)));
+      assertNull(WhisperService.nextVoice(killer.getUniqueId()));
+      WhisperService.clear();
+    }
+  }
 }

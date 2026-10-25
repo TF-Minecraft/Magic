@@ -37,6 +37,10 @@ public final class BloodConfig {
     private static int purifyCheckMinutes = 10;
     private static int huntPointsRequired = 7;
 
+    static {
+        reset();
+    }
+
     private BloodConfig() {}
 
     /** Loads the file; a missing or broken file leaves the feature disabled. Returns false on error. */
@@ -96,6 +100,7 @@ public final class BloodConfig {
         allowedRegions = lower(config.getStringList("placement.allowed_regions"));
         purifyCheckMinutes = Math.max(1, config.getInt("placement.purify_check_minutes", 10));
         huntPointsRequired = Math.max(1, config.getInt("hunt.points_required", 7));
+        WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
         return ok;
     }
 
@@ -149,6 +154,7 @@ public final class BloodConfig {
         allowedRegions = List.of();
         purifyCheckMinutes = 10;
         huntPointsRequired = 7;
+        WhisperConfig.reset();
     }
 
     public static boolean isEnabled() {

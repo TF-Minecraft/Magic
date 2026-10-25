@@ -169,4 +169,40 @@ class BloodCommandTest {
       assertEquals(List.of(), BloodCommand.complete(new String[] {"blood", "info", "Mage", "x", ""}));
     }
   }
+
+  @Test
+  void whisperAndVoiceTools() {
+    try (BloodFixture fx = new BloodFixture(temp)) {
+      BloodConfig.load(new java.io.File("src/main/resources/bloodmagic.yml"), fx.logger);
+      ConsoleCommandSenderMock console = (ConsoleCommandSenderMock) fx.server.getConsoleSender();
+      PlayerMock mage = fx.server.addPlayer("Mage");
+      fx.characters.start(mage, "mage");
+      run(console, "blood whisper");
+      assertEquals("blood.admin.usage", console.nextMessage());
+      run(console, "blood whisper Mage 1 2");
+      assertEquals("blood.admin.usage", console.nextMessage());
+      run(console, "blood voice Mage");
+      assertEquals("blood.admin.no_voices", console.nextMessage());
+      run(console, "blood whisper Mage lots");
+      assertEquals("values.invalid_amount", console.nextMessage());
+      run(console, "blood whisper Mage 5");
+      assertEquals("blood.admin.whisper_added", console.nextMessage());
+      run(console, "blood voice Mage");
+      assertEquals("blood.admin.no_voices", console.nextMessage());
+      run(console, "blood whisper Mage");
+      assertEquals("blood.admin.whispered", console.nextMessage());
+      assertEquals(BloodStage.WHISPERED, BloodRecords.get(BloodFixture.id("mage")).getStage());
+      run(console, "blood whisper Mage");
+      assertEquals("blood.admin.already_whispered", console.nextMessage());
+      run(console, "blood whisper Mage 5");
+      assertEquals("blood.admin.whisper_added", console.nextMessage());
+      run(console, "blood voice Mage");
+      assertEquals("blood.admin.voiced", console.nextMessage());
+      assertNotNull(mage.nextMessage());
+      BloodRecords.delete(BloodFixture.id("mage"));
+      run(console, "blood whisper Mage 0");
+      assertEquals("blood.admin.whisper_added", console.nextMessage());
+      WhisperService.clear();
+    }
+  }
 }

@@ -2,7 +2,9 @@ package net.tfminecraft.magic.blood;
 
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,16 +15,20 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
+import net.tfminecraft.tlibs.character.CharacterRef;
+import net.tfminecraft.tlibs.character.CharacterSessionStartEvent;
 
-/** Altar placement, protection, looks on chunk load, and the owner's death. */
+/** Altar placement, protection, looks on chunk load, dark deeds for the whisper meter, and deaths. */
 public final class BloodListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -99,6 +105,33 @@ public final class BloodListener implements Listener {
     @EventHandler
     public void onCharacterDeath(CharacterDeathEvent event) {
         AltarService.onCharacterDeath(event.getCharacter().characterId().toString());
+        CharacterRef killer = event.getKillerCharacter();
+        if (killer == null || killer.characterId().equals(event.getCharacter().characterId())) {
+            return;
+        }
+        String character = killer.characterId().toString();
+        Player online = Bukkit.getPlayer(killer.ownerId());
+        Player current = online != null && character.equalsIgnoreCase(AltarService.currentCharacter(online))
+                ? online : null;
+        WhisperService.addTo(character, killer.ownerId().toString(), WhisperConfig.characterKill(), current);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onAnimalDeath(EntityDeathEvent event) {
+        Player killer = event.getEntity().getKiller();
+        if (killer != null) {
+            WhisperService.add(killer, WhisperService.animalKillWeight(killer, event.getEntity()));
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        WhisperService.forget(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onSessionStart(CharacterSessionStartEvent event) {
+        WhisperService.forget(event.getPlayer().getUniqueId());
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

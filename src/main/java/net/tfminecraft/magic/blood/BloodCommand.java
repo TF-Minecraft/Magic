@@ -14,12 +14,13 @@ import org.bukkit.inventory.ItemStack;
 import net.tfminecraft.magic.Messages;
 
 /**
- * Staff tools: /magic blood &lt;list|info|stage|path|give|altar|reset&gt;.
+ * Staff tools: /magic blood &lt;list|info|stage|path|give|whisper|voice|altar|reset&gt;.
  * Player targets must be online on the character being edited; altars can also be named by id.
  */
 public final class BloodCommand {
 
-    static final List<String> SUBCOMMANDS = List.of("list", "info", "stage", "path", "give", "altar", "reset");
+    static final List<String> SUBCOMMANDS = List.of(
+            "list", "info", "stage", "path", "give", "whisper", "voice", "altar", "reset");
     private static final List<String> ALTAR_ACTIONS = List.of("info", "tp", "refresh", "purify");
 
     private BloodCommand() {}
@@ -32,6 +33,8 @@ public final class BloodCommand {
             case "stage" -> withTarget(sender, args, 4, (player, character) -> stage(sender, player, character, args[3]));
             case "path" -> withTarget(sender, args, 4, (player, character) -> path(sender, player, character, args[3]));
             case "give" -> withTarget(sender, args, 4, (player, character) -> give(sender, player, character, args[3]));
+            case "whisper" -> whisper(sender, args);
+            case "voice" -> withTarget(sender, args, 3, (player, character) -> voice(sender, player, character));
             case "altar" -> altar(sender, args);
             case "reset" -> withTarget(sender, args, 3, (player, character) -> reset(sender, player, character));
             default -> sender.sendMessage(Messages.get("blood.admin.usage"));
@@ -126,6 +129,53 @@ public final class BloodCommand {
             player.getWorld().dropItemNaturally(player.getLocation(), left);
         }
         sender.sendMessage(Messages.get("blood.admin.given", "player", player.getName(), "item", kind.key()));
+    }
+
+    /** whisper &lt;player&gt; wakes the voices now; whisper &lt;player&gt; &lt;amount&gt; adds to the meter. */
+    private static void whisper(CommandSender sender, String[] args) {
+        if (args.length != 3 && args.length != 4) {
+            sender.sendMessage(Messages.get("blood.admin.usage"));
+            return;
+        }
+        withTarget(sender, Arrays.copyOf(args, 3), 3, (player, character) -> {
+            if (args.length == 4) {
+                addWhisper(sender, player, character, args[3]);
+                return;
+            }
+            BloodRecord record = BloodRecords.getOrCreate(character, player.getUniqueId().toString());
+            if (record.getStage() != BloodStage.NONE) {
+                sender.sendMessage(Messages.get("blood.admin.already_whispered", "player", player.getName()));
+                return;
+            }
+            WhisperService.awaken(record, player);
+            saved(sender, record);
+            sender.sendMessage(Messages.get("blood.admin.whispered", "player", player.getName()));
+        });
+    }
+
+    private static void addWhisper(CommandSender sender, Player player, String character, String raw) {
+        double amount;
+        try {
+            amount = Double.parseDouble(raw);
+        } catch (NumberFormatException ex) {
+            sender.sendMessage(Messages.get("values.invalid_amount"));
+            return;
+        }
+        boolean woke = WhisperService.addTo(character, player.getUniqueId().toString(), amount, player);
+        BloodRecord record = BloodRecords.get(character);
+        sender.sendMessage(Messages.get("blood.admin.whisper_added", "player", player.getName(),
+                "value", String.format(Locale.ROOT, "%.1f", record != null ? record.getWhisper() : 0),
+                "woke", String.valueOf(woke)));
+    }
+
+    private static void voice(CommandSender sender, Player player, String character) {
+        BloodRecord record = BloodRecords.get(character);
+        if (record == null || record.getStage() == BloodStage.NONE) {
+            sender.sendMessage(Messages.get("blood.admin.no_voices", "player", player.getName()));
+            return;
+        }
+        WhisperService.speakNext(player, record);
+        sender.sendMessage(Messages.get("blood.admin.voiced", "player", player.getName()));
     }
 
     private static void reset(CommandSender sender, Player player, String character) {

@@ -61,3 +61,67 @@ placement:
   allowed_regions: []
   # How often (minutes) altars of dead owners are checked and purified.
   purify_check_minutes: 10
+
+# Hidden whisper meter. Dark deeds fill it; past threshold the voices start. It slowly drains.
+whispers:
+  threshold: 30
+  decay_per_hour: 1.0
+  # Characters with one of these RPCharacters traits fill the meter faster (the evil fast route).
+  fast_traits: [heretic]
+  fast_multiplier: 3.0
+  sources:
+    # Killing a listed animal with a blade.
+    animal_kill: 2.0
+    # Animal kills count this many times more at night or with nobody near.
+    alone_or_night_multiplier: 2.0
+    # A character you killed died for good.
+    character_kill: 15.0
+    # Every ten minutes while your equilibrium is at or below corruption_below.
+    corruption: 1.0
+    corruption_below: -40
+  animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
+
+# The two voices. The god speaks until a mage refuses it; then only the mage's own dark self.
+# whispered lines are said in order and end with the knife and altar; other stages pick at random.
+voices:
+  # Minutes between lines, picked at random in this range.
+  interval_minutes: [15, 35]
+  # Only speak when no other player is within alone_radius blocks.
+  require_alone: true
+  alone_radius: 24
+  god:
+    style: "#8a0303§o"
+    sound: minecraft:ambient.cave
+    pitch: 0.5
+    lines:
+      whispered:
+        - "...can you hear it? Beneath the floor. Beneath the stone."
+        - "So much warm blood walks above us. All of it wasted."
+        - "Listen, little one. We will teach you, if you are hungry enough."
+        - "Lay a stone deep in the earth, where no sky can see it."
+        - "Bring beasts to the stone while they still breathe. Hold them, and open them with a plain blade."
+        - "Not your own beasts. Take what others keep. Seven kinds, one each day."
+        - "Look in your pack. We have been generous."
+      animal:
+        - "The stone is thirsty."
+        - "Another kind. We have tasted that one."
+        - "Their pens are full and their owners sleep."
+        - "Lead it down to the stone. Hold it still."
+      choice:
+        - "Come to the stone. We have something to ask of you."
+      final:
+        - "You are ours now. Feed us."
+        - "We remember every drop you give."
+        - "We have chosen for you. Go to the stone."
+  self:
+    style: "#7a7a7a§o"
+    sound: minecraft:entity.warden.heartbeat
+    pitch: 1.2
+    lines:
+      hunt:
+        - "We need no god. Only more."
+        - "Who would miss them? Better: who would we miss?"
+        - "The stone is quiet now. It is only us."
+      final:
+        - "It has to be them. You know it does."
+        - "The closer they are, the more it gives."

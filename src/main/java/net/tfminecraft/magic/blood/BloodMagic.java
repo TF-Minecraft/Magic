@@ -35,6 +35,7 @@ public final class BloodMagic {
         if (context.everyMinutes(BloodConfig.purifyCheckMinutes())) {
             AltarService.sweepDead();
         }
+        WhisperService.tick(context);
     }
 
     public static boolean loadConfig(File dataFolder, Logger log) {
@@ -42,6 +43,7 @@ public final class BloodMagic {
     }
 
     public static void stop() {
+        WhisperService.clear();
         BloodRecords.clear();
         BloodAltars.clear();
     }
