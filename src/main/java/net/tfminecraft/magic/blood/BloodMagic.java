@@ -18,6 +18,7 @@ public final class BloodMagic {
         BloodStore store = new BloodStore(new File(plugin.getDataFolder(), "data/bloodmagic"), plugin.getLogger());
         BloodRecords.init(store);
         BloodAltars.init(store);
+        BloodNotes.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
         MagicTickService.register(BloodMagic::tick);
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
@@ -36,6 +37,12 @@ public final class BloodMagic {
             AltarService.sweepDead();
         }
         WhisperService.tick(context);
+        AnimalRiteService.tick();
+        if (context.everyMinutes(1)) {
+            AltarCorruption.ambient();
+            BloodNotes.tick(System.currentTimeMillis());
+            StolenClues.tick();
+        }
     }
 
     public static boolean loadConfig(File dataFolder, Logger log) {
@@ -43,6 +50,9 @@ public final class BloodMagic {
     }
 
     public static void stop() {
+        AnimalRiteService.releaseAll();
+        StolenClues.clear();
+        BloodNotes.clear();
         WhisperService.clear();
         BloodRecords.clear();
         BloodAltars.clear();

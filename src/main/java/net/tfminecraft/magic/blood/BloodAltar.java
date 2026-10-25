@@ -1,5 +1,7 @@
 package net.tfminecraft.magic.blood;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -21,6 +23,12 @@ public final class BloodAltar {
     private int level;
     private String displayId;
     private long placedAt;
+    private long lastSpreadAt;
+    /** Blocks the altar changed, oldest first, so purification can put them back. */
+    private List<CorruptedBlock> corrupted = new ArrayList<>();
+
+    /** One block the altar changed: where, what it was, and what the altar made it. */
+    public record CorruptedBlock(int x, int y, int z, String original, String placed) {}
 
     public BloodAltar() {}
 
@@ -103,6 +111,21 @@ public final class BloodAltar {
         return placedAt;
     }
 
+    public long getLastSpreadAt() {
+        return lastSpreadAt;
+    }
+
+    public void setLastSpreadAt(long lastSpreadAt) {
+        this.lastSpreadAt = lastSpreadAt;
+    }
+
+    public List<CorruptedBlock> getCorrupted() {
+        if (corrupted == null) {
+            corrupted = new ArrayList<>();
+        }
+        return corrupted;
+    }
+
     public String blockKey() {
         return key(world, x, y, z);
     }
@@ -120,7 +143,7 @@ public final class BloodAltar {
     /** Centre of the altar block, or null when its world is not loaded. */
     public Location center() {
         Block block = block();
-        return block != null ? block.getLocation().add(0.5, 0.5, 0.5) : null;
+        return block != null ? block.getLocation().clone().add(0.5, 0.5, 0.5) : null;
     }
 
     public static String key(String world, int x, int y, int z) {

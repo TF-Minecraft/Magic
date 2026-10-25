@@ -478,6 +478,60 @@ blood:
 
       region: "#8c8c8c§oThis ground is watched. Find somewhere forgotten"
 
+  animal:
+
+    bind:
+
+      ok: "#8a0303§oIt goes still on the stone. Its heart hammers. Now"
+
+      not_stage: "#8c8c8c§oThe stone wants nothing from it"
+
+      not_knife: "#8c8c8c§oIt is only a knife in your hand"
+
+      no_altar: "#8c8c8c§oThere is no stone to lay it on"
+
+      not_species: "#8c8c8c§oThe stone does not want that"
+
+      known: "#8a0303§oWe have tasted that kind. Bring another"
+
+      cooldown: "#8a0303§oNot yet. The stone is still drinking"
+
+      not_stolen: "#8a0303§oNot that one. Take what others keep"
+
+      too_far: "#8a0303§oBring it closer to the stone"
+
+      busy: "#8a0303§oOne at a time"
+
+    spoiled: "#8c8c8c§oThe blood spills wasted. The stone did not drink"
+
+    escaped: "#8c8c8c§oThe beast tears free of the stone"
+
+    accepted: "#8a0303§oThe stone drinks. It is warmer than before"
+
+    complete: "#8a0303§oSeven kinds. The stone is red to its heart. Something new rests in your hand"
+
+    note: "#aaaaaa§oSomething took {animal} while no one was watching. Drag marks lead {direction}"
+
+    note_lost: "#aaaaaa§oSomething took {animal} while no one was watching"
+
+  direction:
+
+    north: "north"
+
+    northeast: "north-east"
+
+    east: "east"
+
+    southeast: "south-east"
+
+    south: "south"
+
+    southwest: "south-west"
+
+    west: "west"
+
+    northwest: "north-west"
+
   admin:
 
     usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | whisper <player> [amount] | voice <player> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"

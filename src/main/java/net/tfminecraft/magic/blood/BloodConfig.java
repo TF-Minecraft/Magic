@@ -101,6 +101,8 @@ public final class BloodConfig {
         purifyCheckMinutes = Math.max(1, config.getInt("placement.purify_check_minutes", 10));
         huntPointsRequired = Math.max(1, config.getInt("hunt.points_required", 7));
         WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
+        AnimalConfig.load(config.getConfigurationSection("animal"), log);
+        CorruptionConfig.load(config.getConfigurationSection("corruption"), log);
         return ok;
     }
 
@@ -155,6 +157,8 @@ public final class BloodConfig {
         purifyCheckMinutes = 10;
         huntPointsRequired = 7;
         WhisperConfig.reset();
+        AnimalConfig.reset();
+        CorruptionConfig.reset();
     }
 
     public static boolean isEnabled() {

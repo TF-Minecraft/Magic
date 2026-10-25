@@ -85,6 +85,7 @@ public final class AltarService {
 
     /** Removes the altar from the world and from its owner's record. */
     public static void purify(BloodAltar altar, String reason) {
+        AltarCorruption.restore(altar);
         AltarDisplays.remove(altar);
         BloodAltars.remove(altar);
         BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());

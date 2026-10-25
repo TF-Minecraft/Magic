@@ -1,9 +1,11 @@
 package net.tfminecraft.magic.blood;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -17,6 +19,8 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerLeashEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
@@ -51,6 +55,24 @@ public final class BloodListener implements Listener {
         event.setUseItemInHand(Event.Result.DENY);
         Block target = AltarPlacement.replaceable(clicked) ? clicked : clicked.getRelative(event.getBlockFace());
         event.getPlayer().sendMessage(Messages.get(AltarService.place(event.getPlayer(), hand, target)));
+    }
+
+    /** The ritual knife binds a living animal onto its owner's altar. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND || !(event.getRightClicked() instanceof LivingEntity animal)
+                || animal instanceof Player
+                || !BloodItems.is(event.getPlayer().getInventory().getItemInMainHand(), BloodItemKind.RITUAL_KNIFE)) {
+            return;
+        }
+        event.setCancelled(true);
+        AnimalRiteService.Bind result = AnimalRiteService.bind(event.getPlayer(), animal);
+        event.getPlayer().sendMessage(Messages.get("blood.animal.bind." + result.name().toLowerCase(Locale.ROOT)));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onLeash(PlayerLeashEntityEvent event) {
+        StolenClues.leashed(event.getEntity());
     }
 
     /** The altar item is never set down as an ordinary block. */
@@ -96,6 +118,7 @@ public final class BloodListener implements Listener {
     @EventHandler
     public void onEntitiesLoad(EntitiesLoadEvent event) {
         AltarDisplays.removeStrays(event.getEntities());
+        StolenClues.removeExpired(event.getEntities());
         for (BloodAltar altar : BloodAltars.inChunk(event.getWorld().getName(),
                 event.getChunk().getX(), event.getChunk().getZ())) {
             AltarService.refresh(altar);
@@ -118,6 +141,7 @@ public final class BloodListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onAnimalDeath(EntityDeathEvent event) {
+        AnimalRiteService.onDeath(event);
         Player killer = event.getEntity().getKiller();
         if (killer != null) {
             WhisperService.add(killer, WhisperService.animalKillWeight(killer, event.getEntity()));
@@ -127,11 +151,14 @@ public final class BloodListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         WhisperService.forget(event.getPlayer().getUniqueId());
+        AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
     public void onSessionStart(CharacterSessionStartEvent event) {
         WhisperService.forget(event.getPlayer().getUniqueId());
+        BloodNotes.deliver(event.getPlayer(), event.getSession().ref().characterId().toString(),
+                System.currentTimeMillis(), true);
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

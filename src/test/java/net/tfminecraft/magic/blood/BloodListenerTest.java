@@ -199,4 +199,49 @@ class BloodListenerTest {
       WhisperService.clear();
     }
   }
+
+  @Test
+  void ritualKnifeClicksBindAnimalsAndLeadsAreRemembered() {
+    try (BloodFixture fx = new BloodFixture(temp)) {
+      PlayerMock mage = fx.player("mage");
+      var cow = fx.world.spawn(mage.getLocation(), org.bukkit.entity.Cow.class);
+      var stand = fx.world.spawn(mage.getLocation(), org.bukkit.entity.ArmorStand.class);
+      PlayerMock other = fx.server.addPlayer();
+      var offHand = new org.bukkit.event.player.PlayerInteractEntityEvent(mage, cow, EquipmentSlot.OFF_HAND);
+      listener.onInteractEntity(offHand);
+      assertFalse(offHand.isCancelled());
+      var plain = new org.bukkit.event.player.PlayerInteractEntityEvent(mage, cow, EquipmentSlot.HAND);
+      listener.onInteractEntity(plain);
+      assertFalse(plain.isCancelled());
+      mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, BloodFixture.id("mage")));
+      var atPlayer = new org.bukkit.event.player.PlayerInteractEntityEvent(mage, other, EquipmentSlot.HAND);
+      listener.onInteractEntity(atPlayer);
+      assertFalse(atPlayer.isCancelled());
+      var item = fx.world.dropItem(mage.getLocation(), new ItemStack(Material.STONE));
+      var atItem = new org.bukkit.event.player.PlayerInteractEntityEvent(mage, item, EquipmentSlot.HAND);
+      listener.onInteractEntity(atItem);
+      assertFalse(atItem.isCancelled());
+      var atCow = new org.bukkit.event.player.PlayerInteractEntityEvent(mage, cow, EquipmentSlot.HAND);
+      listener.onInteractEntity(atCow);
+      assertTrue(atCow.isCancelled());
+      assertEquals("blood.animal.bind.not_stage", mage.nextMessage());
+      assertNotNull(stand);
+
+      listener.onLeash(new org.bukkit.event.entity.PlayerLeashEntityEvent(cow, mage, mage, EquipmentSlot.HAND));
+      assertTrue(StolenClues.remembers(cow.getUniqueId()));
+      StolenClues.clear();
+
+      var trace = fx.world.spawn(mage.getLocation(), ItemDisplay.class);
+      trace.getPersistentDataContainer().set(StolenClues.traceKey(), org.bukkit.persistence.PersistentDataType.LONG, 0L);
+      listener.onEntitiesLoad(new EntitiesLoadEvent(fx.world.getChunkAt(0, 0), List.of(trace)));
+      assertFalse(trace.isValid());
+
+      BloodNotes.add(new BloodNotes.Note(mage.getUniqueId().toString(), null, "taken", Long.MAX_VALUE));
+      listener.onSessionStart(new net.tfminecraft.tlibs.character.CharacterSessionStartEvent(mage,
+          new net.tfminecraft.tlibs.character.CharacterSession(
+              new CharacterRef(mage.getUniqueId(), UUID.fromString(BloodFixture.id("mage"))), 5)));
+      assertEquals("taken", mage.nextMessage());
+      BloodNotes.clear();
+    }
+  }
 }

@@ -25,14 +25,17 @@ public final class BloodStore {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type ALTAR_LIST = new TypeToken<List<BloodAltar>>() {}.getType();
+    private static final Type NOTE_LIST = new TypeToken<List<BloodNotes.Note>>() {}.getType();
 
     private final File characters;
     private final File altars;
+    private final File notes;
     private final Logger log;
 
     public BloodStore(File root, Logger log) {
         this.characters = new File(root, "characters");
         this.altars = new File(root, "altars.json");
+        this.notes = new File(root, "notes.json");
         this.log = log;
     }
 
@@ -92,6 +95,26 @@ public final class BloodStore {
 
     public boolean saveAltars(List<BloodAltar> list) {
         return write(altars, GSON.toJson(list, ALTAR_LIST));
+    }
+
+    public List<BloodNotes.Note> loadNotes() {
+        List<BloodNotes.Note> out = new ArrayList<>();
+        if (!notes.isFile()) {
+            return out;
+        }
+        List<BloodNotes.Note> loaded = read(notes, NOTE_LIST);
+        if (loaded != null) {
+            for (BloodNotes.Note note : loaded) {
+                if (note != null && note.account() != null && note.text() != null) {
+                    out.add(note);
+                }
+            }
+        }
+        return out;
+    }
+
+    public boolean saveNotes(List<BloodNotes.Note> list) {
+        return write(notes, GSON.toJson(list, NOTE_LIST));
     }
 
     private <T> T read(File file, Type type) {
