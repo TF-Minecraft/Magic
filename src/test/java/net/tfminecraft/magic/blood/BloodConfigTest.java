@@ -54,7 +54,7 @@ class BloodConfigTest {
     File bundled = new File("src/main/resources/wildmagic/bloodmagic");
     assertTrue(BloodConfig.load(bundled, log));
     assertTrue(BloodConfig.isEnabled());
-    assertEquals("ia.tfmc_blood:blood_knife", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());
+    assertEquals("m.lore_weapons.blood_knife", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());
     assertFalse(BloodConfig.item(BloodItemKind.ALTAR).lore().isEmpty());
     assertEquals(Material.BARRIER, BloodConfig.altarBlock());
     assertEquals("ia.tfmc_blood:altar_0", BloodConfig.model(0));

@@ -12,15 +12,13 @@ items:
       - "#8c8c8c§oA slab of old carved stone, worn smooth"
       - "#8c8c8c§oby hands that are long gone."
       - "#5c5c5c§oIt is heavier than it should be."
-  # The plain knife (shown as Hunting Knife) is an MMOItems lore weapon (name, lore and look come from MMOItems).
+  # Both knives are MMOItems lore weapons (name, lore, stats and look come from MMOItems):
+  # the plain knife shows as Hunting Knife, the blood knife as Vein-Reaver.
   ritual_knife:
     path: m.lore_weapons.ritual_knife
     name: ""
     lore: []
   blood_knife:
-    path: ia.tfmc_blood:blood_knife
-    name: "#8a0303Vein-Reaver"
-    lore:
-      - "#5c0202§oIt winds like a vein, and it is older than you."
-      - "#5c0202§oIt is warm to the touch,"
-      - "#5c0202§oand if you hold it still, it beats."
+    path: m.lore_weapons.blood_knife
+    name: ""
+    lore: []

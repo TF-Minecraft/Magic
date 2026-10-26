@@ -226,6 +226,7 @@ class ChoiceTest {
     ItemStack helmet = BloodArmour.bind(new ItemStack(Material.LEATHER_HELMET), id);
     assertTrue(BloodArmour.is(helmet));
     assertTrue(helmet.getItemMeta().isUnbreakable());
+    assertTrue(helmet.getItemMeta().hasItemFlag(org.bukkit.inventory.ItemFlag.HIDE_UNBREAKABLE));
     assertFalse(BloodArmour.is(null));
     assertFalse(BloodArmour.is(new ItemStack(Material.AIR)));
     assertFalse(BloodArmour.is(new ItemStack(Material.STONE)));

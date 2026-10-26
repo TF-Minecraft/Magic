@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -83,6 +84,7 @@ public final class BloodArmour {
     static ItemStack bind(ItemStack item, String characterId) {
         ItemMeta meta = item.getItemMeta();
         meta.setUnbreakable(true);
+        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         meta.getPersistentDataContainer().set(BloodItems.kindKey(), PersistentDataType.STRING, KIND);
         meta.getPersistentDataContainer().set(BloodItems.ownerKey(), PersistentDataType.STRING, characterId);
         item.setItemMeta(meta);

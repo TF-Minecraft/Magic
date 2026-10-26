@@ -39,6 +39,7 @@ class AltarServiceTest {
       assertEquals(BloodItemKind.RITUAL_KNIFE, BloodItems.kind(knife));
       assertEquals("c1", BloodItems.owner(knife));
       assertTrue(knife.getItemMeta().isUnbreakable());
+      assertTrue(knife.getItemMeta().hasItemFlag(org.bukkit.inventory.ItemFlag.HIDE_UNBREAKABLE));
       assertTrue(BloodItems.is(knife, BloodItemKind.RITUAL_KNIFE));
       assertFalse(BloodItems.is(knife, null));
       assertFalse(BloodItems.is(knife, BloodItemKind.ALTAR));

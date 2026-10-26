@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -46,6 +47,7 @@ public final class BloodItems {
         }
         if (kind != BloodItemKind.ALTAR) {
             meta.setUnbreakable(true);
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         }
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(kindKey(), PersistentDataType.STRING, kind.key());
