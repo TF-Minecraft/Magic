@@ -39,6 +39,9 @@ public final class BloodConfig {
     private static boolean denyRegions = true;
     private static List<String> allowedRegions = List.of();
     private static int purifyCheckMinutes = 10;
+    private static boolean roomEnabled = true;
+    private static int roomHeight = 3;
+    private static int roomMaxChanges = 150;
     private static int huntPointsRequired = 7;
 
     static {
@@ -126,6 +129,9 @@ public final class BloodConfig {
         denyRegions = config.getBoolean("placement.deny_regions", true);
         allowedRegions = lower(config.getStringList("placement.allowed_regions"));
         purifyCheckMinutes = Math.max(1, config.getInt("placement.purify_check_minutes", 10));
+        roomEnabled = config.getBoolean("placement.room.enabled", true);
+        roomHeight = Math.max(2, config.getInt("placement.room.height", 3));
+        roomMaxChanges = Math.max(0, config.getInt("placement.room.max_changes", 150));
         huntPointsRequired = Math.max(1, config.getInt("hunt.points_required", 7));
         WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
         AnimalConfig.load(config.getConfigurationSection("animal"), log);
@@ -171,6 +177,9 @@ public final class BloodConfig {
 
     /** Clears everything back to the disabled defaults. */
     public static void reset() {
+        roomEnabled = true;
+        roomHeight = 3;
+        roomMaxChanges = 150;
         enabled = false;
         ITEMS.clear();
         for (BloodItemKind kind : BloodItemKind.values()) {
@@ -256,6 +265,19 @@ public final class BloodConfig {
 
     public static boolean regionAllowed(String regionId) {
         return regionId != null && allowedRegions.contains(regionId.toLowerCase(Locale.ROOT));
+    }
+
+    /** Whether placing the altar shapes its meditation room (placement.room). */
+    public static boolean roomEnabled() {
+        return roomEnabled;
+    }
+
+    public static int roomHeight() {
+        return roomHeight;
+    }
+
+    public static int roomMaxChanges() {
+        return roomMaxChanges;
     }
 
     public static int purifyCheckMinutes() {

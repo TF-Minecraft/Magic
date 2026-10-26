@@ -72,7 +72,7 @@ class AltarServiceTest {
   void placingNeedsTheOwnerOnTheRightStageWithNoOtherAltar() {
     try (BloodFixture fx = new BloodFixture(temp)) {
       PlayerMock player = fx.player("mage");
-      Block target = fx.pocket(0, 10, 0);
+      Block target = fx.room(0, 10, 0);
       ItemStack item = altarItem(fx, "mage");
       BloodConfig.setEnabled(false);
       assertEquals("blood.altar.inert", AltarService.place(player, item, target));
@@ -178,7 +178,7 @@ class AltarServiceTest {
     try (BloodFixture fx = new BloodFixture(temp)) {
       PlayerMock player = fx.player("mage");
       fx.record("mage", BloodStage.ANIMAL);
-      Block target = fx.pocket(0, 10, 0);
+      Block target = fx.room(0, 10, 0);
       AltarService.place(player, altarItem(fx, "mage"), target);
       BloodAltar altar = BloodAltars.at(target);
       AltarService.purify(altar, "test");

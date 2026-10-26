@@ -47,7 +47,7 @@ class BloodListenerTest {
       PlayerMock player = fx.player("mage");
       fx.record("mage", BloodStage.ANIMAL);
       Block floor = fx.world.getBlockAt(0, 9, 0);
-      Block target = fx.pocket(0, 10, 0);
+      Block target = fx.room(0, 10, 0);
       ItemStack item = BloodItems.create(BloodItemKind.ALTAR, BloodFixture.id("mage"));
 
       PlayerInteractEvent offHand = click(player, Action.RIGHT_CLICK_BLOCK, item, floor, BlockFace.UP, EquipmentSlot.OFF_HAND);
@@ -73,7 +73,7 @@ class BloodListenerTest {
       assertTrue(touch.isCancelled());
       assertEquals("blood.altar.owner_touch", player.nextMessage());
 
-      Block grass = fx.pocket(5, 10, 5);
+      Block grass = fx.room(5, 10, 5);
       grass.setType(Material.SHORT_GRASS);
       fx.record("other", BloodStage.ANIMAL);
       PlayerMock other = fx.player("other");

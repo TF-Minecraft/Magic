@@ -34,6 +34,9 @@ blood:
 
       shallow: "#8c8c8c§oNot deep enough. Take it further down, under more rock"
 
+      room_too_much: "#8c8c8c§oThe stone wants a chamber of its own: open floor {size} by {size}, {height} high, with it in the middle. Too much rock is in the way here"
+      room_blocked: "#8c8c8c§oThe stone wants a chamber of its own, {size} by {size} and {height} high, but something here will not make way: water, a chest, another stone, or claimed ground"
+      room_shallow: "#8c8c8c§oCarving its chamber here would open the rock to the sky. Go deeper"
       region: "#8c8c8c§oThis ground is claimed and watched. Find somewhere forgotten"
 
   animal:

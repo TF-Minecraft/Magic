@@ -51,7 +51,7 @@ class AnimalRiteTest {
     mage = fx.player("mage");
     id = BloodFixture.id("mage");
     record = fx.record("mage", BloodStage.ANIMAL);
-    target = fx.pocket(0, 10, 0);
+    target = fx.room(0, 10, 0);
     AltarService.place(mage, BloodItems.create(BloodItemKind.ALTAR, id), target);
     altar = BloodAltars.ofCharacter(id);
     mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, id));

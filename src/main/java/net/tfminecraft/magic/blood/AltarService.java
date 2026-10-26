@@ -60,6 +60,12 @@ public final class AltarService {
         if (probe.isCancelled() || !probe.canBuild()) {
             return "blood.altar.place.region";
         }
+        // The altar is the middle of a meditation circle: its room is shaped to hold the pedestals.
+        AltarRoom.Plan room = AltarRoom.plan(target, player.getLocation().getBlock().getRelative(BlockFace.DOWN));
+        if (room.verdict() != AltarRoom.Verdict.OK) {
+            return "blood.altar.place.room_" + room.verdict().name().toLowerCase(Locale.ROOT);
+        }
+        room.apply();
         BloodAltar altar = BloodAltar.create(character, player.getUniqueId().toString(), target,
                 player.getLocation().getYaw() + 180f, System.currentTimeMillis());
         altar.setLevel(BloodProgress.level(record));

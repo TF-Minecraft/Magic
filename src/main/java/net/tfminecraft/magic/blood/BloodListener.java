@@ -77,7 +77,8 @@ public final class BloodListener implements Listener {
         event.setCancelled(true);
         event.setUseItemInHand(Event.Result.DENY);
         Block target = AltarPlacement.replaceable(clicked) ? clicked : clicked.getRelative(event.getBlockFace());
-        event.getPlayer().sendMessage(Messages.get(AltarService.place(event.getPlayer(), hand, target)));
+        event.getPlayer().sendMessage(Messages.get(AltarService.place(event.getPlayer(), hand, target),
+                "size", String.valueOf(AltarRoom.size()), "height", String.valueOf(BloodConfig.roomHeight())));
     }
 
     /** The ritual knife binds a living animal onto its owner's altar. */

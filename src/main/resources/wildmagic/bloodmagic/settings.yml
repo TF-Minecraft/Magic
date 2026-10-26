@@ -40,6 +40,17 @@ placement:
   # Refuse any WorldGuard region except the ids listed here (needs WorldGuard).
   deny_regions: true
   allowed_regions: []
+  # The altar is also a meditation circle, sat on in the middle of the eight pedestals (config.yml
+  # meditation.cardinal_offset / diagonal_offset, 4 and 3). Placing it shapes the room: open floor out
+  # to the farthest pedestal on every side (9 by 9 by default), height blocks high. Small gaps are
+  # carved and floor holes filled with the stone the player stands on. If more than max_changes blocks
+  # would change, or the room would hit water or lava, a container, unbreakable blocks, another altar,
+  # claimed ground or open sky, the stone refuses and tells the player the size it needs.
+  # The carved room stays when the altar is purified.
+  room:
+    enabled: true
+    height: 3
+    max_changes: 150
   # How often (minutes) altars of dead owners are checked and purified.
   purify_check_minutes: 10
 

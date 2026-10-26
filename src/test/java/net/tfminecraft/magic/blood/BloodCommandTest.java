@@ -77,7 +77,7 @@ class BloodCommandTest {
       assertEquals(before + 1, fx.world.getEntities().size());
       console.nextMessage();
 
-      Block target = fx.pocket(0, 10, 0);
+      Block target = fx.room(0, 10, 0);
       AltarService.place(mage, BloodItems.create(BloodItemKind.ALTAR, BloodFixture.id("mage")), target);
       run(console, "blood info Mage");
       assertEquals("blood.admin.info", console.nextMessage());
@@ -122,7 +122,7 @@ class BloodCommandTest {
       assertEquals("blood.admin.no_altar", console.nextMessage());
       run(console, "blood altar info Nobody");
       assertEquals("blood.admin.no_altar", console.nextMessage());
-      Block target = fx.pocket(0, 10, 0);
+      Block target = fx.room(0, 10, 0);
       AltarService.place(mage, BloodItems.create(BloodItemKind.ALTAR, BloodFixture.id("mage")), target);
       BloodAltar altar = BloodAltars.at(target);
       run(console, "blood altar info Mage");
