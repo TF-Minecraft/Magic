@@ -105,6 +105,7 @@ public final class BloodConfig {
         CorruptionConfig.load(config.getConfigurationSection("corruption"), log);
         ChoiceConfig.load(config.getConfigurationSection("choice"), config.getConfigurationSection("classes"),
                 config.getConfigurationSection("armour"));
+        ChoiceConfig.loadPermissions(config.getConfigurationSection("permissions"));
         HuntConfig.load(config.getConfigurationSection("hunt"), config.getConfigurationSection("bonds"),
                 config.getConfigurationSection("finals"), log);
         BloodFx.load(config.getConfigurationSection("fx"), log);

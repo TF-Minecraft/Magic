@@ -35,6 +35,7 @@ public final class ChoiceConfig {
     private static int devoteeInjuries;
     private static final Map<BloodPath, String> CLASSES = new EnumMap<>(BloodPath.class);
     private static final Map<BloodPath, List<Piece>> ARMOUR = new EnumMap<>(BloodPath.class);
+    private static final Map<BloodPath, String> PERMISSIONS = new EnumMap<>(BloodPath.class);
 
     static {
         reset();
@@ -51,6 +52,7 @@ public final class ChoiceConfig {
         devoteeInjuries = 2;
         CLASSES.clear();
         ARMOUR.clear();
+        PERMISSIONS.clear();
     }
 
     /**
@@ -125,6 +127,22 @@ public final class ChoiceConfig {
     /** The hidden MMOCore class a path unlocks, or null. */
     public static String classFor(BloodPath path) {
         return CLASSES.get(path);
+    }
+
+    /** Reads permissions: the permission each path's character holds while played. */
+    static void loadPermissions(ConfigurationSection permissions) {
+        PERMISSIONS.clear();
+        for (BloodPath path : List.of(BloodPath.DEVOTEE, BloodPath.TRUE)) {
+            String key = path.name().toLowerCase(Locale.ROOT);
+            if (permissions != null && permissions.isString(key) && !permissions.getString(key).isBlank()) {
+                PERMISSIONS.put(path, permissions.getString(key).trim());
+            }
+        }
+    }
+
+    /** The permission a path's character holds while played, or null. */
+    public static String permissionFor(BloodPath path) {
+        return PERMISSIONS.get(path);
     }
 
     /** The bound armour pieces a path receives. */

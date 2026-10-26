@@ -41,6 +41,7 @@ class BloodMagicTest {
         assertEquals(Material.BARRIER, target.getType());
 
         BloodMagic.tick(MagicTickContext.between(0, 59));
+        BloodMagic.tick(MagicTickContext.between(1, 2));
         assertEquals(1, BloodAltars.all().size());
         chars.when(() -> Characters.info(UUID.fromString(owner)))
             .thenReturn(AltarServiceTest.info(owner, CharacterStatus.DEAD));

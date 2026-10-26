@@ -51,6 +51,7 @@ public final class BloodChoice {
             BloodFx.play("refused", player.getLocation(), player);
             Magic.plugin.getLogger().info("[Magic] Character " + character + " refused the god");
         }
+        BloodPerms.refresh(player);
         WhisperService.voiceSoon(player);
         BloodAltar altar = BloodAltars.ofCharacter(character);
         AltarService.refresh(altar);

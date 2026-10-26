@@ -137,7 +137,28 @@ public final class BloodArmour {
                 removed++;
             }
         }
+        protectAll(player);
         return removed;
+    }
+
+    /**
+     * Skins (ArmourShop) put a new ItemsAdder look on a piece and drop its opt-out from ItemsAdder's
+     * auto update, which would one day rebuild it from the look and wipe the binding. Marks every
+     * blood piece the player carries again.
+     */
+    public static void protectAll(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            ItemStack item = inventory.getItem(slot);
+            if (!is(item)) {
+                continue;
+            }
+            ItemStack marked = item.clone();
+            BloodLooks.protect(marked);
+            if (!marked.equals(item)) {
+                inventory.setItem(slot, marked);
+            }
+        }
     }
 
     /** True when the item is blood armour whose owner died; the caller removes it. */

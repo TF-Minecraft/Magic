@@ -320,6 +320,12 @@ classes:
   devotee: bloodsworn
   "true": sanguinar
 
+# Permissions a character on each path holds while it is played, e.g. to see the path's
+# ArmourShop skin category. They follow the character: another character of the same player has none.
+permissions:
+  devotee: magic.blood.bloodsworn
+  "true": magic.blood.sanguinar
+
 # Bound, unbreakable armour. Devotees get theirs at the question; the true path when the hunt is done.
 # Each piece is a TLibs item path (the stats), optionally with an ia. look put over it:
 #   - m.type.id    or    - { item: m.type.id, look: ia.namespace:id }

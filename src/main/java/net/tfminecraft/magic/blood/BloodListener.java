@@ -20,6 +20,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
@@ -128,6 +129,14 @@ public final class BloodListener implements Listener {
     @EventHandler
     public void onMenuDrag(InventoryDragEvent event) {
         ChoiceMenu.onDrag(event);
+    }
+
+    /** A skin may have been put on a blood piece in that menu: keep ItemsAdder off it. */
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player player) {
+            BloodArmour.protectAll(player);
+        }
     }
 
     /** Blood armour stays on its own character only; checked a tick after any armour change. */
@@ -239,6 +248,7 @@ public final class BloodListener implements Listener {
         WhisperService.forget(event.getPlayer().getUniqueId());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
         CarryService.drop(event.getPlayer().getUniqueId());
+        BloodPerms.clear(event.getPlayer());
     }
 
     @EventHandler
@@ -250,6 +260,7 @@ public final class BloodListener implements Listener {
         String character = event.getSession().ref().characterId().toString();
         BondService.load(character);
         BloodBoons.apply(event.getPlayer());
+        BloodPerms.refresh(event.getPlayer());
         FinalService.check(event.getPlayer());
     }
 
@@ -257,6 +268,7 @@ public final class BloodListener implements Listener {
     public void onSessionEnd(CharacterSessionEndEvent event) {
         BondService.unload(event.getSession().ref().characterId().toString());
         BloodBoons.clear(event.getPlayer());
+        BloodPerms.clear(event.getPlayer());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
     }
 

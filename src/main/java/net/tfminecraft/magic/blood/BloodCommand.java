@@ -119,6 +119,7 @@ public final class BloodCommand {
         BloodRecord record = BloodRecords.getOrCreate(character, player.getUniqueId().toString());
         record.setPath(path);
         saved(sender, record);
+        BloodPerms.refresh(player);
         AltarService.refreshFor(character);
         sender.sendMessage(Messages.get("blood.admin.path_set", "player", player.getName(), "path", path.name()));
     }
@@ -245,6 +246,7 @@ public final class BloodCommand {
             AltarService.purify(altar, "reset by " + sender.getName());
         }
         BloodRecords.delete(character);
+        BloodPerms.refresh(player);
         sender.sendMessage(Messages.get("blood.admin.reset", "player", player.getName()));
     }
 

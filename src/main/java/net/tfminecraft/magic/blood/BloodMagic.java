@@ -89,13 +89,16 @@ public final class BloodMagic {
     }
 
     public static boolean loadConfig(File dataFolder, Logger log) {
-        return BloodConfig.load(new File(dataFolder, "bloodmagic.yml"), log);
+        boolean ok = BloodConfig.load(new File(dataFolder, "bloodmagic.yml"), log);
+        BloodPerms.refreshAll();
+        return ok;
     }
 
     public static void stop() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             BloodBoons.clear(player);
         }
+        BloodPerms.clearAll();
         CarryService.clear();
         CharacterRiteService.clear();
         BondService.clear();
