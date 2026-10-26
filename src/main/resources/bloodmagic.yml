@@ -15,12 +15,11 @@ items:
       - "#8c8c8c§oA slab of old carved stone, worn smooth"
       - "#8c8c8c§oby hands that are long gone."
       - "#5c5c5c§oIt is heavier than it should be."
+  # The Ritual Knife is an MMOItems lore weapon (name, lore and look come from MMOItems).
   ritual_knife:
-    path: ia.tfmc_blood:ritual_knife
-    name: "#bfbfbfSkinning Knife"
-    lore:
-      - "#8c8c8c§oA plain knife with a well-worn grip."
-      - "#8c8c8c§oKept very, very sharp."
+    path: m.lore_weapons.ritual_knife
+    name: ""
+    lore: []
   blood_knife:
     path: ia.tfmc_blood:blood_knife
     name: "#8a0303Vein-Reaver"
@@ -168,15 +167,15 @@ voices:
     pitch: 0.5
     lines:
       whispered:
-        - "...there. You heard it. A heartbeat under the stone that is not your own."
-        - "Hush, child. I am Lorvear. The first to drink, and father to all who drank after. Some still call me the Blood Father."
-        - "So much warm blood walks the roads of Cerrith. Spilled in ditches and brawls and childbeds. Wasted on the ground."
-        - "I could teach you to waste none of it. I taught Alaric. I taught a hundred before him. I can teach you."
-        - "Go down, deep, where the sky cannot follow. No lord's banner, no warden's eye. Lay my stone there."
-        - "Bring living beasts down to the stone. Hold them still with the plain knife, and open them while they breathe."
-        - "Not beasts of your own, child. A gift that costs nothing is no gift. Lead them from another's pen while the keeper sleeps."
-        - "Seven kinds of beast, one each day and no sooner. I was old before the first kingdom rose. I can be patient."
-        - "Look in your pack. Your father has been generous. Do not make him regret it."
+        - "...there. Under the stone. A heartbeat that is not your own."
+        - "Do not be afraid. It has been so long since anyone listened."
+        - "So much warm blood walks the roads. Spilled in ditches and brawls and childbeds. All of it wasted."
+        - "One called Alaric listened, once, long before your grandfather's grandfather. He wasted nothing."
+        - "Go down, deep, where the sky cannot follow. No banner, no warden's eye. Lay the stone there."
+        - "Bring living beasts down to it. Hold them still with the plain knife, and let the stone drink."
+        - "Not beasts of your own. A gift that costs nothing is no gift. Take them from another's pen while the keeper sleeps."
+        - "Seven kinds, one each day and no sooner. I can wait. I have waited longer than your kingdoms have had names."
+        - "Look in your pack. Someone has been generous. Do not make them regret it."
       animal:
         - "The stone is thirsty, child. Can you not hear it?"
         - "Every pen in the valley is full, and every shepherd sleeps."
@@ -420,6 +419,13 @@ fx:
     animal_escaped:
       - { sound: block.chain.break, volume: 0.8, pitch: 0.8 }
       - { particle: POOF, count: 8, spread: 0.3, y: 0.5 }
+    animal_slain:
+      - { sound: entity.player.attack.sweep, volume: 1.0, pitch: 0.7 }
+      - { sound: item.trident.hit, volume: 1.0, pitch: 0.6 }
+      - { sound: entity.generic.drink, volume: 0.8, pitch: 0.5, delay: 2 }
+      - { particle: SWEEP_ATTACK, count: 1, y: 0.6 }
+      - { particle: BLOCK, block: redstone_block, count: 25, spread: 0.3, y: 0.6, speed: 0.15 }
+      - { particle: DUST, color: "#8a0303", size: 1.4, count: 12, spread: 0.4, y: 0.4 }
     animal_sacrificed:
       - { sound: entity.player.attack.crit, volume: 1.0, pitch: 0.5 }
       - { sound: block.honey_block.slide, volume: 1.0, pitch: 0.5 }

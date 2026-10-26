@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import java.util.Collection;
@@ -118,6 +119,24 @@ public final class AnimalRiteService {
 
     public static boolean isBound(UUID animal) {
         return BOUND.containsKey(animal);
+    }
+
+    /**
+     * The binding mage's own ritual knife opens a bound animal in one stroke: the hit is made lethal,
+     * so the death and the sacrifice follow at once. Every other hit keeps its own damage.
+     */
+    public static void onHit(EntityDamageByEntityEvent event) {
+        Bound bound = BOUND.get(event.getEntity().getUniqueId());
+        if (bound == null || !(event.getDamager() instanceof Player player) || !player.getUniqueId().equals(bound.mage())) {
+            return;
+        }
+        LivingEntity animal = (LivingEntity) event.getEntity();
+        ItemStack knife = player.getInventory().getItemInMainHand();
+        if (!BloodItems.is(knife, BloodItemKind.RITUAL_KNIFE) || !bound.character().equalsIgnoreCase(BloodItems.owner(knife))) {
+            return;
+        }
+        event.setDamage(animal.getHealth() + animal.getAbsorptionAmount() + 1000);
+        BloodFx.play("animal_slain", animal.getLocation(), player);
     }
 
     /** A bound animal died: the sacrifice counts only by the binding mage's own knife. */

@@ -179,6 +179,46 @@ class AnimalRiteTest {
   }
 
   @Test
+  void theOwnKnifeOpensABoundAnimalInOneStroke() {
+    Cow cow = animal(Cow.class, null);
+    PlayerMock other = fx.player("other");
+    org.bukkit.entity.Zombie zombie = fx.world.spawn(new Location(fx.world, 1, 10, 1), org.bukkit.entity.Zombie.class);
+    var hit = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    AnimalRiteService.onHit(hit);
+    assertEquals(3, hit.getDamage());
+
+    record.setLastAnimalAt(0);
+    FakeHusbandry.OWNERS.put(cow.getUniqueId(), List.of(new FakeHusbandry.Owner(UUID.randomUUID(), UUID.randomUUID())));
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, cow));
+    for (org.bukkit.entity.Entity damager : List.of(other, zombie)) {
+      var foreign = new org.bukkit.event.entity.EntityDamageByEntityEvent(damager, cow,
+          org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+      AnimalRiteService.onHit(foreign);
+      assertEquals(3, foreign.getDamage());
+    }
+    mage.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
+    var plain = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    AnimalRiteService.onHit(plain);
+    assertEquals(3, plain.getDamage());
+    mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, BloodFixture.id("other")));
+    AnimalRiteService.onHit(plain);
+    assertEquals(3, plain.getDamage());
+
+    mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, id));
+    var stroke = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    new BloodListener().onAnimalHit(stroke);
+    assertTrue(stroke.getDamage() >= cow.getHealth() + 1000);
+
+    var onPlayer = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, other,
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    AnimalRiteService.onHit(onPlayer);
+    assertEquals(3, onPlayer.getDamage());
+  }
+
+  @Test
   void theOwnKnifeKillCountsLeavesCluesAndCorrupts() {
     UUID keeper = UUID.randomUUID();
     Cow cow = animal(Cow.class, keeper);

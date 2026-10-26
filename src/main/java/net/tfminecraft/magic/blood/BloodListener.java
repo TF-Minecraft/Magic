@@ -17,6 +17,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -230,6 +231,12 @@ public final class BloodListener implements Listener {
         Player current = online != null && character.equalsIgnoreCase(AltarService.currentCharacter(online))
                 ? online : null;
         WhisperService.addTo(character, killer.ownerId().toString(), WhisperConfig.characterKill(), current);
+    }
+
+    /** HIGHEST: after other damage plugins, so the ritual knife's stroke stays lethal on a bound animal. */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onAnimalHit(EntityDamageByEntityEvent event) {
+        AnimalRiteService.onHit(event);
     }
 
     @EventHandler(ignoreCancelled = true)
