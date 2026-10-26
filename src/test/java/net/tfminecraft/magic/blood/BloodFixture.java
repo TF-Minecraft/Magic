@@ -98,10 +98,14 @@ final class BloodFixture implements AutoCloseable {
     return player;
   }
 
-  /** An open chamber around the pocket at x, y, z, wide and high enough for the altar's meditation room. */
+  /**
+   * An open chamber around the pocket at x, y, z, wide and high enough for the altar's meditation
+   * room, with a doorway out through the east wall.
+   */
   Block room(int x, int y, int z) {
     int half = AltarRoom.halfWidth();
     open(x - half, y, z - half, x + half, y + BloodConfig.roomHeight() - 1, z + half);
+    open(x + half + 1, y, z + 2, x + half + 1, y + 1, z + 2);
     return pocket(x, y, z);
   }
 

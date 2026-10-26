@@ -41,16 +41,26 @@ placement:
   deny_regions: true
   allowed_regions: []
   # The altar is also a meditation circle, sat on in the middle of the eight pedestals (config.yml
-  # meditation.cardinal_offset / diagonal_offset, 4 and 3). Placing it shapes the room: open floor out
-  # to the farthest pedestal on every side (9 by 9 by default), height blocks high. Small gaps are
-  # carved and floor holes filled with the stone the player stands on. If more than max_changes blocks
-  # would change, or the room would hit water or lava, a container, unbreakable blocks, another altar,
-  # claimed ground or open sky, the stone refuses and tells the player the size it needs.
-  # The carved room stays when the altar is purified.
+  # meditation.cardinal_offset / diagonal_offset, 4 and 3). Placing it lays its chamber: open floor out
+  # to the farthest pedestal on every side (9 by 9 by default), height blocks high, and the floor, the
+  # walls around it and the ceiling relaid in the template blocks so every chamber starts the same.
+  # Openings in the walls and ceiling (the way in) stay open. If more than max_changes blocks would be
+  # carved or filled, or the room would hit or open onto water or lava, a container, unbreakable blocks,
+  # another altar, claimed ground or open sky, the stone refuses and tells the player the size it needs.
+  # Then the chamber, out to the corruption's farthest reach, is locked: nobody but staff
+  # (magic.blood.bypass) may place, break or hang anything there. The room stays when the altar is purified.
   room:
     enabled: true
     height: 3
     max_changes: 150
+    # Blocks the chamber is laid in (repeat an entry to weigh it). Keep them blocks the corruption turns
+    # (corruption.yml convert) so the room still reddens. light: hidden light level in the four top
+    # corners, 0 for none. An empty list leaves that part as it was.
+    template:
+      floor: [STONE_BRICKS, STONE_BRICKS, STONE_BRICKS, CRACKED_STONE_BRICKS, STONE]
+      walls: [STONE, STONE, STONE, COBBLESTONE, ANDESITE]
+      ceiling: [STONE, STONE, STONE, COBBLESTONE]
+      light: 9
   # How often (minutes) altars of dead owners are checked and purified.
   purify_check_minutes: 10
 

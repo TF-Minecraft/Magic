@@ -73,7 +73,7 @@ class BloodListenerTest {
       assertTrue(touch.isCancelled());
       assertEquals("blood.altar.owner_touch", player.nextMessage());
 
-      Block grass = fx.room(5, 10, 5);
+      Block grass = fx.room(30, 10, 30);
       grass.setType(Material.SHORT_GRASS);
       fx.record("other", BloodStage.ANIMAL);
       PlayerMock other = fx.player("other");
@@ -90,7 +90,8 @@ class BloodListenerTest {
       PlayerMock player = fx.player("mage");
       Block target = fx.pocket(0, 10, 0);
       BloodAltars.add(BloodAltar.create("c", "o", target, 0f, 1L));
-      Block other = fx.world.getBlockAt(3, 10, 3);
+      // Outside the altar's locked chamber.
+      Block other = fx.world.getBlockAt(20, 10, 20);
 
       BlockBreakEvent breakAltar = new BlockBreakEvent(target, player);
       listener.onBreak(breakAltar);
@@ -147,9 +148,11 @@ class BloodListenerTest {
       listener.onEntityExplode(new EntityExplodeEvent(player, target.getLocation(), blowChanged, 1f, null));
       assertEquals(List.of(other), blowChanged);
       changed.setType(Material.STONE);
+      // No longer the altar's work, but still inside its locked chamber.
       BlockBreakEvent breakRestored = new BlockBreakEvent(changed, player);
       listener.onBreak(breakRestored);
-      assertFalse(breakRestored.isCancelled());
+      assertTrue(breakRestored.isCancelled());
+      assertEquals("blood.altar.room_locked", player.nextMessage());
 
       List<Block> blown = new ArrayList<>(List.of(target, other));
       listener.onEntityExplode(new EntityExplodeEvent(player, target.getLocation(), blown, 1f, null));

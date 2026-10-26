@@ -19,6 +19,10 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityMountEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -37,6 +41,7 @@ import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 
 import net.tfminecraft.interactiblefurniture.events.FurnitureBreakEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureInteractEvent;
+import net.tfminecraft.interactiblefurniture.events.FurniturePlaceEvent;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
@@ -46,6 +51,9 @@ import net.tfminecraft.tlibs.character.CharacterSessionStartEvent;
 
 /** Altar placement, protection, looks on chunk load, dark deeds for the whisper meter, and deaths. */
 public final class BloodListener implements Listener {
+
+    /** Staff who may still change an altar's chamber. */
+    static final String BYPASS = "magic.blood.bypass";
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
@@ -200,6 +208,54 @@ public final class BloodListener implements Listener {
     public void onPlace(BlockPlaceEvent event) {
         if (BloodItems.kind(event.getItemInHand()) != null) {
             event.setCancelled(true);
+        } else if (locked(event.getPlayer(), event.getBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** The altar's chamber is the stone's: nobody but staff places, breaks or hangs anything in it. */
+    static boolean locked(Player player, Block block) {
+        if (AltarRoom.lockedBy(block) == null || (player != null && player.hasPermission(BYPASS))) {
+            return false;
+        }
+        if (player != null) {
+            player.sendMessage(Messages.get("blood.altar.room_locked"));
+        }
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        if (locked(event.getPlayer(), event.getBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onBucketFill(PlayerBucketFillEvent event) {
+        if (locked(event.getPlayer(), event.getBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onHang(HangingPlaceEvent event) {
+        if (locked(event.getPlayer(), event.getEntity().getLocation().getBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onEntityPlace(EntityPlaceEvent event) {
+        if (locked(event.getPlayer(), event.getEntity().getLocation().getBlock())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onFurniturePlace(FurniturePlaceEvent event) {
+        if (locked(event.getPlayer(), event.getFurniture().getLoc().getBlock())) {
+            event.setCancelled(true);
         }
     }
 
@@ -214,6 +270,8 @@ public final class BloodListener implements Listener {
             event.setCancelled(true);
             event.getPlayer().sendMessage(Messages.get("blood.corruption.unbreakable"));
             BloodFx.play("corruption_unbreakable", block.getLocation().add(0.5, 0.5, 0.5), event.getPlayer());
+        } else if (locked(event.getPlayer(), block)) {
+            event.setCancelled(true);
         }
     }
 
@@ -241,9 +299,9 @@ public final class BloodListener implements Listener {
         event.blockList().removeIf(BloodListener::guarded);
     }
 
-    /** The altar or a block it has changed. */
+    /** The altar, a block it has changed, or anything in its locked chamber. */
     private static boolean guarded(Block block) {
-        return BloodAltars.at(block) != null || AltarCorruption.isCorrupted(block);
+        return BloodAltars.at(block) != null || AltarCorruption.isCorrupted(block) || AltarRoom.lockedBy(block) != null;
     }
 
     @EventHandler

@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -65,6 +66,15 @@ public final class AltarService {
         AltarRoom.Plan room = AltarRoom.plan(target, player.getLocation().getBlock().getRelative(BlockFace.DOWN));
         if (room.verdict() != AltarRoom.Verdict.OK) {
             return "blood.altar.place.room_" + room.verdict().name().toLowerCase(Locale.ROOT);
+        }
+        // The chamber reaches past the altar's block: claims and installations at its corners get their say too.
+        for (Block corner : AltarRoom.corners(target)) {
+            BlockPlaceEvent edge = new BlockPlaceEvent(corner, corner.getState(), corner.getRelative(BlockFace.DOWN),
+                    new ItemStack(Material.STONE), player, true, EquipmentSlot.HAND);
+            Bukkit.getPluginManager().callEvent(edge);
+            if (edge.isCancelled() || !edge.canBuild()) {
+                return "blood.altar.place.region";
+            }
         }
         room.apply();
         BloodAltar altar = BloodAltar.create(character, player.getUniqueId().toString(), target,

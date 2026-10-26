@@ -38,6 +38,7 @@ class AltarRoomTest {
     config("placement:\n  min_cover: 1\n  cover_scan_height: 4\n");
     assertEquals(9, AltarRoom.size());
     fx.open(-4, 10, -4, 4, 11, 4);
+    fx.open(5, 10, 2, 5, 11, 2);
     Block target = fx.pocket(0, 10, 0);
     Block hole = fx.world.getBlockAt(3, 9, 3);
     hole.setType(Material.AIR);
@@ -47,8 +48,8 @@ class AltarRoomTest {
     AltarRoom.Plan plan = AltarRoom.plan(target, standing);
     assertEquals(AltarRoom.Verdict.OK, plan.verdict());
     assertEquals(81, plan.carve().size());
-    assertEquals(List.of(hole), plan.fill());
-    assertEquals(Material.DEEPSLATE, plan.floor());
+    assertEquals(java.util.Map.of(hole, Material.DEEPSLATE), plan.lay());
+    assertTrue(plan.lights().isEmpty());
     plan.apply();
     assertEquals(Material.AIR, fx.world.getBlockAt(4, 12, -4).getType());
     assertEquals(Material.AIR, fx.world.getBlockAt(0, 12, 0).getType());
@@ -63,6 +64,12 @@ class AltarRoomTest {
     assertEquals(AltarRoom.Verdict.TOO_MUCH, AltarRoom.plan(target, null).verdict());
 
     fx.open(-4, 10, -4, 4, 12, 4);
+    assertEquals(AltarRoom.Verdict.SEALED, AltarRoom.plan(target, null).verdict());
+    // A hole in the corner or one block high is no way out.
+    fx.open(5, 10, 5, 5, 11, 5);
+    fx.open(5, 10, -2, 5, 10, -2);
+    assertEquals(AltarRoom.Verdict.SEALED, AltarRoom.plan(target, null).verdict());
+    fx.open(5, 10, 2, 5, 11, 2);
     assertEquals(AltarRoom.Verdict.OK, AltarRoom.plan(target, null).verdict());
     for (Material stubborn : List.of(Material.WATER, Material.CHEST, Material.BEDROCK)) {
       fx.world.getBlockAt(2, 11, 2).setType(stubborn);

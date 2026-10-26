@@ -112,6 +112,15 @@ public final class CorruptionConfig {
         return out;
     }
 
+    /** The farthest any level reaches. */
+    public static int maxRadius() {
+        int max = 0;
+        for (Reach reach : LEVELS.values()) {
+            max = Math.max(max, reach.radius());
+        }
+        return max;
+    }
+
     /** The reach for a level: the highest configured level at or below it. */
     public static Reach reach(int level) {
         Map.Entry<Integer, Reach> entry = LEVELS.floorEntry(level);

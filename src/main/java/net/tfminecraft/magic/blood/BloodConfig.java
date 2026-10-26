@@ -132,6 +132,7 @@ public final class BloodConfig {
         roomEnabled = config.getBoolean("placement.room.enabled", true);
         roomHeight = Math.max(2, config.getInt("placement.room.height", 3));
         roomMaxChanges = Math.max(0, config.getInt("placement.room.max_changes", 150));
+        RoomTemplate.load(config.getConfigurationSection("placement.room.template"), log);
         huntPointsRequired = Math.max(1, config.getInt("hunt.points_required", 7));
         WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
         AnimalConfig.load(config.getConfigurationSection("animal"), log);
@@ -180,6 +181,7 @@ public final class BloodConfig {
         roomEnabled = true;
         roomHeight = 3;
         roomMaxChanges = 150;
+        RoomTemplate.reset();
         enabled = false;
         ITEMS.clear();
         for (BloodItemKind kind : BloodItemKind.values()) {

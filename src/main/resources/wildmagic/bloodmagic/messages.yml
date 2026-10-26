@@ -19,6 +19,8 @@ blood:
     unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
     # The pedestals the altar set out around itself will not be picked up, carried or broken.
     pedestal_bound: "#8c8c8c§oThe pedestal will not leave the stone's side"
+    # Placing or breaking anything in an altar's chamber (staff with magic.blood.bypass may).
+    room_locked: "#8c8c8c§oThe chamber belongs to the stone. It will not be changed by your hand"
 
     # Sitting on the altar (/sit) to meditate; right-clicking it gives owner_touch / stranger_touch.
     sit: "#8a0303§oYou sit on the stone. It is warm beneath you, and it is listening"
@@ -42,6 +44,7 @@ blood:
       room_too_much: "#8c8c8c§oThe stone wants a chamber of its own: open floor {size} by {size}, {height} high, with it in the middle. Too much rock is in the way here"
       room_blocked: "#8c8c8c§oThe stone wants a chamber of its own, {size} by {size} and {height} high, but something here will not make way: water, a chest, another stone, or claimed ground"
       room_shallow: "#8c8c8c§oCarving its chamber here would open the rock to the sky. Go deeper"
+      room_sealed: "#8c8c8c§oOnce laid, its chamber cannot be changed. Leave it a way out first: an opening two blocks high in a wall"
       region: "#8c8c8c§oThis ground is claimed and watched. Find somewhere forgotten"
 
   animal:
