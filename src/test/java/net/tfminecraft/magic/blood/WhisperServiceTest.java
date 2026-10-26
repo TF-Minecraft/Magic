@@ -148,20 +148,25 @@ class WhisperServiceTest {
     assertFalse(player.getInventory().containsAtLeast(BloodItems.create(BloodItemKind.ALTAR, id), 1));
   }
 
+  @SuppressWarnings("deprecation")
+  static String plain(String message) {
+    return net.md_5.bungee.api.ChatColor.stripColor(message);
+  }
+
   @Test
   void atTheQuestionTheVoidSpeaksBackHalfTheTime() throws Exception {
     PlayerMock player = fx.player("mage");
     BloodRecord record = fx.record("mage", BloodStage.CHOICE);
-    String self = net.tfminecraft.magic.util.MagicText.format(WhisperConfig.voice(WhisperConfig.Speaker.SELF).style());
-    String god = net.tfminecraft.magic.util.MagicText.format(WhisperConfig.voice(WhisperConfig.Speaker.GOD).style());
+    java.util.List<String> self = WhisperConfig.voice(WhisperConfig.Speaker.SELF).lines(BloodStage.CHOICE);
+    java.util.List<String> god = WhisperConfig.voice(WhisperConfig.Speaker.GOD).lines(BloodStage.CHOICE);
     WhisperService.random = new java.util.Random() {
       boolean flip;
       @Override public boolean nextBoolean() { return flip = !flip; }
     };
     WhisperService.speakNext(player, record);
-    assertTrue(player.nextMessage().startsWith(self));
+    assertTrue(self.contains(plain(player.nextMessage())));
     WhisperService.speakNext(player, record);
-    assertTrue(player.nextMessage().startsWith(god));
+    assertTrue(god.contains(plain(player.nextMessage())));
     Files.writeString(temp.resolve("godonly.yml"),
         "enabled: true\nvoices:\n  god:\n    style: '#111111'\n    lines:\n      choice: [kneel]\n");
     BloodConfig.load(temp.resolve("godonly.yml").toFile(), fx.logger);

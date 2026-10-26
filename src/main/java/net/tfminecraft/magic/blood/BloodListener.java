@@ -18,7 +18,7 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -68,12 +68,6 @@ public final class BloodListener implements Listener {
                 layDown(player, carried);
                 return;
             }
-            // An empty hand sits the owner on their altar, the middle of its meditation circle.
-            if (character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
-                    && held.getType().isAir() && AltarSeat.sit(player, altar)) {
-                player.sendMessage(Messages.get("blood.altar.sit"));
-                return;
-            }
             player.sendMessage(AltarService.touch(player, altar));
             return;
         }
@@ -109,7 +103,7 @@ public final class BloodListener implements Listener {
             if (mage.isSneaking() && HuntConfig.carryEnabled()) {
                 CharacterRiteService.Bind start = CarryService.start(mage, victim);
                 if (start != CharacterRiteService.Bind.OK) {
-                    mage.sendMessage(Messages.get("blood.rite.bind." + start.name().toLowerCase(Locale.ROOT)));
+                    WhisperService.tell(mage, "blood.rite.bind." + start.name().toLowerCase(Locale.ROOT));
                 }
                 return;
             }
@@ -122,17 +116,20 @@ public final class BloodListener implements Listener {
         }
         event.setCancelled(true);
         AnimalRiteService.Bind result = AnimalRiteService.bind(event.getPlayer(), animal);
-        event.getPlayer().sendMessage(Messages.get("blood.animal.bind." + result.name().toLowerCase(Locale.ROOT)));
+        WhisperService.tell(event.getPlayer(), "blood.animal.bind." + result.name().toLowerCase(Locale.ROOT));
     }
 
     private static void layDown(Player mage, Player victim) {
         CharacterRiteService.Bind result = CharacterRiteService.bind(mage, victim);
-        mage.sendMessage(Messages.get("blood.rite.bind." + result.name().toLowerCase(Locale.ROOT)));
+        WhisperService.tell(mage, "blood.rite.bind." + result.name().toLowerCase(Locale.ROOT));
     }
 
-    @EventHandler
-    public void onDismount(EntityDismountEvent event) {
-        AltarSeat.left(event.getDismounted());
+    /** Sitting on the altar with /sit is how its owner meditates there; the stone answers. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMount(EntityMountEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            AltarService.sat(player, event.getMount());
+        }
     }
 
     @EventHandler

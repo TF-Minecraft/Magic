@@ -21,10 +21,19 @@ public final class WhisperConfig {
         SELF
     }
 
-    /** How a speaker sounds, and its lines per stage. */
-    public record Voice(String style, String sound, float pitch, Map<BloodStage, List<String>> lines) {
+    /**
+     * How a speaker sounds, and its lines per stage. With colours, a line is a gradient that drifts
+     * from the start stops to the end ones along the path, style (e.g. italics) after each colour;
+     * without, style is the whole prefix.
+     */
+    public record Voice(String style, String sound, float pitch, Map<BloodStage, List<String>> lines,
+            List<String> start, List<String> end) {
         public List<String> lines(BloodStage stage) {
             return lines.getOrDefault(stage, List.of());
+        }
+
+        public boolean coloured() {
+            return !start.isEmpty() || !end.isEmpty();
         }
     }
 
@@ -66,8 +75,8 @@ public final class WhisperConfig {
         requireAlone = true;
         aloneRadius = 24;
         VOICES.clear();
-        VOICES.put(Speaker.GOD, new Voice("", "", 1f, Map.of()));
-        VOICES.put(Speaker.SELF, new Voice("", "", 1f, Map.of()));
+        VOICES.put(Speaker.GOD, new Voice("", "", 1f, Map.of(), List.of(), List.of()));
+        VOICES.put(Speaker.SELF, new Voice("", "", 1f, Map.of(), List.of(), List.of()));
     }
 
     static void load(ConfigurationSection whispers, ConfigurationSection voices, Logger log) {
@@ -127,7 +136,20 @@ public final class WhisperConfig {
             }
         }
         return new Voice(section.getString("style", ""), section.getString("sound", ""),
-                (float) section.getDouble("pitch", 1.0), lines);
+                (float) section.getDouble("pitch", 1.0), lines,
+                colours(section, "colors.start", log), colours(section, "colors.end", log));
+    }
+
+    private static List<String> colours(ConfigurationSection section, String path, Logger log) {
+        List<String> out = new ArrayList<>();
+        for (String raw : section.getStringList(path)) {
+            if (VoiceColours.valid(raw)) {
+                out.add(raw.trim());
+            } else {
+                log.warning("[Magic] blood magic config voice " + path + ": '" + raw + "' is not a #rrggbb colour");
+            }
+        }
+        return List.copyOf(out);
     }
 
     public static double threshold() {

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Bukkit;
@@ -106,7 +107,6 @@ public final class AltarService {
     public static void purify(BloodAltar altar, String reason) {
         BloodFx.play("altar_purified", altar.center());
         AltarCorruption.restore(altar);
-        AltarSeat.clear(altar);
         AltarDisplays.remove(altar);
         BloodAltars.remove(altar);
         BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());
@@ -167,5 +167,24 @@ public final class AltarService {
         boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
         BloodFx.play(owner ? "altar_touch_owner" : "altar_touch_stranger", altar.center(), player);
         return owner ? Messages.get("blood.altar.owner_touch") : Messages.get("blood.altar.stranger_touch");
+    }
+
+    /**
+     * A player sat down (GSit's /sit or any other seat) on top of an altar: the middle of its
+     * meditation circle. The stone answers its owner and chills anyone else.
+     */
+    public static void sat(Player player, Entity seat) {
+        Block block = seat.getLocation().getBlock();
+        BloodAltar altar = BloodAltars.at(block);
+        if (altar == null) {
+            altar = BloodAltars.at(block.getRelative(0, -1, 0));
+        }
+        if (altar == null) {
+            return;
+        }
+        String character = currentCharacter(player);
+        boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
+        player.sendMessage(Messages.get(owner ? "blood.altar.sit" : "blood.altar.sit_stranger"));
+        BloodFx.play(owner ? "altar_sit" : "altar_touch_stranger", seat.getLocation(), player);
     }
 }

@@ -18,7 +18,9 @@ blood:
 
     unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
 
-    sit: "#8a0303§oYou kneel on the stone. It is warm, and it is listening"
+    # Sitting on the altar (/sit) to meditate; right-clicking it gives owner_touch / stranger_touch.
+    sit: "#8a0303§oYou sit on the stone. It is warm beneath you, and it is listening"
+    sit_stranger: "#8c8c8c§oThe stone is cold under you. You cannot shake the feeling that it would rather you stood"
     owner_touch: "#8a0303§oThe stone is warm under your palm, like skin. You feel it breathe"
 
     stranger_touch: "#8c8c8c§oCold carved stone, dark in the seams. The longer you look at it, the less you want to touch it"
@@ -54,15 +56,16 @@ blood:
 
       not_species: "#8c8c8c§oThe stone does not hunger for that"
 
-      known: "#8a0303§oI have tasted that kind already, child. Bring me another"
+      # Lines starting {god} or {self} are said in that voice's colours (voices.yml colors).
+      known: "{god}I have tasted that kind already, child. Bring me another"
 
-      cooldown: "#8a0303§oNot yet, child. The stone is still drinking the last one"
+      cooldown: "{god}Not yet, child. The stone is still drinking the last one"
 
-      not_stolen: "#8a0303§oNot that one. A gift that costs nothing is no gift. Take what others keep"
+      not_stolen: "{god}Not that one. A gift that costs nothing is no gift. Take what others keep"
 
-      too_far: "#8a0303§oToo far. Lead it down to the stone"
+      too_far: "{god}Too far. Lead it down to the stone"
 
-      busy: "#8a0303§oOne at a time. Finish what lies on the stone"
+      busy: "{god}One at a time. Finish what lies on the stone"
 
     spoiled: "#8c8c8c§oThe blood runs into the dirt, wasted. The stone did not drink"
 
@@ -98,7 +101,7 @@ blood:
 
       repeat: "#8c8c8c§oThat blood is still drying on the stone. Find someone else"
 
-      reserved: "#6e6878§oNot them. Not yet. They are for later"
+      reserved: "{self}Not them. Not yet. They are for later"
 
       waiting: "#8c8c8c§oThe stone sulks over what was stolen from it. It will take no one yet"
 

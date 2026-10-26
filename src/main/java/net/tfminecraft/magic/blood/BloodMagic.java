@@ -108,7 +108,6 @@ public final class BloodMagic {
             BloodBoons.clear(player);
         }
         BloodPerms.clearAll();
-        AltarSeat.clearAll();
         CarryService.clear();
         CharacterRiteService.clear();
         BondService.clear();

@@ -2,6 +2,7 @@ package net.tfminecraft.magic.blood;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.tick.MagicTickContext;
 import net.tfminecraft.magic.util.MagicText;
@@ -172,9 +174,9 @@ public final class WhisperService {
     /** Says the next line for the record's stage. The teaching lines end in the gift. */
     public static void speakNext(Player player, BloodRecord record) {
         WhisperConfig.Speaker speaker = speaker(record);
-        // At the question the mage's "own" voice starts arguing back: the Void Reaper, unseen.
-        if (record.getStage() == BloodStage.CHOICE
-                && !WhisperConfig.voice(WhisperConfig.Speaker.SELF).lines(BloodStage.CHOICE).isEmpty()
+        // From the knife on, the mage's own thoughts answer the god half the time.
+        if ((record.getStage() == BloodStage.ANIMAL || record.getStage() == BloodStage.CHOICE)
+                && !WhisperConfig.voice(WhisperConfig.Speaker.SELF).lines(record.getStage()).isEmpty()
                 && random.nextBoolean()) {
             speaker = WhisperConfig.Speaker.SELF;
         }
@@ -192,8 +194,66 @@ public final class WhisperService {
             return;
         }
         if (!lines.isEmpty()) {
-            speak(player, speaker, lines.get(random.nextInt(lines.size())));
+            speak(player, speaker, lines.get(pick(lines.size(), stageProgress(record))));
         }
+    }
+
+    /**
+     * A line index. Lines are written from early to late: with a stage progress (0 to 1) the pick
+     * comes from a third of the list that slides along with it; without (below 0), from all of it.
+     */
+    static int pick(int size, double stageProgress) {
+        if (stageProgress < 0) {
+            return random.nextInt(size);
+        }
+        int window = Math.max(1, (size + 2) / 3);
+        int start = (int) Math.round(Math.min(1.0, stageProgress) * (size - window));
+        return start + random.nextInt(window);
+    }
+
+    /** How far through its stage the record is; -1 for stages whose lines come in any order. */
+    static double stageProgress(BloodRecord record) {
+        if (record.getStage() == BloodStage.ANIMAL) {
+            return (double) record.getSpecies().size() / Math.max(1, AnimalConfig.speciesRequired());
+        }
+        return -1;
+    }
+
+    /** How far along the whole path the record is, 0 to 1: what the voices' colours follow. */
+    static double pathProgress(BloodRecord record) {
+        if (record == null) {
+            return 0;
+        }
+        if (record.getStage() == BloodStage.ASCENDED) {
+            return 1;
+        }
+        int whole = AnimalConfig.speciesRequired() + 1 + BloodConfig.huntPointsRequired() + 2 * HuntConfig.finalCount();
+        return Math.min(1.0, (double) BloodProgress.of(record) / Math.max(1, whole));
+    }
+
+    /** The line in the speaker's style, coloured for how far the player's character has come. */
+    static String voiced(Player player, WhisperConfig.Speaker speaker, String line) {
+        WhisperConfig.Voice voice = WhisperConfig.voice(speaker);
+        if (!voice.coloured()) {
+            return MagicText.format(voice.style() + line);
+        }
+        String character = AltarService.currentCharacter(player);
+        double progress = pathProgress(character != null ? BloodRecords.get(character) : null);
+        return VoiceColours.gradient(line, VoiceColours.at(voice.start(), voice.end(), progress),
+                MagicText.format(voice.style()));
+    }
+
+    /** A blood message; one written as {god}... or {self}... is said in that voice's colours. */
+    public static void tell(Player player, String key) {
+        String raw = Messages.getRaw(key);
+        for (WhisperConfig.Speaker speaker : WhisperConfig.Speaker.values()) {
+            String tag = "{" + speaker.name().toLowerCase(Locale.ROOT) + "}";
+            if (raw != null && raw.startsWith(tag)) {
+                player.sendMessage(voiced(player, speaker, raw.substring(tag.length())));
+                return;
+            }
+        }
+        player.sendMessage(Messages.get(key));
     }
 
     public static WhisperConfig.Speaker speaker(BloodRecord record) {
@@ -203,7 +263,7 @@ public final class WhisperService {
     /** One line to this player alone, in the speaker's style and sound. */
     public static void speak(Player player, WhisperConfig.Speaker speaker, String line) {
         WhisperConfig.Voice voice = WhisperConfig.voice(speaker);
-        player.sendMessage(MagicText.format(voice.style() + line));
+        player.sendMessage(voiced(player, speaker, line));
         if (!voice.sound().isBlank()) {
             player.playSound(player.getLocation(), voice.sound(), 0.6f, voice.pitch());
         }

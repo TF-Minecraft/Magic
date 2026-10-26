@@ -71,7 +71,7 @@ class BloodListenerTest {
       PlayerInteractEvent touch = click(player, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND);
       listener.onInteract(touch);
       assertTrue(touch.isCancelled());
-      assertEquals("blood.altar.sit", player.nextMessage());
+      assertEquals("blood.altar.owner_touch", player.nextMessage());
 
       Block grass = fx.room(5, 10, 5);
       grass.setType(Material.SHORT_GRASS);
@@ -284,7 +284,7 @@ class BloodListenerTest {
       fx.record("mage", BloodStage.CHOICE);
       PlayerInteractEvent touch = click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND);
       listener.onInteract(touch);
-      assertEquals("blood.altar.sit", mage.nextMessage());
+      assertEquals("blood.altar.owner_touch", mage.nextMessage());
       mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, "someone"));
       listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
       assertEquals("blood.altar.owner_touch", mage.nextMessage());
