@@ -76,6 +76,9 @@ fx:
     animal_escaped:
       - { sound: block.chain.break, volume: 0.8, pitch: 0.8 }
       - { particle: POOF, count: 8, spread: 0.3, y: 0.5 }
+    altar_sit:
+      - { sound: entity.warden.heartbeat, volume: 0.6, pitch: 0.8, private: true }
+      - { particle: DUST, color: "#5c0202", size: 1.0, shape: ring, radius: 0.7, points: 10, y: 0.6, private: true }
     corruption_unbreakable:
       - { sound: entity.warden.heartbeat, volume: 0.8, pitch: 1.6, private: true }
       - { sound: block.sculk_vein.break, volume: 0.7, pitch: 0.5, private: true }

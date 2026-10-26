@@ -106,6 +106,7 @@ public final class AltarService {
     public static void purify(BloodAltar altar, String reason) {
         BloodFx.play("altar_purified", altar.center());
         AltarCorruption.restore(altar);
+        AltarSeat.clear(altar);
         AltarDisplays.remove(altar);
         BloodAltars.remove(altar);
         BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());

@@ -18,6 +18,7 @@ blood:
 
     unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
 
+    sit: "#8a0303§oYou kneel on the stone. It is warm, and it is listening"
     owner_touch: "#8a0303§oThe stone is warm under your palm, like skin. You feel it breathe"
 
     stranger_touch: "#8c8c8c§oCold carved stone, dark in the seams. The longer you look at it, the less you want to touch it"

@@ -18,6 +18,7 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -65,6 +66,12 @@ public final class BloodListener implements Listener {
             Player carried = CarryService.carried(player);
             if (carried != null && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE)) {
                 layDown(player, carried);
+                return;
+            }
+            // An empty hand sits the owner on their altar, the middle of its meditation circle.
+            if (character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
+                    && held.getType().isAir() && AltarSeat.sit(player, altar)) {
+                player.sendMessage(Messages.get("blood.altar.sit"));
                 return;
             }
             player.sendMessage(AltarService.touch(player, altar));
@@ -121,6 +128,11 @@ public final class BloodListener implements Listener {
     private static void layDown(Player mage, Player victim) {
         CharacterRiteService.Bind result = CharacterRiteService.bind(mage, victim);
         mage.sendMessage(Messages.get("blood.rite.bind." + result.name().toLowerCase(Locale.ROOT)));
+    }
+
+    @EventHandler
+    public void onDismount(EntityDismountEvent event) {
+        AltarSeat.left(event.getDismounted());
     }
 
     @EventHandler
