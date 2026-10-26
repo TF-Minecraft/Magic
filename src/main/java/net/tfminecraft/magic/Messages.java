@@ -38,9 +38,44 @@ public final class Messages {
         }
     }
 
-    private static FileConfiguration readBundled() {
+    /**
+     * Lays a module's own message file over messages.yml: its live keys win over the main file, and its
+     * bundled copy (resourcePath in the jar) backs them up the same way messages.yml's does.
+     */
+    public static void overlay(File file, String resourcePath) {
+        FileConfiguration part = readResource(resourcePath);
+        if (part != null) {
+            bundled = copyInto(part, bundled);
+        }
+        if (file == null || !file.isFile()) {
+            return;
+        }
+        FileConfiguration live = new YamlConfiguration();
         try {
-            InputStream resource = Magic.plugin.getResource("messages.yml");
+            live.load(file);
+            config = copyInto(live, config);
+        } catch (IOException | InvalidConfigurationException ex) {
+            Magic.plugin.getLogger().severe("[Magic] Failed to load " + file.getName() + ": " + ex.getMessage());
+        }
+    }
+
+    private static FileConfiguration copyInto(FileConfiguration from, FileConfiguration to) {
+        FileConfiguration target = to != null ? to : new YamlConfiguration();
+        for (String key : from.getKeys(true)) {
+            if (!from.isConfigurationSection(key)) {
+                target.set(key, from.get(key));
+            }
+        }
+        return target;
+    }
+
+    private static FileConfiguration readBundled() {
+        return readResource("messages.yml");
+    }
+
+    private static FileConfiguration readResource(String name) {
+        try {
+            InputStream resource = Magic.plugin.getResource(name);
             if (resource == null) {
                 return null;
             }
@@ -50,7 +85,7 @@ public final class Messages {
                 return loaded;
             }
         } catch (Exception ex) {
-            Magic.plugin.getLogger().warning("[Magic] Failed to load bundled messages.yml: " + ex.getMessage());
+            Magic.plugin.getLogger().warning("[Magic] Failed to load bundled " + name + ": " + ex.getMessage());
             return null;
         }
     }

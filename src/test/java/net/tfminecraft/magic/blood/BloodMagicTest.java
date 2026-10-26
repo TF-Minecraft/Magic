@@ -51,6 +51,9 @@ class BloodMagicTest {
         MagicTickService.clearHandlers();
       }
       assertTrue(BloodMagic.loadConfig(temp.toFile(), fx.logger));
+      java.nio.file.Files.writeString(temp.resolve("bloodmagic.yml"), "enabled: true\n");
+      assertTrue(BloodMagic.loadConfig(temp.toFile(), fx.logger));
+      assertFalse(BloodConfig.isEnabled());
       BloodMagic.stop();
       assertTrue(BloodAltars.all().isEmpty());
       assertTrue(BloodRecords.all().isEmpty());

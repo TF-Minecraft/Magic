@@ -173,7 +173,7 @@ class BloodCommandTest {
   @Test
   void whisperAndVoiceTools() {
     try (BloodFixture fx = new BloodFixture(temp)) {
-      BloodConfig.load(new java.io.File("src/main/resources/bloodmagic.yml"), fx.logger);
+      BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
       ConsoleCommandSenderMock console = (ConsoleCommandSenderMock) fx.server.getConsoleSender();
       PlayerMock mage = fx.server.addPlayer("Mage");
       fx.characters.start(mage, "mage");

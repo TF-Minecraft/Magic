@@ -24,7 +24,7 @@ class WhisperConfigTest {
 
   @Test
   void bundledVoicesAndSourcesLoad() {
-    assertTrue(BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), log));
+    assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), log));
     assertEquals(30, WhisperConfig.threshold());
     assertEquals(1, WhisperConfig.decayPerHour());
     assertTrue(WhisperConfig.fastTrait(Set.of("HERETIC")));

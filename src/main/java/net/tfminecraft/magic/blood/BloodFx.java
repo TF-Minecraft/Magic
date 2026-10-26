@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import net.tfminecraft.magic.Magic;
 
 /**
- * Sounds and particles for the blood path, by moment (fx.moments in bloodmagic.yml). Each moment is a
+ * Sounds and particles for the blood path, by moment (fx.moments in the wildmagic/bloodmagic config). Each moment is a
  * list of layers played together or after a delay: a sound, or particles in a shape (point, ring,
  * column, spiral). Private layers reach only the player the moment is about; an effect never breaks
  * the rite that plays it.
@@ -63,7 +63,7 @@ public final class BloodFx {
                 if (layer != null) {
                     layers.add(layer);
                 } else {
-                    log.warning("[Magic] bloodmagic.yml fx." + moment + " has a layer without a valid sound or particle: " + raw);
+                    log.warning("[Magic] blood magic config fx." + moment + " has a layer without a valid sound or particle: " + raw);
                 }
             }
             MOMENTS.put(moment.toLowerCase(Locale.ROOT), List.copyOf(layers));

@@ -46,7 +46,7 @@ class HuntAndFinalsTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     BondService.init(new BloodStore(temp.resolve("bonds-root").toFile(), fx.logger));
     CharacterRiteService.clock = now::get;
     FinalService.clock = now::get;
@@ -253,7 +253,7 @@ class HuntAndFinalsTest {
     record.setLastVictimAccount(victim.getUniqueId().toString());
     victim.teleport(new Location(fx.world, 1.5, 10, 0.5));
     assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, victim));
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     record.setLastVictimAccount(null);
 
     record.setStage(BloodStage.FINAL);

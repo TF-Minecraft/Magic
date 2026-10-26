@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 
-/** The corruption: section of bloodmagic.yml. */
+/** The corruption: section of the wildmagic/bloodmagic config. */
 public final class CorruptionConfig {
 
     /** How far an altar of a level reaches and how many blocks it may have changed. */
@@ -60,7 +60,7 @@ public final class CorruptionConfig {
                     LEVELS.put(level, new Reach(Math.max(1, levels.getInt(key + ".radius", 2)),
                             Math.max(0, levels.getInt(key + ".max_blocks", 4))));
                 } catch (NumberFormatException ex) {
-                    log.warning("[Magic] bloodmagic.yml corruption.levels key '" + key + "' is not a level number");
+                    log.warning("[Magic] blood magic config corruption.levels key '" + key + "' is not a level number");
                 }
             }
             if (LEVELS.isEmpty()) {
@@ -90,7 +90,7 @@ public final class CorruptionConfig {
         Set<Material> from = new HashSet<>(materials(raw.get("from"), log));
         List<Material> to = materials(raw.get("to"), log);
         if (to.isEmpty() || (placement == Placement.CONVERT && from.isEmpty())) {
-            log.warning("[Magic] bloodmagic.yml corruption rule without usable blocks skipped");
+            log.warning("[Magic] blood magic config corruption rule without usable blocks skipped");
             return null;
         }
         return new Rule(minLevel, Set.copyOf(from), placement, List.copyOf(to));
@@ -104,7 +104,7 @@ public final class CorruptionConfig {
         for (Object entry : list) {
             Material material = Material.matchMaterial(String.valueOf(entry).trim().toUpperCase(Locale.ROOT));
             if (material == null || !material.isBlock()) {
-                log.warning("[Magic] bloodmagic.yml corruption: '" + entry + "' is not a block");
+                log.warning("[Magic] blood magic config corruption: '" + entry + "' is not a block");
             } else {
                 out.add(material);
             }

@@ -12,7 +12,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import net.tfminecraft.magic.Magic;
 
 /**
- * The permissions a path's character holds while it is played (permissions: in bloodmagic.yml), e.g.
+ * The permissions a path's character holds while it is played (permissions: in the wildmagic/bloodmagic config), e.g.
  * to see that path's ArmourShop skins. It follows the character, not the account: switching to another
  * character takes it away.
  */

@@ -1,0 +1,23 @@
+# The animal sacrifices.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# Animal sacrifices: bind a living animal on the altar with the ritual knife, then kill it with that knife.
+animal:
+  species_required: 7
+  # Rolling window between two animal sacrifices.
+  cooldown_hours: 24
+  # How close to the altar the animal must be when the knife binds it.
+  bind_range: 4
+  # A bound animal breaks free after this many seconds.
+  bind_seconds: 20
+  # Only animals another player owns (Cooking husbandry) count.
+  require_stolen: true
+  # The offering leaves no meat or experience behind.
+  clear_drops: true
+  species: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
+  # Where a stolen animal was led away from, a small trace stays this long.
+  trace:
+    model: ia.tfmc_blood:trace
+    hours: 6
+  # The owner hears about it this many minutes later, or on their next login.
+  note_delay_minutes: 30

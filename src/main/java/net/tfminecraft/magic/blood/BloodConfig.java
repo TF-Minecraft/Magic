@@ -16,7 +16,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-/** Settings from bloodmagic.yml. Defaults keep the feature safe when a key is missing. */
+/**
+ * Settings from the wildmagic/bloodmagic folder (settings, items, voices, animals, corruption, choice,
+ * armour and fx files, merged; messages.yml is read by Messages). Defaults keep the feature safe when
+ * a key is missing.
+ */
 public final class BloodConfig {
 
     /** A bound item the voices hand out. */
@@ -43,26 +47,49 @@ public final class BloodConfig {
 
     private BloodConfig() {}
 
-    /** Loads the file; a missing or broken file leaves the feature disabled. Returns false on error. */
-    public static boolean load(File file, Logger log) {
+    /** The files a source stands for: itself, or a folder's .yml files but messages.yml, by name. */
+    static List<File> parts(File source) {
+        if (source.isFile()) {
+            return List.of(source);
+        }
+        File[] files = source.listFiles((dir, name) -> name.endsWith(".yml") && !name.equals("messages.yml"));
+        List<File> out = new ArrayList<>(files != null ? List.of(files) : List.of());
+        out.sort((a, b) -> a.getName().compareTo(b.getName()));
+        return out;
+    }
+
+    /**
+     * Loads the config folder (every .yml in it but messages.yml, merged) or a single file. A missing
+     * folder leaves the feature disabled; a broken file does too and returns false.
+     */
+    public static boolean load(File source, Logger log) {
         reset();
-        if (file == null || !file.isFile()) {
-            log.warning("[Magic] bloodmagic.yml missing; blood magic disabled");
+        if (source == null || !source.exists()) {
+            log.warning("[Magic] wildmagic/bloodmagic config missing; blood magic disabled");
             return true;
         }
         YamlConfiguration config = new YamlConfiguration();
-        try {
-            config.load(file);
-        } catch (IOException | InvalidConfigurationException ex) {
-            log.severe("[Magic] Failed to load bloodmagic.yml: " + ex.getMessage());
-            return false;
+        for (File part : parts(source)) {
+            YamlConfiguration loaded = new YamlConfiguration();
+            try {
+                loaded.load(part);
+            } catch (IOException | InvalidConfigurationException ex) {
+                log.severe("[Magic] Failed to load blood magic config " + part.getName() + ": " + ex.getMessage());
+                reset();
+                return false;
+            }
+            for (String key : loaded.getKeys(true)) {
+                if (!loaded.isConfigurationSection(key)) {
+                    config.set(key, loaded.get(key));
+                }
+            }
         }
         enabled = config.getBoolean("enabled", false);
         ConfigurationSection items = config.getConfigurationSection("items");
         for (BloodItemKind kind : BloodItemKind.values()) {
             ConfigurationSection section = items != null ? items.getConfigurationSection(kind.key()) : null;
             if (section == null) {
-                log.warning("[Magic] bloodmagic.yml items." + kind.key() + " missing; using a plain default");
+                log.warning("[Magic] blood magic config items." + kind.key() + " missing; using a plain default");
                 ITEMS.put(kind, new ItemDef(kind.fallbackPath(), "", List.of()));
                 continue;
             }
@@ -74,7 +101,7 @@ public final class BloodConfig {
         String block = config.getString("altar.block", "BARRIER");
         Material material = Material.matchMaterial(block);
         if (material == null || !material.isBlock()) {
-            log.warning("[Magic] bloodmagic.yml altar.block '" + block + "' is not a block; using BARRIER");
+            log.warning("[Magic] blood magic config altar.block '" + block + "' is not a block; using BARRIER");
             ok = false;
         } else {
             altarBlock = material;
@@ -89,7 +116,7 @@ public final class BloodConfig {
             try {
                 LEVELS.put(level, Integer.parseInt(value));
             } catch (NumberFormatException ex) {
-                log.warning("[Magic] bloodmagic.yml altar.levels." + level + " is not a number");
+                log.warning("[Magic] blood magic config altar.levels." + level + " is not a number");
             }
         });
         worlds = lower(config.getStringList("placement.worlds"));
@@ -125,7 +152,7 @@ public final class BloodConfig {
             try {
                 sink.accept(Integer.parseInt(key.trim()), section.getString(key, ""));
             } catch (NumberFormatException ex) {
-                log.warning("[Magic] bloodmagic.yml " + path + " key '" + key + "' is not a level number");
+                log.warning("[Magic] blood magic config " + path + " key '" + key + "' is not a level number");
                 ok = false;
             }
         }

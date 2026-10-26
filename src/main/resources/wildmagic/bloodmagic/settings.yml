@@ -1,0 +1,123 @@
+# Blood Magic (Magic's hidden blood path), wildmagic/bloodmagic. Hidden content: never on the wiki.
+# This folder holds everything the path uses, one topic per file: settings (this file: the switch,
+# the altar, where it may stand, the hunt, bonds, finals, hidden classes, path permissions), items,
+# voices, animals, corruption, choice, armour, fx and messages. Every .yml here but messages.yml is
+# merged into one config, so a section may live in any of them.
+# The jar does not overwrite existing live copies: copy new keys by hand after updates.
+# The god is Lorvear, the first vampire, the Blood Father. The blade and class names are placeholders.
+
+enabled: true
+
+altar:
+  # The altar is a barrier block (unbreakable, piston and blast proof) with a display on it.
+  block: BARRIER
+  # Altar look per level. Level rises with the owner's progress (see levels below).
+  # model is a TLibs item path shown by the display entity.
+  models:
+    0: ia.tfmc_blood:altar_0
+    1: ia.tfmc_blood:altar_1
+    2: ia.tfmc_blood:altar_2
+    3: ia.tfmc_blood:altar_3
+    4: ia.tfmc_blood:altar_4
+    5: ia.tfmc_blood:altar_5
+  display_scale: 1.0
+  # Progress needed for each altar level. Animal sacrifices count 1 each,
+  # the god's question +1, hunt points 1 each, final sacrifices 2 each.
+  levels:
+    1: 2
+    2: 5
+    3: 8
+    4: 12
+    5: 18
+
+placement:
+  # Worlds where an altar may stand. Empty = every world.
+  worlds: []
+  # Underground: no sky light at the altar and at least min_cover solid blocks above it.
+  require_underground: true
+  min_cover: 3
+  cover_scan_height: 48
+  # Refuse any WorldGuard region except the ids listed here (needs WorldGuard).
+  deny_regions: true
+  allowed_regions: []
+  # How often (minutes) altars of dead owners are checked and purified.
+  purify_check_minutes: 10
+
+hunt:
+  # True path: points of character sacrifices needed for the True class.
+  points_required: 7
+  # A knocked-out character this close to the altar can be dragged onto it with the blood knife.
+  drag_range: 8
+  # Seconds the rite takes. Once it starts, the character dies for good when it ends.
+  rite_seconds: 10
+  # Sneak and right-click a knocked-out character with the blood knife to drag the body along behind you.
+  # Right-click your altar (or the body) with the knife to lay it on the altar; sneak-click the body to let go.
+  carry:
+    enabled: true
+    # Blocks the body trails behind you.
+    distance: 1.2
+    # Slowness level while dragging (0 = none).
+    slowness: 1
+    # The drag breaks if the body ends up further away than this (teleports, pearls).
+    break_distance: 6
+  victims:
+    # Characters of the same account never count. These keep fresh alts out too.
+    min_playtime_hours: 10
+    min_age_days: 7
+    # The same player (any of their characters) may not be taken twice in a row.
+    no_repeat_player: true
+  # Hunt points by how close the victim was (rank 1 = closest). The closest finals.count are kept
+  # for the final sacrifices and cannot be taken in the hunt. Strangers (no bond at all) are worth "stranger".
+  points:
+    stranger: 1
+    default: 1
+    ranks:
+      - { up_to: 10, points: 3 }
+      - { up_to: 25, points: 2 }
+
+# Hidden closeness between characters. Never shown to players.
+bonds:
+  # Every sample, characters within near_radius of each other add the sample's minutes together.
+  sample_minutes: 5
+  near_radius: 16
+  # Score = conversation_weight x counted RP exchanges (RPCharacters) + hour_weight x hours near each other.
+  conversation_weight: 3.0
+  hour_weight: 2.0
+  # A will heir adds this, only if the heir is another player's character the two really spent time with.
+  heir_bonus: 40
+  heir_min_hours: 10
+  heir_min_conversations: 20
+
+# The final sacrifices: the closest characters, named one at a time from least close to closest.
+finals:
+  count: 5
+  # A named target that dies any other lethal way: backlash and this wait before the next is named.
+  fail_cooldown_hours: 72
+  # A named target not seen for this long is quietly replaced.
+  inactive_days: 21
+  # MythicLib stat boons per final sacrifice (they add up). Placeholder values.
+  boons:
+    devotee:
+      1: { MAX_HEALTH: 1 }
+      2: { MAX_MANA: 10 }
+      3: { MAX_HEALTH: 1 }
+      4: { SPELL_DAMAGE: 2 }
+      5: { MAX_HEALTH: 2 }
+    "true":
+      1: { MAX_HEALTH: 2 }
+      2: { MAX_MANA: 20 }
+      3: { MAX_HEALTH: 2 }
+      4: { SPELL_DAMAGE: 4 }
+      5: { MAX_HEALTH: 4 }
+
+# Hidden MMOCore classes (options.display: false) unlocked for the character through RPCharacters.
+classes:
+  devotee: bloodsworn
+  "true": sanguinar
+
+# Permissions a character on each path holds while it is played (one or a list), e.g. to see the
+# hidden Wild Mage Sets skin category (magic.wild) and the path's skins in it. They follow the
+# character: another character of the same player has none.
+permissions:
+  devotee: [magic.blood.bloodsworn, magic.wild]
+  "true": magic.blood.sanguinar

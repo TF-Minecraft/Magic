@@ -51,9 +51,9 @@ class BloodFxTest {
 
   @Test
   void everyBundledEffectIsARealParticleOrSound() {
-    YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File("src/main/resources/bloodmagic.yml"));
+    YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File("src/main/resources/wildmagic/bloodmagic/fx.yml"));
     var moments = yaml.getConfigurationSection("fx.moments");
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     assertTrue(BloodFx.isEnabled());
     int layers = 0;
     for (String moment : moments.getKeys(false)) {

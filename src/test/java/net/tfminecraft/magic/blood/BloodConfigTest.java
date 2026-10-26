@@ -28,8 +28,30 @@ class BloodConfigTest {
   }
 
   @Test
+  void aFolderMergesItsFilesByNameAndSkipsMessages() throws Exception {
+    java.nio.file.Path dir = temp.resolve("bm");
+    Files.createDirectories(dir);
+    Files.writeString(dir.resolve("a.yml"), "enabled: true\naltar:\n  display_scale: 2.0\n");
+    Files.writeString(dir.resolve("b.yml"), "altar:\n  display_scale: 3.0\n");
+    Files.writeString(dir.resolve("messages.yml"), "enabled: false\n");
+    Files.writeString(dir.resolve("notes.txt"), "enabled: false\n");
+    assertTrue(BloodConfig.load(dir.toFile(), log));
+    assertTrue(BloodConfig.isEnabled());
+    assertEquals(3.0f, BloodConfig.displayScale());
+    Files.writeString(dir.resolve("c.yml"), "altar: [unclosed\n");
+    assertFalse(BloodConfig.load(dir.toFile(), log));
+    assertFalse(BloodConfig.isEnabled());
+    File odd = org.mockito.Mockito.mock(File.class);
+    org.mockito.Mockito.when(odd.listFiles(org.mockito.ArgumentMatchers.any(java.io.FilenameFilter.class))).thenReturn(null);
+    assertTrue(BloodConfig.parts(odd).isEmpty());
+    assertTrue(BloodConfig.load(null, log));
+    assertTrue(BloodConfig.load(temp.resolve("nowhere").toFile(), log));
+    assertFalse(BloodConfig.isEnabled());
+  }
+
+  @Test
   void bundledFileLoadsEverySection() {
-    File bundled = new File("src/main/resources/bloodmagic.yml");
+    File bundled = new File("src/main/resources/wildmagic/bloodmagic");
     assertTrue(BloodConfig.load(bundled, log));
     assertTrue(BloodConfig.isEnabled());
     assertEquals("ia.tfmc_blood:blood_knife", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());

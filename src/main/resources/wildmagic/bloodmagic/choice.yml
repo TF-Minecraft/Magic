@@ -1,0 +1,37 @@
+# The god's question and its menu.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# The god's question: right-click your altar with your blood knife once the seventh kind is given.
+choice:
+  title: "#5c0202The Blood Father asks"
+  question:
+    - "#8a0303§oSeven kinds have bled for me, child, and you did not flinch."
+    - "#8a0303§oKneel, and be my child. I will carry you all the way."
+    - "#8a0303§oOr stand alone, and carry the weight yourself. Forever."
+  devotee:
+    item: v.red_dye
+    name: "#8a0303I kneel to Lorvear"
+    lore:
+      - "#8c8c8c§oPart of you stays on the stone,"
+      - "#8c8c8c§oa wound that will never close."
+      - "#8c8c8c§oThe Blood Father walks with you, and chooses for you."
+  "true":
+    item: v.iron_sword
+    name: "#bfbfbfI kneel to no one"
+    lore:
+      - "#6e6878§oI never needed him. I never did."
+      - "#8c8c8c§oNo father. No voices. No one to blame."
+      - "#8c8c8c§oOnly you, and what you take"
+      - "#8c8c8c§ofrom the people who love you."
+  confirm:
+    item: v.redstone
+    name: "#ff5555There is no going back"
+    lore:
+      - "#8c8c8c§oThe stone will remember what you chose."
+  back:
+    item: v.barrier
+    name: "#aaaaaaNot yet"
+    lore:
+      - "#8c8c8c§oHe will wait. He is very good at waiting."
+  # Permanent injuries a devotee keeps as the mark of what they gave.
+  devotee_injuries: 2

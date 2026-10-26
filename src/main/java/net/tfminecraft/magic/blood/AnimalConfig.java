@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 
-/** The animal: section of bloodmagic.yml. */
+/** The animal: section of the wildmagic/bloodmagic config. */
 public final class AnimalConfig {
 
     private static int speciesRequired;
@@ -57,7 +57,7 @@ public final class AnimalConfig {
             try {
                 types.add(EntityType.valueOf(raw.trim().toUpperCase(Locale.ROOT)));
             } catch (IllegalArgumentException ex) {
-                log.warning("[Magic] bloodmagic.yml animal.species: unknown entity '" + raw + "'");
+                log.warning("[Magic] blood magic config animal.species: unknown entity '" + raw + "'");
             }
         }
         species = Set.copyOf(types);

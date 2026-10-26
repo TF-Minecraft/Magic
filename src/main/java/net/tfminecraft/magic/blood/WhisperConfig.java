@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 
-/** The whisper meter and the two voices, from the whispers: and voices: sections of bloodmagic.yml. */
+/** The whisper meter and the two voices, from the whispers: and voices: sections of the wildmagic/bloodmagic config. */
 public final class WhisperConfig {
 
     /** Who speaks. The god until a mage refuses it; after that only the mage's own dark self. */
@@ -91,7 +91,7 @@ public final class WhisperConfig {
                 try {
                     types.add(EntityType.valueOf(raw.trim().toUpperCase(Locale.ROOT)));
                 } catch (IllegalArgumentException ex) {
-                    log.warning("[Magic] bloodmagic.yml whispers.animal_types: unknown entity '" + raw + "'");
+                    log.warning("[Magic] blood magic config whispers.animal_types: unknown entity '" + raw + "'");
                 }
             }
             animals = Set.copyOf(types);
@@ -120,7 +120,7 @@ public final class WhisperConfig {
             for (String key : stages.getKeys(false)) {
                 BloodStage stage = BloodStage.parse(key);
                 if (stage == null) {
-                    log.warning("[Magic] bloodmagic.yml voice lines: unknown stage '" + key + "'");
+                    log.warning("[Magic] blood magic config voice lines: unknown stage '" + key + "'");
                     continue;
                 }
                 lines.put(stage, List.copyOf(new ArrayList<>(stages.getStringList(key))));

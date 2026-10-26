@@ -41,7 +41,7 @@ class WhisperServiceTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     WhisperService.clock = now::get;
     WhisperService.random = new Random(1);
     WhisperService.equilibrium = player -> Double.NaN;

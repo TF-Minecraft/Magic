@@ -1,0 +1,103 @@
+# The whisper meter that wakes the voices, and every timed line the two voices say.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# Hidden whisper meter. Dark deeds fill it; past threshold the voices start. It slowly drains.
+whispers:
+  threshold: 30
+  decay_per_hour: 1.0
+  # Characters with one of these RPCharacters traits fill the meter faster (the evil fast route).
+  fast_traits: [heretic]
+  fast_multiplier: 3.0
+  sources:
+    # Killing a listed animal with a blade.
+    animal_kill: 2.0
+    # Animal kills count this many times more at night or with nobody near.
+    alone_or_night_multiplier: 2.0
+    # A character you killed died for good.
+    character_kill: 15.0
+    # Every ten minutes while your equilibrium is at or below corruption_below.
+    corruption: 1.0
+    corruption_below: -40
+  animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
+
+# The two voices. The god is Lorvear, the first vampire, the Blood Father: ancient, regal and paternal,
+# he speaks in red and calls the mage "child". The other voice sounds like the mage's own thoughts, but it
+# is the Void Reaper, working on them unseen: it argues against kneeling at the question (choice lines,
+# half the time) and is all a mage hears once they refuse. It never names itself; it only hints at the
+# quiet, the cold and the empty. Grey with a touch of the void.
+# whispered lines are said in order and end with the knife and altar; other stages pick at random.
+voices:
+  # Minutes between lines, picked at random in this range.
+  interval_minutes: [15, 35]
+  # Only speak when no other player is within alone_radius blocks.
+  require_alone: true
+  alone_radius: 24
+  god:
+    style: "#8a0303§o"
+    sound: minecraft:ambient.cave
+    pitch: 0.5
+    lines:
+      whispered:
+        - "...there. Under the stone. A heartbeat that is not your own."
+        - "Do not be afraid. It has been so long since anyone listened."
+        - "So much warm blood walks the roads. Spilled in ditches and brawls and childbeds. All of it wasted."
+        - "One called Alaric listened, once, long before your grandfather's grandfather. He wasted nothing."
+        - "Go down, deep, where the sky cannot follow. No banner, no warden's eye. Lay the stone there."
+        - "Bring living beasts down to it. Hold them still with the plain knife, and let the stone drink."
+        - "Not beasts of your own. A gift that costs nothing is no gift. Take them from another's pen while the keeper sleeps."
+        - "Seven kinds, one each day and no sooner. I can wait. I have waited longer than your kingdoms have had names."
+        - "Look in your pack. Someone has been generous. Do not make them regret it."
+      animal:
+        - "The stone is thirsty, child. Can you not hear it?"
+        - "Every pen in the valley is full, and every shepherd sleeps."
+        - "Lead it down gently. Fear sours the blood."
+        - "Look into its eyes when you do it. I want to see what you see."
+        - "I remember the taste of the last one. Bring me a kind I have not had."
+        - "Wash your hands before you climb back up. They can smell it on you."
+        - "The Lady in her tower would call this wickedness. Let her. She has never been hungry."
+      choice:
+        - "Seven kinds have bled. Come down to the stone, and bring the curved blade. Your father has a question."
+        - "The stone is red to its heart. Kneel at it with the blade in your hand, child."
+        - "Do not keep me waiting. Nothing in all of Cerrith has ever kept me waiting."
+      final:
+        - "You are my child now, and so are they. I will tell you which of them."
+        - "I have chosen for you. You need not think any more. Only go to the stone."
+        - "Do you remember their laugh? Remember it on the stone. It makes them sweeter."
+        - "They trust you. That is what makes it holy."
+        - "The Reaper hoards the dead. I prefer them warm, and given freely by someone they loved."
+        - "Every drop you give me, I remember. Every drop, I repay."
+      ascended:
+        - "All of them, given. Sleep now, my child. Your father will wake you when he is hungry."
+        - "You walk among them and none of them know. You are more mine than Alaric ever was."
+        - "Let the Lady send her hunters. I have outlived every one of them."
+  self:
+    style: "#6e6878§o"
+    sound: minecraft:entity.warden.heartbeat
+    pitch: 1.2
+    lines:
+      choice:
+        - "Kneel? To him? I have never knelt to anyone."
+        - "Father. As if I need another one."
+        - "Everything he gives, he owns. What if I took it, and owed no one?"
+        - "He wants a child on its knees. I could be so much more than his child."
+        - "Listen past his voice. Underneath it there is a quiet. The quiet is honest."
+      hunt:
+        - "I don't need a father to tell me what I want."
+        - "Lorvear went quiet. Let him sulk under his stone. I can hear myself think."
+        - "Strangers are cheap. The ones I know are worth more. I knew that before anyone told me."
+        - "Nobody notices one more empty chair. Not at first."
+        - "Seven measures. I keep counting, even when I pretend I'm not."
+        - "They smiled at me today. They have no idea."
+        - "Warm, he wanted them. Why warm? Cold keeps."
+      final:
+        - "It has to be them. I've known it for days."
+        - "The closer they are, the more it gives. That's the whole trick, isn't it?"
+        - "I'll be quick. I owe them that much."
+        - "If I stop now, everything before was for nothing."
+        - "Their name keeps coming back. Of course it does."
+        - "Afterwards it is so still. I could live in that stillness."
+      ascended:
+        - "There is no one left I would miss. So this is what freedom feels like."
+        - "The Lady would call me evil. She'd be right. And far too late."
+        - "Quiet. So quiet. No god, no father. I did it all myself."
+        - "...and in the quiet, something old and patient is smiling. It sounds like me."

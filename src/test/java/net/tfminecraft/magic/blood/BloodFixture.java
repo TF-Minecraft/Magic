@@ -42,7 +42,7 @@ final class BloodFixture implements AutoCloseable {
     when(Magic.plugin.getDataFolder()).thenReturn(data.toFile());
     when(Magic.plugin.isEnabled()).thenReturn(true);
     characters = new CharacterTestSupport();
-    messages = mockStatic(Messages.class, i -> i.getArgument(0));
+    messages = mockStatic(Messages.class, i -> i.getMethod().getReturnType() == void.class ? null : i.getArgument(0));
     BloodConfig.reset();
     BloodConfig.setEnabled(true);
     BloodStore store = new BloodStore(new File(data.toFile(), "blood"), logger);

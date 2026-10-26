@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import net.tfminecraft.magic.Messages;
 import net.tfminecraft.magic.manager.MagicTickService;
 import net.tfminecraft.magic.tick.MagicTickContext;
 
@@ -88,8 +89,16 @@ public final class BloodMagic {
         }
     }
 
+    /** Where the blood path's config files live inside Magic's data folder. */
+    public static final String FOLDER = "wildmagic/bloodmagic";
+
     public static boolean loadConfig(File dataFolder, Logger log) {
-        boolean ok = BloodConfig.load(new File(dataFolder, "bloodmagic.yml"), log);
+        if (new File(dataFolder, "bloodmagic.yml").isFile()) {
+            log.warning("[Magic] blood magic config is no longer read; the blood path's config lives in " + FOLDER + "/");
+        }
+        File folder = new File(dataFolder, FOLDER);
+        Messages.overlay(new File(folder, "messages.yml"), FOLDER + "/messages.yml");
+        boolean ok = BloodConfig.load(folder, log);
         BloodPerms.refreshAll();
         return ok;
     }

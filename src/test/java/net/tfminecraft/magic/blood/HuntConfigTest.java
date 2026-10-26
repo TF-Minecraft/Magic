@@ -23,7 +23,7 @@ class HuntConfigTest {
 
   @Test
   void bundledHuntBondsAndFinalsLoad() {
-    assertTrue(BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), log));
+    assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), log));
     assertEquals(8, HuntConfig.dragRange());
     assertEquals(10, HuntConfig.riteSeconds());
     assertEquals(10, HuntConfig.minPlaytimeHours());

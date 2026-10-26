@@ -44,7 +44,7 @@ class CarryTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     BondService.init(new BloodStore(temp.resolve("bonds").toFile(), fx.logger));
     CharacterRiteService.clock = now::get;
     bridge = mockStatic(RpCharactersBridge.class);
@@ -309,7 +309,7 @@ class CarryTest {
     assertNull(CarryService.carried(mage));
     assertFalse(HuntConfig.carryEnabled());
 
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     assertEquals(CharacterRiteService.Bind.OK, CarryService.start(mage, fourth));
     assertEquals("blood.carry.start", mage.nextMessage());
     listener.onQuit(new PlayerQuitEvent(fourth, net.kyori.adventure.text.Component.empty(),

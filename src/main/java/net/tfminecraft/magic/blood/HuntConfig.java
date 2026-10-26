@@ -94,7 +94,7 @@ public final class HuntConfig {
                 if (raw.get("up_to") instanceof Number upTo && raw.get("points") instanceof Number points) {
                     RANK_POINTS.add(new RankPoints(upTo.intValue(), Math.max(0, points.intValue())));
                 } else {
-                    log.warning("[Magic] bloodmagic.yml hunt.points.ranks entry needs up_to and points");
+                    log.warning("[Magic] blood magic config hunt.points.ranks entry needs up_to and points");
                 }
             }
             RANK_POINTS.sort(Comparator.comparingInt(RankPoints::upTo));
@@ -133,7 +133,7 @@ public final class HuntConfig {
                 index = -1;
             }
             if (index < 1 || stats == null) {
-                log.warning("[Magic] bloodmagic.yml finals.boons entry '" + key + "' skipped");
+                log.warning("[Magic] blood magic config finals.boons entry '" + key + "' skipped");
                 continue;
             }
             Map<String, Double> values = new LinkedHashMap<>();

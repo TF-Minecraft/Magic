@@ -177,7 +177,7 @@ class BloodListenerTest {
           offline.ownerId(), offline, "x"));
       assertEquals(15, BloodRecords.get(offline.characterId().toString()).getWhisper());
 
-      BloodConfig.load(new java.io.File("src/main/resources/bloodmagic.yml"), fx.logger);
+      BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
       BloodConfig.setEnabled(true);
       var cow = fx.world.spawn(killer.getLocation(), org.bukkit.entity.Cow.class);
       killer.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));

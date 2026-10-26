@@ -44,7 +44,7 @@ class AnimalRiteTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/bloodmagic.yml"), fx.logger);
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     AnimalRiteService.clock = now::get;
     StolenClues.clock = now::get;
     FakeHusbandry.use();
