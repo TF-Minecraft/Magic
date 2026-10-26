@@ -320,10 +320,11 @@ classes:
   devotee: bloodsworn
   "true": sanguinar
 
-# Permissions a character on each path holds while it is played, e.g. to see the path's
-# ArmourShop skin category. They follow the character: another character of the same player has none.
+# Permissions a character on each path holds while it is played (one or a list), e.g. to see the
+# hidden Wild Mage Sets skin category (magic.wild) and the path's skins in it. They follow the
+# character: another character of the same player has none.
 permissions:
-  devotee: magic.blood.bloodsworn
+  devotee: [magic.blood.bloodsworn, magic.wild]
   "true": magic.blood.sanguinar
 
 # Bound, unbreakable armour. Devotees get theirs at the question; the true path when the hunt is done.

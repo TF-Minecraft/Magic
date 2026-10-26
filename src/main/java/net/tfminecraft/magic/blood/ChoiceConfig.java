@@ -35,7 +35,7 @@ public final class ChoiceConfig {
     private static int devoteeInjuries;
     private static final Map<BloodPath, String> CLASSES = new EnumMap<>(BloodPath.class);
     private static final Map<BloodPath, List<Piece>> ARMOUR = new EnumMap<>(BloodPath.class);
-    private static final Map<BloodPath, String> PERMISSIONS = new EnumMap<>(BloodPath.class);
+    private static final Map<BloodPath, List<String>> PERMISSIONS = new EnumMap<>(BloodPath.class);
 
     static {
         reset();
@@ -129,20 +129,30 @@ public final class ChoiceConfig {
         return CLASSES.get(path);
     }
 
-    /** Reads permissions: the permission each path's character holds while played. */
+    /** Reads permissions: the permission(s) each path's character holds while played, one or a list. */
     static void loadPermissions(ConfigurationSection permissions) {
         PERMISSIONS.clear();
+        if (permissions == null) {
+            return;
+        }
         for (BloodPath path : List.of(BloodPath.DEVOTEE, BloodPath.TRUE)) {
             String key = path.name().toLowerCase(Locale.ROOT);
-            if (permissions != null && permissions.isString(key) && !permissions.getString(key).isBlank()) {
-                PERMISSIONS.put(path, permissions.getString(key).trim());
+            List<String> names = new ArrayList<>();
+            List<?> raw = permissions.isList(key) ? permissions.getList(key) : List.of(permissions.get(key, ""));
+            for (Object entry : raw) {
+                if (entry instanceof String name && !name.isBlank()) {
+                    names.add(name.trim());
+                }
+            }
+            if (!names.isEmpty()) {
+                PERMISSIONS.put(path, List.copyOf(names));
             }
         }
     }
 
-    /** The permission a path's character holds while played, or null. */
-    public static String permissionFor(BloodPath path) {
-        return PERMISSIONS.get(path);
+    /** The permissions a path's character holds while played; empty for none. */
+    public static List<String> permissionsFor(BloodPath path) {
+        return PERMISSIONS.getOrDefault(path, List.of());
     }
 
     /** The bound armour pieces a path receives. */

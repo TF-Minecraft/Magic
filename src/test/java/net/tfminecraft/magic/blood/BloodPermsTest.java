@@ -45,17 +45,21 @@ class BloodPermsTest {
     Files.writeString(temp.resolve("p.yml"), String.join("\n",
         "enabled: true",
         "permissions:",
-        "  devotee: magic.blood.bloodsworn",
+        "  devotee: [magic.blood.bloodsworn, ' ', 4, magic.wild]",
         "  \"true\": ' '",
         "  none: magic.blood.none",
         ""));
     BloodConfig.load(temp.resolve("p.yml").toFile(), fx.logger);
-    assertEquals("magic.blood.bloodsworn", ChoiceConfig.permissionFor(BloodPath.DEVOTEE));
-    assertNull(ChoiceConfig.permissionFor(BloodPath.TRUE));
-    assertNull(ChoiceConfig.permissionFor(BloodPath.NONE));
-    Files.writeString(temp.resolve("q.yml"), "enabled: true\npermissions:\n  devotee: 3\n");
+    assertEquals(List.of("magic.blood.bloodsworn", "magic.wild"), ChoiceConfig.permissionsFor(BloodPath.DEVOTEE));
+    assertTrue(ChoiceConfig.permissionsFor(BloodPath.TRUE).isEmpty());
+    assertTrue(ChoiceConfig.permissionsFor(BloodPath.NONE).isEmpty());
+    Files.writeString(temp.resolve("q.yml"), "enabled: true\npermissions:\n  devotee: 3\n  \"true\": magic.blood.sanguinar\n");
     BloodConfig.load(temp.resolve("q.yml").toFile(), fx.logger);
-    assertNull(ChoiceConfig.permissionFor(BloodPath.DEVOTEE));
+    assertTrue(ChoiceConfig.permissionsFor(BloodPath.DEVOTEE).isEmpty());
+    assertEquals(List.of("magic.blood.sanguinar"), ChoiceConfig.permissionsFor(BloodPath.TRUE));
+    Files.writeString(temp.resolve("r.yml"), "enabled: true\n");
+    BloodConfig.load(temp.resolve("r.yml").toFile(), fx.logger);
+    assertTrue(ChoiceConfig.permissionsFor(BloodPath.TRUE).isEmpty());
     BloodConfig.load(temp.resolve("p.yml").toFile(), fx.logger);
 
     PlayerMock mage = fx.player("mage");
@@ -68,6 +72,7 @@ class BloodPermsTest {
     record.setPath(BloodPath.DEVOTEE);
     BloodPerms.refresh(mage);
     assertTrue(mage.hasPermission("magic.blood.bloodsworn"));
+    assertTrue(mage.hasPermission("magic.wild"));
     BloodPerms.refresh(mage);
     assertTrue(mage.hasPermission("magic.blood.bloodsworn"));
 
@@ -77,8 +82,8 @@ class BloodPermsTest {
 
     BloodPerms.refreshAll();
     assertTrue(mage.hasPermission("magic.blood.bloodsworn"));
-    mage.getEffectivePermissions().stream().filter(p -> p.getAttachment() != null)
-        .forEach(p -> mage.removeAttachment(p.getAttachment()));
+    mage.getEffectivePermissions().stream().map(p -> p.getAttachment()).filter(a -> a != null).distinct().toList()
+        .forEach(mage::removeAttachment);
     BloodPerms.clear(mage);
     assertFalse(BloodPerms.holds(mage.getUniqueId()));
 
