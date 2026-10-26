@@ -34,6 +34,7 @@ public final class BloodFx {
 
     private static final Map<String, List<Layer>> MOMENTS = new HashMap<>();
     private static boolean enabled;
+    private static double hearRadius;
 
     static {
         reset();
@@ -43,7 +44,13 @@ public final class BloodFx {
 
     static void reset() {
         enabled = true;
+        hearRadius = 10;
         MOMENTS.clear();
+    }
+
+    /** How far a shared sound carries: only players this close hear it. */
+    static double hearRadius() {
+        return hearRadius;
     }
 
     static void load(ConfigurationSection fx, Logger log) {
@@ -52,6 +59,7 @@ public final class BloodFx {
             return;
         }
         enabled = fx.getBoolean("enabled", true);
+        hearRadius = Math.max(1, fx.getDouble("hear_radius", 10));
         ConfigurationSection moments = fx.getConfigurationSection("moments");
         if (moments == null) {
             return;
@@ -109,7 +117,12 @@ public final class BloodFx {
                 if (layer.personal()) {
                     viewer.playSound(at, layer.sound(), layer.volume(), layer.pitch());
                 } else {
-                    at.getWorld().playSound(at, layer.sound(), layer.volume(), layer.pitch());
+                    // Shared sounds stay in the room: only players within hear_radius get them.
+                    for (Player near : at.getWorld().getPlayers()) {
+                        if (near.getLocation().distanceSquared(at) <= hearRadius * hearRadius) {
+                            near.playSound(at, layer.sound(), layer.volume(), layer.pitch());
+                        }
+                    }
                 }
                 return;
             }

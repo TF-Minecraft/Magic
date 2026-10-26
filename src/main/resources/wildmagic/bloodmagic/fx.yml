@@ -9,6 +9,9 @@
 #   player the moment is about sees or hears it. A moment with no entry plays nothing.
 fx:
   enabled: true
+  # Shared sounds reach only players this many blocks away; private: true layers reach only
+  # the player the moment is about (the rite music in animals.yml is private too).
+  hear_radius: 10
   moments:
     # --- The altar ---
     altar_placed:
@@ -65,18 +68,18 @@ fx:
 
     # --- The animals ---
     animal_bound:
-      - { sound: block.chain.place, volume: 1.0, pitch: 0.6 }
-      - { sound: entity.warden.heartbeat, volume: 0.8, pitch: 1.4, delay: 5 }
+      - { sound: block.chain.place, volume: 0.5, pitch: 0.6 }
+      - { sound: entity.warden.heartbeat, volume: 0.4, pitch: 1.4, delay: 5 }
       - { particle: SCULK_SOUL, shape: ring, radius: 0.8, points: 12, y: 0.6, speed: 0.01 }
       - { particle: DUST, color: "#4a0000", size: 1.3, shape: column, height: 1.4, points: 10, y: 0.5 }
     animal_binding:
       - { particle: DAMAGE_INDICATOR, count: 2, spread: 0.2, y: 0.6 }
       - { particle: DUST, color: "#8a0303", size: 0.9, count: 3, spread: 0.3, y: 0.4 }
-      - { sound: entity.warden.heartbeat, volume: 0.5, pitch: 1.3 }
+      - { sound: entity.warden.heartbeat, volume: 0.3, pitch: 1.3 }
     animal_cut:
-      - { sound: entity.player.attack.sweep, volume: 1.0, pitch: 0.7 }
-      - { sound: item.trident.hit, volume: 1.0, pitch: 0.6 }
-      - { sound: entity.warden.heartbeat, volume: 1.2, pitch: 1.1, delay: 4, private: true }
+      - { sound: entity.player.attack.sweep, volume: 0.5, pitch: 0.7 }
+      - { sound: item.trident.hit, volume: 0.4, pitch: 0.6 }
+      - { sound: entity.warden.heartbeat, volume: 0.5, pitch: 1.1, delay: 4 }
       - { particle: SWEEP_ATTACK, count: 1, y: 0.6 }
       - { particle: BLOCK, block: redstone_block, count: 30, spread: 0.3, y: 0.6, speed: 0.15 }
       - { particle: DUST, color: "#8a0303", size: 1.4, count: 14, spread: 0.4, y: 0.4 }
@@ -88,15 +91,15 @@ fx:
       - { particle: SCULK_SOUL, count: 1, spread: 0.3, y: -0.3, speed: 0.01 }
     # Its heart, slower toward the end; only its mage hears it up close.
     animal_heartbeat:
-      - { sound: entity.warden.heartbeat, volume: 1.0, pitch: 0.9, private: true }
+      - { sound: entity.warden.heartbeat, volume: 0.5, pitch: 0.9 }
       - { particle: DAMAGE_INDICATOR, count: 2, spread: 0.2, y: 0.6 }
     animal_spilled:
-      - { sound: block.fire.extinguish, volume: 0.6, pitch: 0.6 }
-      - { sound: entity.generic.splash, volume: 0.5, pitch: 0.5 }
+      - { sound: block.fire.extinguish, volume: 0.4, pitch: 0.6 }
+      - { sound: entity.generic.splash, volume: 0.4, pitch: 0.5 }
       - { particle: BLOCK, block: redstone_block, count: 20, spread: [0.6, 0.1, 0.6], y: 0.0, speed: 0.05 }
       - { particle: LARGE_SMOKE, count: 6, spread: 0.3, y: 0.4, speed: 0.01 }
     animal_escaped:
-      - { sound: block.chain.break, volume: 0.8, pitch: 0.8 }
+      - { sound: block.chain.break, volume: 0.5, pitch: 0.8 }
       - { particle: POOF, count: 8, spread: 0.3, y: 0.5 }
     altar_sit:
       - { sound: entity.warden.heartbeat, volume: 0.6, pitch: 0.8, private: true }
@@ -107,28 +110,28 @@ fx:
       - { particle: DUST, color: "#8a0303", size: 1.2, count: 14, spread: 0.45, private: true }
       - { particle: DAMAGE_INDICATOR, count: 3, spread: 0.3, private: true }
     animal_slain:
-      - { sound: entity.player.attack.sweep, volume: 1.0, pitch: 0.7 }
-      - { sound: item.trident.hit, volume: 1.0, pitch: 0.6 }
-      - { sound: entity.generic.drink, volume: 0.8, pitch: 0.5, delay: 2 }
+      - { sound: entity.player.attack.sweep, volume: 0.5, pitch: 0.7 }
+      - { sound: item.trident.hit, volume: 0.4, pitch: 0.6 }
+      - { sound: entity.generic.drink, volume: 0.4, pitch: 0.5, delay: 2 }
       - { particle: SWEEP_ATTACK, count: 1, y: 0.6 }
       - { particle: BLOCK, block: redstone_block, count: 25, spread: 0.3, y: 0.6, speed: 0.15 }
       - { particle: DUST, color: "#8a0303", size: 1.4, count: 12, spread: 0.4, y: 0.4 }
     animal_sacrificed:
-      - { sound: entity.player.attack.crit, volume: 1.0, pitch: 0.5 }
-      - { sound: block.honey_block.slide, volume: 1.0, pitch: 0.5 }
-      - { sound: block.sculk_catalyst.bloom, volume: 0.8, pitch: 0.5, delay: 4 }
-      - { sound: entity.warden.heartbeat, volume: 1.0, pitch: 0.6, delay: 12 }
+      - { sound: entity.player.attack.crit, volume: 0.4, pitch: 0.5 }
+      - { sound: block.honey_block.slide, volume: 0.5, pitch: 0.5 }
+      - { sound: block.sculk_catalyst.bloom, volume: 0.4, pitch: 0.5, delay: 4 }
+      - { sound: entity.warden.heartbeat, volume: 0.5, pitch: 0.6, delay: 12 }
       - { particle: BLOCK, block: redstone_block, count: 40, spread: 0.4, y: 0.7, speed: 0.1 }
       - { particle: DAMAGE_INDICATOR, count: 12, spread: 0.3, y: 0.6, speed: 0.05 }
       - { particle: DUST_COLOR_TRANSITION, color: "#c40c0c", to: "#1a0000", size: 1.5, shape: ring, radius: 1.2, points: 20, y: 0.6, delay: 4 }
       - { particle: SCULK_SOUL, shape: column, height: 1.8, points: 8, y: 0.6, speed: 0.03, delay: 8 }
     blood_knife_given:
-      - { sound: entity.warden.emerge, volume: 0.7, pitch: 0.7, delay: 20 }
-      - { sound: block.end_portal.spawn, volume: 0.4, pitch: 0.5, delay: 40 }
+      - { sound: entity.warden.emerge, volume: 0.4, pitch: 0.7, delay: 20 }
+      - { sound: block.end_portal.spawn, volume: 0.25, pitch: 0.5, delay: 40 }
       - { particle: DUST_COLOR_TRANSITION, color: "#c40c0c", to: "#1a0000", size: 2.0, shape: spiral, radius: 1.3, height: 3.5, points: 70, y: -0.5, delay: 20 }
       - { particle: SCULK_SOUL, shape: ring, radius: 2.2, points: 30, y: -0.4, speed: 0.04, delay: 30 }
       - { particle: SONIC_BOOM, count: 1, y: 1.4, delay: 40 }
-      - { sound: ambient.cave, volume: 1.0, pitch: 0.5, delay: 50, private: true }
+      - { sound: ambient.cave, volume: 0.4, pitch: 0.5, delay: 50 }
 
     # --- The question ---
     question:

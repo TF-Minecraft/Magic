@@ -181,24 +181,39 @@ class BloodFxTest {
     World world = mock(World.class);
     Location at = new Location(world, 1, 2, 3);
     Player viewer = mock(Player.class);
+    // Shared sounds reach only players within hear_radius (10 by default).
+    Player near = mock(Player.class);
+    when(near.getLocation()).thenReturn(new Location(world, 1, 2, 12));
+    Player far = mock(Player.class);
+    when(far.getLocation()).thenReturn(new Location(world, 1, 2, 14));
+    when(world.getPlayers()).thenReturn(java.util.List.of(near, far));
+    assertEquals(10, BloodFx.hearRadius());
     BloodFx.play("test", at, viewer);
-    verify(world).playSound(any(Location.class), eq("minecraft:block.stone.place"), anyFloat(), anyFloat());
+    verify(near).playSound(any(Location.class), eq("minecraft:block.stone.place"), anyFloat(), anyFloat());
+    verify(far, never()).playSound(any(Location.class), anyString(), anyFloat(), anyFloat());
+    verify(world, never()).playSound(any(Location.class), anyString(), anyFloat(), anyFloat());
     verify(viewer).playSound(any(Location.class), eq("minecraft:block.bell.use"), anyFloat(), anyFloat());
     verify(world).spawnParticle(eq(Particle.SMOKE), any(Location.class), eq(2), anyDouble(), anyDouble(), anyDouble(),
         anyDouble(), any());
     verify(viewer, times(3)).spawnParticle(eq(Particle.SMOKE), any(Location.class), anyInt(), anyDouble(), anyDouble(),
         anyDouble(), anyDouble(), any());
-    verify(world, never()).playSound(any(Location.class), eq("minecraft:block.chain.place"), anyFloat(), anyFloat());
+    verify(near, never()).playSound(any(Location.class), eq("minecraft:block.chain.place"), anyFloat(), anyFloat());
     fx.server.getScheduler().performTicks(6);
-    verify(world).playSound(any(Location.class), eq("minecraft:block.chain.place"), anyFloat(), anyFloat());
+    verify(near).playSound(any(Location.class), eq("minecraft:block.chain.place"), anyFloat(), anyFloat());
 
     World quiet = mock(World.class);
+    Player listener = mock(Player.class);
+    when(listener.getLocation()).thenReturn(new Location(quiet, 0, 0, 0));
+    when(quiet.getPlayers()).thenReturn(java.util.List.of(listener));
     BloodFx.play("test", new Location(quiet, 0, 0, 0));
-    verify(quiet).playSound(any(Location.class), eq("minecraft:block.stone.place"), anyFloat(), anyFloat());
-    verify(quiet, never()).playSound(any(Location.class), eq("minecraft:block.bell.use"), anyFloat(), anyFloat());
+    verify(listener).playSound(any(Location.class), eq("minecraft:block.stone.place"), anyFloat(), anyFloat());
+    verify(listener, never()).playSound(any(Location.class), eq("minecraft:block.bell.use"), anyFloat(), anyFloat());
 
     World broken = mock(World.class);
-    doThrow(new IllegalStateException("no sound")).when(broken).playSound(any(Location.class), anyString(), anyFloat(), anyFloat());
+    Player deaf = mock(Player.class);
+    when(deaf.getLocation()).thenReturn(new Location(broken, 0, 0, 0));
+    when(broken.getPlayers()).thenReturn(java.util.List.of(deaf));
+    doThrow(new IllegalStateException("no sound")).when(deaf).playSound(any(Location.class), anyString(), anyFloat(), anyFloat());
     BloodFx.play("test", new Location(broken, 0, 0, 0));
     fx.server.getScheduler().performTicks(6);
     verify(broken).spawnParticle(eq(Particle.SMOKE), any(Location.class), eq(2), anyDouble(), anyDouble(), anyDouble(),
@@ -207,6 +222,10 @@ class BloodFxTest {
     BloodFx.play("test", null);
     BloodFx.play("test", new Location(null, 0, 0, 0));
     BloodFx.play("unknown", at);
+
+    Files.writeString(temp.resolve("wide.yml"), "enabled: true\nfx:\n  hear_radius: 0\n");
+    BloodConfig.load(temp.resolve("wide.yml").toFile(), fx.logger);
+    assertEquals(1, BloodFx.hearRadius());
 
     Files.writeString(temp.resolve("off.yml"), "enabled: true\nfx:\n  enabled: false\n  moments:\n    test:\n      - { sound: a.b }\n");
     BloodConfig.load(temp.resolve("off.yml").toFile(), fx.logger);
