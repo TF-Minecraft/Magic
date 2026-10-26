@@ -55,14 +55,14 @@ placement:
     max_changes: 150
     # Blocks the chamber is laid in (repeat an entry to weigh it). Keep them blocks the corruption turns
     # (corruption.yml convert) so the room still reddens. An empty list leaves that part as it was.
-    # candles: a lit cluster (count 1-4) in each floor corner. Not red candles: those count toward a
-    # bloodmagic shrine. altar_light: the stone glows (an unseen light just above it). light: hidden light
-    # in the four top corners. Levels 0-15, 0 for none.
+    # candles: { block: <candle>, count: 1-4 } stands a lit cluster in each floor corner (none by default:
+    # candles come with the corruption and on the altar itself; red ones count toward a bloodmagic shrine).
+    # altar_light: the stone glows (an unseen light just above it). light: hidden light in the four top
+    # corners. Levels 0-15, 0 for none.
     template:
       floor: [STONE_BRICKS, STONE_BRICKS, STONE_BRICKS, CRACKED_STONE_BRICKS, STONE]
       walls: [STONE, STONE, STONE, COBBLESTONE, ANDESITE]
       ceiling: [STONE, STONE, STONE, COBBLESTONE]
-      candles: { block: BLACK_CANDLE, count: 3 }
       altar_light: 7
       light: 0
   # How often (minutes) altars of dead owners are checked and purified.
