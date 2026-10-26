@@ -75,9 +75,14 @@ public final class AltarCorruption {
     static boolean fits(CorruptionConfig.Rule rule, Block block) {
         return switch (rule.on()) {
             case CONVERT -> rule.from().contains(block.getType()) && exposed(block);
-            case FLOOR -> block.isEmpty() && block.getRelative(BlockFace.DOWN).getType().isSolid();
-            case CEILING -> block.isEmpty() && block.getRelative(BlockFace.UP).getType().isSolid();
+            case FLOOR -> block.isEmpty() && rests(block.getRelative(BlockFace.DOWN));
+            case CEILING -> block.isEmpty() && rests(block.getRelative(BlockFace.UP));
         };
+    }
+
+    /** Solid stone to sit on or hang from; a barrier is furniture (a pedestal) or the altar, never decorated. */
+    private static boolean rests(Block block) {
+        return block.getType().isSolid() && block.getType() != Material.BARRIER;
     }
 
     private static boolean exposed(Block block) {

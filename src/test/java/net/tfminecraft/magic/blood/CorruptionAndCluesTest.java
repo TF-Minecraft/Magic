@@ -113,6 +113,24 @@ class CorruptionAndCluesTest {
   }
 
   @Test
+  void pedestalsAndTheAltarAreNeverDecorated() {
+    Block center = room();
+    CorruptionConfig.Rule floor = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+        java.util.List.of(Material.RED_CANDLE));
+    CorruptionConfig.Rule ceiling = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.CEILING,
+        java.util.List.of(Material.WEEPING_VINES));
+    Block onStone = center.getRelative(2, 0, 0);
+    assertTrue(AltarCorruption.fits(floor, onStone));
+    Block pedestal = center.getRelative(3, 0, 0);
+    pedestal.setType(Material.BARRIER);
+    assertFalse(AltarCorruption.fits(floor, pedestal.getRelative(0, 1, 0)));
+    Block under = center.getRelative(-2, 2, 0);
+    assertTrue(AltarCorruption.fits(ceiling, under));
+    under.getRelative(0, 1, 0).setType(Material.BARRIER);
+    assertFalse(AltarCorruption.fits(ceiling, under));
+  }
+
+  @Test
   void reconvertingKeepsTheFirstOriginal() throws Exception {
     config(String.join("\n", "corruption:", "  levels:", "    0: { radius: 1, max_blocks: 200 }",
         "  convert:", "    - { min_level: 0, from: [STONE, NETHERRACK], to: [NETHERRACK] }", ""));
