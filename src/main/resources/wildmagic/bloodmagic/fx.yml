@@ -11,7 +11,7 @@ fx:
   enabled: true
   # Vanilla candle flames over the wicks of the altar's candles (the model draws no flames of its own),
   # every every_ticks while a player is within view_range, with a wisp of smoke at smoke_chance.
-  # wicks: [x, y, z, max_level] in the model's pixels (the wick tops in .build/blood-art/altar.py),
+  # wicks: [x, y, z, max_level] in the model's pixels, 1 px over each wick top like vanilla candles,
   # max_level the last altar level that still has that candle (the skull takes one at 4). yaw_offset
   # turns the positions to match how item displays face.
   candles:
@@ -22,10 +22,10 @@ fx:
     view_range: 24
     yaw_offset: 180
     wicks:
-      - [13.5, 16.4, 2.5, 5]
-      - [13.5, 17.4, 14.5, 5]
-      - [1.5, 16.4, 14.5, 5]
-      - [1.5, 15.4, 2.5, 3]
+      - [13.5, 17, 2.5, 5]
+      - [13.5, 18, 14.5, 5]
+      - [1.5, 17, 14.5, 5]
+      - [1.5, 16, 2.5, 3]
   # Shared sounds reach only players this many blocks away; private: true layers reach only
   # the player the moment is about (the rite music in animals.yml is private too).
   hear_radius: 10
