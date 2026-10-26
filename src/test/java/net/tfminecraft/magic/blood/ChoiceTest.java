@@ -22,12 +22,6 @@ import net.tfminecraft.tlibs.character.Characters;
 import net.tfminecraft.tlibs.objects.api.ItemAPI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,19 +72,52 @@ class ChoiceTest {
     bridge.close();
     ClassUnlockBridge.unlocksClass = "net.tfminecraft.rpcharacters.classpick.ClassUnlocks";
     WhisperService.clear();
+    QuestionService.clear();
+    QuestionService.clock = System::currentTimeMillis;
     fx.close();
   }
 
-  InventoryClickEvent click(int slot) {
-    InventoryView view = mage.getOpenInventory();
-    return new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, slot, ClickType.LEFT, InventoryAction.PICKUP_ALL);
+  final java.util.concurrent.atomic.AtomicLong now = new java.util.concurrent.atomic.AtomicLong(1_000_000L);
+
+  /** The god's question in the mage's chamber: altar in the middle of an open room. */
+  void chamber() {
+    BloodAltars.remove(BloodAltars.ofCharacter(id));
+    BloodAltars.add(BloodAltar.create(id, "o", fx.room(0, 10, 0), 0f, 1L));
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    QuestionService.clock = now::get;
+  }
+
+  /** Lets the dialogue run a while, one tick a second. */
+  void wait(int seconds) {
+    for (int i = 0; i < seconds; i++) {
+      now.addAndGet(1000L);
+      QuestionService.tick();
+    }
+  }
+
+  java.util.List<String> heard() {
+    java.util.List<String> out = new java.util.ArrayList<>();
+    for (String m = mage.nextMessage(); m != null; m = mage.nextMessage()) {
+      out.add(WhisperServiceTest.plain(m));
+    }
+    return out;
+  }
+
+  void say(String words) {
+    QuestionService.onChat(mage, "rp", words);
   }
 
   @Test
   void bundledQuestionClassesAndArmourLoad() {
-    assertEquals("#5c0202The Blood Father asks", ChoiceConfig.title());
-    assertEquals(3, ChoiceConfig.button(ChoiceConfig.Slot.QUESTION).lore().size());
-    assertEquals("v.iron_sword", ChoiceConfig.button(ChoiceConfig.Slot.TRUE).item());
+    assertEquals(5, ChoiceConfig.ask().size());
+    assertEquals(WhisperConfig.Speaker.SELF, ChoiceConfig.ask().get(3).speaker());
+    assertNotNull(ChoiceConfig.unclear());
+    assertNotNull(ChoiceConfig.walkedAway());
+    assertEquals(90, ChoiceConfig.answerSeconds());
+    assertEquals(5, ChoiceConfig.lineSeconds());
+    assertEquals("", ChoiceConfig.music());
+    assertTrue(ChoiceConfig.answer(BloodPath.DEVOTEE).words().contains("i kneel"));
+    assertEquals(2, ChoiceConfig.answer(BloodPath.TRUE).sealed().size());
     assertEquals(2, ChoiceConfig.devoteeInjuries());
     assertEquals("bloodsworn", ChoiceConfig.classFor(BloodPath.DEVOTEE));
     assertEquals("sanguinar", ChoiceConfig.classFor(BloodPath.TRUE));
@@ -101,65 +128,137 @@ class ChoiceTest {
 
   @Test
   void missingSectionsFallBack() throws Exception {
-    Files.writeString(temp.resolve("e.yml"), "enabled: true\nchoice:\n  devotee_injuries: -3\nclasses:\n  devotee: ' '\n  'true': [x]\n");
+    Files.writeString(temp.resolve("e.yml"), String.join("\n", "enabled: true", "choice:", "  devotee_injuries: -3",
+        "  answer_seconds: 1", "  line_seconds: 0", "  music: { sound: ' x:y ', category: nope, volume: -1 }",
+        "  ask: [plain, { god: ' ' }, { who: hi }, { god: a, self: b }, { self: mine }]",
+        "classes:", "  devotee: ' '", "  'true': [x]", ""));
     BloodConfig.load(temp.resolve("e.yml").toFile(), fx.logger);
-    assertEquals("...", ChoiceConfig.title());
     assertEquals(0, ChoiceConfig.devoteeInjuries());
-    assertEquals("v.red_dye", ChoiceConfig.button(ChoiceConfig.Slot.DEVOTEE).item());
+    assertEquals(5, ChoiceConfig.answerSeconds());
+    assertEquals(1, ChoiceConfig.lineSeconds());
+    assertEquals("x:y", ChoiceConfig.music());
+    assertEquals(org.bukkit.SoundCategory.RECORDS, ChoiceConfig.musicCategory());
+    assertEquals(0f, ChoiceConfig.musicVolume());
+    assertEquals(1, ChoiceConfig.ask().size());
+    assertNull(ChoiceConfig.unclear());
+    assertTrue(ChoiceConfig.answer(BloodPath.DEVOTEE).words().isEmpty());
     assertNull(ChoiceConfig.classFor(BloodPath.DEVOTEE));
     assertNull(ChoiceConfig.classFor(BloodPath.TRUE));
     assertTrue(ChoiceConfig.armourFor(BloodPath.DEVOTEE).isEmpty());
+    Files.writeString(temp.resolve("w.yml"), "enabled: true\nchoice:\n  kneel:\n    words: [' ', 'Yes!']\n");
+    BloodConfig.load(temp.resolve("w.yml").toFile(), fx.logger);
+    assertEquals(java.util.List.of("yes"), ChoiceConfig.answer(BloodPath.DEVOTEE).words());
     BloodConfig.reset();
-    assertEquals("...", ChoiceConfig.title());
+    assertTrue(ChoiceConfig.ask().isEmpty());
   }
 
   @Test
-  void theMenuAsksThenConfirmsAndGoesBack() {
-    ChoiceMenu.open(mage);
-    ChoiceMenu menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
-    assertEquals(BloodPath.NONE, menu.pending());
-    assertSame(mage.getOpenInventory().getTopInventory(), menu.getInventory());
-    ChoiceMenu.onClick(click(0));
-    ChoiceMenu.onClick(click(ChoiceMenu.RIGHT_SLOT));
-    fx.server.getScheduler().performTicks(1);
-    menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
-    assertEquals(BloodPath.TRUE, menu.pending());
-    ChoiceMenu.onClick(click(0));
-    ChoiceMenu.onClick(click(ChoiceMenu.RIGHT_SLOT));
-    fx.server.getScheduler().performTicks(1);
-    menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
-    assertEquals(BloodPath.NONE, menu.pending());
-    ChoiceMenu.onClick(click(ChoiceMenu.LEFT_SLOT));
-    fx.server.getScheduler().performTicks(1);
-    menu = (ChoiceMenu) mage.getOpenInventory().getTopInventory().getHolder();
-    assertEquals(BloodPath.DEVOTEE, menu.pending());
-    InventoryClickEvent below = click(40);
-    ChoiceMenu.onClick(below);
-    assertTrue(below.isCancelled());
-    ChoiceMenu.onClick(click(ChoiceMenu.LEFT_SLOT));
-    fx.server.getScheduler().performTicks(1);
+  void answersAreReadFromWhatIsSaid() {
+    assertEquals(BloodPath.TRUE, QuestionService.classify("I kneel to no one."));
+    assertEquals(BloodPath.TRUE, QuestionService.classify("I will NOT kneel"));
+    assertEquals(BloodPath.DEVOTEE, QuestionService.classify("Yes, father... I kneel."));
+    assertNull(QuestionService.classify("I know what you are"));
+    assertNull(QuestionService.classify("hm"));
+    assertEquals("i'm yours", QuestionService.normalize("  I'M   yours!! "));
+  }
+
+  @Test
+  void kneelingIsAskedBackThenSealed() {
+    chamber();
+    QuestionService.start(mage);
+    assertTrue(QuestionService.asking(mage.getUniqueId()));
+    QuestionService.start(mage);
+    say("I kneel");
+    wait(30);
+    java.util.List<String> lines = heard();
+    assertEquals(ChoiceConfig.ask().size() + 1, lines.size());
+    assertEquals(ChoiceConfig.ask().get(0).text(), lines.get(0));
+    assertEquals("blood.choice.prompt", lines.get(lines.size() - 1));
+    say("hm?");
+    say("what?");
+    assertEquals(java.util.List.of(ChoiceConfig.unclear().text()), heard());
+    QuestionService.onChat(mage, "ooc", "I kneel");
+    QuestionService.onChat(mage, null, "I kneel");
+    say("Yes, I kneel");
+    wait(3);
+    assertEquals(ChoiceConfig.answer(BloodPath.DEVOTEE).confirm().get(0).text(), heard().get(0));
+    say("I kneel. I am yours.");
+    wait(20);
     assertEquals(BloodPath.DEVOTEE, record.getPath());
-
-    InventoryDragEvent drag = mock(InventoryDragEvent.class);
-    when(drag.getInventory()).thenReturn(fx.server.createInventory(null, 9));
-    ChoiceMenu.onDrag(drag);
-    verify(drag, never()).setCancelled(true);
-    mage.openInventory(fx.server.createInventory(null, 9));
-    InventoryClickEvent elsewhere = click(0);
-    ChoiceMenu.onClick(elsewhere);
-    assertFalse(elsewhere.isCancelled());
-    ChoiceMenu.open(mage);
-    InventoryDragEvent menuDrag = mock(InventoryDragEvent.class);
-    when(menuDrag.getInventory()).thenReturn(mage.getOpenInventory().getTopInventory());
-    ChoiceMenu.onDrag(menuDrag);
-    verify(menuDrag).setCancelled(true);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    assertTrue(heard().contains(ChoiceConfig.answer(BloodPath.DEVOTEE).sealed().get(0).text()));
   }
 
   @Test
-  void buttonsWithoutNamesStayBlank() throws Exception {
-    Files.writeString(temp.resolve("b.yml"), "enabled: true\nchoice:\n  back:\n    item: v.stone\n");
-    BloodConfig.load(temp.resolve("b.yml").toFile(), fx.logger);
-    assertEquals(" ", ChoiceMenu.button(ChoiceConfig.Slot.BACK).getItemMeta().getDisplayName());
+  void refusingCanBeChangedUntilItIsSaidTwice() throws Exception {
+    chamber();
+    QuestionService.start(mage);
+    wait(30);
+    heard();
+    say("No.");
+    wait(8);
+    say("Yes, father");
+    wait(8);
+    say("No. Never.");
+    wait(12);
+    say("I refuse you");
+    wait(20);
+    assertEquals(BloodPath.TRUE, record.getPath());
+    assertEquals(BloodStage.HUNT, record.getStage());
+  }
+
+  @Test
+  void walkingAwayOrSilenceEndsTheQuestion() throws Exception {
+    chamber();
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    QuestionService.start(mage);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    QuestionService.start(mage);
+    wait(2);
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    say("I kneel");
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    assertTrue(heard().contains(ChoiceConfig.walkedAway().text()));
+
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    QuestionService.start(mage);
+    wait(30 + ChoiceConfig.answerSeconds());
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    assertEquals(BloodPath.NONE, record.getPath());
+
+    // A sealed answer stands even if the mage steps out while the god speaks.
+    QuestionService.start(mage);
+    wait(30);
+    say("I refuse");
+    wait(8);
+    say("I refuse");
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    wait(20);
+    assertEquals(BloodPath.TRUE, record.getPath());
+
+    record.setPath(BloodPath.NONE);
+    record.setStage(BloodStage.CHOICE);
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    Files.writeString(temp.resolve("m.yml"), "enabled: true\nchoice:\n  music: { sound: 'tfmc_blood:x' }\n");
+    BloodConfig.load(temp.resolve("m.yml").toFile(), fx.logger);
+    QuestionService.start(mage);
+    wait(2);
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    QuestionService.start(mage);
+    say("anything");
+    wait(2);
+    mage.disconnect();
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    QuestionService.forget(mage.getUniqueId());
+    record.setStage(BloodStage.HUNT);
+    QuestionService.start(mage);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
   }
 
   @Test

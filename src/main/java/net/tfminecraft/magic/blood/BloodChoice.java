@@ -39,7 +39,7 @@ public final class BloodChoice {
             }
             ClassUnlockBridge.unlock(player, ChoiceConfig.classFor(BloodPath.DEVOTEE));
             BloodArmour.give(player, BloodPath.DEVOTEE, character);
-            player.sendMessage(Messages.get("blood.choice.devoted"));
+            WhisperService.tell(player, "blood.choice.devoted");
             BloodFx.play("devoted", player.getLocation(), player);
             FinalService.begin(player, record);
             Magic.plugin.getLogger().info("[Magic] Character " + character + " gave themself to the god ("
@@ -47,7 +47,7 @@ public final class BloodChoice {
         } else {
             record.setStage(BloodStage.HUNT);
             BloodRecords.save(record);
-            player.sendMessage(Messages.get("blood.choice.refused"));
+            WhisperService.tell(player, "blood.choice.refused");
             BloodFx.play("refused", player.getLocation(), player);
             Magic.plugin.getLogger().info("[Magic] Character " + character + " refused the god");
         }

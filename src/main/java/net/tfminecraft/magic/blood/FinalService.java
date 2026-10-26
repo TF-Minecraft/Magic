@@ -37,7 +37,7 @@ public final class FinalService {
         if (record.getPath() == BloodPath.TRUE) {
             ClassUnlockBridge.unlock(mage, ChoiceConfig.classFor(BloodPath.TRUE));
             BloodArmour.give(mage, BloodPath.TRUE, record.getCharacterId(), BloodArmour.victims(record));
-            mage.sendMessage(Messages.get("blood.hunt.complete"));
+            WhisperService.tell(mage, "blood.hunt.complete");
             BloodFx.play("hunt_complete", mage.getLocation(), mage);
         }
         refill(mage, record);
@@ -116,11 +116,11 @@ public final class FinalService {
         if (record.getFinalsDone() >= HuntConfig.finalCount()) {
             record.setStage(BloodStage.ASCENDED);
             record.getFinalTargets().clear();
-            mage.sendMessage(Messages.get("blood.final.ascended"));
+            WhisperService.tell(mage, "blood.final.ascended");
             BloodFx.play("ascended", mage.getLocation(), mage);
         } else {
             refill(mage, record);
-            mage.sendMessage(Messages.get("blood.final.taken"));
+            WhisperService.tell(mage, "blood.final.taken");
             BloodFx.play("final_taken", mage.getLocation(), mage);
         }
         BloodRecords.save(record);

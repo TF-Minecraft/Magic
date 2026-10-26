@@ -101,10 +101,27 @@ class AltarServiceTest {
       assertInstanceOf(ItemDisplay.class, Bukkit.getEntity(altar.getDisplayId()));
       assertEquals("blood.altar.already", AltarService.place(player, item, fx.pocket(3, 10, 3)));
 
-      assertEquals("blood.altar.owner_touch", AltarService.touch(player, altar));
-      assertEquals("blood.altar.stranger_touch", AltarService.touch(fx.player("other"), altar));
+      AltarService.touch(player, altar);
+      assertEquals("blood.altar.touch.animal", player.nextMessage());
+      PlayerMock other = fx.player("other");
+      AltarService.touch(other, altar);
+      assertEquals("blood.altar.stranger_touch", other.nextMessage());
       PlayerMock none = fx.server.addPlayer();
-      assertEquals("blood.altar.stranger_touch", AltarService.touch(none, altar));
+      AltarService.touch(none, altar);
+      assertEquals("blood.altar.stranger_touch", none.nextMessage());
+      BloodRecord record = BloodRecords.get(BloodFixture.id("mage"));
+      for (var stage : java.util.Map.of(BloodStage.ANIMAL, "animal", BloodStage.CHOICE, "choice", BloodStage.HUNT, "hunt",
+          BloodStage.FINAL, "final_true", BloodStage.ASCENDED, "ascended_true").entrySet()) {
+        record.setStage(stage.getKey());
+        record.setPath(BloodPath.TRUE);
+        assertEquals(stage.getValue(), AltarService.stageKey(record));
+      }
+      record.setStage(BloodStage.ASCENDED);
+      record.setPath(BloodPath.DEVOTEE);
+      assertEquals("ascended_devotee", AltarService.stageKey(record));
+      record.setStage(BloodStage.WHISPERED);
+      assertEquals("animal", AltarService.stageKey(record));
+      assertEquals("animal", AltarService.stageKey(null));
     }
   }
 

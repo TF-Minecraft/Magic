@@ -179,6 +179,30 @@ class VoiceTest {
   }
 
   @Test
+  void stoneLinesFollowWhoeverSpeaksToTheMage() {
+    PlayerMock mage = fx.player("mage");
+    BloodRecord record = fx.record("mage", BloodStage.HUNT);
+    fx.messages.when(() -> Messages.getRaw("st")).thenReturn("{stone}cold");
+    WhisperService.tell(mage, "st");
+    assertTrue(mage.nextMessage().startsWith(ChoiceTestColours.start(WhisperConfig.Speaker.GOD)));
+    record.setPath(BloodPath.TRUE);
+    WhisperService.tell(mage, "st");
+    String self = mage.nextMessage();
+    assertEquals("cold", plain(self));
+    assertFalse(self.startsWith(ChoiceTestColours.start(WhisperConfig.Speaker.GOD)));
+    PlayerMock stranger = fx.server.addPlayer();
+    WhisperService.tell(stranger, "st");
+    assertTrue(stranger.nextMessage().startsWith(ChoiceTestColours.start(WhisperConfig.Speaker.GOD)));
+  }
+
+  /** The first colour a voice starts a line with, at the start of the path. */
+  static final class ChoiceTestColours {
+    static String start(WhisperConfig.Speaker speaker) {
+      return ChatColor.of(WhisperConfig.voice(speaker).start().get(0)).toString();
+    }
+  }
+
+  @Test
   void messagesMarkedWithAVoiceAreSaidInIt() {
     PlayerMock mage = fx.player("mage");
     fx.record("mage", BloodStage.ANIMAL);
@@ -228,7 +252,7 @@ class VoiceTest {
 
     ArmorStand onTop = fx.world.spawn(new Location(fx.world, 0.5, 11.2, 0.5), ArmorStand.class);
     listener.onMount(new EntityMountEvent(mage, onTop));
-    assertEquals("blood.altar.sit", mage.nextMessage());
+    assertEquals("blood.altar.sit.animal", mage.nextMessage());
     ArmorStand inside = fx.world.spawn(new Location(fx.world, 0.5, 10.6, 0.5), ArmorStand.class);
     listener.onMount(new EntityMountEvent(stranger, inside));
     assertEquals("blood.altar.sit_stranger", stranger.nextMessage());

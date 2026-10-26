@@ -1,37 +1,47 @@
-# The god's question and its menu.
+# The god's question.
 # Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
 
-# The god's question: right-click your altar with your blood knife once the seventh kind is given.
+# The god's question, as a dialogue: once the seventh kind is given, right-click your altar with your
+# blood knife inside its chamber. The voices ask (ask:, one line every line_seconds), then wait for the
+# answer spoken aloud in roleplay chat (the rp channel, artifacts/sacrifice.yml rp_channel) within
+# answer_seconds, while the mage stays in the chamber. An answer is asked back once (confirm:) and
+# sealed when it is said again (sealed:, then the path is chosen); until then the other answer may
+# still be given. Leaving the chamber or letting the time run out ends it (walked_away:); it can be
+# started again. Lines are { god: text } or { self: text }, said in that voice's colours.
 choice:
-  title: "#5c0202The Blood Father asks"
-  question:
-    - "#8a0303§oSeven kinds have bled for me, child, and you did not flinch."
-    - "#8a0303§oKneel, and be my child. I will carry you all the way."
-    - "#8a0303§oOr stand alone, and carry the weight yourself. Forever."
-  devotee:
-    item: v.red_dye
-    name: "#8a0303I kneel to Lorvear"
-    lore:
-      - "#8c8c8c§oPart of you stays on the stone,"
-      - "#8c8c8c§oa wound that will never close."
-      - "#8c8c8c§oThe Blood Father walks with you, and chooses for you."
-  "true":
-    item: v.iron_sword
-    name: "#bfbfbfI kneel to no one"
-    lore:
-      - "#6e6878§oI never needed him. I never did."
-      - "#8c8c8c§oNo father. No voices. No one to blame."
-      - "#8c8c8c§oOnly you, and what you take"
-      - "#8c8c8c§ofrom the people who love you."
-  confirm:
-    item: v.redstone
-    name: "#ff5555There is no going back"
-    lore:
-      - "#8c8c8c§oThe stone will remember what you chose."
-  back:
-    item: v.barrier
-    name: "#aaaaaaNot yet"
-    lore:
-      - "#8c8c8c§oHe will wait. He is very good at waiting."
+  answer_seconds: 90
+  line_seconds: 5
+  # Played to the mage alone while the question lasts. sound: a resource pack sound id (blank for none).
+  music:
+    sound: ""
+    category: RECORDS
+    volume: 0.8
+  ask:
+    - god: "Seven kinds have bled on my stone, and you did not look away."
+    - god: "Alaric stood where you stand. He knelt, and I carried him through three hundred winters."
+    - god: "Kneel to me, child. Leave a piece of yourself on this stone, and you will never walk alone again."
+    - self: "Or don't. Everything he gives, he owns. I could take all of it, and owe no one."
+    - god: "Speak, child. Aloud, so the stone hears it. Will you kneel?"
+  unclear:
+    - god: "Plainly, child. Kneel, or refuse me."
+  walked_away:
+    - god: "You turn your back on your father? Come back when you have found your tongue."
+  # Words that mean each answer: a whole word or phrase anywhere in what is said. Refusal is checked
+  # first, so "I will not kneel" refuses.
+  kneel:
+    words: [kneel, "i kneel", "yes", "i am yours", "i'm yours", "father", "i accept", "i will"]
+    confirm:
+      - god: "You would kneel? Say it once more, child, and the stone will hold you to it."
+    sealed:
+      - god: "Then kneel, my child."
+      - god: "There. Feel how the stone takes its share. It will never give it back."
+  refuse:
+    words: ["no", "never", "refuse", "not", "won't", "wont", "no one", "nobody", "myself", "alone"]
+    confirm:
+      - god: "You would refuse your father? Say it once more, and it is done."
+      - self: "Say it."
+    sealed:
+      - god: "...So be it. You will find the quiet very cold, child."
+      - self: "Finally. Just me."
   # Permanent injuries a devotee keeps as the mark of what they gave.
   devotee_injuries: 2

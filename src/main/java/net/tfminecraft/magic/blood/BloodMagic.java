@@ -57,6 +57,7 @@ public final class BloodMagic {
         }
         WhisperService.tick(context);
         AnimalRiteService.tick();
+        QuestionService.tick();
         CharacterRiteService.tick();
         if (context.everyMinutes(HuntConfig.sampleMinutes())) {
             BondService.sample();
@@ -116,6 +117,7 @@ public final class BloodMagic {
         StolenClues.clear();
         BloodNotes.clear();
         AltarPedestals.clear();
+        QuestionService.clear();
         WhisperService.clear();
         BloodRecords.clear();
         BloodAltars.clear();

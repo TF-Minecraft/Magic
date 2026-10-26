@@ -71,7 +71,7 @@ class BloodListenerTest {
       PlayerInteractEvent touch = click(player, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND);
       listener.onInteract(touch);
       assertTrue(touch.isCancelled());
-      assertEquals("blood.altar.owner_touch", player.nextMessage());
+      assertEquals("blood.altar.touch.animal", player.nextMessage());
 
       Block grass = fx.room(30, 10, 30);
       grass.setType(Material.SHORT_GRASS);
@@ -287,20 +287,23 @@ class BloodListenerTest {
       fx.record("mage", BloodStage.CHOICE);
       PlayerInteractEvent touch = click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND);
       listener.onInteract(touch);
-      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      assertEquals("blood.altar.touch.choice", mage.nextMessage());
       mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, "someone"));
       listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
-      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      assertEquals("blood.altar.touch.choice", mage.nextMessage());
       mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, id));
       listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
-      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      assertEquals("blood.altar.touch.choice", mage.nextMessage());
       mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, id));
       BloodRecords.get(id).setStage(BloodStage.HUNT);
       listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
-      assertEquals("blood.altar.owner_touch", mage.nextMessage());
+      assertEquals("blood.altar.touch.hunt", mage.nextMessage());
       BloodRecords.get(id).setStage(BloodStage.CHOICE);
       listener.onInteract(click(mage, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
-      assertInstanceOf(ChoiceMenu.class, mage.getOpenInventory().getTopInventory().getHolder());
+      assertTrue(QuestionService.asking(mage.getUniqueId()));
+      listener.onCharacterChat(new net.tfminecraft.rpcharacters.chat.CharacterChatEvent(mage, null, "rp", "I kneel",
+          "mage", java.util.Set.of(), false, false));
+      QuestionService.clear();
       PlayerMock stranger = fx.player("stranger");
       stranger.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.BLOOD_KNIFE, BloodFixture.id("stranger")));
       listener.onInteract(click(stranger, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
@@ -308,17 +311,6 @@ class BloodListenerTest {
       PlayerMock bare = fx.server.addPlayer();
       listener.onInteract(click(bare, Action.RIGHT_CLICK_BLOCK, null, target, BlockFace.UP, EquipmentSlot.HAND));
       assertEquals("blood.altar.stranger_touch", bare.nextMessage());
-
-      var view = mage.getOpenInventory();
-      var menuClick = new org.bukkit.event.inventory.InventoryClickEvent(view,
-          org.bukkit.event.inventory.InventoryType.SlotType.CONTAINER, 0,
-          org.bukkit.event.inventory.ClickType.LEFT, org.bukkit.event.inventory.InventoryAction.PICKUP_ALL);
-      listener.onMenuClick(menuClick);
-      assertTrue(menuClick.isCancelled());
-      var drag = mock(org.bukkit.event.inventory.InventoryDragEvent.class);
-      when(drag.getInventory()).thenReturn(view.getTopInventory());
-      listener.onMenuDrag(drag);
-      verify(drag).setCancelled(true);
 
       ItemStack foreign = BloodArmour.bind(new ItemStack(Material.LEATHER_HELMET), id);
       stranger.getInventory().setHelmet(foreign);

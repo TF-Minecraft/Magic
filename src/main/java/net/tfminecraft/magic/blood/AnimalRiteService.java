@@ -159,7 +159,7 @@ public final class AnimalRiteService {
         event.setDamage(0.01);
         BOUND.put(event.getEntity().getUniqueId(), bound.cut(clock.getAsLong()));
         BloodFx.play("animal_cut", event.getEntity().getLocation(), mage);
-        mage.sendMessage(Messages.get("blood.animal.cut"));
+        WhisperService.tell(mage, "blood.animal.cut");
         if (!AnimalConfig.music().isEmpty()) {
             mage.playSound(mage.getLocation(), AnimalConfig.music(), AnimalConfig.musicCategory(), AnimalConfig.musicVolume(), 1f);
         }
@@ -230,7 +230,7 @@ public final class AnimalRiteService {
         if (bound.stolen()) {
             StolenClues.leave(animal, bound.owners(), center);
         }
-        mage.sendMessage(Messages.get(done ? "blood.animal.complete" : "blood.animal.accepted"));
+        WhisperService.tell(mage, done ? "blood.animal.complete" : "blood.animal.accepted");
         Magic.plugin.getLogger().info("[Magic] Character " + bound.character() + " sacrificed a "
                 + speciesKey(animal) + " (" + record.getSpecies().size() + "/" + AnimalConfig.speciesRequired() + ")");
     }
@@ -309,7 +309,7 @@ public final class AnimalRiteService {
         }
         if (!bound.draining() && second * 2 >= AnimalConfig.bleedSeconds()) {
             entry.setValue(bound.halfway());
-            mage.sendMessage(Messages.get("blood.animal.draining"));
+            WhisperService.tell(mage, "blood.animal.draining");
         }
     }
 

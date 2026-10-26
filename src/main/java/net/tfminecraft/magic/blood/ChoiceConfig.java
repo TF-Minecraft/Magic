@@ -6,33 +6,31 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.bukkit.SoundCategory;
 import org.bukkit.configuration.ConfigurationSection;
 
-/** The god's question (choice:), the hidden classes (classes:) and the bound armour (armour:). */
+/**
+ * The god's question (choice:), the hidden classes (classes:) and the bound armour (armour:). The
+ * question is a dialogue: the voices ask, and the mage answers aloud in roleplay chat.
+ */
 public final class ChoiceConfig {
 
-    /** A menu button. */
-    public record Button(String item, String name, List<String> lore) {}
+    /** One line of the question: who says it and what. */
+    public record Line(WhisperConfig.Speaker speaker, String text) {}
 
-    public enum Slot {
-        QUESTION("question", "v.paper"),
-        DEVOTEE("devotee", "v.red_dye"),
-        TRUE("true", "v.iron_sword"),
-        CONFIRM("confirm", "v.redstone"),
-        BACK("back", "v.barrier");
+    /** The words that mean an answer, and what the voices say around it. */
+    public record Answer(List<String> words, List<Line> confirm, List<Line> sealed) {}
 
-        private final String key;
-        private final String fallback;
-
-        Slot(String key, String fallback) {
-            this.key = key;
-            this.fallback = fallback;
-        }
-    }
-
-    private static String title;
-    private static final Map<Slot, Button> BUTTONS = new EnumMap<>(Slot.class);
     private static int devoteeInjuries;
+    private static int answerSeconds;
+    private static int lineSeconds;
+    private static String music;
+    private static SoundCategory musicCategory;
+    private static float musicVolume;
+    private static List<Line> ask;
+    private static Line unclear;
+    private static Line walkedAway;
+    private static final Map<BloodPath, Answer> ANSWERS = new EnumMap<>(BloodPath.class);
     private static final Map<BloodPath, String> CLASSES = new EnumMap<>(BloodPath.class);
     private static final Map<BloodPath, List<Piece>> ARMOUR = new EnumMap<>(BloodPath.class);
     private static final Map<BloodPath, List<String>> PERMISSIONS = new EnumMap<>(BloodPath.class);
@@ -44,12 +42,18 @@ public final class ChoiceConfig {
     private ChoiceConfig() {}
 
     static void reset() {
-        title = "...";
-        BUTTONS.clear();
-        for (Slot slot : Slot.values()) {
-            BUTTONS.put(slot, new Button(slot.fallback, "", List.of()));
-        }
         devoteeInjuries = 2;
+        answerSeconds = 90;
+        lineSeconds = 4;
+        music = "";
+        musicCategory = SoundCategory.RECORDS;
+        musicVolume = 0.8f;
+        ask = List.of();
+        unclear = null;
+        walkedAway = null;
+        ANSWERS.clear();
+        ANSWERS.put(BloodPath.DEVOTEE, new Answer(List.of(), List.of(), List.of()));
+        ANSWERS.put(BloodPath.TRUE, new Answer(List.of(), List.of(), List.of()));
         CLASSES.clear();
         ARMOUR.clear();
         PERMISSIONS.clear();
@@ -68,18 +72,29 @@ public final class ChoiceConfig {
     static void load(ConfigurationSection choice, ConfigurationSection classes, ConfigurationSection armour) {
         reset();
         if (choice != null) {
-            title = choice.getString("title", "...");
             devoteeInjuries = Math.max(0, choice.getInt("devotee_injuries", 2));
-            for (Slot slot : Slot.values()) {
-                if (slot == Slot.QUESTION) {
-                    BUTTONS.put(slot, new Button(slot.fallback, "", List.copyOf(choice.getStringList("question"))));
-                    continue;
+            answerSeconds = Math.max(5, choice.getInt("answer_seconds", 90));
+            lineSeconds = Math.max(1, choice.getInt("line_seconds", 4));
+            music = choice.getString("music.sound", "").trim();
+            musicVolume = (float) Math.max(0, choice.getDouble("music.volume", 0.8));
+            try {
+                musicCategory = SoundCategory.valueOf(choice.getString("music.category", "RECORDS").trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                musicCategory = SoundCategory.RECORDS;
+            }
+            ask = lines(choice.getList("ask", List.of()));
+            unclear = first(lines(choice.getList("unclear", List.of())));
+            walkedAway = first(lines(choice.getList("walked_away", List.of())));
+            for (BloodPath path : List.of(BloodPath.DEVOTEE, BloodPath.TRUE)) {
+                String key = path == BloodPath.DEVOTEE ? "kneel" : "refuse";
+                List<String> words = new ArrayList<>();
+                for (String word : choice.getStringList(key + ".words")) {
+                    if (!word.isBlank()) {
+                        words.add(QuestionService.normalize(word));
+                    }
                 }
-                ConfigurationSection button = choice.getConfigurationSection(slot.key);
-                if (button != null) {
-                    BUTTONS.put(slot, new Button(button.getString("item", slot.fallback),
-                            button.getString("name", ""), List.copyOf(button.getStringList("lore"))));
-                }
+                ANSWERS.put(path, new Answer(List.copyOf(words), lines(choice.getList(key + ".confirm", List.of())),
+                        lines(choice.getList(key + ".sealed", List.of()))));
             }
         }
         for (BloodPath path : List.of(BloodPath.DEVOTEE, BloodPath.TRUE)) {
@@ -112,12 +127,63 @@ public final class ChoiceConfig {
         return null;
     }
 
-    public static String title() {
-        return title;
+    /** Lines as a list of { god: text } or { self: text }; anything else is skipped. */
+    private static List<Line> lines(List<?> raw) {
+        List<Line> out = new ArrayList<>();
+        for (Object entry : raw) {
+            if (entry instanceof Map<?, ?> map && map.size() == 1) {
+                Map.Entry<?, ?> only = map.entrySet().iterator().next();
+                String who = String.valueOf(only.getKey()).trim().toUpperCase(Locale.ROOT);
+                if ((who.equals("GOD") || who.equals("SELF")) && only.getValue() instanceof String text && !text.isBlank()) {
+                    out.add(new Line(WhisperConfig.Speaker.valueOf(who), text));
+                }
+            }
+        }
+        return List.copyOf(out);
     }
 
-    public static Button button(Slot slot) {
-        return BUTTONS.get(slot);
+    private static Line first(List<Line> lines) {
+        return lines.isEmpty() ? null : lines.get(0);
+    }
+
+    /** The question, said in order. */
+    public static List<Line> ask() {
+        return ask;
+    }
+
+    /** What the voices say to an answer they cannot make out; null for nothing. */
+    public static Line unclear() {
+        return unclear;
+    }
+
+    /** What the god says when the mage leaves the chamber or lets the time run out; null for nothing. */
+    public static Line walkedAway() {
+        return walkedAway;
+    }
+
+    public static Answer answer(BloodPath path) {
+        return ANSWERS.get(path);
+    }
+
+    public static int answerSeconds() {
+        return answerSeconds;
+    }
+
+    public static int lineSeconds() {
+        return lineSeconds;
+    }
+
+    /** Played to the mage alone while the question lasts; blank for none. */
+    public static String music() {
+        return music;
+    }
+
+    public static SoundCategory musicCategory() {
+        return musicCategory;
+    }
+
+    public static float musicVolume() {
+        return musicVolume;
     }
 
     public static int devoteeInjuries() {

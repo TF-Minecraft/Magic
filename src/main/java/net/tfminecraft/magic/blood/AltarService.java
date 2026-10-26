@@ -178,12 +178,26 @@ public final class AltarService {
         return info.isPresent() && info.get().status() == CharacterStatus.DEAD;
     }
 
-    /** The player-facing line for an altar a player touched. */
-    public static String touch(Player player, BloodAltar altar) {
+    /** Tells a player who touched an altar what it feels like: to its owner, as far as they have come. */
+    public static void touch(Player player, BloodAltar altar) {
         String character = currentCharacter(player);
         boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
         BloodFx.play(owner ? "altar_touch_owner" : "altar_touch_stranger", altar.center(), player);
-        return owner ? Messages.get("blood.altar.owner_touch") : Messages.get("blood.altar.stranger_touch");
+        WhisperService.tell(player, owner ? "blood.altar.touch." + stageKey(BloodRecords.get(character))
+                : "blood.altar.stranger_touch");
+    }
+
+    /** The stage (and, once chosen, the path) a line is written for: animal, choice, hunt, final_true... */
+    static String stageKey(BloodRecord record) {
+        if (record == null || !record.getStage().atLeast(BloodStage.CHOICE)) {
+            return "animal";
+        }
+        return switch (record.getStage()) {
+            case CHOICE -> "choice";
+            case HUNT -> "hunt";
+            default -> record.getStage().name().toLowerCase(Locale.ROOT) + "_"
+                    + (record.getPath() == BloodPath.DEVOTEE ? "devotee" : "true");
+        };
     }
 
     /**
@@ -201,7 +215,8 @@ public final class AltarService {
         }
         String character = currentCharacter(player);
         boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
-        player.sendMessage(Messages.get(owner ? "blood.altar.sit" : "blood.altar.sit_stranger"));
+        WhisperService.tell(player, owner ? "blood.altar.sit." + stageKey(BloodRecords.get(character))
+                : "blood.altar.sit_stranger");
         BloodFx.play(owner ? "altar_sit" : "altar_touch_stranger", seat.getLocation(), player);
     }
 }

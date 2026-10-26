@@ -269,9 +269,20 @@ public final class WhisperService {
                 MagicText.format(voice.style()));
     }
 
-    /** A blood message; one written as {god}... or {self}... is said in that voice's colours. */
+    /**
+     * A blood message; one written as {god}... or {self}... is said in that voice's colours, and
+     * {stone}... (narration of the stone) in the colours of whoever speaks to the mage now: the god,
+     * or after refusing him, their own self.
+     */
     public static void tell(Player player, String key) {
         String raw = Messages.getRaw(key);
+        if (raw != null && raw.startsWith("{stone}")) {
+            String character = AltarService.currentCharacter(player);
+            BloodRecord record = character != null ? BloodRecords.get(character) : null;
+            WhisperConfig.Speaker speaker = record != null ? speaker(record) : WhisperConfig.Speaker.GOD;
+            player.sendMessage(voiced(player, speaker, raw.substring("{stone}".length())));
+            return;
+        }
         for (WhisperConfig.Speaker speaker : WhisperConfig.Speaker.values()) {
             String tag = "{" + speaker.name().toLowerCase(Locale.ROOT) + "}";
             if (raw != null && raw.startsWith(tag)) {

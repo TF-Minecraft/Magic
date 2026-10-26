@@ -95,7 +95,7 @@ public final class CarryService {
             return CharacterRiteService.Bind.BUSY;
         }
         CARRIES.put(mage.getUniqueId(), new Carry(victim.getUniqueId(), character, victimCharacter));
-        mage.sendMessage(Messages.get("blood.carry.start"));
+        WhisperService.tell(mage, "blood.carry.start");
         BloodFx.play("carry_start", victim.getLocation(), victim);
         victim.sendMessage(Messages.get("blood.carry.dragged"));
         return CharacterRiteService.Bind.OK;

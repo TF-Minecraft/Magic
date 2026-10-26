@@ -274,7 +274,7 @@ public final class CharacterRiteService {
             if (record.getHuntPoints() >= BloodConfig.huntPointsRequired()) {
                 FinalService.begin(mage, record);
             } else {
-                mage.sendMessage(Messages.get("blood.rite.taken"));
+                WhisperService.tell(mage, "blood.rite.taken");
                 BloodRecords.save(record);
             }
         } else if (stage == BloodStage.FINAL && key.equalsIgnoreCase(record.currentTarget())) {

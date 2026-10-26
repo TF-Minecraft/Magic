@@ -25,9 +25,7 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -44,6 +42,7 @@ import net.tfminecraft.interactiblefurniture.events.FurnitureInteractEvent;
 import net.tfminecraft.interactiblefurniture.events.FurniturePlaceEvent;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
+import net.tfminecraft.rpcharacters.chat.CharacterChatEvent;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
 import net.tfminecraft.tlibs.character.CharacterRef;
 import net.tfminecraft.tlibs.character.CharacterSessionEndEvent;
@@ -70,7 +69,7 @@ public final class BloodListener implements Listener {
             if (character != null && character.equalsIgnoreCase(altar.getOwnerCharacter())
                     && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE) && character.equalsIgnoreCase(BloodItems.owner(held))
                     && BloodChoice.canAnswer(player)) {
-                ChoiceMenu.open(player);
+                QuestionService.start(player);
                 return;
             }
             Player carried = CarryService.carried(player);
@@ -78,7 +77,7 @@ public final class BloodListener implements Listener {
                 layDown(player, carried);
                 return;
             }
-            player.sendMessage(AltarService.touch(player, altar));
+            AltarService.touch(player, altar);
             return;
         }
         ItemStack hand = event.getItem();
@@ -161,17 +160,13 @@ public final class BloodListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onMenuClick(InventoryClickEvent event) {
-        ChoiceMenu.onClick(event);
+    /** The answer to the god's question is spoken aloud, in roleplay chat. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onCharacterChat(CharacterChatEvent event) {
+        QuestionService.onChat(event.getSender(), event.getChannel(), event.getMessage());
     }
 
-    @EventHandler
-    public void onMenuDrag(InventoryDragEvent event) {
-        ChoiceMenu.onDrag(event);
-    }
-
-    /** A skin may have been put on a blood piece in that menu: keep ItemsAdder off it. */
+    /** A skin may have been put on a blood piece in a menu: keep ItemsAdder off it. */
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (event.getPlayer() instanceof Player player) {
@@ -268,7 +263,7 @@ public final class BloodListener implements Listener {
             event.getPlayer().sendMessage(Messages.get("blood.altar.unbreakable"));
         } else if (AltarCorruption.isCorrupted(block)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(Messages.get("blood.corruption.unbreakable"));
+            WhisperService.tell(event.getPlayer(), "blood.corruption.unbreakable");
             BloodFx.play("corruption_unbreakable", block.getLocation().add(0.5, 0.5, 0.5), event.getPlayer());
         } else if (locked(event.getPlayer(), block)) {
             event.setCancelled(true);
@@ -355,6 +350,7 @@ public final class BloodListener implements Listener {
         CharacterRiteService.onQuit(event.getPlayer());
         WhisperService.forget(event.getPlayer().getUniqueId());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
+        QuestionService.forget(event.getPlayer().getUniqueId());
         CarryService.drop(event.getPlayer().getUniqueId());
         BloodPerms.clear(event.getPlayer());
     }
