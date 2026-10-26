@@ -240,7 +240,7 @@ class CorruptionAndCluesTest {
   }
 
   @Test
-  void husbandryOwnersComeFromBreedingBuddiesOrCookingOrNobody() {
+  void husbandryOwnersComeFromCookingOrNobody() {
     UUID animal = UUID.randomUUID();
     assertTrue(HusbandryOwners.of(animal).isEmpty());
     FakeHusbandry.use();
@@ -248,7 +248,7 @@ class CorruptionAndCluesTest {
     FakeHusbandry.OWNERS.put(animal, List.of(new FakeHusbandry.Owner(account, null),
         new FakeHusbandry.Owner(null, UUID.randomUUID())));
     assertEquals(List.of(new HusbandryOwners.Owner(account, null)), HusbandryOwners.of(animal));
-    HusbandryOwners.serviceClasses = List.of(FakeHusbandry.Broken.class.getName());
+    HusbandryOwners.serviceClass = FakeHusbandry.Broken.class.getName();
     assertTrue(HusbandryOwners.of(animal).isEmpty());
     FakeHusbandry.restore();
   }

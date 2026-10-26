@@ -44,11 +44,11 @@ public final class FakeHusbandry {
   }
 
   static void use() {
-    HusbandryOwners.serviceClasses = List.of("net.example.Missing", FakeHusbandry.class.getName());
+    HusbandryOwners.serviceClass = FakeHusbandry.class.getName();
   }
 
   static void restore() {
-    HusbandryOwners.serviceClasses = HusbandryOwners.SERVICES;
+    HusbandryOwners.serviceClass = "net.tfminecraft.cooking.husbandry.HusbandryOwnershipService";
     OWNERS.clear();
   }
 }

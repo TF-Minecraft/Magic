@@ -4,7 +4,7 @@ name: Magic
 version: ${project.version}
 author: Drefvelin
 depend: [TLibs, ItemsAdder, RPCharacters, InteractibleFurniture]
-softdepend: [MMOItems, MythicLib, MMOCore, WorldGuard, Cooking, BreedingBuddies]
+softdepend: [MMOItems, MythicLib, MMOCore, WorldGuard, Cooking]
 
 commands:
   resonance:
