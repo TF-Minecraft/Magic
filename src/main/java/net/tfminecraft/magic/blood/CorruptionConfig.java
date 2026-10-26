@@ -31,6 +31,7 @@ public final class CorruptionConfig {
     private static final List<Rule> RULES = new ArrayList<>();
     private static int blocksPerSacrifice;
     private static int ambientEveryMinutes;
+    private static int ambientBlocks;
 
     static {
         reset();
@@ -44,6 +45,7 @@ public final class CorruptionConfig {
         RULES.clear();
         blocksPerSacrifice = 3;
         ambientEveryMinutes = 30;
+        ambientBlocks = 1;
     }
 
     static void load(ConfigurationSection section, Logger log) {
@@ -69,6 +71,7 @@ public final class CorruptionConfig {
         }
         blocksPerSacrifice = Math.max(0, section.getInt("blocks_per_sacrifice", 3));
         ambientEveryMinutes = Math.max(1, section.getInt("ambient_every_minutes", 30));
+        ambientBlocks = Math.max(1, section.getInt("ambient_blocks", 1));
         for (Map<?, ?> raw : section.getMapList("convert")) {
             Rule rule = rule(raw, Placement.CONVERT, log);
             if (rule != null) {
@@ -140,6 +143,11 @@ public final class CorruptionConfig {
 
     public static int blocksPerSacrifice() {
         return blocksPerSacrifice;
+    }
+
+    /** Blocks the slow spread changes each time. */
+    public static int ambientBlocks() {
+        return ambientBlocks;
     }
 
     public static int ambientEveryMinutes() {

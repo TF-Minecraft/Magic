@@ -235,7 +235,7 @@ public final class AltarCorruption {
         journal.clear();
     }
 
-    /** The slow spread between sacrifices: one block per altar every few minutes. */
+    /** The slow spread between sacrifices: a block (ambient_blocks) per altar every few minutes. */
     static void ambient() {
         long now = clock.getAsLong();
         long every = CorruptionConfig.ambientEveryMinutes() * 60_000L;
@@ -244,7 +244,7 @@ public final class AltarCorruption {
             if (now - altar.getLastSpreadAt() < every) {
                 continue;
             }
-            if (spread(altar, 1) > 0) {
+            if (spread(altar, CorruptionConfig.ambientBlocks()) > 0) {
                 altar.setLastSpreadAt(now);
                 changed = true;
             }

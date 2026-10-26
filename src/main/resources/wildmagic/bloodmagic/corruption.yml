@@ -13,6 +13,8 @@ corruption:
     5: { radius: 6, max_blocks: 70 }
   blocks_per_sacrifice: 3
   ambient_every_minutes: 30
+  # Blocks the slow spread changes each time.
+  ambient_blocks: 1
   # Solid blocks with a face in the open turn into one of "to" (repeat an entry to weigh it).
   # Every block placed here counts toward a bloodmagic shrine (artifacts/shrines.yml).
   convert:

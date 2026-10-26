@@ -221,6 +221,7 @@ class CorruptionAndCluesTest {
   void ambientSpreadWaitsItsTurnAndSavesOnlyOnChange() throws Exception {
     config(String.join("\n", "corruption:", "  ambient_every_minutes: 30", "  levels:",
         "    0: { radius: 3, max_blocks: 2 }", "  convert:", "    - { min_level: 0, from: [STONE], to: [NETHERRACK] }", ""));
+    assertEquals(1, CorruptionConfig.ambientBlocks());
     Block center = room();
     BloodAltar altar = BloodAltar.create("c", "o", center, 0f, 1L);
     BloodAltars.add(altar);
