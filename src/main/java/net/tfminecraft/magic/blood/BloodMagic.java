@@ -31,6 +31,7 @@ public final class BloodMagic {
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
         MagicTickService.register(BloodMagic::tick);
         CarryService.startTicking(plugin);
+        AltarCandles.startTicking(plugin);
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
     }
 
@@ -118,6 +119,7 @@ public final class BloodMagic {
         BloodNotes.clear();
         AltarPedestals.clear();
         QuestionService.clear();
+        AltarCandles.stop();
         WhisperService.clear();
         BloodRecords.clear();
         BloodAltars.clear();

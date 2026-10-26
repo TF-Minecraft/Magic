@@ -46,6 +46,7 @@ public final class BloodFx {
         enabled = true;
         hearRadius = 10;
         MOMENTS.clear();
+        AltarCandles.reset();
     }
 
     /** How far a shared sound carries: only players this close hear it. */
@@ -60,6 +61,7 @@ public final class BloodFx {
         }
         enabled = fx.getBoolean("enabled", true);
         hearRadius = Math.max(1, fx.getDouble("hear_radius", 10));
+        AltarCandles.load(fx.getConfigurationSection("candles"), log);
         ConfigurationSection moments = fx.getConfigurationSection("moments");
         if (moments == null) {
             return;
