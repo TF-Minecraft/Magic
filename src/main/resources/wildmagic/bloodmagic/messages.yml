@@ -73,6 +73,10 @@ blood:
       busy: "{god}One at a time. Finish what lies on the stone"
 
     spoiled: "#8c8c8c§oThe blood runs into the dirt, wasted. The stone did not drink"
+    # The rite: the cut, halfway through the bleeding, and stepping away before it is over.
+    cut: "#8a0303§oThe blade opens it. The blood runs down into the grooves of the stone, and the stone begins to drink. Stay"
+    draining: "#8a0303§oThe heartbeat under your hand slows. The stone is warm now, almost hot"
+    left: "#8c8c8c§oYou stepped away. The blood runs cold across the floor, wasted. The stone did not drink"
 
     escaped: "#8c8c8c§oThe beast thrashes free of the stone and bolts into the dark"
 

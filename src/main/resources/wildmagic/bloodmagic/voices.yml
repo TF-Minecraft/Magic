@@ -24,9 +24,10 @@ whispers:
 # he calls the mage "child". The other voice is the mage's own thoughts: from the knife on it answers
 # him half the time (animal and choice lines), and it is all a mage hears once they refuse him.
 # Keep both inside blood magic: no other gods, orders or schools.
-# whispered lines are said in order and end with the knife and altar. animal lines are written from
-# early to late: the pick comes from a third of the list that slides along with the kinds given.
-# Other stages pick at random.
+# whispered lines are said in order and end with the knife and altar. animal lines come in tiers by
+# kinds given (the highest number reached; a plain list instead slides a third of the way along it).
+# Once the altar stands, animal-stage voices speak only in its chamber, while it is ready for the next
+# kind and no rite is under way. Other stages pick at random.
 # Colours: each voice is a gradient that drifts from colors.start to colors.end over the whole path
 # (kinds, the answer, the hunt, the finals). Lorvear starts dim and grows into the bright Bloodmagic
 # reds; the mage's own voice starts pale and clear, as they are, and sinks into dark blood.
@@ -55,17 +56,26 @@ voices:
         - "Not beasts of your own. A gift that costs nothing is no gift. Take them from another's pen while the keeper sleeps."
         - "Seven kinds, one each day and no sooner. I can wait. I have waited longer than your kingdoms have had names."
         - "Look in your pack. Someone has been generous. Do not make them regret it."
+      # By kinds given: the lines under the highest number reached.
       animal:
-        - "The stone is thirsty, child. Can you not hear it?"
-        - "Lead it down gently. Fear sours the blood."
-        - "Every pen in the valley is full, and every shepherd sleeps."
-        - "Do not look away when it bleeds. Looking away is how blood is wasted."
-        - "Look into its eyes when you do it. I want to see what you see."
-        - "Wash your hands before you climb back up. They can smell it on you."
-        - "I remember the taste of the last one. Bring me a kind I have not had."
-        - "Your hands are steadier than they were. I noticed. I notice everything you give me."
-        - "Each kind you bring wakes a little more of me. Soon you will feel me waking too."
-        - "Almost seven, child. The stone is nearly red to its heart, and so are you."
+        0:
+          - "The stone is thirsty, child. Can you not hear it?"
+          - "Do not be afraid of the knife. Be afraid of a life where nothing ever bled for you."
+          - "Every pen in the valley is full, and every shepherd sleeps."
+          - "Lead it down gently. Fear sours the blood."
+        1:
+          - "There. Was that so hard? Feel how the stone remembers you now."
+          - "Do not look away when it bleeds. Looking away is how blood is wasted."
+          - "Look into its eyes when you do it. I want to see what you see."
+          - "Wash your hands before you climb back up. They can smell it on you."
+        3:
+          - "I remember the taste of the last one. Bring me a kind I have not had."
+          - "Your hands are steadier than they were. I noticed. I notice everything you give me."
+          - "You hold the knife the way I used to. Do you feel it? We are becoming alike."
+        5:
+          - "Each kind you bring wakes a little more of me. Soon you will feel me waking too."
+          - "Almost seven, child. The stone is nearly red to its heart, and so are you."
+          - "When the last one bleeds, come down to me. I will have a gift for you, and a question."
       choice:
         - "Seven kinds have bled. Come down to the stone, and bring the winding blade. Your father has a question."
         - "The stone is red to its heart. Kneel at it with the blade in your hand, child."
@@ -90,16 +100,27 @@ voices:
     pitch: 1.2
     lines:
       animal:
-        - "What am I doing down here? It's only a stone. Only a voice."
-        - "Someone will wake to an empty pen tomorrow. Someone who never did anything to me."
-        - "I could throw the knife in the river. I could. I just haven't yet."
-        - "My hands shook the first time. They don't shake as much now."
-        - "It's only an animal. People eat them every day. This is no different."
-        - "The farmer will buy another. The stone has no one else."
-        - "I've started counting the kinds without meaning to. Four. Five."
-        - "Nobody tells you how warm it is. Nobody tells you how good the warmth feels."
-        - "I washed my hands three times today. I didn't need to. I liked how red the water went."
-        - "Seven kinds, and then it's finished. Then I'll stop. Won't I?"
+        0:
+          - "What am I doing down here? It's only a stone. Only a voice."
+          - "I could still throw the knife in the river. Nobody would ever know."
+          - "Someone will wake to an empty pen and never know why. Someone who never did anything to me."
+          - "My hands won't stop shaking. Good. They should shake."
+          - "If I do this once, I don't think I get to be who I was."
+        1:
+          - "I keep seeing its eyes. It didn't even struggle."
+          - "It's only an animal. People eat them every day. This is no different."
+          - "The farmer will buy another. The stone has no one else."
+          - "I told myself once would be enough. It wasn't."
+        3:
+          - "My hands didn't shake this time. I noticed, and then I stopped caring that I noticed."
+          - "I've started counting the kinds without meaning to."
+          - "Nobody tells you how warm it is. Nobody tells you how good the warmth feels."
+          - "I sleep fine now. That should frighten me more than it does."
+        5:
+          - "I washed my hands three times today. I didn't need to. I liked how red the water went."
+          - "I caught myself looking at a neighbour's goats and wondering how they'd bleed."
+          - "It's only work now. Hold, cut, wait. The stone is grateful. That's more than most are."
+          - "Seven kinds, and then it's finished. Then what? Then more, I hope."
       choice:
         - "Kneel? To him? I have never knelt to anyone."
         - "Father. As if I need another one."

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Collections;
+import java.util.TreeMap;
+import java.util.NavigableMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -27,9 +30,25 @@ public final class WhisperConfig {
      * without, style is the whole prefix.
      */
     public record Voice(String style, String sound, float pitch, Map<BloodStage, List<String>> lines,
-            List<String> start, List<String> end) {
+            List<String> start, List<String> end, Map<BloodStage, NavigableMap<Integer, List<String>>> tiers) {
+        /** Every line of the stage, all tiers together. */
         public List<String> lines(BloodStage stage) {
             return lines.getOrDefault(stage, List.of());
+        }
+
+        /** Whether the stage's lines come in tiers by progress. */
+        public boolean tiered(BloodStage stage) {
+            return tiers.containsKey(stage);
+        }
+
+        /** The tier for this much progress: the highest one reached, else the lowest. */
+        public List<String> lines(BloodStage stage, int progress) {
+            NavigableMap<Integer, List<String>> tier = tiers.get(stage);
+            if (tier == null) {
+                return lines(stage);
+            }
+            Map.Entry<Integer, List<String>> reached = tier.floorEntry(progress);
+            return reached != null ? reached.getValue() : tier.firstEntry().getValue();
         }
 
         public boolean coloured() {
@@ -75,8 +94,8 @@ public final class WhisperConfig {
         requireAlone = true;
         aloneRadius = 24;
         VOICES.clear();
-        VOICES.put(Speaker.GOD, new Voice("", "", 1f, Map.of(), List.of(), List.of()));
-        VOICES.put(Speaker.SELF, new Voice("", "", 1f, Map.of(), List.of(), List.of()));
+        VOICES.put(Speaker.GOD, new Voice("", "", 1f, Map.of(), List.of(), List.of(), Map.of()));
+        VOICES.put(Speaker.SELF, new Voice("", "", 1f, Map.of(), List.of(), List.of(), Map.of()));
     }
 
     static void load(ConfigurationSection whispers, ConfigurationSection voices, Logger log) {
@@ -124,6 +143,7 @@ public final class WhisperConfig {
 
     private static Voice voice(ConfigurationSection section, Logger log) {
         Map<BloodStage, List<String>> lines = new EnumMap<>(BloodStage.class);
+        Map<BloodStage, NavigableMap<Integer, List<String>>> tiers = new EnumMap<>(BloodStage.class);
         ConfigurationSection stages = section.getConfigurationSection("lines");
         if (stages != null) {
             for (String key : stages.getKeys(false)) {
@@ -132,12 +152,31 @@ public final class WhisperConfig {
                     log.warning("[Magic] blood magic config voice lines: unknown stage '" + key + "'");
                     continue;
                 }
-                lines.put(stage, List.copyOf(new ArrayList<>(stages.getStringList(key))));
+                ConfigurationSection tiered = stages.getConfigurationSection(key);
+                if (tiered == null) {
+                    lines.put(stage, List.copyOf(new ArrayList<>(stages.getStringList(key))));
+                    continue;
+                }
+                NavigableMap<Integer, List<String>> byProgress = new TreeMap<>();
+                List<String> all = new ArrayList<>();
+                for (String from : tiered.getKeys(false)) {
+                    try {
+                        List<String> tier = List.copyOf(tiered.getStringList(from));
+                        byProgress.put(Integer.parseInt(from.trim()), tier);
+                        all.addAll(tier);
+                    } catch (NumberFormatException ex) {
+                        log.warning("[Magic] blood magic config voice lines." + key + ": tier '" + from + "' is not a number");
+                    }
+                }
+                if (!byProgress.isEmpty()) {
+                    tiers.put(stage, Collections.unmodifiableNavigableMap(byProgress));
+                    lines.put(stage, List.copyOf(all));
+                }
             }
         }
         return new Voice(section.getString("style", ""), section.getString("sound", ""),
                 (float) section.getDouble("pitch", 1.0), lines,
-                colours(section, "colors.start", log), colours(section, "colors.end", log));
+                colours(section, "colors.start", log), colours(section, "colors.end", log), tiers);
     }
 
     private static List<String> colours(ConfigurationSection section, String path, Logger log) {

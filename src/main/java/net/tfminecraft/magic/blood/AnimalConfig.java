@@ -21,6 +21,9 @@ public final class AnimalConfig {
     private static String traceModel;
     private static long traceMillis;
     private static long noteDelayMillis;
+    private static int bleedSeconds;
+    private static double stayRange;
+    private static Set<Integer> heartbeats;
 
     static {
         reset();
@@ -39,6 +42,9 @@ public final class AnimalConfig {
         traceModel = "v.redstone";
         traceMillis = 6L * 3_600_000L;
         noteDelayMillis = 30L * 60_000L;
+        bleedSeconds = 15;
+        stayRange = 4;
+        heartbeats = Set.of(0, 1, 2, 3, 5, 7, 10, 13);
     }
 
     static void load(ConfigurationSection section, Logger log) {
@@ -64,6 +70,26 @@ public final class AnimalConfig {
         traceModel = section.getString("trace.model", "v.redstone");
         traceMillis = (long) (Math.max(0, section.getDouble("trace.hours", 6)) * 3_600_000L);
         noteDelayMillis = (long) (Math.max(0, section.getDouble("note_delay_minutes", 30)) * 60_000L);
+        bleedSeconds = Math.max(1, section.getInt("rite.bleed_seconds", 15));
+        stayRange = Math.max(1, section.getDouble("rite.stay_range", 4));
+        if (section.isList("rite.heartbeats")) {
+            heartbeats = Set.copyOf(section.getIntegerList("rite.heartbeats"));
+        }
+    }
+
+    /** Seconds a cut animal bleeds out on the stone before the sacrifice counts. */
+    public static int bleedSeconds() {
+        return bleedSeconds;
+    }
+
+    /** How far from the altar the mage may stand while it bleeds; further spills it. */
+    public static double stayRange() {
+        return stayRange;
+    }
+
+    /** Seconds into the bleeding when its heart beats, slowing toward the end. */
+    public static Set<Integer> heartbeats() {
+        return heartbeats;
     }
 
     public static int speciesRequired() {

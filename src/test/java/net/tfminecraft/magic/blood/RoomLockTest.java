@@ -51,6 +51,8 @@ class RoomLockTest {
       "      walls: [COBBLESTONE, UNOBTAINIUM, WATER]",
       "      ceiling: [ANDESITE]",
       "      light: 40",
+      "      candles: { block: BLACK_CANDLE, count: 9 }",
+      "      altar_light: 6",
       "");
 
   @BeforeEach
@@ -98,6 +100,17 @@ class RoomLockTest {
     Block corner = fx.world.getBlockAt(4, 12, -4);
     assertEquals(Material.LIGHT, corner.getType());
     assertEquals(15, ((Levelled) corner.getBlockData()).getLevel());
+    Block candle = fx.world.getBlockAt(-4, 10, 4);
+    assertEquals(Material.BLACK_CANDLE, candle.getType());
+    assertEquals(4, ((org.bukkit.block.data.type.Candle) candle.getBlockData()).getCandles());
+    assertTrue(((org.bukkit.block.data.type.Candle) candle.getBlockData()).isLit());
+    Block glow = target.getRelative(BlockFace.UP);
+    assertEquals(Material.LIGHT, glow.getType());
+    assertEquals(6, ((Levelled) glow.getBlockData()).getLevel());
+    BloodAltar altar = BloodAltar.create("g", "o", target, 0f, 1L);
+    BloodAltars.add(altar);
+    AltarService.purify(altar, "test");
+    assertEquals(Material.AIR, glow.getType());
     assertEquals(4, AltarRoom.corners(target).size());
     assertTrue(AltarRoom.corners(target).contains(fx.world.getBlockAt(5, 10, 5)));
   }
@@ -255,7 +268,8 @@ class RoomLockTest {
 
   @Test
   void badTemplateEntriesAreSkipped() throws Exception {
-    config("placement:\n  room:\n    template:\n      floor: [AIR]\n      light: -3\n");
+    config("placement:\n  room:\n    template:\n      floor: [AIR]\n      light: -3\n      candles: { block: STONE }\n");
+    assertNull(RoomTemplate.candle());
     assertFalse(RoomTemplate.hasFloor());
     assertEquals(0, RoomTemplate.light());
     assertNull(RoomTemplate.wall(new java.util.Random()));

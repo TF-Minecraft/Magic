@@ -77,6 +77,30 @@ class AnimalRiteTest {
     return animal;
   }
 
+  org.bukkit.event.entity.EntityDamageByEntityEvent hit(org.bukkit.entity.Entity damager, LivingEntity animal) {
+    return new org.bukkit.event.entity.EntityDamageByEntityEvent(damager, animal,
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+  }
+
+  /** The mage's knife makes the cut. */
+  void cut(LivingEntity animal) {
+    var stroke = hit(mage, animal);
+    AnimalRiteService.onHit(stroke);
+    assertFalse(stroke.isCancelled());
+    assertEquals("blood.animal.cut", mage.nextMessage());
+  }
+
+  /** The animal bleeds out with its mage beside the altar; the halfway line is read here. */
+  void bleedOut() {
+    for (int second = 0; second <= AnimalConfig.bleedSeconds(); second++) {
+      AnimalRiteService.tick();
+      if (second * 2 == AnimalConfig.bleedSeconds() + 1 || second * 2 == AnimalConfig.bleedSeconds()) {
+        assertEquals("blood.animal.draining", mage.nextMessage());
+      }
+      now.addAndGet(1000L);
+    }
+  }
+
   EntityDeathEvent death(LivingEntity animal, PlayerMock killer) {
     if (killer != null) {
       ((org.mockbukkit.mockbukkit.entity.LivingEntityMock) animal).setKiller(killer);
@@ -173,49 +197,107 @@ class AnimalRiteTest {
     BloodConfig.load(temp.resolve("w.yml").toFile(), fx.logger);
     Pig pig = animal(Pig.class, null);
     assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, pig));
-    AnimalRiteService.onDeath(death(pig, mage));
+    cut(pig);
+    bleedOut();
     assertTrue(record.hasSpecies("pig"));
     assertTrue(BloodNotes.all().isEmpty());
   }
 
   @Test
-  void theOwnKnifeOpensABoundAnimalInOneStroke() {
+  void onlyTheOwnKnifeCutsAndNothingElseTouchesIt() {
     Cow cow = animal(Cow.class, null);
     PlayerMock other = fx.player("other");
     org.bukkit.entity.Zombie zombie = fx.world.spawn(new Location(fx.world, 1, 10, 1), org.bukkit.entity.Zombie.class);
-    var hit = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
-        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
-    AnimalRiteService.onHit(hit);
-    assertEquals(3, hit.getDamage());
+    var loose = hit(mage, cow);
+    AnimalRiteService.onHit(loose);
+    assertEquals(3, loose.getDamage());
+    assertFalse(loose.isCancelled());
 
     record.setLastAnimalAt(0);
     FakeHusbandry.OWNERS.put(cow.getUniqueId(), List.of(new FakeHusbandry.Owner(UUID.randomUUID(), UUID.randomUUID())));
     assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, cow));
     for (org.bukkit.entity.Entity damager : List.of(other, zombie)) {
-      var foreign = new org.bukkit.event.entity.EntityDamageByEntityEvent(damager, cow,
-          org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+      var foreign = hit(damager, cow);
       AnimalRiteService.onHit(foreign);
-      assertEquals(3, foreign.getDamage());
+      assertTrue(foreign.isCancelled());
     }
     mage.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
-    var plain = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
-        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    var plain = hit(mage, cow);
     AnimalRiteService.onHit(plain);
-    assertEquals(3, plain.getDamage());
+    assertTrue(plain.isCancelled());
     mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, BloodFixture.id("other")));
-    AnimalRiteService.onHit(plain);
-    assertEquals(3, plain.getDamage());
+    var borrowed = hit(mage, cow);
+    AnimalRiteService.onHit(borrowed);
+    assertTrue(borrowed.isCancelled());
 
     mage.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, id));
-    var stroke = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, cow,
-        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    var stroke = hit(mage, cow);
     new BloodListener().onAnimalHit(stroke);
-    assertTrue(stroke.getDamage() >= cow.getHealth() + 1000);
+    assertFalse(stroke.isCancelled());
+    assertTrue(stroke.getDamage() < 1);
+    assertEquals("blood.animal.cut", mage.nextMessage());
+    assertTrue(AnimalRiteService.isBound(cow.getUniqueId()));
+    var again = hit(mage, cow);
+    AnimalRiteService.onHit(again);
+    assertTrue(again.isCancelled());
 
-    var onPlayer = new org.bukkit.event.entity.EntityDamageByEntityEvent(mage, other,
-        org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), 3);
+    var onPlayer = hit(mage, other);
     AnimalRiteService.onHit(onPlayer);
     assertEquals(3, onPlayer.getDamage());
+  }
+
+  @Test
+  void steppingAwaySwitchingOrLeavingSpillsIt() {
+    UUID keeper = UUID.randomUUID();
+    Cow cow = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, cow);
+    cut(cow);
+    AnimalRiteService.tick();
+    mage.teleport(new Location(fx.world, 9.5, 10, 0.5));
+    AnimalRiteService.tick();
+    assertEquals("blood.animal.left", mage.nextMessage());
+    assertFalse(AnimalRiteService.isBound(cow.getUniqueId()));
+    assertTrue(cow.getPersistentDataContainer().has(AnimalRiteService.drainedKey()));
+    assertTrue(record.getSpecies().isEmpty());
+
+    mage.teleport(new Location(fx.world, 0.5, 11, 0.5));
+    Cow second = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, second);
+    cut(second);
+    fx.characters.start(mage, "switched");
+    AnimalRiteService.tick();
+    assertEquals("blood.animal.left", mage.nextMessage());
+    fx.characters.start(mage, "mage");
+
+    Cow third = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, third);
+    cut(third);
+    var otherWorld = fx.server.addSimpleWorld("elsewhere");
+    mage.teleport(new Location(otherWorld, 0, 64, 0));
+    AnimalRiteService.tick();
+    assertEquals("blood.animal.left", mage.nextMessage());
+    mage.teleport(new Location(fx.world, 0.5, 11, 0.5));
+
+    Cow fourth = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, fourth);
+    cut(fourth);
+    AnimalRiteService.releaseFor(mage.getUniqueId());
+    assertTrue(fourth.getPersistentDataContainer().has(AnimalRiteService.drainedKey()));
+
+    Cow fifth = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, fifth);
+    cut(fifth);
+    fifth.remove();
+    AnimalRiteService.tick();
+    assertFalse(AnimalRiteService.isBound(fifth.getUniqueId()));
+
+    Cow sixth = animal(Cow.class, keeper);
+    AnimalRiteService.bind(mage, sixth);
+    cut(sixth);
+    mage.disconnect();
+    AnimalRiteService.tick();
+    assertFalse(AnimalRiteService.isBound(sixth.getUniqueId()));
+    assertTrue(record.getSpecies().isEmpty());
   }
 
   @Test
@@ -225,13 +307,24 @@ class AnimalRiteTest {
     StolenClues.leashed(cow);
     cow.teleport(new Location(fx.world, 1.5, 10, 0.5));
     assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, cow));
-    EntityDeathEvent event = death(cow, mage);
-    AnimalRiteService.onDeath(event);
-    assertTrue(event.getDrops().isEmpty());
-    assertEquals(0, event.getDroppedExp());
+    cut(cow);
+    AnimalRiteService.tick();
+    assertFalse(record.hasSpecies("cow"));
+    now.addAndGet(8000L);
+    AnimalRiteService.tick();
+    assertEquals("blood.animal.draining", mage.nextMessage());
+    AnimalRiteService.tick();
+    assertNull(mage.nextMessage());
+    now.addAndGet(AnimalConfig.bleedSeconds() * 1000L - 8000L);
+    AnimalRiteService.tick();
     assertTrue(record.hasSpecies("cow"));
     assertEquals(now.get(), record.getLastAnimalAt());
     assertEquals("blood.animal.accepted", mage.nextMessage());
+    assertTrue(cow.getPersistentDataContainer().has(AnimalRiteService.drainedKey()));
+    EntityDeathEvent event = death(cow, null);
+    AnimalRiteService.onDeath(event);
+    assertTrue(event.getDrops().isEmpty());
+    assertEquals(0, event.getDroppedExp());
     assertEquals(1, BloodNotes.all().size());
     assertEquals(keeper.toString(), BloodNotes.all().get(0).account());
     assertFalse(AnimalRiteService.isBound(cow.getUniqueId()));
@@ -244,7 +337,9 @@ class AnimalRiteTest {
     BloodConfig.load(temp.resolve("one.yml").toFile(), fx.logger);
     Cow cow = animal(Cow.class, UUID.randomUUID());
     AnimalRiteService.bind(mage, cow);
-    EntityDeathEvent event = death(cow, mage);
+    cut(cow);
+    bleedOut();
+    EntityDeathEvent event = death(cow, null);
     AnimalRiteService.onDeath(event);
     assertFalse(event.getDrops().isEmpty());
     assertEquals(BloodStage.CHOICE, record.getStage());
@@ -302,20 +397,24 @@ class AnimalRiteTest {
     UUID keeper = UUID.randomUUID();
     Cow cow = animal(Cow.class, keeper);
     AnimalRiteService.bind(mage, cow);
+    cut(cow);
     record.setStage(BloodStage.CHOICE);
-    AnimalRiteService.onDeath(death(cow, mage));
+    bleedOut();
     assertTrue(record.getSpecies().isEmpty());
     record.setStage(BloodStage.ANIMAL);
     cow = animal(Cow.class, keeper);
     AnimalRiteService.bind(mage, cow);
+    cut(cow);
     BloodAltars.remove(altar);
-    AnimalRiteService.onDeath(death(cow, mage));
+    AnimalRiteService.tick();
+    assertEquals("blood.animal.left", mage.nextMessage());
     assertTrue(record.getSpecies().isEmpty());
     BloodAltars.add(altar);
     cow = animal(Cow.class, keeper);
     AnimalRiteService.bind(mage, cow);
+    cut(cow);
     BloodRecords.delete(id);
-    AnimalRiteService.onDeath(death(cow, mage));
+    bleedOut();
   }
 
   @Test

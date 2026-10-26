@@ -158,7 +158,7 @@ public final class WhisperService {
             schedule(player, now);
             return;
         }
-        if (now < due || (WhisperConfig.requireAlone() && !alone(player))) {
+        if (now < due || (WhisperConfig.requireAlone() && !alone(player)) || !atTheStone(player, record)) {
             return;
         }
         speakNext(player, record);
@@ -193,9 +193,35 @@ public final class WhisperService {
             BloodRecords.save(record);
             return;
         }
+        WhisperConfig.Voice voice = WhisperConfig.voice(speaker);
+        if (voice.tiered(record.getStage())) {
+            lines = voice.lines(record.getStage(), record.getSpecies().size());
+            if (!lines.isEmpty()) {
+                speak(player, speaker, lines.get(random.nextInt(lines.size())));
+            }
+            return;
+        }
         if (!lines.isEmpty()) {
             speak(player, speaker, lines.get(pick(lines.size(), stageProgress(record))));
         }
+    }
+
+    /**
+     * Once the altar stands, the animal-stage voices come only to its chamber, while the stone is ready
+     * for the next kind and no rite is under way. Before the altar, and in other stages, anywhere.
+     */
+    static boolean atTheStone(Player player, BloodRecord record) {
+        if (record.getStage() != BloodStage.ANIMAL) {
+            return true;
+        }
+        BloodAltar altar = BloodAltars.ofCharacter(record.getCharacterId());
+        if (altar == null) {
+            return true;
+        }
+        boolean ready = record.getLastAnimalAt() <= 0
+                || clock.getAsLong() - record.getLastAnimalAt() >= AnimalConfig.cooldownMillis();
+        return ready && AltarRoom.lockedBy(player.getLocation().getBlock()) == altar
+                && AnimalRiteService.bindingOf(player.getUniqueId()) == null;
     }
 
     /**

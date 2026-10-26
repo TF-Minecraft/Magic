@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.TileState;
 import org.bukkit.block.data.Levelled;
+import org.bukkit.block.data.type.Candle;
 
 import net.tfminecraft.magic.meditation.MeditationCache;
 
@@ -41,10 +42,14 @@ public final class AltarRoom {
         SEALED
     }
 
-    /** What placing the altar would change: blocks carved to air, blocks laid, and hidden lights. */
-    public record Plan(Verdict verdict, List<Block> carve, Map<Block, Material> lay, List<Block> lights) {
+    /**
+     * What placing the altar would change: blocks carved to air, blocks laid, hidden lights in the top
+     * corners, lit candles in the floor corners, and the glow just above the altar (or null).
+     */
+    public record Plan(Verdict verdict, List<Block> carve, Map<Block, Material> lay, List<Block> lights,
+            List<Block> candles, Block glow) {
         static Plan refused(Verdict verdict) {
-            return new Plan(verdict, List.of(), Map.of(), List.of());
+            return new Plan(verdict, List.of(), Map.of(), List.of(), List.of(), null);
         }
 
         public void apply() {
@@ -55,11 +60,25 @@ public final class AltarRoom {
                 entry.getKey().setType(entry.getValue(), false);
             }
             for (Block block : lights) {
-                block.setType(Material.LIGHT, false);
-                Levelled data = (Levelled) block.getBlockData();
-                data.setLevel(RoomTemplate.light());
+                light(block, RoomTemplate.light());
+            }
+            for (Block block : candles) {
+                block.setType(RoomTemplate.candle(), false);
+                Candle data = (Candle) block.getBlockData();
+                data.setCandles(RoomTemplate.candles());
+                data.setLit(true);
                 block.setBlockData(data, false);
             }
+            if (glow != null) {
+                light(glow, RoomTemplate.altarLight());
+            }
+        }
+
+        private static void light(Block block, int level) {
+            block.setType(Material.LIGHT, false);
+            Levelled data = (Levelled) block.getBlockData();
+            data.setLevel(level);
+            block.setBlockData(data, false);
         }
     }
 
@@ -81,7 +100,7 @@ public final class AltarRoom {
      */
     public static Plan plan(Block target, Block standingOn) {
         if (!BloodConfig.roomEnabled()) {
-            return new Plan(Verdict.OK, List.of(), Map.of(), List.of());
+            return new Plan(Verdict.OK, List.of(), Map.of(), List.of(), List.of(), null);
         }
         int half = halfWidth();
         int height = BloodConfig.roomHeight();
@@ -91,6 +110,7 @@ public final class AltarRoom {
         List<Block> carve = new ArrayList<>();
         Map<Block, Material> lay = new LinkedHashMap<>();
         List<Block> lights = new ArrayList<>();
+        List<Block> candles = new ArrayList<>();
         int filled = 0;
         boolean doorway = false;
         for (int dx = -half - 1; dx <= half + 1; dx++) {
@@ -113,8 +133,12 @@ public final class AltarRoom {
                             }
                             carve.add(block);
                         }
-                        if (RoomTemplate.light() > 0 && Math.abs(dx) == half && Math.abs(dz) == half && dy == height - 1) {
+                        boolean corner = Math.abs(dx) == half && Math.abs(dz) == half;
+                        if (corner && RoomTemplate.light() > 0 && dy == height - 1) {
                             lights.add(block);
+                        }
+                        if (corner && RoomTemplate.candle() != null && dy == 0) {
+                            candles.add(block);
                         }
                         continue;
                     }
@@ -157,7 +181,9 @@ public final class AltarRoom {
         if (!doorway) {
             return Plan.refused(Verdict.SEALED);
         }
-        return new Plan(Verdict.OK, List.copyOf(carve), Collections.unmodifiableMap(lay), List.copyOf(lights));
+        Block glow = RoomTemplate.altarLight() > 0 ? target.getRelative(BlockFace.UP) : null;
+        return new Plan(Verdict.OK, List.copyOf(carve), Collections.unmodifiableMap(lay), List.copyOf(lights),
+                List.copyOf(candles), glow);
     }
 
     /** The four outer corners of the chamber at the altar's height, for the claim check. */

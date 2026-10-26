@@ -28,7 +28,6 @@ permissions:
     default: op
     children:
       magic.admin.reload: true
-      magic.blood.bypass: true
   magic.admin.reload:
     description: Legacy permission alias for magic.admin
     default: op
@@ -51,7 +50,7 @@ permissions:
     description: Allows Bloodmagic resonance
     default: false
   magic.blood.bypass:
-    description: Staff may still place and break blocks in a blood altar's locked chamber
+    description: Staff may still place and break blocks in a blood altar's locked chamber (grant per group)
     default: op
   magic.weapon.give:
     description: Give completed weapons (default give-permission)

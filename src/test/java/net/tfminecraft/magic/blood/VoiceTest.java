@@ -100,8 +100,10 @@ class VoiceTest {
       @Override public boolean nextBoolean() { return flip = !flip; }
       @Override public int nextInt(int bound) { return 0; }
     };
+    WhisperConfig.Voice selfVoice = WhisperConfig.voice(WhisperConfig.Speaker.SELF);
+    assertTrue(selfVoice.tiered(BloodStage.ANIMAL));
     WhisperService.speakNext(mage, record);
-    assertEquals(self.get(0), plain(mage.nextMessage()));
+    assertEquals(selfVoice.lines(BloodStage.ANIMAL, 0).get(0), plain(mage.nextMessage()));
     WhisperService.speakNext(mage, record);
     assertEquals(god.get(0), plain(mage.nextMessage()));
     for (String kind : List.of("cow", "pig", "sheep", "goat", "horse", "rabbit", "chicken")) {
@@ -109,14 +111,70 @@ class VoiceTest {
     }
     assertEquals(1.0, WhisperService.stageProgress(record));
     WhisperService.speakNext(mage, record);
-    int window = (self.size() + 2) / 3;
-    assertEquals(self.get(self.size() - window), plain(mage.nextMessage()));
+    assertEquals(selfVoice.lines(BloodStage.ANIMAL, 7).get(0), plain(mage.nextMessage()));
+    assertEquals(selfVoice.lines(BloodStage.ANIMAL, 5), selfVoice.lines(BloodStage.ANIMAL, 6));
+    assertNotEquals(selfVoice.lines(BloodStage.ANIMAL, 0), selfVoice.lines(BloodStage.ANIMAL, 1));
+    assertTrue(self.containsAll(selfVoice.lines(BloodStage.ANIMAL, 3)));
+    assertEquals(selfVoice.lines(BloodStage.CHOICE), selfVoice.lines(BloodStage.CHOICE, 3));
 
     assertEquals(0, WhisperService.pick(5, -1));
     assertEquals(0, WhisperService.pick(1, 0.5));
     assertEquals(6, WhisperService.pick(9, 2.0));
     record.setStage(BloodStage.HUNT);
     assertEquals(-1, WhisperService.stageProgress(record));
+  }
+
+  @Test
+  void tiersStartAtTheLowestAndBadTiersAreSkipped() throws Exception {
+    Files.writeString(temp.resolve("tiers.yml"), String.join("\n",
+        "enabled: true",
+        "voices:",
+        "  god:",
+        "    lines:",
+        "      animal:",
+        "        2: [later]",
+        "        soon: [never]",
+        "      hunt:",
+        "        nope: [never]",
+        ""));
+    assertTrue(BloodConfig.load(temp.resolve("tiers.yml").toFile(), fx.logger));
+    WhisperConfig.Voice god = WhisperConfig.voice(WhisperConfig.Speaker.GOD);
+    assertEquals(List.of("later"), god.lines(BloodStage.ANIMAL, 0));
+    assertFalse(god.tiered(BloodStage.HUNT));
+    assertTrue(god.lines(BloodStage.HUNT).isEmpty());
+    PlayerMock mage = fx.player("mage");
+    BloodRecord record = fx.record("mage", BloodStage.ANIMAL);
+    WhisperService.random = new Random() {
+      @Override public boolean nextBoolean() { return false; }
+    };
+    WhisperService.speakNext(mage, record);
+    assertEquals("later", plain(mage.nextMessage()));
+    Files.writeString(temp.resolve("empty.yml"), "enabled: true\nvoices:\n  god:\n    lines:\n      animal:\n        0: []\n");
+    assertTrue(BloodConfig.load(temp.resolve("empty.yml").toFile(), fx.logger));
+    WhisperService.speakNext(mage, record);
+    assertNull(mage.nextMessage());
+  }
+
+  @Test
+  void animalVoicesWaitForTheChamberAndAReadyStone() {
+    PlayerMock mage = fx.player("mage");
+    BloodRecord record = fx.record("mage", BloodStage.ANIMAL);
+    assertTrue(WhisperService.atTheStone(mage, record));
+    Block center = fx.room(0, 10, 0);
+    BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
+    BloodAltars.add(altar);
+    mage.teleport(new Location(fx.world, 2.5, 10, 2.5));
+    assertTrue(WhisperService.atTheStone(mage, record));
+    mage.teleport(new Location(fx.world, 40.5, 10, 2.5));
+    assertFalse(WhisperService.atTheStone(mage, record));
+    mage.teleport(new Location(fx.world, 2.5, 10, 2.5));
+    record.setLastAnimalAt(System.currentTimeMillis());
+    assertFalse(WhisperService.atTheStone(mage, record));
+    record.setLastAnimalAt(1);
+    assertTrue(WhisperService.atTheStone(mage, record));
+    record.setStage(BloodStage.HUNT);
+    mage.teleport(new Location(fx.world, 40.5, 10, 2.5));
+    assertTrue(WhisperService.atTheStone(mage, record));
   }
 
   @Test

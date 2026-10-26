@@ -120,6 +120,11 @@ public final class AltarService {
         AltarCorruption.restore(altar);
         AltarDisplays.remove(altar);
         AltarPedestals.remove(altar);
+        // The glow above the altar goes with it.
+        Block stone = altar.block();
+        if (stone != null && stone.getRelative(BlockFace.UP).getType() == Material.LIGHT) {
+            stone.getRelative(BlockFace.UP).setType(Material.AIR, false);
+        }
         BloodAltars.remove(altar);
         BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());
         if (record != null && altar.getId().equals(record.getAltarId())) {

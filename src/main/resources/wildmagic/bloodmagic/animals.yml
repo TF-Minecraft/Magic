@@ -1,7 +1,8 @@
 # The animal sacrifices.
 # Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
 
-# Animal sacrifices: bind a living animal on the altar with the ritual knife, then kill it with that knife.
+# Animal sacrifices: bind a living animal on the altar with the ritual knife, cut it with that knife, and
+# stay by the stone while it bleeds out. Only then does the sacrifice count.
 animal:
   species_required: 7
   # Rolling window between two animal sacrifices.
@@ -10,6 +11,13 @@ animal:
   bind_range: 4
   # A bound animal breaks free after this many seconds.
   bind_seconds: 20
+  # The rite after the cut: it bleeds out on the stone this long while its mage stays within stay_range
+  # blocks of the altar (further, or switching character or leaving, spills it, wasted). Its heart beats
+  # at these seconds of the bleeding, slowing toward the end.
+  rite:
+    bleed_seconds: 15
+    stay_range: 4
+    heartbeats: [0, 1, 2, 3, 5, 7, 10, 13]
   # Only animals another player owns (Cooking husbandry) count.
   require_stolen: true
   # The offering leaves no meat or experience behind.
