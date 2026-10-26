@@ -13,7 +13,7 @@ items:
       - "#8c8c8c§oby hands that are long gone."
       - "#5c5c5c§oIt is heavier than it should be."
   # Both knives are MMOItems lore weapons (name, lore, stats and look come from MMOItems):
-  # the plain knife shows as Hunting Knife, the blood knife as Vein-Reaver.
+  # the plain knife shows as Hunting Knife, the blood knife as Ritual Knife.
   ritual_knife:
     path: m.lore_weapons.ritual_knife
     name: ""
