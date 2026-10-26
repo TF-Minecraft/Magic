@@ -26,6 +26,7 @@ public final class BloodMagic {
         BloodRecords.init(store);
         BloodAltars.init(store);
         BloodNotes.init(store);
+        AltarPedestals.init(store);
         BondService.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
         MagicTickService.register(BloodMagic::tick);
@@ -114,6 +115,7 @@ public final class BloodMagic {
         AnimalRiteService.releaseAll();
         StolenClues.clear();
         BloodNotes.clear();
+        AltarPedestals.clear();
         WhisperService.clear();
         BloodRecords.clear();
         BloodAltars.clear();

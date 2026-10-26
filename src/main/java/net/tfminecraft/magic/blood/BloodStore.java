@@ -28,12 +28,14 @@ public final class BloodStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type ALTAR_LIST = new TypeToken<List<BloodAltar>>() {}.getType();
     private static final Type NOTE_LIST = new TypeToken<List<BloodNotes.Note>>() {}.getType();
+    private static final Type STRING_LIST = new TypeToken<List<String>>() {}.getType();
     private static final Type BOND_MAP = new TypeToken<Map<String, Integer>>() {}.getType();
 
     private final File characters;
     private final File altars;
     private final File notes;
     private final File bonds;
+    private final File leftovers;
     private final Logger log;
 
     public BloodStore(File root, Logger log) {
@@ -41,6 +43,7 @@ public final class BloodStore {
         this.altars = new File(root, "altars.json");
         this.notes = new File(root, "notes.json");
         this.bonds = new File(root, "bonds");
+        this.leftovers = new File(root, "leftover_pedestals.json");
         this.log = log;
     }
 
@@ -120,6 +123,27 @@ public final class BloodStore {
 
     public boolean saveNotes(List<BloodNotes.Note> list) {
         return write(notes, GSON.toJson(list, NOTE_LIST));
+    }
+
+    /** Furniture ids of purified altars' pedestals that still wait to be removed. */
+    public List<String> loadLeftovers() {
+        List<String> out = new ArrayList<>();
+        if (!leftovers.isFile()) {
+            return out;
+        }
+        List<String> loaded = read(leftovers, STRING_LIST);
+        if (loaded != null) {
+            for (String id : loaded) {
+                if (id != null && !id.isBlank()) {
+                    out.add(id);
+                }
+            }
+        }
+        return out;
+    }
+
+    public boolean saveLeftovers(java.util.Collection<String> ids) {
+        return write(leftovers, GSON.toJson(new ArrayList<>(ids), STRING_LIST));
     }
 
     /** Minutes the character spent near each other character; empty when there is no file yet. */

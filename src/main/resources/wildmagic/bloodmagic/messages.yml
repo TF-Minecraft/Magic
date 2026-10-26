@@ -17,6 +17,8 @@ blood:
     already: "#8c8c8c§oYou already keep a stone. It would not share you"
 
     unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
+    # The pedestals the altar set out around itself will not be picked up, carried or broken.
+    pedestal_bound: "#8c8c8c§oThe pedestal will not leave the stone's side"
 
     # Sitting on the altar (/sit) to meditate; right-clicking it gives owner_touch / stranger_touch.
     sit: "#8a0303§oYou sit on the stone. It is warm beneath you, and it is listening"

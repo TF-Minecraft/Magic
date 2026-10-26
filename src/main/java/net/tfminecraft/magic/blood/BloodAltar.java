@@ -28,6 +28,8 @@ public final class BloodAltar {
     private long lastSpreadAt;
     /** Blocks the altar changed, oldest first, so purification can put them back. */
     private List<CorruptedBlock> corrupted = new ArrayList<>();
+    /** Furniture ids of the pedestals the altar set out around itself. */
+    private List<String> pedestals = new ArrayList<>();
 
     /** One block the altar changed: where, what it was, and what the altar made it. */
     public record CorruptedBlock(int x, int y, int z, String original, String placed) {}
@@ -134,6 +136,13 @@ public final class BloodAltar {
             corrupted = new ArrayList<>();
         }
         return corrupted;
+    }
+
+    public List<String> getPedestals() {
+        if (pedestals == null) {
+            pedestals = new ArrayList<>();
+        }
+        return pedestals;
     }
 
     public String blockKey() {

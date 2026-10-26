@@ -71,6 +71,7 @@ public final class AltarService {
                 player.getLocation().getYaw() + 180f, System.currentTimeMillis());
         altar.setLevel(BloodProgress.level(record));
         AltarDisplays.ensure(altar);
+        AltarPedestals.place(altar, target);
         BloodAltars.add(altar);
         record.setAltarId(altar.getId());
         BloodRecords.save(record);
@@ -108,6 +109,7 @@ public final class AltarService {
         BloodFx.play("altar_purified", altar.center());
         AltarCorruption.restore(altar);
         AltarDisplays.remove(altar);
+        AltarPedestals.remove(altar);
         BloodAltars.remove(altar);
         BloodRecord record = BloodRecords.get(altar.getOwnerCharacter());
         if (record != null && altar.getId().equals(record.getAltarId())) {

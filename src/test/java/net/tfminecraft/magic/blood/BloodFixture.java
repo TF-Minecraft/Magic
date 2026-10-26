@@ -48,6 +48,7 @@ final class BloodFixture implements AutoCloseable {
     BloodStore store = new BloodStore(new File(data.toFile(), "blood"), logger);
     BloodRecords.init(store);
     BloodAltars.init(store);
+    AltarPedestals.init(store);
     AltarRegions.setQuery(location -> java.util.List.of());
   }
 
@@ -142,6 +143,7 @@ final class BloodFixture implements AutoCloseable {
     AltarRegions.setQuery(null);
     BloodRecords.clear();
     BloodAltars.clear();
+    AltarPedestals.clear();
     BloodConfig.reset();
     messages.close();
     characters.unregister();

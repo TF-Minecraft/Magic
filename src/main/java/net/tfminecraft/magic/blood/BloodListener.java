@@ -35,6 +35,8 @@ import org.bukkit.inventory.ItemStack;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 
+import net.tfminecraft.interactiblefurniture.events.FurnitureBreakEvent;
+import net.tfminecraft.interactiblefurniture.events.FurnitureInteractEvent;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.tlibs.character.CharacterDeathEvent;
@@ -122,6 +124,25 @@ public final class BloodListener implements Listener {
     private static void layDown(Player mage, Player victim) {
         CharacterRiteService.Bind result = CharacterRiteService.bind(mage, victim);
         WhisperService.tell(mage, "blood.rite.bind." + result.name().toLowerCase(Locale.ROOT));
+    }
+
+    /** The altar's own pedestals cannot be picked up, broken or carried off; purifying it removes them. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFurnitureBreak(FurnitureBreakEvent event) {
+        if (event.hasPlayer() && AltarPedestals.bound(event.getFurniture())) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Messages.get("blood.altar.pedestal_bound"));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onFurnitureInteract(FurnitureInteractEvent event) {
+        Player player = event.getPlayer();
+        if (player.isSneaking() && player.getInventory().getItemInMainHand().getType().isAir()
+                && AltarPedestals.bound(event.getFurniture())) {
+            event.setCancelled(true);
+            player.sendMessage(Messages.get("blood.altar.pedestal_bound"));
+        }
     }
 
     /** Sitting on the altar with /sit is how its owner meditates there; the stone answers. */
@@ -230,6 +251,7 @@ public final class BloodListener implements Listener {
         AltarDisplays.removeStrays(event.getEntities());
         AnimalRiteService.wakeLoaded(event.getEntities());
         StolenClues.removeExpired(event.getEntities());
+        AltarPedestals.sweep();
         for (BloodAltar altar : BloodAltars.inChunk(event.getWorld().getName(),
                 event.getChunk().getX(), event.getChunk().getZ())) {
             AltarService.refresh(altar);
