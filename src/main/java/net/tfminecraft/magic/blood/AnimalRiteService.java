@@ -154,6 +154,16 @@ public final class AnimalRiteService {
         BOUND.put(event.getEntity().getUniqueId(), bound.cut(clock.getAsLong()));
         BloodFx.play("animal_cut", event.getEntity().getLocation(), mage);
         mage.sendMessage(Messages.get("blood.animal.cut"));
+        if (!AnimalConfig.music().isEmpty()) {
+            mage.playSound(mage.getLocation(), AnimalConfig.music(), AnimalConfig.musicCategory(), AnimalConfig.musicVolume(), 1f);
+        }
+    }
+
+    /** The rite's music ends with the rite, however it ends. */
+    private static void silence(Player mage) {
+        if (mage != null && !AnimalConfig.music().isEmpty()) {
+            mage.stopSound(AnimalConfig.music(), AnimalConfig.musicCategory());
+        }
     }
 
     /**
@@ -172,6 +182,7 @@ public final class AnimalRiteService {
         Bound bound = BOUND.remove(animal.getUniqueId());
         Player mage = bound != null ? Bukkit.getPlayer(bound.mage()) : null;
         if (mage != null) {
+            silence(mage);
             mage.sendMessage(Messages.get("blood.animal.spoiled"));
         }
     }
@@ -271,6 +282,7 @@ public final class AnimalRiteService {
             it.remove();
             BloodFx.play("animal_spilled", animal.getLocation());
             drain(animal);
+            silence(mage);
             if (mage != null) {
                 mage.sendMessage(Messages.get("blood.animal.left"));
             }
@@ -279,6 +291,7 @@ public final class AnimalRiteService {
         long bled = now - bound.cutAt();
         if (bled >= AnimalConfig.bleedSeconds() * 1000L) {
             it.remove();
+            silence(mage);
             complete(mage, bound, animal);
             drain(animal);
             return;

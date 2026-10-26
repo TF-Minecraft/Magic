@@ -247,6 +247,31 @@ class AnimalRiteTest {
   }
 
   @Test
+  void theRiteMusicIsConfigurable() throws Exception {
+    assertEquals("tfmc_blood:rite.bleed", AnimalConfig.music());
+    assertEquals(org.bukkit.SoundCategory.RECORDS, AnimalConfig.musicCategory());
+    assertEquals(0.8f, AnimalConfig.musicVolume());
+    Files.writeString(temp.resolve("m.yml"), String.join("\n", "enabled: true", "animal:", "  rite:", "    music:",
+        "      sound: ' '", "      category: nope", "      volume: -2", ""));
+    BloodConfig.load(temp.resolve("m.yml").toFile(), fx.logger);
+    assertEquals("", AnimalConfig.music());
+    assertEquals(org.bukkit.SoundCategory.RECORDS, AnimalConfig.musicCategory());
+    assertEquals(0f, AnimalConfig.musicVolume());
+    Files.writeString(temp.resolve("m2.yml"), String.join("\n", "enabled: true", "animal:", "  rite:", "    music:",
+        "      sound: x:y", "      category: ambient", ""));
+    BloodConfig.load(temp.resolve("m2.yml").toFile(), fx.logger);
+    assertEquals(org.bukkit.SoundCategory.AMBIENT, AnimalConfig.musicCategory());
+    // Without music nothing is played or stopped.
+    Files.writeString(temp.resolve("m3.yml"), "enabled: true\nanimal:\n  require_stolen: false\n  species: [COW]\n");
+    BloodConfig.load(temp.resolve("m3.yml").toFile(), fx.logger);
+    Cow cow = animal(Cow.class, null);
+    AnimalRiteService.bind(mage, cow);
+    cut(cow);
+    bleedOut();
+    assertTrue(record.hasSpecies("cow"));
+  }
+
+  @Test
   void steppingAwaySwitchingOrLeavingSpillsIt() {
     UUID keeper = UUID.randomUUID();
     Cow cow = animal(Cow.class, keeper);

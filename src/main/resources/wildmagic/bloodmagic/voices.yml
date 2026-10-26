@@ -26,8 +26,8 @@ whispers:
 # Keep both inside blood magic: no other gods, orders or schools.
 # whispered lines are said in order and end with the knife and altar. animal lines come in tiers by
 # kinds given (the highest number reached; a plain list instead slides a third of the way along it).
-# Once the altar stands, animal-stage voices speak only in its chamber, while it is ready for the next
-# kind and no rite is under way. Other stages pick at random.
+# Animal-stage voices speak only in the altar's chamber, while it is ready for the next kind and no rite
+# is under way (with no altar standing, they keep quiet). Other stages pick at random.
 # Colours: each voice is a gradient that drifts from colors.start to colors.end over the whole path
 # (kinds, the answer, the hunt, the finals). Lorvear starts dim and grows into the bright Bloodmagic
 # reds; the mage's own voice starts pale and clear, as they are, and sinks into dark blood.

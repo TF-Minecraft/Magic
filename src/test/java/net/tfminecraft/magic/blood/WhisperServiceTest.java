@@ -242,7 +242,7 @@ class WhisperServiceTest {
     WhisperService.tick(minute(40));
 
     BloodRecord record = BloodRecords.getOrCreate(id, "o");
-    record.setStage(BloodStage.ANIMAL);
+    record.setStage(BloodStage.CHOICE);
     record.setWhisper(3);
     WhisperService.tick(minute(50));
     assertEquals(3, record.getWhisper());
@@ -272,12 +272,12 @@ class WhisperServiceTest {
   void fixedIntervalAndCrowdedVoicesWhenSolitudeIsNotRequired() throws Exception {
     Files.writeString(temp.resolve("v.yml"), String.join("\n", "enabled: true", "voices:",
         "  interval_minutes: [5, 5]", "  require_alone: false", "  god:", "    lines:",
-        "      animal: [hello]", ""));
+        "      choice: [hello]", ""));
     BloodConfig.load(temp.resolve("v.yml").toFile(), fx.logger);
     PlayerMock player = fx.player("mage");
     PlayerMock witness = fx.server.addPlayer();
     witness.teleport(player.getLocation());
-    fx.record("mage", BloodStage.ANIMAL);
+    fx.record("mage", BloodStage.CHOICE);
     WhisperService.voiceSoon(player);
     WhisperService.tick(minute(1));
     assertEquals("hello", player.nextMessage());

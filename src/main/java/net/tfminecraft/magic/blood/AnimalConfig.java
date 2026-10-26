@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.bukkit.SoundCategory;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
 
@@ -24,6 +25,9 @@ public final class AnimalConfig {
     private static int bleedSeconds;
     private static double stayRange;
     private static Set<Integer> heartbeats;
+    private static String music;
+    private static SoundCategory musicCategory;
+    private static float musicVolume;
 
     static {
         reset();
@@ -45,6 +49,9 @@ public final class AnimalConfig {
         bleedSeconds = 15;
         stayRange = 4;
         heartbeats = Set.of(0, 1, 2, 3, 5, 7, 10, 13);
+        music = "";
+        musicCategory = SoundCategory.RECORDS;
+        musicVolume = 0.8f;
     }
 
     static void load(ConfigurationSection section, Logger log) {
@@ -75,6 +82,27 @@ public final class AnimalConfig {
         if (section.isList("rite.heartbeats")) {
             heartbeats = Set.copyOf(section.getIntegerList("rite.heartbeats"));
         }
+        music = section.getString("rite.music.sound", "").trim();
+        musicVolume = (float) Math.max(0, section.getDouble("rite.music.volume", 0.8));
+        String category = section.getString("rite.music.category", "RECORDS");
+        try {
+            musicCategory = SoundCategory.valueOf(category.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            log.warning("[Magic] blood magic config animal.rite.music.category: unknown '" + category + "'");
+        }
+    }
+
+    /** The music played to the mage alone while the animal bleeds; blank for none. */
+    public static String music() {
+        return music;
+    }
+
+    public static SoundCategory musicCategory() {
+        return musicCategory;
+    }
+
+    public static float musicVolume() {
+        return musicVolume;
     }
 
     /** Seconds a cut animal bleeds out on the stone before the sacrifice counts. */

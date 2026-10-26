@@ -159,7 +159,8 @@ class VoiceTest {
   void animalVoicesWaitForTheChamberAndAReadyStone() {
     PlayerMock mage = fx.player("mage");
     BloodRecord record = fx.record("mage", BloodStage.ANIMAL);
-    assertTrue(WhisperService.atTheStone(mage, record));
+    // No altar standing: the animal-stage voices keep quiet.
+    assertFalse(WhisperService.atTheStone(mage, record));
     Block center = fx.room(0, 10, 0);
     BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
     BloodAltars.add(altar);

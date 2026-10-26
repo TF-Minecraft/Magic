@@ -207,8 +207,8 @@ public final class WhisperService {
     }
 
     /**
-     * Once the altar stands, the animal-stage voices come only to its chamber, while the stone is ready
-     * for the next kind and no rite is under way. Before the altar, and in other stages, anywhere.
+     * The animal-stage voices come only to the altar's chamber, while the stone is ready for the next
+     * kind and no rite is under way; with no altar standing they keep quiet. Other stages, anywhere.
      */
     static boolean atTheStone(Player player, BloodRecord record) {
         if (record.getStage() != BloodStage.ANIMAL) {
@@ -216,7 +216,7 @@ public final class WhisperService {
         }
         BloodAltar altar = BloodAltars.ofCharacter(record.getCharacterId());
         if (altar == null) {
-            return true;
+            return false;
         }
         boolean ready = record.getLastAnimalAt() <= 0
                 || clock.getAsLong() - record.getLastAnimalAt() >= AnimalConfig.cooldownMillis();
