@@ -122,6 +122,35 @@ class BloodListenerTest {
       listener.onPistonRetract(retractFree);
       assertFalse(retractFree.isCancelled());
 
+      Block changed = fx.world.getBlockAt(4, 10, 4);
+      changed.setType(Material.NETHERRACK);
+      BloodAltar altar = BloodAltars.at(target);
+      altar.getCorrupted().add(new BloodAltar.CorruptedBlock(5, 10, 5, "minecraft:stone", "NETHERRACK"));
+      altar.getCorrupted().add(new BloodAltar.CorruptedBlock(4, 11, 4, "minecraft:stone", "NETHERRACK"));
+      altar.getCorrupted().add(new BloodAltar.CorruptedBlock(4, 10, 6, "minecraft:stone", "NETHERRACK"));
+      altar.getCorrupted().add(new BloodAltar.CorruptedBlock(4, 10, 4, "minecraft:stone", "NETHERRACK"));
+      org.mockbukkit.mockbukkit.world.WorldMock elsewhere = new org.mockbukkit.mockbukkit.world.WorldMock();
+      elsewhere.setName("elsewhere");
+      fx.server.addWorld(elsewhere);
+      BloodAltars.add(BloodAltar.create("d", "o2", elsewhere.getBlockAt(0, 10, 0), 0f, 1L));
+      BlockBreakEvent breakUntouched = new BlockBreakEvent(other, player);
+      listener.onBreak(breakUntouched);
+      assertFalse(breakUntouched.isCancelled());
+      BlockBreakEvent breakChanged = new BlockBreakEvent(changed, player);
+      listener.onBreak(breakChanged);
+      assertTrue(breakChanged.isCancelled());
+      assertEquals("blood.corruption.unbreakable", player.nextMessage());
+      BlockPistonExtendEvent pushChanged = new BlockPistonExtendEvent(other, List.of(changed), BlockFace.UP);
+      listener.onPistonExtend(pushChanged);
+      assertTrue(pushChanged.isCancelled());
+      List<Block> blowChanged = new ArrayList<>(List.of(changed, other));
+      listener.onEntityExplode(new EntityExplodeEvent(player, target.getLocation(), blowChanged, 1f, null));
+      assertEquals(List.of(other), blowChanged);
+      changed.setType(Material.STONE);
+      BlockBreakEvent breakRestored = new BlockBreakEvent(changed, player);
+      listener.onBreak(breakRestored);
+      assertFalse(breakRestored.isCancelled());
+
       List<Block> blown = new ArrayList<>(List.of(target, other));
       listener.onEntityExplode(new EntityExplodeEvent(player, target.getLocation(), blown, 1f, null));
       assertEquals(List.of(other), blown);

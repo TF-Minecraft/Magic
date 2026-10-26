@@ -4,6 +4,8 @@
 # Blood path. Hidden content: keep these lines vague and never quote them on the wiki.
 blood:
 
+  corruption:
+    unbreakable: "#8a0303§oThe stone pulses warm under your tool. It belongs to the altar now"
   altar:
 
     placed: "#8c8c8c§oThe stone settles into the dark as if it had always been there. Somewhere below, something sighs"

@@ -76,6 +76,11 @@ fx:
     animal_escaped:
       - { sound: block.chain.break, volume: 0.8, pitch: 0.8 }
       - { particle: POOF, count: 8, spread: 0.3, y: 0.5 }
+    corruption_unbreakable:
+      - { sound: entity.warden.heartbeat, volume: 0.8, pitch: 1.6, private: true }
+      - { sound: block.sculk_vein.break, volume: 0.7, pitch: 0.5, private: true }
+      - { particle: DUST, color: "#8a0303", size: 1.2, count: 14, spread: 0.45, private: true }
+      - { particle: DAMAGE_INDICATOR, count: 3, spread: 0.3, private: true }
     animal_slain:
       - { sound: entity.player.attack.sweep, volume: 1.0, pitch: 0.7 }
       - { sound: item.trident.hit, volume: 1.0, pitch: 0.6 }

@@ -114,6 +114,22 @@ public final class AltarCorruption {
         BloodFx.play("corruption", block.getLocation().clone().add(0.5, 0.5, 0.5));
     }
 
+    /** Whether an altar changed this block and it still is what the altar made it. */
+    public static boolean isCorrupted(Block block) {
+        String world = block.getWorld().getName();
+        for (BloodAltar altar : BloodAltars.all()) {
+            if (!world.equals(altar.getWorld())) {
+                continue;
+            }
+            for (BloodAltar.CorruptedBlock entry : altar.getCorrupted()) {
+                if (entry.x() == block.getX() && entry.y() == block.getY() && entry.z() == block.getZ()) {
+                    return block.getType().name().equals(entry.placed());
+                }
+            }
+        }
+        return false;
+    }
+
     /** Puts back every journalled block that still is what the altar made it, newest first. */
     public static void restore(BloodAltar altar) {
         List<BloodAltar.CorruptedBlock> journal = altar.getCorrupted();

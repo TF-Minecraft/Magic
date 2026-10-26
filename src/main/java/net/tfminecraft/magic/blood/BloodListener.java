@@ -172,11 +172,17 @@ public final class BloodListener implements Listener {
         }
     }
 
+    /** The altar, and every block it has changed around it, stand against tools. */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
-        if (BloodAltars.at(event.getBlock()) != null) {
+        Block block = event.getBlock();
+        if (BloodAltars.at(block) != null) {
             event.setCancelled(true);
             event.getPlayer().sendMessage(Messages.get("blood.altar.unbreakable"));
+        } else if (AltarCorruption.isCorrupted(block)) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Messages.get("blood.corruption.unbreakable"));
+            BloodFx.play("corruption_unbreakable", block.getLocation().add(0.5, 0.5, 0.5), event.getPlayer());
         }
     }
 
@@ -196,12 +202,17 @@ public final class BloodListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
-        event.blockList().removeIf(block -> BloodAltars.at(block) != null);
+        event.blockList().removeIf(BloodListener::guarded);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
-        event.blockList().removeIf(block -> BloodAltars.at(block) != null);
+        event.blockList().removeIf(BloodListener::guarded);
+    }
+
+    /** The altar or a block it has changed. */
+    private static boolean guarded(Block block) {
+        return BloodAltars.at(block) != null || AltarCorruption.isCorrupted(block);
     }
 
     @EventHandler
@@ -281,7 +292,7 @@ public final class BloodListener implements Listener {
 
     private static boolean touchesAltar(List<Block> blocks) {
         for (Block block : blocks) {
-            if (BloodAltars.at(block) != null) {
+            if (guarded(block)) {
                 return true;
             }
         }
