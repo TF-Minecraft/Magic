@@ -265,19 +265,22 @@ corruption:
   blocks_per_sacrifice: 3
   ambient_every_minutes: 30
   # Solid blocks with a face in the open turn into one of "to" (repeat an entry to weigh it).
+  # Every block placed here counts toward a bloodmagic shrine (artifacts/shrines.yml).
   convert:
-    - { min_level: 0, from: [STONE, COBBLESTONE, ANDESITE, DIORITE, GRANITE, STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, TUFF], to: [CRACKED_STONE_BRICKS, MOSSY_COBBLESTONE] }
-    - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, MOSSY_COBBLESTONE, DEEPSLATE, DIRT], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, NETHERRACK] }
+    - { min_level: 0, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF], to: [REDSTONE_ORE] }
+    - { min_level: 0, from: [DEEPSLATE, COBBLED_DEEPSLATE], to: [DEEPSLATE_REDSTONE_ORE] }
+    - { min_level: 1, from: [STONE, COBBLESTONE, STONE_BRICKS, MOSSY_COBBLESTONE, CRACKED_STONE_BRICKS, REDSTONE_ORE], to: [NETHERRACK, NETHERRACK, CRACKED_NETHER_BRICKS] }
+    - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, DEEPSLATE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, NETHERRACK] }
     - { min_level: 3, from: [DIRT, COARSE_DIRT, ROOTED_DIRT, NETHERRACK, STONE, DEEPSLATE], to: [CRIMSON_NYLIUM] }
-    - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, BONE_BLOCK, NETHER_WART_BLOCK] }
+    - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, NETHER_WART_BLOCK, CHISELED_NETHER_BRICKS] }
   # Air spots get decorated: at floor = on top of a solid block, at ceiling = hanging under one.
   decorate:
     - { min_level: 0, at: floor, to: [REDSTONE_WIRE, REDSTONE_WIRE, RED_CANDLE] }
-    - { min_level: 1, at: floor, to: [COBWEB] }
-    - { min_level: 2, at: floor, to: [WITHER_ROSE] }
+    - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
+    - { min_level: 2, at: floor, to: [RED_CANDLE] }
     - { min_level: 3, at: ceiling, to: [WEEPING_VINES] }
-    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, NETHER_SPROUTS] }
-    - { min_level: 4, at: floor, to: [SKELETON_SKULL, BONE_BLOCK] }
+    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, CRIMSON_FUNGUS] }
+    - { min_level: 4, at: floor, to: [NETHER_WART_BLOCK, RED_CANDLE] }
 
 # The god's question: right-click your altar with your blood knife once the seventh kind is given.
 choice:
