@@ -247,6 +247,17 @@ class AnimalRiteTest {
   }
 
   @Test
+  void aLedAnimalLosesItsLeadToTheMage() {
+    // MockBukkit cannot leash; the cow says it is led.
+    Cow cow = spy(animal(Cow.class, UUID.randomUUID()));
+    doReturn(true).when(cow).isLeashed();
+    assertFalse(mage.getInventory().contains(Material.LEAD));
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, cow));
+    org.mockito.Mockito.verify(cow).setLeashHolder(null);
+    assertTrue(mage.getInventory().contains(Material.LEAD));
+  }
+
+  @Test
   void theRiteMusicIsConfigurable() throws Exception {
     assertEquals("tfmc_blood:rite.bleed", AnimalConfig.music());
     assertEquals(org.bukkit.SoundCategory.RECORDS, AnimalConfig.musicCategory());

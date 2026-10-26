@@ -10,6 +10,7 @@ import java.util.function.LongSupplier;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -101,6 +102,11 @@ public final class AnimalRiteService {
         }
         if (bindingOf(player.getUniqueId()) != null || isBound(animal.getUniqueId())) {
             return Bind.BUSY;
+        }
+        // A lead comes off as it goes onto the stone, back to the hand that held it.
+        if (animal.isLeashed()) {
+            animal.setLeashHolder(null);
+            WhisperService.give(player, new ItemStack(Material.LEAD));
         }
         if (!animal.teleport(top.clone().add(0, 0.5, 0))) {
             return Bind.TOO_FAR;

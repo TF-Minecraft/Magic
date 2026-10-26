@@ -81,16 +81,14 @@ class CorruptionAndCluesTest {
     assertEquals(made, altar.getCorrupted().size());
     assertEquals(Material.BARRIER, center.getType());
     assertTrue(center.getRelative(0, 1, 0).isEmpty());
-    boolean candle = false;
+    // Candles only grow before the pedestals, on turned ground; any that did are lit.
     for (BloodAltar.CorruptedBlock entry : altar.getCorrupted()) {
       Block block = fx.world.getBlockAt(entry.x(), entry.y(), entry.z());
       assertEquals(entry.placed(), block.getType().name());
       if (block.getType() == Material.RED_CANDLE) {
-        candle = true;
         assertTrue(((Lightable) block.getBlockData()).isLit());
       }
     }
-    assertTrue(candle);
     assertEquals(0, AltarCorruption.spread(altar, 5));
 
     BloodAltar.CorruptedBlock first = altar.getCorrupted().get(0);
@@ -108,6 +106,44 @@ class CorruptionAndCluesTest {
         if (!(x == first.x() && z == first.z())) {
           assertNotEquals(Material.NETHERRACK, fx.world.getBlockAt(x, 9, z).getType());
         }
+      }
+    }
+  }
+
+  @Test
+  void candlesStandOnlyBeforeThePedestalsAndTheRoomTurnsInPatches() throws Exception {
+    Block center = room();
+    assertTrue(AltarCorruption.candleSpot(center.getRelative(3, 0, 0), center));
+    assertTrue(AltarCorruption.candleSpot(center.getRelative(0, 0, -3), center));
+    assertTrue(AltarCorruption.candleSpot(center.getRelative(-2, 0, 2), center));
+    assertFalse(AltarCorruption.candleSpot(center.getRelative(2, 0, 0), center));
+    assertFalse(AltarCorruption.candleSpot(center.getRelative(3, 1, 0), center));
+    CorruptionConfig.Rule candles = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+        java.util.List.of(Material.RED_CANDLE));
+    CorruptionConfig.Rule mixed = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+        java.util.List.of(Material.RED_CANDLE, Material.REDSTONE_WIRE));
+    assertNull(AltarCorruption.material(candles, center.getRelative(1, 0, 1), center));
+    assertEquals(Material.RED_CANDLE, AltarCorruption.material(candles, center.getRelative(2, 0, 2), center));
+    for (int i = 0; i < 10; i++) {
+      assertEquals(Material.REDSTONE_WIRE, AltarCorruption.material(mixed, center.getRelative(1, 0, 1), center));
+    }
+    AltarCorruption.random = new Random(1) {
+      @Override public double nextDouble() { return 0; }
+    };
+    java.util.Set<Long> none = java.util.Set.of();
+    assertTrue(AltarCorruption.score(center.getRelative(1, 0, 0), center, none)
+        > AltarCorruption.score(center.getRelative(3, 0, 0), center, none));
+    Block far = center.getRelative(3, 0, 0);
+    BloodAltar altar = BloodAltar.create("p", "o", center, 0f, 1L);
+    altar.getCorrupted().add(new BloodAltar.CorruptedBlock(far.getX(), far.getY() - 1, far.getZ(), "minecraft:stone", "NETHERRACK"));
+    config(String.join("\n", "corruption:", "  levels:", "    0: { radius: 3, max_blocks: 40 }",
+        "  decorate:", "    - { min_level: 0, at: floor, to: [RED_CANDLE] }", ""));
+    for (int i = 0; i < 30; i++) {
+      AltarCorruption.spread(altar, 1);
+    }
+    for (BloodAltar.CorruptedBlock entry : altar.getCorrupted()) {
+      if (entry.placed().equals("RED_CANDLE")) {
+        assertTrue(AltarCorruption.candleSpot(fx.world.getBlockAt(entry.x(), entry.y(), entry.z()), center), entry.toString());
       }
     }
   }
@@ -184,7 +220,7 @@ class CorruptionAndCluesTest {
   @Test
   void ambientSpreadWaitsItsTurnAndSavesOnlyOnChange() throws Exception {
     config(String.join("\n", "corruption:", "  ambient_every_minutes: 30", "  levels:",
-        "    0: { radius: 3, max_blocks: 2 }", "  decorate:", "    - { min_level: 0, at: floor, to: [COBWEB] }", ""));
+        "    0: { radius: 3, max_blocks: 2 }", "  convert:", "    - { min_level: 0, from: [STONE], to: [NETHERRACK] }", ""));
     Block center = room();
     BloodAltar altar = BloodAltar.create("c", "o", center, 0f, 1L);
     BloodAltars.add(altar);

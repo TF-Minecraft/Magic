@@ -22,7 +22,10 @@ corruption:
     - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, DEEPSLATE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, NETHERRACK] }
     - { min_level: 3, from: [DIRT, COARSE_DIRT, ROOTED_DIRT, NETHERRACK, STONE, DEEPSLATE], to: [CRIMSON_NYLIUM] }
     - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, NETHER_WART_BLOCK, CHISELED_NETHER_BRICKS] }
-  # Air spots get decorated: at floor = on top of a solid block, at ceiling = hanging under one.
+  # The room turns outward from the altar in connected patches (blocks touching what it already turned
+  # win). Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
+  # one. Candles only ever stand on the spots right in front of the pedestals; elsewhere a rule's other
+  # blocks are used, and a candle-only rule waits for one of those spots.
   decorate:
     - { min_level: 0, at: floor, to: [REDSTONE_WIRE, REDSTONE_WIRE, RED_CANDLE] }
     - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
