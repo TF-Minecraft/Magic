@@ -27,6 +27,7 @@ public final class ChoiceConfig {
     private static String music;
     private static SoundCategory musicCategory;
     private static float musicVolume;
+    private static int musicLoopSeconds;
     private static List<Line> ask;
     private static Line unclear;
     private static Line walkedAway;
@@ -48,6 +49,7 @@ public final class ChoiceConfig {
         music = "";
         musicCategory = SoundCategory.RECORDS;
         musicVolume = 0.8f;
+        musicLoopSeconds = 0;
         ask = List.of();
         unclear = null;
         walkedAway = null;
@@ -77,6 +79,7 @@ public final class ChoiceConfig {
             lineSeconds = Math.max(1, choice.getInt("line_seconds", 4));
             music = choice.getString("music.sound", "").trim();
             musicVolume = (float) Math.max(0, choice.getDouble("music.volume", 0.8));
+            musicLoopSeconds = Math.max(0, choice.getInt("music.loop_seconds", 0));
             try {
                 musicCategory = SoundCategory.valueOf(choice.getString("music.category", "RECORDS").trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
@@ -184,6 +187,11 @@ public final class ChoiceConfig {
 
     public static float musicVolume() {
         return musicVolume;
+    }
+
+    /** The track's length: it is started again this often while the question lasts; 0 plays it once. */
+    public static int musicLoopSeconds() {
+        return musicLoopSeconds;
     }
 
     public static int devoteeInjuries() {

@@ -115,7 +115,8 @@ class ChoiceTest {
     assertNotNull(ChoiceConfig.walkedAway());
     assertEquals(90, ChoiceConfig.answerSeconds());
     assertEquals(5, ChoiceConfig.lineSeconds());
-    assertEquals("", ChoiceConfig.music());
+    assertEquals("tfmc_blood:rite.question", ChoiceConfig.music());
+    assertEquals(91, ChoiceConfig.musicLoopSeconds());
     assertTrue(ChoiceConfig.answer(BloodPath.DEVOTEE).words().contains("i kneel"));
     assertEquals(2, ChoiceConfig.answer(BloodPath.TRUE).sealed().size());
     assertEquals(2, ChoiceConfig.devoteeInjuries());
@@ -241,10 +242,11 @@ class ChoiceTest {
     record.setPath(BloodPath.NONE);
     record.setStage(BloodStage.CHOICE);
     mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
-    Files.writeString(temp.resolve("m.yml"), "enabled: true\nchoice:\n  music: { sound: 'tfmc_blood:x' }\n");
+    Files.writeString(temp.resolve("m.yml"), "enabled: true\nchoice:\n  music: { sound: 'tfmc_blood:x', loop_seconds: 3 }\n");
     BloodConfig.load(temp.resolve("m.yml").toFile(), fx.logger);
+    assertEquals(3, ChoiceConfig.musicLoopSeconds());
     QuestionService.start(mage);
-    wait(2);
+    wait(4);
     mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
     wait(1);
     assertFalse(QuestionService.asking(mage.getUniqueId()));

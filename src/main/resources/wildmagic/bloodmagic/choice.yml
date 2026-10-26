@@ -11,11 +11,14 @@
 choice:
   answer_seconds: 90
   line_seconds: 5
-  # Played to the mage alone while the question lasts. sound: a resource pack sound id (blank for none).
+  # Played to the mage alone while the question lasts. sound: a resource pack sound id (blank for none);
+  # loop_seconds: the track's length, to start it again for as long as the question goes on (0: once).
+  # The default is "Dark Horror Ambient Piano Choir" by ISAo (OGA-BY 3.0, see tfmc_blood CREDITS.md).
   music:
-    sound: ""
+    sound: tfmc_blood:rite.question
     category: RECORDS
     volume: 0.8
+    loop_seconds: 91
   ask:
     - god: "Seven kinds have bled on my stone, and you did not look away."
     - god: "Alaric stood where you stand. He knelt, and I carried him through three hundred winters."

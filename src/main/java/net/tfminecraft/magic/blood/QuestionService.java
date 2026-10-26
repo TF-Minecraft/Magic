@@ -32,6 +32,7 @@ public final class QuestionService {
         long nextLineAt;
         long endsAt;
         long lastUnclearAt;
+        long musicAgainAt;
         BloodPath heard;
         BloodPath sealed;
 
@@ -62,10 +63,7 @@ public final class QuestionService {
         session.lines.addAll(ChoiceConfig.ask());
         session.nextLineAt = clock.getAsLong();
         SESSIONS.put(player.getUniqueId(), session);
-        if (!ChoiceConfig.music().isEmpty()) {
-            player.playSound(player.getLocation(), ChoiceConfig.music(), ChoiceConfig.musicCategory(),
-                    ChoiceConfig.musicVolume(), 1f);
-        }
+        music(player, session, clock.getAsLong());
         BloodFx.play("question", altar.center(), player);
         // In the chamber and at the question, as just checked: the first line is said now.
         step(player, session, clock.getAsLong());
@@ -93,6 +91,10 @@ public final class QuestionService {
             say(player, ChoiceConfig.walkedAway());
             silence(player);
             return false;
+        }
+        if (session.musicAgainAt > 0 && now >= session.musicAgainAt) {
+            silence(player);
+            music(player, session, now);
         }
         if (!session.lines.isEmpty()) {
             if (now >= session.nextLineAt) {
@@ -178,6 +180,16 @@ public final class QuestionService {
         if (line != null) {
             WhisperService.speak(player, line.speaker(), line.text());
         }
+    }
+
+    /** Starts the music, and when it loops, when to start it again. */
+    private static void music(Player player, Session session, long now) {
+        if (ChoiceConfig.music().isEmpty()) {
+            return;
+        }
+        player.playSound(player.getLocation(), ChoiceConfig.music(), ChoiceConfig.musicCategory(),
+                ChoiceConfig.musicVolume(), 1f);
+        session.musicAgainAt = ChoiceConfig.musicLoopSeconds() > 0 ? now + ChoiceConfig.musicLoopSeconds() * 1000L : 0;
     }
 
     private static void silence(Player player) {
