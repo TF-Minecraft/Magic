@@ -143,11 +143,11 @@ finals:
   #   spells: MMOCore class skills it unlocks
   class_rewards:
     devotee:
-      1: { skill_points: 4 }
-      2: { skill_points: 4, slots: [3] }
-      3: { skill_points: 4 }
-      4: { skill_points: 4, slots: [4] }
-      5: { skill_points: 4 }
+      1: { skill_points: 2 }
+      2: { skill_points: 2, slots: [3] }
+      3: { skill_points: 2 }
+      4: { skill_points: 2, slots: [4] }
+      5: { skill_points: 2 }
     "true":
       1: { slots: [2], spells: [SANGUINAR_EXSANGUINATE, SANGUINAR_OSSUARY] }
       2: { slots: [3], spells: [SANGUINAR_SANGUINE_POOL, SANGUINAR_HEMOPLAGUE] }

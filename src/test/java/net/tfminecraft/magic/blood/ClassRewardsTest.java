@@ -97,7 +97,7 @@ class ClassRewardsTest {
 
   @Test
   void rewardsAddUpPerFinalAndAscensionGivesEverything() {
-    assertEquals(new HuntConfig.ClassReward(8, List.of(3), List.of()),
+    assertEquals(new HuntConfig.ClassReward(4, List.of(3), List.of()),
         HuntConfig.classRewardsUpTo(BloodPath.DEVOTEE, 2));
     assertEquals(HuntConfig.ClassReward.NONE, HuntConfig.classRewardsUpTo(BloodPath.DEVOTEE, 0));
     assertEquals(HuntConfig.ClassReward.NONE, HuntConfig.classRewardsUpTo(BloodPath.NONE, 5));
@@ -133,17 +133,17 @@ class ClassRewardsTest {
     assertEquals("", messages());
     record.setFinalsDone(1);
     ClassRewards.apply(mage);
-    assertEquals(4, FakePoints.pools.get("bloodsworn"));
+    assertEquals(2, FakePoints.pools.get("bloodsworn"));
     assertTrue(messages().contains("blood.class.rewarded"));
     ClassRewards.apply(mage);
     assertEquals("", messages(), "Nothing new, nothing said");
     record.setStage(BloodStage.ASCENDED);
     ClassRewards.apply(mage);
-    assertEquals(20, FakePoints.pools.get("bloodsworn"));
+    assertEquals(10, FakePoints.pools.get("bloodsworn"));
     messages();
     FakePoints.pools.put("bloodsworn", 30);
     ClassRewards.apply(mage);
-    assertEquals(20, FakePoints.pools.get("bloodsworn"));
+    assertEquals(10, FakePoints.pools.get("bloodsworn"));
     assertEquals("", messages(), "Fewer points than before is no gift");
     FakePoints.pools.put("bloodsworn", 3);
     FakePoints.answer = false;
