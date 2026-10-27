@@ -66,7 +66,7 @@ class BoonsAndToolsTest {
 
   @Test
   void boonsNeedMythicLibAndReplaceEachOther() {
-    record.setFinalsDone(2);
+    record.setFinalsDone(4); // health and spell damage: two stats
     BloodBoons.apply(mage);
     BloodBoons.clear(mage);
     MockBukkit.createMockPlugin("MythicLib");
