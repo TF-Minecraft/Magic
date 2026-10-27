@@ -125,7 +125,7 @@ finals:
   boons:
     "true":
       1: { MAX_HEALTH: 2 }
-      2: { MAX_MANA: 20 }
+      2: { MAX_HEALTH: 2 }
       3: { MAX_HEALTH: 2 }
       4: { SPELL_DAMAGE: 4 }
       5: { MAX_HEALTH: 4 }

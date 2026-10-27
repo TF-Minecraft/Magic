@@ -45,7 +45,7 @@ class HuntConfigTest {
     assertEquals(72 * 3_600_000L, HuntConfig.failCooldownMillis());
     assertEquals(21 * 86_400_000L, HuntConfig.inactiveMillis());
     assertEquals(Map.of(), HuntConfig.boonsUpTo(BloodPath.TRUE, 0));
-    assertEquals(Map.of("MAX_HEALTH", 4.0, "MAX_MANA", 20.0), HuntConfig.boonsUpTo(BloodPath.TRUE, 3));
+    assertEquals(Map.of("MAX_HEALTH", 6.0), HuntConfig.boonsUpTo(BloodPath.TRUE, 3));
     assertEquals(Map.of(), HuntConfig.boonsUpTo(BloodPath.NONE, 5));
     assertEquals(Map.of(), HuntConfig.boonsUpTo(BloodPath.DEVOTEE, 5), "Devotees get no boons");
   }
