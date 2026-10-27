@@ -45,7 +45,7 @@ class ChoiceTest {
 
     private FakeUnlocks() {}
 
-    public static boolean unlock(Player player, String classId) {
+    public static boolean assign(Player player, String classId) {
       last = classId;
       return answer;
     }
@@ -313,13 +313,13 @@ class ChoiceTest {
 
   @Test
   void classUnlockBridgeReportsFailures() {
-    assertFalse(ClassUnlockBridge.unlock(mage, null));
+    assertFalse(ClassUnlockBridge.assign(mage, null));
     FakeUnlocks.answer = false;
-    assertFalse(ClassUnlockBridge.unlock(mage, "x"));
+    assertFalse(ClassUnlockBridge.assign(mage, "x"));
     FakeUnlocks.answer = true;
-    assertTrue(ClassUnlockBridge.unlock(mage, "x"));
+    assertTrue(ClassUnlockBridge.assign(mage, "x"));
     ClassUnlockBridge.unlocksClass = "no.such.Unlocks";
-    assertFalse(ClassUnlockBridge.unlock(mage, "x"));
+    assertFalse(ClassUnlockBridge.assign(mage, "x"));
   }
 
   @Test

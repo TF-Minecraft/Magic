@@ -20,6 +20,22 @@ class BloodMagicTest {
   @TempDir Path temp;
 
   @Test
+  void withMmoCoreTheClassRewardsListenForClassChanges() throws Exception {
+    try (BloodFixture fx = new BloodFixture(temp)) {
+      MockBukkit.createMockPlugin("MMOCore");
+      var plugin = MockBukkit.createMockPlugin("BloodHost");
+      try {
+        BloodMagic.start(plugin);
+        assertTrue(org.bukkit.event.HandlerList.getRegisteredListeners(plugin).stream()
+            .anyMatch(listener -> listener.getListener() instanceof MmoClassRewards));
+      } finally {
+        MagicTickService.clearHandlers();
+        BloodMagic.stop();
+      }
+    }
+  }
+
+  @Test
   void startLoadsDataSettlesAltarsAndSweepsOnSchedule() throws Exception {
     try (BloodFixture fx = new BloodFixture(temp)) {
       var plugin = MockBukkit.createMockPlugin("BloodHost");

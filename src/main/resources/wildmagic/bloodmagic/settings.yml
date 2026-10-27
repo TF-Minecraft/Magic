@@ -134,8 +134,30 @@ finals:
       3: { MAX_HEALTH: 2 }
       4: { SPELL_DAMAGE: 4 }
       5: { MAX_HEALTH: 4 }
+  # What each final sacrifice gives the path's class (see classes: below), on top of the boons.
+  # Worked out again from the sacrifices every time, so a change here also reaches characters part
+  # way through; an ascended character gets every listed reward.
+  #   skill_points: added to the class's own skill-point pool, which RPCharacters keeps apart from
+  #                 the character's other classes (placeholder amounts, balance later)
+  #   slots: MMOCore skill slots it opens
+  #   spells: MMOCore class skills it unlocks
+  class_rewards:
+    devotee:
+      1: { skill_points: 4 }
+      2: { skill_points: 4, slots: [3] }
+      3: { skill_points: 4 }
+      4: { skill_points: 4, slots: [4] }
+      5: { skill_points: 4 }
+    "true":
+      1: { slots: [2], spells: [SANGUINAR_EXSANGUINATE, SANGUINAR_OSSUARY] }
+      2: { slots: [3], spells: [SANGUINAR_SANGUINE_POOL, SANGUINAR_HEMOPLAGUE] }
+      3: { slots: [4], spells: [SANGUINAR_BLOOD_MOON] }
+      4: { slots: [5], spells: [SANGUINAR_SANGUINE_CHAINS] }
+      5: { slots: [6], spells: [SANGUINAR_RED_HARVEST, SANGUINAR_CRIMSON_TIDE] }
 
-# Hidden MMOCore classes (options.display: false) unlocked for the character through RPCharacters.
+# Hidden MMOCore classes (options.display: false). Players never pick them: RPCharacters puts the
+# character into the devotee class when it kneels and into the true class when its hunt is done, and
+# binds it there (/class refuses; staff release with /rpcharacter admin releaseclass).
 classes:
   devotee: bloodsworn
   "true": sanguinar

@@ -176,6 +176,10 @@ blood:
 
     failed_self: "Someone else got to them first. Everything I put into them, wasted"
 
+  class:
+
+    rewarded: "#8c8c8c§oSomething new stirs in your blood. Your skills have changed (/skills)"
+
   choice:
 
     # After the answer is sealed. prompt: once the question is asked (answer aloud, in roleplay).

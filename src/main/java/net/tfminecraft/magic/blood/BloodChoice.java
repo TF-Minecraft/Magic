@@ -8,7 +8,7 @@ import net.tfminecraft.magic.integration.RpCharactersBridge;
 
 /**
  * The answer to the god's question. A devotee gives part of themself (permanent injuries), skips
- * the hunt and gets the devotee class and armour at once. A mage who refuses keeps their class and
+ * the hunt and is put into the devotee class (bound to it) with its armour at once. A mage who refuses keeps their class and
  * hunts alone; from now on only their own dark self speaks to them.
  */
 public final class BloodChoice {
@@ -37,7 +37,7 @@ public final class BloodChoice {
                     marks++;
                 }
             }
-            ClassUnlockBridge.unlock(player, ChoiceConfig.classFor(BloodPath.DEVOTEE));
+            ClassUnlockBridge.assign(player, ChoiceConfig.classFor(BloodPath.DEVOTEE));
             BloodArmour.give(player, BloodPath.DEVOTEE, character);
             WhisperService.tell(player, "blood.choice.devoted");
             BloodFx.play("devoted", player.getLocation(), player);

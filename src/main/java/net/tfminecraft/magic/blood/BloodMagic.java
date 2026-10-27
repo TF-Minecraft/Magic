@@ -29,6 +29,9 @@ public final class BloodMagic {
         AltarPedestals.init(store);
         BondService.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
+        if (plugin.getServer().getPluginManager().isPluginEnabled("MMOCore")) {
+            plugin.getServer().getPluginManager().registerEvents(new MmoClassRewards(), plugin);
+        }
         MagicTickService.register(BloodMagic::tick);
         CarryService.startTicking(plugin);
         AltarCandles.startTicking(plugin);

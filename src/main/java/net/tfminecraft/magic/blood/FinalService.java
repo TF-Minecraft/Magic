@@ -31,17 +31,18 @@ public final class FinalService {
 
     private FinalService() {}
 
-    /** Starts the finals: the path's class and armour (true path), then the first target. */
+    /** Starts the finals: the path's class and armour (true path), its class pool, then the first target. */
     public static void begin(Player mage, BloodRecord record) {
         record.setStage(BloodStage.FINAL);
         if (record.getPath() == BloodPath.TRUE) {
-            ClassUnlockBridge.unlock(mage, ChoiceConfig.classFor(BloodPath.TRUE));
+            ClassUnlockBridge.assign(mage, ChoiceConfig.classFor(BloodPath.TRUE));
             BloodArmour.give(mage, BloodPath.TRUE, record.getCharacterId(), BloodArmour.victims(record));
             WhisperService.tell(mage, "blood.hunt.complete");
             BloodFx.play("hunt_complete", mage.getLocation(), mage);
         }
         refill(mage, record);
         BloodRecords.save(record);
+        ClassRewards.apply(mage);
         name(mage, record);
         Magic.plugin.getLogger().info("[Magic] Character " + record.getCharacterId() + " began the final sacrifices: "
                 + record.getFinalTargets());
@@ -125,6 +126,7 @@ public final class FinalService {
         }
         BloodRecords.save(record);
         BloodBoons.apply(mage);
+        ClassRewards.apply(mage);
         if (record.getStage() == BloodStage.FINAL) {
             name(mage, record);
         }

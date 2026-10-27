@@ -18,6 +18,22 @@ public final class HuntConfig {
     /** Ranks up to and including upTo are worth this many hunt points. */
     public record RankPoints(int upTo, int points) {}
 
+    /**
+     * What final sacrifices give the path's class: skill points for its own pool (a lifetime total),
+     * MMOCore skill slots to open and class skills (spells) to unlock.
+     */
+    public record ClassReward(int skillPoints, List<Integer> slots, List<String> spells) {
+        static final ClassReward NONE = new ClassReward(0, List.of(), List.of());
+
+        ClassReward plus(ClassReward other) {
+            List<Integer> allSlots = new ArrayList<>(slots);
+            other.slots.stream().filter(slot -> !allSlots.contains(slot)).forEach(allSlots::add);
+            List<String> allSpells = new ArrayList<>(spells);
+            other.spells.stream().filter(spell -> !allSpells.contains(spell)).forEach(allSpells::add);
+            return new ClassReward(skillPoints + other.skillPoints, List.copyOf(allSlots), List.copyOf(allSpells));
+        }
+    }
+
     private static double dragRange;
     private static int riteSeconds;
     private static boolean carryEnabled;
@@ -43,6 +59,7 @@ public final class HuntConfig {
     private static long failCooldownMillis;
     private static long inactiveMillis;
     private static final Map<BloodPath, TreeMap<Integer, Map<String, Double>>> BOONS = new EnumMap<>(BloodPath.class);
+    private static final Map<BloodPath, TreeMap<Integer, ClassReward>> REWARDS = new EnumMap<>(BloodPath.class);
 
     static {
         reset();
@@ -74,6 +91,7 @@ public final class HuntConfig {
         failCooldownMillis = 72L * 3_600_000L;
         inactiveMillis = 21L * 86_400_000L;
         BOONS.clear();
+        REWARDS.clear();
     }
 
     static void load(ConfigurationSection hunt, ConfigurationSection bonds, ConfigurationSection finals, Logger log) {
@@ -118,7 +136,47 @@ public final class HuntConfig {
                 if (section != null) {
                     BOONS.put(path, boons(section, log));
                 }
+                ConfigurationSection rewards = finals.getConfigurationSection(
+                        "class_rewards." + path.name().toLowerCase(Locale.ROOT));
+                if (rewards != null) {
+                    REWARDS.put(path, rewards(rewards, log));
+                }
             }
+        }
+    }
+
+    private static TreeMap<Integer, ClassReward> rewards(ConfigurationSection section, Logger log) {
+        TreeMap<Integer, ClassReward> out = new TreeMap<>();
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection reward = section.getConfigurationSection(key);
+            int index = index(key);
+            if (index < 1 || reward == null) {
+                log.warning("[Magic] blood magic config finals.class_rewards entry '" + key + "' skipped");
+                continue;
+            }
+            List<String> spells = new ArrayList<>();
+            for (String spell : reward.getStringList("spells")) {
+                if (!spell.isBlank()) {
+                    spells.add(spell.trim().toUpperCase(Locale.ROOT));
+                }
+            }
+            List<Integer> slots = new ArrayList<>();
+            for (Integer slot : reward.getIntegerList("slots")) {
+                if (slot > 0) {
+                    slots.add(slot);
+                }
+            }
+            out.put(index, new ClassReward(Math.max(0, reward.getInt("skill_points", 0)), List.copyOf(slots),
+                    List.copyOf(spells)));
+        }
+        return out;
+    }
+
+    private static int index(String key) {
+        try {
+            return Integer.parseInt(key.trim());
+        } catch (NumberFormatException ex) {
+            return -1;
         }
     }
 
@@ -126,12 +184,7 @@ public final class HuntConfig {
         TreeMap<Integer, Map<String, Double>> out = new TreeMap<>();
         for (String key : section.getKeys(false)) {
             ConfigurationSection stats = section.getConfigurationSection(key);
-            int index;
-            try {
-                index = Integer.parseInt(key.trim());
-            } catch (NumberFormatException ex) {
-                index = -1;
-            }
+            int index = index(key);
             if (index < 1 || stats == null) {
                 log.warning("[Magic] blood magic config finals.boons entry '" + key + "' skipped");
                 continue;
@@ -249,6 +302,18 @@ public final class HuntConfig {
         }
         for (Map<String, Double> step : table.headMap(finalsDone, true).values()) {
             step.forEach((stat, value) -> total.merge(stat, value, Double::sum));
+        }
+        return total;
+    }
+
+    /** Everything the path's class has earned after this many final sacrifices, added up. */
+    public static ClassReward classRewardsUpTo(BloodPath path, int finalsDone) {
+        ClassReward total = ClassReward.NONE;
+        TreeMap<Integer, ClassReward> table = REWARDS.get(path);
+        if (table != null) {
+            for (ClassReward step : table.headMap(finalsDone, true).values()) {
+                total = total.plus(step);
+            }
         }
         return total;
     }

@@ -364,6 +364,7 @@ public final class BloodListener implements Listener {
         String character = event.getSession().ref().characterId().toString();
         BondService.load(character);
         BloodBoons.apply(event.getPlayer());
+        ClassRewards.applySoon(event.getPlayer());
         BloodPerms.refresh(event.getPlayer());
         FinalService.check(event.getPlayer());
     }

@@ -107,6 +107,7 @@ public final class BloodCommand {
         record.setStage(stage);
         saved(sender, record);
         AltarService.refreshFor(character);
+        ClassRewards.apply(player);
         sender.sendMessage(Messages.get("blood.admin.stage_set", "player", player.getName(), "stage", stage.name()));
     }
 
@@ -120,6 +121,7 @@ public final class BloodCommand {
         record.setPath(path);
         saved(sender, record);
         BloodPerms.refresh(player);
+        ClassRewards.apply(player);
         AltarService.refreshFor(character);
         sender.sendMessage(Messages.get("blood.admin.path_set", "player", player.getName(), "path", path.name()));
     }
