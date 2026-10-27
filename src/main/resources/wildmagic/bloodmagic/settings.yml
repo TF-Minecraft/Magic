@@ -120,14 +120,9 @@ finals:
   fail_cooldown_hours: 72
   # A named target not seen for this long is quietly replaced.
   inactive_days: 21
-  # MythicLib stat boons per final sacrifice (they add up). Placeholder values.
+  # MythicLib stat boons per final sacrifice (they add up). Placeholder values. Only the true path
+  # gets boons (fran); a path left out here gets none.
   boons:
-    devotee:
-      1: { MAX_HEALTH: 1 }
-      2: { MAX_MANA: 10 }
-      3: { MAX_HEALTH: 1 }
-      4: { SPELL_DAMAGE: 2 }
-      5: { MAX_HEALTH: 2 }
     "true":
       1: { MAX_HEALTH: 2 }
       2: { MAX_MANA: 20 }
