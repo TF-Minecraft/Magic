@@ -205,6 +205,7 @@ class AltarPedestalsTest {
     UUID id = loaded ? fx.world.spawn(new Location(fx.world, 0, 10, 0), ItemDisplay.class).getUniqueId() : UUID.randomUUID();
     when(furniture.getEntityId()).thenReturn(id);
     when(furniture.getType()).thenReturn(type);
+    when(furniture.getLoc()).thenReturn(new Location(fx.world, 2, 10, 0));
     when(furniture.getActiveSlot("item")).thenReturn(java.util.Optional.ofNullable(active));
     when(furniture.getOrCreatePlacedSlot("item"))
         .thenReturn(mock(net.tfminecraft.interactiblefurniture.furniture.PlacedSlot.class));
@@ -269,6 +270,45 @@ class AltarPedestalsTest {
     assertFalse(AltarPedestals.offer(full, null, null));
     when(plugin.getFurnitureManager()).thenReturn(null);
     assertFalse(AltarPedestals.offer(full, fresh, null));
+  }
+
+  @Test
+  void theAltarFindsTheArtefactsOnItsPedestalsAndRestylesThem() {
+    BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodRecord record = BloodRecords.getOrCreate(BloodFixture.id("mage"), "o");
+    record.setStage(BloodStage.FINAL);
+    record.setPath(BloodPath.DEVOTEE);
+    var slot = mock(net.tfminecraft.interactiblefurniture.furniture.SlotDefinition.class);
+    when(slot.getId()).thenReturn("item");
+    FurnitureType type = mock(FurnitureType.class);
+    when(type.getSlots()).thenReturn(Map.of("item", slot));
+    BloodAltar altar = BloodAltar.create("a", "o", fx.pocket(0, 10, 0), 0f, 1L);
+    altar.getPedestals().add(UUID.randomUUID().toString());
+    pedestal(altar, null, true, null);
+    pedestal(altar, type, true, null);
+    pedestal(altar, type, true, showing(new ItemStack(Material.STONE), null));
+    var held = showing(BloodArtefacts.create(record, "devotee:0"), null);
+    Furniture holding = pedestal(altar, type, true, held);
+    ItemDisplay stand = fx.world.spawn(new Location(fx.world, 0, 10, 0), ItemDisplay.class);
+    stand.setItemStack(BloodArtefacts.create(record, "devotee:1"));
+    var standing = showing(null, stand.getUniqueId());
+    pedestal(altar, type, true, standing);
+    Furniture nowhere = pedestal(altar, type, true, showing(BloodArtefacts.create(record, "devotee:2"), null));
+    when(nowhere.getLoc()).thenReturn(null);
+
+    List<AltarPedestals.Shown> found = AltarPedestals.artefacts(altar);
+    assertEquals(List.of("devotee:0", "devotee:1"), found.stream().map(each -> BloodArtefacts.id(each.item())).toList());
+    assertEquals(11.8, found.get(0).point().getY(), 1e-9);
+    AltarPedestals.restyle(altar, item -> {
+      item.setAmount(2);
+      return item;
+    });
+    verify(held).setCurrentItem(argThat(item -> item.getAmount() == 2));
+    verify(standing).setCurrentItem(any());
+    verify(manager).persistFurniture(holding);
+    when(plugin.getFurnitureManager()).thenReturn(null);
+    assertTrue(AltarPedestals.artefacts(altar).isEmpty());
+    AltarPedestals.restyle(altar, item -> item);
   }
 
   @Test

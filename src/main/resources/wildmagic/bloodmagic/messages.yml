@@ -188,16 +188,31 @@ blood:
     given: "{stone}Gifts wait on the pedestals around the stone. Sink them into its pool of blood"
     replaced: "{stone}Something new waits on a pedestal by the stone. Sink it into the pool"
     not_yours: "#8c8c8c§oIt will not leave the pedestal for you"
-    sink:
-      sunk: "{stone}It sinks into the pool without a ripple, and the blood grows warmer"
-      all_sunk: "{stone}The last of them sinks. The pool is whole, and so are you"
+    # Right-clicking the altar with an artefact: it charges in the pool.
+    charge:
+      started: "{stone}It sinks into the pool without a ripple, and the blood begins to warm it"
       not_yours: "#8c8c8c§oThe pool will not take it from you"
       stale: "#8c8c8c§oIt crumbles to dried blood before it touches the pool"
-      already: "#8c8c8c§oThe pool already holds one like it. This one crumbles in your hand"
+      full: "#8c8c8c§oIt is already full. The pool has nothing more to give it"
+      dry: "{stone}The pool is dry. It has nothing left to give"
+      busy: "#8c8c8c§oThe pool is already holding something. Wait for it to rise"
+      done: "{stone}It rises from the pool, warm and glowing. Set it back on its pedestal"
+    returned: "{stone}What you left in the pool has risen. It waits in your hands"
+  # Meditating on the altar (sit on it) among its charged artefacts.
+  meditate:
+    start:
+      started: "{stone}The stone's heart beats under you. Catch what it gives you, in time with it"
+      not_ready: "#8c8c8c§oThe stone is quiet. It has nothing to share with you yet"
+      dry: "{stone}The artefacts are dry. Charge them in the pool first"
+      full: "{stone}Your blood is as full as the artefacts can make it"
+      busy: "#8c8c8c§oYou are already listening to it"
+    end:
+      stood: "#8c8c8c§oThe heartbeat fades as you rise"
+      dry: "{stone}The artefacts are drained. The heartbeat slows and stops"
+      full: "{stone}Your blood is full. The stone lets you go"
   pool:
     fed: "{stone}The pool drinks them down and rises. You feel it in your hands again"
     thinned: "{stone}Your blood runs thinner. Something you could call on, you no longer can"
-    dry: "{stone}The pool is dry. Feed it, or lose what it gave you"
     too_thin: "#8c8c8c§oYour blood runs too thin for that"
 
   class:
@@ -259,8 +274,8 @@ blood:
     path_set: "#55ff55{player} is now on path {path}."
 
     given: "#55ff55Gave {player} a bound {item}."
-    artefacts_given: "#55ff55Gave {player} {count} artefact(s) that are not in the pool yet."
-    pool: "#d10202{player} #aaaaaapool #ffffff{pool}/{capacity} #aaaaaa(draining #ffffff{draining}#aaaaaa), blood resonance #ffffff{resonance} #aaaaaa(tier #ffffff{tier}#aaaaaa), artefacts in the pool #ffffff{sunk}/{total}"
+    artefacts_given: "#55ff55Gave {player} a copy of each of their {count} artefact(s)."
+    pool: "#d10202{player} #aaaaaapool #ffffff{pool}/{capacity} #aaaaaa(path complete #ffffff{draining}#aaaaaa), blood resonance #ffffff{resonance} #aaaaaa(tier #ffffff{tier}#aaaaaa), artefacts charged #ffffff{charged}/{total}"
 
     reset: "#55ff55{player}'s blood path was cleared and any altar purified."
 

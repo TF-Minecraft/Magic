@@ -82,9 +82,21 @@ class ArtefactsAndPoolTest {
     return altar;
   }
 
-  void sinkAll() {
-    record.getSunk().clear();
-    record.getSunk().addAll(BloodArtefacts.ids(record));
+  void fill() {
+    record.setResonance(BloodPool.cap(record));
+  }
+
+  boolean glows(ItemStack item) {
+    return item.getItemMeta().hasEnchantmentGlintOverride() && item.getItemMeta().getEnchantmentGlintOverride();
+  }
+
+  ItemStack carried(PlayerMock player, String id) {
+    for (ItemStack item : player.getInventory().getContents()) {
+      if (id.equals(BloodArtefacts.id(item))) {
+        return item;
+      }
+    }
+    return null;
   }
 
   PlayerInteractEvent click(PlayerMock player, ItemStack held) {
@@ -95,7 +107,8 @@ class ArtefactsAndPoolTest {
   @Test
   void theDefaultsSetOutThePoolTiersAndArtefacts() {
     assertEquals(100, PoolConfig.capacity());
-    assertEquals(0.5, PoolConfig.drainPerHour());
+    assertEquals(1, PoolConfig.decayPercent());
+    assertEquals(2, PoolConfig.bloodPerPoint());
     assertEquals(5, PoolConfig.floor());
     assertEquals(40, PoolConfig.refill(0));
     assertEquals(100, PoolConfig.refill(3));
@@ -251,15 +264,22 @@ class ArtefactsAndPoolTest {
 
     altar();
     record.setPath(BloodPath.TRUE);
-    record.getSunk().add("devotee:0");
+    record.setCharge("devotee:0", 2);
+    record.getPending().add("devotee:0");
     assertEquals(8, BloodArtefacts.sync(mage));
-    assertTrue(record.getSunk().isEmpty(), "The old path's artefacts leave the pool");
-    record.getSunk().addAll(List.of("true:hunt:0", "true:hunt:1"));
+    assertEquals(0, record.getCharge("devotee:0"), "The old path's artefacts lose their charge");
+    assertTrue(record.getPending().isEmpty());
+    record.setCharge("true:hunt:0", 2);
+    record.setCharge("true:hunt:1", 2);
+    record.getPending().addAll(List.of("true:hunt:0", "true:hunt:1"));
     record.setFinalsDone(1);
     messages(mage);
     assertEquals(1, BloodArtefacts.sync(mage));
     assertTrue(messages(mage).contains("blood.artefact.replaced"));
-    assertEquals(List.of("true:hunt:1"), record.getSunk());
+    assertEquals(0, record.getCharge("true:hunt:0"));
+    assertEquals(2, record.getCharge("true:hunt:1"));
+    assertEquals(List.of("true:hunt:1"), record.getPending());
+    record.getPending().clear();
     record.getArtefacts().add("true:hunt:8");
     assertEquals(0, BloodArtefacts.sync(mage), "A place the config dropped just goes");
     assertEquals(8, record.getArtefacts().size());
@@ -288,54 +308,118 @@ class ArtefactsAndPoolTest {
   }
 
   @Test
-  void onlyTheOwnersCurrentArtefactsSinkIntoTheirOwnPool() {
+  void artefactsChargeInThePoolAndRiseGlowing() {
     BloodListener listener = new BloodListener();
     altar();
-    BloodArtefacts.sync(mage);
-    messages(mage);
-    List<String> ids = BloodArtefacts.ids(record);
-    for (int i = 0; i < ids.size() - 1; i++) {
-      listener.onInteract(click(mage, BloodArtefacts.create(record, ids.get(i))));
-      assertEquals("blood.artefact.sink.sunk", mage.nextMessage());
-      assertTrue(mage.getInventory().getItemInMainHand().getType().isAir());
-    }
-    assertEquals(7, BloodArtefacts.sunk(record));
-    ItemStack two = BloodArtefacts.create(record, ids.get(0));
-    two.setAmount(2);
-    listener.onInteract(click(mage, two));
-    assertEquals("blood.artefact.sink.already", mage.nextMessage());
-    assertEquals(1, mage.getInventory().getItemInMainHand().getAmount());
-    listener.onInteract(click(mage, BloodArtefacts.create(record, ids.get(7))));
-    assertEquals("blood.artefact.sink.all_sunk", mage.nextMessage());
-    record.setPath(BloodPath.TRUE);
+    ItemStack ring = BloodArtefacts.create(record, "devotee:0");
+    assertFalse(glows(ring));
+    listener.onInteract(click(mage, ring));
+    assertEquals("blood.artefact.charge.started", mage.nextMessage());
+    assertTrue(mage.getInventory().getItemInMainHand().getType().isAir());
+    assertEquals(2.5, record.getCharge("devotee:0"));
+    assertEquals(List.of("devotee:0"), record.getPending());
+    assertTrue(BloodCharging.isCharging(mageId, "devotee:0"));
+    assertFalse(BloodCharging.isCharging(mageId, "devotee:1"));
+    assertFalse(BloodCharging.isCharging("other", "devotee:0"));
+    assertEquals(0, BloodArtefacts.deliverPending(mage), "Still in the pool");
     listener.onInteract(click(mage, BloodArtefacts.create(record, "devotee:1")));
-    assertEquals("blood.artefact.sink.stale", mage.nextMessage(), "The old path's artefact");
+    assertEquals("blood.artefact.charge.busy", mage.nextMessage());
+    assertEquals(1, mage.getInventory().getItemInMainHand().getAmount());
+    mage.getInventory().setItemInMainHand(null);
+    for (int i = 0; i < MeditationConfig.chargeTicks(); i++) {
+      BloodCharging.tick();
+    }
+    assertEquals("blood.artefact.charge.done", mage.nextMessage());
+    assertTrue(glows(carried(mage, "devotee:0")));
+    assertTrue(record.getPending().isEmpty());
+    listener.onInteract(click(mage, BloodArtefacts.create(record, "devotee:0")));
+    assertEquals("blood.artefact.charge.full", mage.nextMessage());
+    listener.onInteract(click(mage, BloodArtefacts.create(record, "true:hunt:0")));
+    assertEquals("blood.artefact.charge.stale", mage.nextMessage());
+    assertTrue(mage.getInventory().getItemInMainHand().getType().isAir());
+
+    record.setStage(BloodStage.ASCENDED);
+    record.setPool(0.0);
+    listener.onInteract(click(mage, BloodArtefacts.create(record, "devotee:1")));
+    assertEquals("blood.artefact.charge.dry", mage.nextMessage());
+    record.setPool(3.0);
+    listener.onInteract(click(mage, BloodArtefacts.create(record, "devotee:1")));
+    assertEquals("blood.artefact.charge.started", mage.nextMessage());
+    assertEquals(1.5, record.getCharge("devotee:1"), "Only what the pool could pay for");
+    assertEquals(0, record.getPool());
+
+    // Away when it rises: it waits as pending and comes back next session.
+    mage.disconnect();
+    for (int i = 0; i < MeditationConfig.chargeTicks(); i++) {
+      BloodCharging.tick();
+    }
+    assertEquals(List.of("devotee:1"), record.getPending());
+    PlayerMock back = fx.player("mage");
+    assertEquals(1, BloodArtefacts.deliverPending(back));
+    assertTrue(messages(back).contains("blood.artefact.returned"));
+    assertNotNull(carried(back, "devotee:1"));
+    assertEquals(0, BloodArtefacts.deliverPending(back));
+    record.getPending().add("true:hunt:3");
+    assertEquals(0, BloodArtefacts.deliverPending(back), "No longer one of its artefacts");
+    assertTrue(record.getPending().isEmpty());
+    assertEquals(0, BloodArtefacts.deliverPending(fx.server.addPlayer()));
+
+    // Its place is filled anew, or its record goes, while it charges: nothing comes back.
+    record.setPool(100.0);
+    BloodAltar altar = BloodAltars.ofCharacter(mageId);
+    assertEquals(BloodCharging.Start.STARTED, BloodCharging.start(back, altar, BloodArtefacts.create(record, "devotee:2")));
+    record.setPath(BloodPath.TRUE);
+    for (int i = 0; i < MeditationConfig.chargeTicks(); i++) {
+      BloodCharging.tick();
+    }
+    assertNull(carried(back, "devotee:2"));
+    record.setPath(BloodPath.DEVOTEE);
+    assertEquals(BloodCharging.Start.STARTED, BloodCharging.start(back, altar, BloodArtefacts.create(record, "devotee:3")));
+    BloodRecords.delete(mageId);
+    for (int i = 0; i < MeditationConfig.chargeTicks(); i++) {
+      BloodCharging.tick();
+    }
+    assertNull(carried(back, "devotee:3"));
+    record = fx.record("mage", BloodStage.ASCENDED);
+    record.setPath(BloodPath.DEVOTEE);
+    record.setPool(100.0);
+    fx.characters.start(back, "elsewhere");
+    assertEquals(BloodCharging.Start.NOT_YOURS, BloodCharging.start(back, altar, BloodArtefacts.create(record, "devotee:4")));
+    fx.characters.start(back, "mage");
+    assertEquals(BloodCharging.Start.STARTED, BloodCharging.start(back, altar, BloodArtefacts.create(record, "devotee:4")));
+    fx.characters.start(back, "elsewhere");
+    for (int i = 0; i < MeditationConfig.chargeTicks(); i++) {
+      BloodCharging.tick();
+    }
+    assertEquals(List.of("devotee:4"), record.getPending(), "Played another character meanwhile");
+    fx.characters.start(back, "mage");
+    record.getPending().add("devotee:5");
+    assertEquals(BloodCharging.Start.STARTED, BloodCharging.start(back, altar, BloodArtefacts.create(record, "devotee:5")));
+    assertEquals(1, record.getPending().stream().filter("devotee:5"::equals).count());
+    BloodCharging.clear();
+    assertFalse(BloodCharging.isCharging(mageId, "devotee:5"));
 
     PlayerMock thief = fx.player("thief");
-    ItemStack stolen = BloodArtefacts.create(record, "devotee:1");
+    ItemStack stolen = BloodArtefacts.create(record, "devotee:6");
     listener.onInteract(click(thief, stolen));
-    assertEquals("blood.artefact.sink.not_yours", thief.nextMessage());
+    assertEquals("blood.artefact.charge.not_yours", thief.nextMessage());
     assertEquals(1, thief.getInventory().getItemInMainHand().getAmount());
     BloodRecord own = fx.record("thief", BloodStage.FINAL);
     own.setPath(BloodPath.DEVOTEE);
-    listener.onInteract(click(thief, BloodArtefacts.create(own, "devotee:1")));
-    assertEquals("blood.artefact.sink.not_yours", thief.nextMessage(), "Not the thief's altar");
-    BloodAltar mine = BloodAltars.ofCharacter(mageId);
-    assertEquals(BloodArtefacts.Sink.NOT_YOURS, BloodArtefacts.sink(mage, mine, BloodArtefacts.create(own, "devotee:1")));
-    PlayerMock bare = fx.server.addPlayer();
-    assertEquals(BloodArtefacts.Sink.NOT_YOURS, BloodArtefacts.sink(bare, BloodAltars.ofCharacter(mageId), stolen));
-    PlayerMock lost = fx.player("lost");
-    assertEquals(BloodArtefacts.Sink.NOT_YOURS, BloodArtefacts.sink(lost, BloodAltars.ofCharacter(mageId), stolen));
+    assertEquals(BloodCharging.Start.NOT_YOURS, BloodCharging.start(thief, altar, BloodArtefacts.create(own, "devotee:1")));
+    assertEquals(BloodCharging.Start.NOT_YOURS, BloodCharging.start(back, altar, BloodArtefacts.create(own, "devotee:1")));
+    assertEquals(BloodCharging.Start.NOT_YOURS, BloodCharging.start(fx.server.addPlayer(), altar, stolen));
   }
 
   @Test
-  void staffHandOutWhatIsNotInThePool() {
+  void staffHandOutCopies() {
     PlayerMock bare = fx.server.addPlayer();
     assertEquals(0, BloodArtefacts.regive(bare));
-    sinkAll();
-    record.getSunk().remove("devotee:3");
-    assertEquals(1, BloodArtefacts.regive(mage));
-    assertEquals("devotee:3", BloodArtefacts.id(mage.getInventory().getItem(0)));
+    record.setCharge("devotee:3", 1);
+    assertEquals(1, BloodArtefacts.charged(record));
+    assertEquals(8, BloodArtefacts.regive(mage));
+    assertTrue(glows(carried(mage, "devotee:3")));
+    assertFalse(glows(carried(mage, "devotee:2")));
   }
 
   @Test
@@ -378,70 +462,72 @@ class ArtefactsAndPoolTest {
   }
 
   @Test
-  void resonanceIsTheSunkShareHeldDownByThePool() {
+  void resonanceIsDrawnUpToWhatTheArtefactsAreWorth() throws Exception {
     assertEquals(5, BloodPool.resonance(null));
-    assertEquals(5, BloodPool.resonance(record), "Nothing sunk yet: the floor");
-    sinkAll();
+    assertEquals(5, BloodPool.resonance(record), "Nothing drawn yet: the floor");
+    record.setResonance(18);
+    assertEquals(18, BloodPool.resonance(record));
+    record.setResonance(40);
     assertEquals(20, BloodPool.resonance(record));
-    record.getSunk().subList(0, 2).clear();
-    assertEquals(15, BloodPool.resonance(record));
     record.setPath(BloodPath.NONE);
     assertEquals(5, BloodPool.resonance(record));
+    assertEquals(0, BloodArtefacts.maxCharge(record));
 
     record.setPath(BloodPath.TRUE);
     record.setStage(BloodStage.ASCENDED);
-    sinkAll();
+    fill();
     assertEquals(95, BloodPool.resonance(record));
     assertEquals("full", BloodPool.state(record));
     record.setPool(120.0);
     assertEquals(100, BloodPool.level(record));
     record.setPool(60.0);
-    assertEquals(60, BloodPool.resonance(record));
     assertEquals("half", BloodPool.state(record));
     record.setPool(10.0);
     assertEquals("low", BloodPool.state(record));
-    record.setPool(0.0);
+    assertEquals(5, BloodPool.pay(record, 10), "The pool pays for what it holds");
+    assertEquals(0, record.getPool());
     assertEquals("dry", BloodPool.state(record));
-    assertEquals(5, BloodPool.resonance(record));
     record.setStage(BloodStage.FINAL);
-    assertEquals(100, BloodPool.level(record), "Only a complete path drains its pool");
+    assertEquals(100, BloodPool.level(record), "Only a complete path spends its pool");
+    assertEquals(10, BloodPool.pay(record, 10));
+    Files.writeString(temp.resolve("f.yml"), "enabled: true\npool:\n  blood_per_point: 0\n");
+    BloodConfig.load(temp.resolve("f.yml").toFile(), fx.logger);
+    record.setStage(BloodStage.ASCENDED);
+    assertEquals(10, BloodPool.pay(record, 10), "Free when blood costs nothing");
   }
 
   @Test
-  void thePoolDrainsOnceThePathIsCompleteAndSaysWhenPowerSlips() throws Exception {
+  void onceThePathIsCompleteResonanceFadesAndSaysWhenATierSlips() throws Exception {
     PlayerMock other = fx.server.addPlayer();
     PlayerMock waiting = fx.player("waiting");
     fx.record("waiting", BloodStage.ASCENDED);
     record.setPath(BloodPath.TRUE);
     record.setStage(BloodStage.ASCENDED);
     BloodPool.tick();
-    assertNull(record.getPool(), "Nothing sunk, nothing drinks");
-    sinkAll();
-    record.setPool(90.004);
+    assertEquals(0, record.getResonance(), "At the floor nothing fades");
+    record.setResonance(90.05);
     BloodPool.tick();
-    assertTrue(record.getPool() < 90);
-    assertEquals("blood.pool.thinned", mage.nextMessage());
-    BloodPool.tick();
+    assertTrue(record.getResonance() < 90.05 && record.getResonance() >= 90);
     assertNull(mage.nextMessage(), "Still the same tier");
-    record.setPool(0.005);
+    record.setResonance(90.005);
     BloodPool.tick();
-    assertEquals(0, record.getPool());
-    assertEquals("blood.pool.dry", mage.nextMessage());
+    assertTrue(record.getResonance() < 90);
+    assertEquals("blood.pool.thinned", mage.nextMessage());
+    record.setResonance(5.0001);
     BloodPool.tick();
-    assertNull(mage.nextMessage());
-    assertEquals(0, record.getPool());
+    assertEquals(5, record.getResonance(), "Never below the floor");
     record.setStage(BloodStage.FINAL);
-    record.setPool(50.0);
+    record.setResonance(50);
     BloodPool.tick();
-    assertEquals(50, record.getPool());
+    assertEquals(50, record.getResonance());
     assertNull(other.nextMessage());
     assertNull(waiting.nextMessage());
 
-    Files.writeString(temp.resolve("d.yml"), "enabled: true\npool:\n  drain_per_hour: 0\n");
+    Files.writeString(temp.resolve("d.yml"), "enabled: true\npool:\n  decay_percent_per_hour: 0\n");
     BloodConfig.load(temp.resolve("d.yml").toFile(), fx.logger);
     record.setStage(BloodStage.ASCENDED);
     BloodPool.tick();
-    assertEquals(50, record.getPool());
+    assertEquals(50, record.getResonance());
   }
 
   @Test
@@ -464,10 +550,10 @@ class ArtefactsAndPoolTest {
     now.addAndGet(5000);
     assertTrue(cast(gate, mage, "BLOODSWORN_BLOOD_BOIL"));
     assertEquals("blood.pool.too_thin", mage.nextMessage());
-    sinkAll();
+    fill();
     assertFalse(cast(gate, mage, "BLOODSWORN_BLOOD_BOIL"));
     BloodConfig.setEnabled(false);
-    record.getSunk().clear();
+    record.setResonance(0);
     assertFalse(cast(gate, mage, "BLOODSWORN_BLOOD_BOIL"));
     BloodSpellGate.forget(mage.getUniqueId());
 
@@ -548,27 +634,40 @@ class ArtefactsAndPoolTest {
       assertTrue(org.bukkit.event.HandlerList.getRegisteredListeners(plugin).stream()
           .anyMatch(listener -> listener.getListener() instanceof BloodSpellGate));
     } finally {
+      BloodCharging.startTicking(plugin);
+      BloodMeditation.startTicking(plugin);
       MagicTickService.clearHandlers();
       BloodMagic.stop();
     }
   }
 
   @Test
-  void recordsKeepTheirArtefactsAndPool() {
+  void recordsKeepTheirArtefactsChargesAndPool() {
     BloodRecord fresh = BloodRecord.create("c", "o");
     assertTrue(fresh.isEmpty());
     fresh.getArtefacts().add("devotee:0");
     assertFalse(fresh.isEmpty());
     fresh.getArtefacts().clear();
-    fresh.getSunk().add("devotee:0");
+    fresh.setCharge("devotee:0", 1);
     assertFalse(fresh.isEmpty());
-    fresh.getSunk().clear();
+    fresh.setCharge("devotee:0", 0);
+    assertEquals(0, fresh.getCharge("devotee:0"));
+    assertTrue(fresh.isEmpty());
+    fresh.getPending().add("devotee:0");
+    assertFalse(fresh.isEmpty());
+    fresh.getPending().clear();
+    fresh.setResonance(3);
+    assertFalse(fresh.isEmpty());
+    fresh.setResonance(-2);
+    assertEquals(0, fresh.getResonance());
     fresh.setPool(-4.0);
     assertEquals(0, fresh.getPool());
     assertFalse(fresh.isEmpty());
     fresh.setPool(Double.NaN);
+    fresh.setResonance(Double.NaN);
     fresh.normalize();
     assertEquals(0, fresh.getPool());
+    assertEquals(0, fresh.getResonance());
     fresh.setPool(null);
     assertNull(fresh.getPool());
     fresh.normalize();
@@ -576,11 +675,23 @@ class ArtefactsAndPoolTest {
     fresh.setPool(3.0);
     fresh.normalize();
     assertEquals(3, fresh.getPool());
-    BloodRecord old = new com.google.gson.Gson().fromJson("{\"artefacts\":null,\"sunk\":null,\"pool\":-3}",
-        BloodRecord.class);
+    fresh.setCharge("a", 1);
+    fresh.setCharge("b", 2);
+    fresh.keepCharges(List.of("b"));
+    assertEquals(0, fresh.getCharge("a"));
+    assertEquals(2, fresh.getCharge("b"));
+    BloodRecord old = new com.google.gson.Gson().fromJson(
+        "{\"artefacts\":null,\"charges\":null,\"pending\":null,\"pool\":-3,\"resonance\":-1}", BloodRecord.class);
     old.normalize();
     assertTrue(old.getArtefacts().isEmpty());
-    assertTrue(old.getSunk().isEmpty());
+    assertTrue(old.getPending().isEmpty());
+    assertEquals(0, old.getCharge("x"));
     assertEquals(0, old.getPool());
+    assertEquals(0, old.getResonance());
+    BloodRecord odd = new com.google.gson.Gson().fromJson("{\"charges\":{\"a\":-1,\"b\":null,\"c\":2,\"d\":NaN}}",
+        BloodRecord.class);
+    odd.normalize();
+    assertEquals(0, odd.getCharge("a"));
+    assertEquals(2, odd.getCharge("c"));
   }
 }

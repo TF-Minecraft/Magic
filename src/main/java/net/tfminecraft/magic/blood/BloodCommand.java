@@ -111,7 +111,7 @@ public final class BloodCommand {
                 "draining", String.valueOf(record.getStage() == BloodStage.ASCENDED),
                 "resonance", String.format(Locale.ROOT, "%.1f", resonance),
                 "tier", String.valueOf(PoolConfig.band(resonance)),
-                "sunk", String.valueOf(BloodArtefacts.sunk(record)),
+                "charged", String.valueOf(BloodArtefacts.charged(record)),
                 "total", String.valueOf(BloodArtefacts.ids(record).size())));
     }
 

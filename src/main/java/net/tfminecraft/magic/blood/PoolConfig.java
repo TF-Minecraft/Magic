@@ -13,16 +13,17 @@ import java.util.logging.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 
 /**
- * The pool of blood (settings.yml pool:): how much the altar's pool holds and how fast its artefacts
- * drink it once the path is complete, what sacrifices pour back, what the path's artefacts are worth,
- * and the blood resonance each spell tier needs.
+ * The pool of blood (settings.yml pool:): how much the altar's pool holds, what charging artefacts in
+ * it costs once the path is complete, how fast blood resonance fades then, what sacrifices pour back,
+ * what the path's artefacts are worth, and the blood resonance each spell tier needs.
  */
 public final class PoolConfig {
 
     private record RankAmount(int upTo, double amount) {}
 
     private static double capacity;
-    private static double drainPerHour;
+    private static double decayPercent;
+    private static double bloodPerPoint;
     private static double floor;
     private static double strangerRefill;
     private static double defaultRefill;
@@ -39,7 +40,8 @@ public final class PoolConfig {
 
     static void reset() {
         capacity = 100;
-        drainPerHour = 0.5;
+        decayPercent = 1;
+        bloodPerPoint = 2;
         floor = 5;
         strangerRefill = 40;
         defaultRefill = 40;
@@ -55,7 +57,8 @@ public final class PoolConfig {
             return;
         }
         capacity = Math.max(1, pool.getDouble("capacity", 100));
-        drainPerHour = Math.max(0, pool.getDouble("drain_per_hour", 0.5));
+        decayPercent = Math.max(0, pool.getDouble("decay_percent_per_hour", 1));
+        bloodPerPoint = Math.max(0, pool.getDouble("blood_per_point", 2));
         floor = Math.max(0, pool.getDouble("floor", 5));
         strangerRefill = Math.max(0, pool.getDouble("refill.people.stranger", 40));
         defaultRefill = Math.max(0, pool.getDouble("refill.people.default", 40));
@@ -119,9 +122,14 @@ public final class PoolConfig {
         return capacity;
     }
 
-    /** Blood the pool loses per hour its character is played, once the path is complete. */
-    public static double drainPerHour() {
-        return drainPerHour;
+    /** Share (percent) of their blood resonance a mage loses per hour played, once the path is complete. */
+    public static double decayPercent() {
+        return decayPercent;
+    }
+
+    /** Pool blood one point of artefact charge costs, once the path is complete. */
+    public static double bloodPerPoint() {
+        return bloodPerPoint;
     }
 
     /** Blood resonance never sinks below this. */

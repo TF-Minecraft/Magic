@@ -219,8 +219,12 @@ public final class AltarService {
         }
         String character = currentCharacter(player);
         boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
-        WhisperService.tell(player, owner ? "blood.altar.sit." + stageKey(BloodRecords.get(character))
-                : "blood.altar.sit_stranger");
+        BloodRecord record = owner ? BloodRecords.get(character) : null;
+        WhisperService.tell(player, owner ? "blood.altar.sit." + stageKey(record) : "blood.altar.sit_stranger");
         BloodFx.play(owner ? "altar_sit" : "altar_touch_stranger", seat.getLocation(), player);
+        if (record != null && !BloodArtefacts.ids(record).isEmpty()) {
+            WhisperService.tell(player, "blood.meditate.start."
+                    + BloodMeditation.start(player, altar).name().toLowerCase(Locale.ROOT));
+        }
     }
 }

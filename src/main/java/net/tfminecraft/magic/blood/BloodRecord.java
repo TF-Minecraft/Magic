@@ -1,8 +1,11 @@
 package net.tfminecraft.magic.blood;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /** One character's blood path, saved as data/bloodmagic/characters/&lt;characterId&gt;.json. */
 public final class BloodRecord {
@@ -33,8 +36,12 @@ public final class BloodRecord {
     private boolean pendingBacklash;
     /** The path's artefacts handed out so far, one id per place (see {@link BloodArtefacts}). */
     private List<String> artefacts = new ArrayList<>();
-    /** Ids of the artefacts sunk into the altar's pool of blood. */
-    private List<String> sunk = new ArrayList<>();
+    /** Charge each artefact holds (by id), filled in the altar's pool and drawn by meditation. */
+    private Map<String, Double> charges = new HashMap<>();
+    /** Artefacts charging in the pool, given back once done (also after a restart). */
+    private List<String> pending = new ArrayList<>();
+    /** Blood resonance, drawn from charged artefacts in meditation. */
+    private double resonance;
     /** Blood in the altar's pool once the path is complete; null until then (a full pool). */
     private Double pool;
 
@@ -77,8 +84,15 @@ public final class BloodRecord {
         if (artefacts == null) {
             artefacts = new ArrayList<>();
         }
-        if (sunk == null) {
-            sunk = new ArrayList<>();
+        if (charges == null) {
+            charges = new HashMap<>();
+        }
+        charges.values().removeIf(charge -> charge == null || charge.isNaN() || charge <= 0);
+        if (pending == null) {
+            pending = new ArrayList<>();
+        }
+        if (resonance < 0 || Double.isNaN(resonance)) {
+            resonance = 0;
         }
         if (pool != null && (pool.isNaN() || pool < 0)) {
             pool = 0.0;
@@ -229,8 +243,34 @@ public final class BloodRecord {
         return artefacts;
     }
 
-    public List<String> getSunk() {
-        return sunk;
+    /** The charge an artefact holds; 0 for none. */
+    public double getCharge(String id) {
+        return charges.getOrDefault(id, 0.0);
+    }
+
+    public void setCharge(String id, double charge) {
+        if (charge > 0) {
+            charges.put(id, charge);
+        } else {
+            charges.remove(id);
+        }
+    }
+
+    /** Drops the charge of every artefact but these. */
+    public void keepCharges(Collection<String> ids) {
+        charges.keySet().retainAll(ids);
+    }
+
+    public List<String> getPending() {
+        return pending;
+    }
+
+    public double getResonance() {
+        return resonance;
+    }
+
+    public void setResonance(double resonance) {
+        this.resonance = Math.max(0, resonance);
     }
 
     /** The pool's blood, or null while it was never measured (full). */
@@ -247,6 +287,7 @@ public final class BloodRecord {
         return stage == BloodStage.NONE && path == BloodPath.NONE && whisper <= 0
                 && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
                 && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash
-                && artefacts.isEmpty() && sunk.isEmpty() && pool == null;
+                && artefacts.isEmpty() && charges.isEmpty() && pending.isEmpty() && resonance <= 0
+                && pool == null;
     }
 }

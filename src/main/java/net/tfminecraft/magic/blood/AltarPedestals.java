@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -28,6 +29,7 @@ import net.tfminecraft.interactiblefurniture.manager.FurnitureManager;
 import net.tfminecraft.interactiblefurniture.manager.handlers.FurniturePlacementHandler;
 import net.tfminecraft.interactiblefurniture.manager.handlers.InteractionHandler;
 import net.tfminecraft.magic.meditation.MeditationCache;
+import net.tfminecraft.magic.util.PedestalFx;
 
 /**
  * The altar sets out its own meditation ring: an InteractibleFurniture pedestal on every free spot
@@ -153,6 +155,39 @@ public final class AltarPedestals {
         chosen.getOrCreatePlacedSlot(slot.getId()).spawnDisplayStand(chosen.getLoc(), item, display, null);
         manager.persistFurniture(chosen);
         return true;
+    }
+
+    /** A blood artefact on one of the altar's loaded pedestals, and the point above it. */
+    public record Shown(Furniture furniture, PlacedSlot slot, ItemStack item, Location point) {}
+
+    /** The blood artefacts on the altar's loaded pedestals. */
+    static List<Shown> artefacts(BloodAltar altar) {
+        FurnitureManager manager = manager();
+        if (manager == null) {
+            return List.of();
+        }
+        Map<UUID, Furniture> placed = manager.getPlacedFurniture();
+        List<Shown> out = new ArrayList<>();
+        for (String id : altar.getPedestals()) {
+            Furniture furniture = find(placed, id);
+            SlotDefinition slot = furniture != null ? itemSlot(furniture) : null;
+            PlacedSlot active = slot != null ? furniture.getActiveSlot(slot.getId()).orElse(null) : null;
+            ItemStack item = active != null ? shown(active) : null;
+            Location point = BloodArtefacts.is(item) ? PedestalFx.artifactPoint(furniture) : null;
+            if (point != null) {
+                out.add(new Shown(furniture, active, item, point));
+            }
+        }
+        return out;
+    }
+
+    /** Shows each artefact on the altar's pedestals restyled (a charged one glows). */
+    static void restyle(BloodAltar altar, UnaryOperator<ItemStack> style) {
+        FurnitureManager manager = manager();
+        for (Shown shown : artefacts(altar)) {
+            shown.slot().setCurrentItem(style.apply(shown.item().clone()));
+            manager.persistFurniture(shown.furniture());
+        }
     }
 
     /** The pedestal's first slot for an item (not for nested furniture), or null. */

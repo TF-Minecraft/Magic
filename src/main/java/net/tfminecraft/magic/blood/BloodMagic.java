@@ -37,6 +37,8 @@ public final class BloodMagic {
         }
         MagicTickService.register(BloodMagic::tick);
         CarryService.startTicking(plugin);
+        BloodCharging.startTicking(plugin);
+        BloodMeditation.startTicking(plugin);
         AltarCandles.startTicking(plugin);
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
     }
@@ -63,6 +65,7 @@ public final class BloodMagic {
             ambient();
         }
         WhisperService.tick(context);
+        BloodAmbience.tick(System.currentTimeMillis());
         AnimalRiteService.tick();
         QuestionService.tick();
         CharacterRiteService.tick();
@@ -119,6 +122,9 @@ public final class BloodMagic {
         }
         BloodPerms.clearAll();
         CarryService.clear();
+        BloodMeditation.clear();
+        BloodCharging.clear();
+        BloodAmbience.clear();
         CharacterRiteService.clear();
         BondService.clear();
         AnimalRiteService.releaseAll();

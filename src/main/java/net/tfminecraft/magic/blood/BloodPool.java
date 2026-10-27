@@ -4,11 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 /**
- * The altar's pool of blood and the blood resonance it holds up. The artefacts sunk in the pool give
- * the resonance (their share of what the path's artefacts are worth); the pool caps it at its level.
- * It stays full while the path goes on. Once the path is complete, the sunk artefacts drink it by the
- * hour the character is played, and only people sacrificed on the altar fill it again. Resonance never
- * sinks below the floor, so the lowest spells always work.
+ * The altar's pool of blood and the blood resonance it feeds. Artefacts charge in the pool, and
+ * meditating among the charged ones draws their charge into blood resonance, up to what the path's
+ * artefacts are worth. While the path goes on, charging is free and resonance keeps. Once the path is
+ * complete, charging costs pool blood, resonance fades by the hour the character is played, and only
+ * people sacrificed on the altar fill the pool again. Resonance never sinks below the floor, so the
+ * lowest spells always work.
  */
 public final class BloodPool {
 
@@ -20,16 +21,17 @@ public final class BloodPool {
         return pool != null ? Math.min(pool, PoolConfig.capacity()) : PoolConfig.capacity();
     }
 
-    /** The character's blood resonance now; the floor without a path's class. */
+    /** The most blood resonance the path's artefacts can give now. */
+    static double cap(BloodRecord record) {
+        return BloodArtefacts.maxCharge(record) * BloodArtefacts.ids(record).size();
+    }
+
+    /** The character's blood resonance now, never below the floor; the floor without a path's class. */
     public static double resonance(BloodRecord record) {
         if (record == null) {
             return PoolConfig.floor();
         }
-        int places = BloodArtefacts.ids(record).size();
-        int reached = record.getStage() == BloodStage.ASCENDED ? Integer.MAX_VALUE : record.getFinalsDone();
-        double artefacts = places == 0 ? 0
-                : PoolConfig.worth(record.getPath(), reached) * BloodArtefacts.sunk(record) / places;
-        return Math.max(PoolConfig.floor(), Math.min(artefacts, level(record)));
+        return Math.max(PoolConfig.floor(), Math.min(record.getResonance(), cap(record)));
     }
 
     /** How the pool looks to its owner: full, half, low or dry. */
@@ -42,27 +44,40 @@ public final class BloodPool {
         return level >= capacity * 0.75 ? "full" : level >= capacity * 0.25 ? "half" : "low";
     }
 
-    /** Every minute: the pools of mages online whose path is complete drain; they hear it thin. */
+    /**
+     * Takes the blood for this much charge from the pool and returns the charge it paid for: all of it
+     * while the path goes on, else as much as the pool holds.
+     */
+    static double pay(BloodRecord record, double charge) {
+        double price = PoolConfig.bloodPerPoint();
+        if (record.getStage() != BloodStage.ASCENDED || price <= 0) {
+            return charge;
+        }
+        double level = level(record);
+        double paid = Math.min(charge, level / price);
+        record.setPool(level - paid * price);
+        return paid;
+    }
+
+    /**
+     * Every minute: mages online whose path is complete lose a share of their blood resonance (never
+     * below the floor) and hear it when a tier slips away.
+     */
     static void tick() {
-        double drain = PoolConfig.drainPerHour() / 60.0;
-        if (drain <= 0) {
+        double share = PoolConfig.decayPercent() / 100.0 / 60.0;
+        if (share <= 0) {
             return;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             BloodRecord record = BloodRecords.get(AltarService.currentCharacter(player));
-            if (record == null || record.getStage() != BloodStage.ASCENDED || BloodArtefacts.sunk(record) == 0) {
-                continue;
-            }
-            double level = level(record);
-            if (level <= 0) {
+            if (record == null || record.getStage() != BloodStage.ASCENDED
+                    || record.getResonance() <= PoolConfig.floor()) {
                 continue;
             }
             int before = PoolConfig.band(resonance(record));
-            record.setPool(Math.max(0, level - drain));
+            record.setResonance(Math.max(PoolConfig.floor(), record.getResonance() * (1 - share)));
             BloodRecords.save(record);
-            if (record.getPool() <= 0) {
-                WhisperService.tell(player, "blood.pool.dry");
-            } else if (PoolConfig.band(resonance(record)) < before) {
+            if (PoolConfig.band(resonance(record)) < before) {
                 WhisperService.tell(player, "blood.pool.thinned");
             }
         }

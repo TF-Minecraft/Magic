@@ -29,6 +29,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
@@ -79,11 +80,9 @@ public final class BloodListener implements Listener {
                 return;
             }
             if (BloodArtefacts.is(held)) {
-                BloodArtefacts.Sink sunk = BloodArtefacts.sink(player, altar, held);
+                BloodCharging.Start start = BloodCharging.start(player, altar, held);
                 player.getInventory().setItemInMainHand(held.getAmount() > 0 ? held : null);
-                WhisperService.tell(player, "blood.artefact.sink." + sunk.name().toLowerCase(Locale.ROOT));
-                BloodFx.play(sunk == BloodArtefacts.Sink.NOT_YOURS ? "altar_touch_stranger" : "artefact_sunk",
-                        altar.center(), player);
+                WhisperService.tell(player, "blood.artefact.charge." + start.name().toLowerCase(Locale.ROOT));
                 return;
             }
             AltarService.touch(player, altar);
@@ -159,6 +158,12 @@ public final class BloodListener implements Listener {
             event.setCancelled(true);
             player.sendMessage(Messages.get("blood.altar.pedestal_bound"));
         }
+    }
+
+    /** A meditating mage's swing catches the drop of blood they aim at. */
+    @EventHandler
+    public void onSwing(PlayerAnimationEvent event) {
+        BloodMeditation.swing(event.getPlayer());
     }
 
     /** Only the character an artefact is bound to may take it off a pedestal. */
@@ -377,6 +382,8 @@ public final class BloodListener implements Listener {
         QuestionService.forget(event.getPlayer().getUniqueId());
         CarryService.drop(event.getPlayer().getUniqueId());
         BloodSpellGate.forget(event.getPlayer().getUniqueId());
+        BloodMeditation.stop(event.getPlayer().getUniqueId());
+        BloodAmbience.forget(event.getPlayer().getUniqueId());
         BloodPerms.clear(event.getPlayer());
     }
 
@@ -401,6 +408,7 @@ public final class BloodListener implements Listener {
         BloodBoons.clear(event.getPlayer());
         BloodPerms.clear(event.getPlayer());
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
+        BloodMeditation.stop(event.getPlayer().getUniqueId());
     }
 
     private static boolean touchesAltar(List<Block> blocks) {

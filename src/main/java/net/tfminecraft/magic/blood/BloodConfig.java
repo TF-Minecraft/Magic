@@ -143,6 +143,7 @@ public final class BloodConfig {
         HuntConfig.load(config.getConfigurationSection("hunt"), config.getConfigurationSection("bonds"),
                 config.getConfigurationSection("finals"), log);
         PoolConfig.load(config.getConfigurationSection("pool"), log);
+        MeditationConfig.load(config.getConfigurationSection("meditation"));
         ArtefactConfig.load(config.getConfigurationSection("artefacts"), log);
         BloodFx.load(config.getConfigurationSection("fx"), log);
         return ok;
@@ -208,6 +209,7 @@ public final class BloodConfig {
         ChoiceConfig.reset();
         HuntConfig.reset();
         PoolConfig.reset();
+        MeditationConfig.reset();
         ArtefactConfig.reset();
         BloodFx.reset();
     }

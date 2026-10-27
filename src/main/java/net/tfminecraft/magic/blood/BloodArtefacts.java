@@ -17,24 +17,17 @@ import net.tfminecraft.magic.util.ItemRef;
 import net.tfminecraft.magic.util.MagicText;
 
 /**
- * The path's artefacts: bound to one character, set out on its altar's pedestals when the path's
- * class is given (and, on the true path, one more in place of an older one at every final), and only
- * of use once sunk into the altar's pool of blood. Each holds a place; its id names the place and what
- * fills it (devotee:3, true:hunt:3, true:final:3), so an artefact whose place was filled again since
- * dissolves instead of sinking. They are not Magic artifacts: no aura, no wear, no use in mage gear.
+ * The path's artefacts: bound to one character and set out on its altar's pedestals when the path's
+ * class is given (and, on the true path, one more in place of an older one at every final). Each
+ * holds a charge, filled in the altar's pool of blood (see {@link BloodCharging}) and drawn into blood
+ * resonance by meditating among them (see {@link BloodMeditation}); a charged one glows. Each holds a
+ * place; its id names the place and what fills it (devotee:3, true:hunt:3, true:final:3), so one whose
+ * place was filled again since is of no more use. They are not Magic artifacts: no aura, no wear, no
+ * use in mage gear.
  */
 public final class BloodArtefacts {
 
     static final String KIND = "artefact";
-
-    /** What sinking an artefact into the pool came to. */
-    public enum Sink {
-        SUNK,
-        ALL_SUNK,
-        NOT_YOURS,
-        STALE,
-        ALREADY
-    }
 
     private BloodArtefacts() {}
 
@@ -85,11 +78,18 @@ public final class BloodArtefacts {
         }
     }
 
-    /** How many of the character's artefacts are in the pool now. */
-    static int sunk(BloodRecord record) {
+    /** The most charge one artefact holds: an equal share of what the path's artefacts are worth. */
+    static double maxCharge(BloodRecord record) {
+        int places = ids(record).size();
+        int reached = record.getStage() == BloodStage.ASCENDED ? Integer.MAX_VALUE : record.getFinalsDone();
+        return places == 0 ? 0 : PoolConfig.worth(record.getPath(), reached) / places;
+    }
+
+    /** How many of the character's current artefacts hold any charge. */
+    static int charged(BloodRecord record) {
         int count = 0;
         for (String id : ids(record)) {
-            if (record.getSunk().contains(id)) {
+            if (record.getCharge(id) > 0) {
                 count++;
             }
         }
@@ -127,6 +127,14 @@ public final class BloodArtefacts {
         pdc.set(idKey(), PersistentDataType.STRING, id);
         item.setItemMeta(meta);
         BloodLooks.protect(item);
+        return styled(record, item);
+    }
+
+    /** The artefact glowing while its place holds charge, plain once drained. */
+    static ItemStack styled(BloodRecord record, ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        meta.setEnchantmentGlintOverride(record.getCharge(id(item)) > 0);
+        item.setItemMeta(meta);
         return item;
     }
 
@@ -154,8 +162,8 @@ public final class BloodArtefacts {
     /**
      * Hands out every artefact the character holds a place for but was not given yet: onto the altar's
      * pedestals (in place of the one it follows, else on a free one), or into the inventory when none is
-     * free or loaded. One that follows an artefact in the pool takes that one's place there: the old one
-     * stops counting. Returns how many were handed out.
+     * free or loaded. One that takes another's place starts without charge, and the old one's charge
+     * goes. Returns how many were handed out.
      */
     public static int sync(Player player) {
         String character = AltarService.currentCharacter(player);
@@ -181,7 +189,8 @@ public final class BloodArtefacts {
         }
         record.getArtefacts().clear();
         record.getArtefacts().addAll(wanted);
-        record.getSunk().retainAll(wanted);
+        record.keepCharges(wanted);
+        record.getPending().retainAll(wanted);
         BloodRecords.save(record);
         if (given > 0) {
             WhisperService.tell(player, given > 1 ? "blood.artefact.given" : "blood.artefact.replaced");
@@ -190,49 +199,53 @@ public final class BloodArtefacts {
         return given;
     }
 
-    /** Runs {@link #sync} on the next tick, if the player is still online then. */
+    /**
+     * Runs {@link #sync} and {@link #deliverPending} on the next tick, if the player is still online
+     * then.
+     */
     public static void syncSoon(Player player) {
         Bukkit.getScheduler().runTask(Magic.plugin, () -> {
             if (player.isOnline()) {
                 sync(player);
+                deliverPending(player);
             }
         });
     }
 
     /**
-     * The player sinks the held artefact into their own altar's pool. Anything but NOT_YOURS uses the
-     * item up: an artefact whose place was filled anew, or a copy of one already in the pool, crumbles.
+     * Gives back the artefacts that finished charging while their owner was away (or the server
+     * stopped), and returns how many.
      */
-    public static Sink sink(Player player, BloodAltar altar, ItemStack held) {
-        String character = AltarService.currentCharacter(player);
-        BloodRecord record = BloodRecords.get(character);
-        if (record == null || !character.equalsIgnoreCase(altar.getOwnerCharacter())
-                || !character.equalsIgnoreCase(BloodItems.owner(held))) {
-            return Sink.NOT_YOURS;
-        }
-        String id = id(held);
-        held.setAmount(held.getAmount() - 1);
-        if (!ids(record).contains(id)) {
-            return Sink.STALE;
-        }
-        if (record.getSunk().contains(id)) {
-            return Sink.ALREADY;
-        }
-        record.getSunk().add(id);
-        BloodRecords.save(record);
-        return sunk(record) >= ids(record).size() ? Sink.ALL_SUNK : Sink.SUNK;
-    }
-
-    /** Staff: gives the player every one of their current artefacts that is not in the pool. */
-    public static int regive(Player player) {
+    public static int deliverPending(Player player) {
         BloodRecord record = BloodRecords.get(AltarService.currentCharacter(player));
+        if (record == null || record.getPending().isEmpty()) {
+            return 0;
+        }
         int given = 0;
-        for (String id : ids(record)) {
-            if (!record.getSunk().contains(id)) {
+        for (String id : List.copyOf(record.getPending())) {
+            if (BloodCharging.isCharging(record.getCharacterId(), id)) {
+                continue;
+            }
+            record.getPending().remove(id);
+            if (ids(record).contains(id)) {
                 WhisperService.give(player, create(record, id));
                 given++;
             }
         }
+        BloodRecords.save(record);
+        if (given > 0) {
+            WhisperService.tell(player, "blood.artefact.returned");
+        }
         return given;
+    }
+
+    /** Staff: gives the player a fresh copy of each of their current artefacts. */
+    public static int regive(Player player) {
+        BloodRecord record = BloodRecords.get(AltarService.currentCharacter(player));
+        List<String> ids = ids(record);
+        for (String id : ids) {
+            WhisperService.give(player, create(record, id));
+        }
+        return ids.size();
     }
 }

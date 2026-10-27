@@ -266,6 +266,23 @@ fx:
       - { sound: item.armor.equip_leather, volume: 1.0, pitch: 0.6 }
       - { sound: entity.warden.heartbeat, volume: 0.8, pitch: 0.8, delay: 6 }
       - { particle: DUST_COLOR_TRANSITION, color: "#8a0303", to: "#1a0000", size: 1.4, shape: column, height: 2.0, points: 14 }
+    # --- Artefacts and meditation ---
+    artefact_charge:
+      - { sound: entity.generic.splash, volume: 0.5, pitch: 0.5 }
+      - { sound: block.lava.pop, volume: 0.6, pitch: 0.6, delay: 10 }
+      - { particle: DUST_COLOR_TRANSITION, color: "#c40c0c", to: "#1a0000", size: 1.4, shape: ring, radius: 0.5, points: 16, y: 0.1 }
+    artefact_charge_beat:
+      - { sound: entity.warden.heartbeat, volume: 0.6, pitch: 0.6 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 4, spread: [0.3, 0.05, 0.3], y: 0.2 }
+    artefact_charged:
+      - { sound: block.respawn_anchor.charge, volume: 0.6, pitch: 0.6 }
+      - { sound: block.amethyst_block.resonate, volume: 0.5, pitch: 0.5, delay: 4, private: true }
+      - { particle: DUST_COLOR_TRANSITION, color: "#d10202", to: "#3a0000", size: 1.4, shape: spiral, radius: 0.5, height: 1.2, points: 24 }
+    meditate_catch:
+      - { sound: block.honey_block.break, volume: 0.6, pitch: 0.6, private: true }
+      - { sound: block.amethyst_cluster.hit, volume: 0.4, pitch: 0.5, private: true }
+    meditate_miss:
+      - { sound: entity.player.hurt, volume: 0.5, pitch: 0.7, private: true }
     armour_crumbles:
       - { sound: entity.item.break, volume: 1.0, pitch: 0.5 }
       - { sound: block.soul_sand.break, volume: 0.8, pitch: 0.6 }
