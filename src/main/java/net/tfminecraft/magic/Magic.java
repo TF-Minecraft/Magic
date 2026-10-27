@@ -332,6 +332,7 @@ public class Magic extends JavaPlugin {
             "wildmagic/bloodmagic/corruption.yml",
             "wildmagic/bloodmagic/choice.yml",
             "wildmagic/bloodmagic/armour.yml",
+            "wildmagic/bloodmagic/artefacts.yml",
             "wildmagic/bloodmagic/fx.yml",
             "wildmagic/bloodmagic/messages.yml",
             "gear/archetypes.yml",

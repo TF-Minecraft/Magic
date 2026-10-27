@@ -18,7 +18,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
  * Settings from the wildmagic/bloodmagic folder (settings, items, voices, animals, corruption, choice,
- * armour and fx files, merged; messages.yml is read by Messages). Defaults keep the feature safe when
+ * armour, artefacts and fx files, merged; messages.yml is read by Messages). Defaults keep the feature safe when
  * a key is missing.
  */
 public final class BloodConfig {
@@ -142,6 +142,8 @@ public final class BloodConfig {
         ChoiceConfig.loadPermissions(config.getConfigurationSection("permissions"));
         HuntConfig.load(config.getConfigurationSection("hunt"), config.getConfigurationSection("bonds"),
                 config.getConfigurationSection("finals"), log);
+        PoolConfig.load(config.getConfigurationSection("pool"), log);
+        ArtefactConfig.load(config.getConfigurationSection("artefacts"), log);
         BloodFx.load(config.getConfigurationSection("fx"), log);
         return ok;
     }
@@ -205,6 +207,8 @@ public final class BloodConfig {
         CorruptionConfig.reset();
         ChoiceConfig.reset();
         HuntConfig.reset();
+        PoolConfig.reset();
+        ArtefactConfig.reset();
         BloodFx.reset();
     }
 

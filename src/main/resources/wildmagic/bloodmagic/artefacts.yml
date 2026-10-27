@@ -1,0 +1,42 @@
+# The path's artefacts. Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content:
+# never on the wiki.
+
+# Bound to one character and set out on its altar's pedestals: the devotee's when it kneels, the true
+# path's when its hunt is done. Each only counts once its owner sinks it into the altar's pool of blood
+# (right-click the altar with it), and each gives an equal share of the path's blood resonance
+# (settings.yml pool.worth). They are not Magic artifacts: no aura, no wear, no use in mage gear.
+# Each entry: { item: TLibs path, name, lore: [lines] }; without lore the path's shared lore is used.
+artefacts:
+  devotee_lore:
+    - "§7§oA small gift from the Blood Father."
+    - "§7§oIt only wakes in the pool of blood."
+  devotee:
+    - { item: ia.tfmc_magic:oseni_ring_147, name: "#8a0303Clotted Ring" }
+    - { item: ia.tfmc_magic:oseni_ring_172, name: "#8a0303Ring of the Kneeling" }
+    - { item: ia.tfmc_magic:oseni_bracelet_152, name: "#8a0303Bloodstained Bracelet" }
+    - { item: ia.tfmc_magic:oseni_amulet_156, name: "#8a0303Amulet of Small Mercies" }
+    - { item: ia.tfmc_magic:oseni_amulet_159, name: "#8a0303Red Tear Amulet" }
+    - { item: ia.tfmc_magic:oseni_necklace_197, name: "#8a0303Vein Necklace" }
+    - { item: ia.tfmc_magic:oseni_gem_164, name: "#8a0303Clot Stone" }
+    - { item: ia.tfmc_magic:oseni_brooch_13, name: "#8a0303Brooch of the Father" }
+  "true":
+    lore:
+      - "§7§oTaken, not given."
+      - "§7§oIt only wakes in the pool of blood."
+    hunt:
+      - { item: ia.tfmc_magic:oseni_orb_0, name: "#5c0202Hunter's Orb" }
+      - { item: ia.tfmc_magic:bloodmagic_eye_orb_18, name: "#5c0202The Watching Eye" }
+      - { item: ia.tfmc_magic:oseni_book_20, name: "#5c0202Book of Names" }
+      - { item: ia.tfmc_magic:oseni_book_35, name: "#5c0202Book of Measures" }
+      - { item: ia.tfmc_magic:oseni_brooch_15, name: "#5c0202Brooch of the First Cut" }
+      - { item: ia.tfmc_magic:oseni_amulet_195, name: "#5c0202Amulet of Red Silence" }
+      - { item: ia.tfmc_magic:shared_brooch_17, name: "#5c0202Brooch of Hollow Ties" }
+      - { item: ia.tfmc_magic:bloodmagic_book_27, name: "#5c0202The Red Ledger" }
+    # The Nth final sacrifice's artefact takes the place of the Nth hunt artefact; {victim} is the name
+    # of that final's victim.
+    finals:
+      - { item: ia.tfmc_magic:necromancy_jar_117, name: "#5c0202Heart of {victim}", lore: ["§7§oAll that is left of them.", "§7§oIt only wakes in the pool of blood."] }
+      - { item: ia.tfmc_magic:necromancy_jar_117, name: "#5c0202Heart of {victim}", lore: ["§7§oAll that is left of them.", "§7§oIt only wakes in the pool of blood."] }
+      - { item: ia.tfmc_magic:necromancy_jar_117, name: "#5c0202Heart of {victim}", lore: ["§7§oAll that is left of them.", "§7§oIt only wakes in the pool of blood."] }
+      - { item: ia.tfmc_magic:necromancy_jar_117, name: "#5c0202Heart of {victim}", lore: ["§7§oAll that is left of them.", "§7§oIt only wakes in the pool of blood."] }
+      - { item: ia.tfmc_magic:bloodmagic_eye_orb_19, name: "#5c0202Eye of {victim}", lore: ["§7§oThe closest of them all.", "§7§oIt only wakes in the pool of blood."] }

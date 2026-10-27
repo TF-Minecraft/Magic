@@ -25,7 +25,8 @@ import net.tfminecraft.magic.integration.RpCharactersBridge;
  * Character sacrifices. A knocked-out character near the altar is dragged onto it with the mage's
  * blood knife; once the short rite ends the character dies for good, whatever happens to the
  * knockout meanwhile. In the hunt it earns points by how much the victim mattered (the closest
- * are kept for the finals); in the finals only the named target counts.
+ * are kept for the finals); in the finals only the named target counts. Once the path is complete,
+ * anyone the hunt would take fills the altar's pool of blood, by how close they were.
  */
 public final class CharacterRiteService {
 
@@ -96,7 +97,8 @@ public final class CharacterRiteService {
             return Bind.BUSY;
         }
         String victimAccount = victim.getUniqueId().toString();
-        int rank = record.getStage() == BloodStage.HUNT ? BondService.rank(mage, victimCharacter) : 0;
+        boolean ranked = record.getStage() == BloodStage.HUNT || record.getStage() == BloodStage.ASCENDED;
+        int rank = ranked ? BondService.rank(mage, victimCharacter) : 0;
         int points = record.getStage() == BloodStage.HUNT ? HuntConfig.points(rank) : 0;
         if (!RpCharactersBridge.moveDowned(victim, top.clone().add(0, 0.5, 0))) {
             return Bind.BLOCKED;
@@ -110,18 +112,22 @@ public final class CharacterRiteService {
     }
 
     /**
-     * Whether this victim may be taken now: TOO_NEW, REPEAT (hunt only; a named final target must stay
-     * takeable), RESERVED (the closest are kept for the finals), WAITING, NOT_TARGET; null when they may.
+     * Whether this victim may be taken now: TOO_NEW, REPEAT (in the hunt and once the path is complete;
+     * a named final target must stay takeable), RESERVED (in the hunt the closest are kept for the
+     * finals), WAITING, NOT_TARGET; null when they may.
      */
     static Bind eligibility(Player mage, BloodRecord record, Player victim, String victimCharacter) {
         if (RpCharactersBridge.playtimeSeconds(victim) < HuntConfig.minPlaytimeHours() * 3600
                 || RpCharactersBridge.characterAgeSeconds(victim) < HuntConfig.minAgeDays() * 86_400) {
             return Bind.TOO_NEW;
         }
-        if (record.getStage() == BloodStage.HUNT) {
+        if (record.getStage() == BloodStage.HUNT || record.getStage() == BloodStage.ASCENDED) {
             if (HuntConfig.noRepeatPlayer()
                     && victim.getUniqueId().toString().equalsIgnoreCase(record.getLastVictimAccount())) {
                 return Bind.REPEAT;
+            }
+            if (record.getStage() == BloodStage.ASCENDED) {
+                return null;
             }
             int rank = BondService.rank(mage, victimCharacter);
             return rank >= 1 && rank <= HuntConfig.finalCount() ? Bind.RESERVED : null;
@@ -192,7 +198,8 @@ public final class CharacterRiteService {
     /** NOT_STAGE or NOT_KNIFE when the mage may not take anyone now, else null. */
     static Bind readiness(Player mage, String character, BloodRecord record) {
         if (!BloodConfig.isEnabled() || record == null
-                || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL)) {
+                || (record.getStage() != BloodStage.HUNT && record.getStage() != BloodStage.FINAL
+                        && record.getStage() != BloodStage.ASCENDED)) {
             return Bind.NOT_STAGE;
         }
         ItemStack knife = mage.getInventory().getItemInMainHand();
@@ -279,6 +286,8 @@ public final class CharacterRiteService {
             }
         } else if (stage == BloodStage.FINAL && key.equalsIgnoreCase(record.currentTarget())) {
             FinalService.completed(mage, record);
+        } else if (stage == BloodStage.ASCENDED) {
+            BloodPool.fedPerson(mage, record, rite.rank());
         } else {
             BloodRecords.save(record);
         }

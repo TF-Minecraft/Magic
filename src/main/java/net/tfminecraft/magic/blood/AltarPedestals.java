@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -12,12 +13,16 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import net.tfminecraft.interactiblefurniture.InteractibleFurniture;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.interactiblefurniture.furniture.FurnitureType;
+import net.tfminecraft.interactiblefurniture.furniture.PlacedSlot;
+import net.tfminecraft.interactiblefurniture.furniture.SlotDefinition;
 import net.tfminecraft.interactiblefurniture.loaders.FurnitureLoader;
 import net.tfminecraft.interactiblefurniture.manager.FurnitureManager;
 import net.tfminecraft.interactiblefurniture.manager.handlers.FurniturePlacementHandler;
@@ -112,6 +117,65 @@ public final class AltarPedestals {
             count++;
         }
         return count;
+    }
+
+    /**
+     * Sets the item on one of the altar's loaded pedestals: the one showing the artefact with the
+     * replaced id (which goes), else the first empty one. False when none is loaded and free.
+     */
+    public static boolean offer(BloodAltar altar, ItemStack item, String replaced) {
+        FurnitureManager manager = manager();
+        if (manager == null || item == null) {
+            return false;
+        }
+        Map<UUID, Furniture> placed = manager.getPlacedFurniture();
+        Furniture chosen = null;
+        for (String id : altar.getPedestals()) {
+            Furniture furniture = find(placed, id);
+            SlotDefinition slot = furniture != null ? itemSlot(furniture) : null;
+            if (slot == null || !(Bukkit.getEntity(furniture.getEntityId()) instanceof ItemDisplay)) {
+                continue;
+            }
+            Optional<PlacedSlot> active = furniture.getActiveSlot(slot.getId());
+            if (active.isEmpty()) {
+                chosen = chosen != null ? chosen : furniture;
+            } else if (replaced != null && replaced.equals(BloodArtefacts.id(shown(active.get())))) {
+                furniture.removeActiveSlot(slot.getId());
+                chosen = furniture;
+                break;
+            }
+        }
+        if (chosen == null) {
+            return false;
+        }
+        SlotDefinition slot = itemSlot(chosen);
+        ItemDisplay display = (ItemDisplay) Bukkit.getEntity(chosen.getEntityId());
+        chosen.getOrCreatePlacedSlot(slot.getId()).spawnDisplayStand(chosen.getLoc(), item, display, null);
+        manager.persistFurniture(chosen);
+        return true;
+    }
+
+    /** The pedestal's first slot for an item (not for nested furniture), or null. */
+    private static SlotDefinition itemSlot(Furniture furniture) {
+        FurnitureType type = furniture.getType();
+        if (type == null) {
+            return null;
+        }
+        for (SlotDefinition slot : type.getSlots().values()) {
+            if (!slot.isFurnitureSlot()) {
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    /** What a slot shows: its item, or the item on its display stand. */
+    private static ItemStack shown(PlacedSlot slot) {
+        if (slot.getCurrentItem() != null || slot.getDisplayStandId() == null) {
+            return slot.getCurrentItem();
+        }
+        Entity stand = Bukkit.getEntity(slot.getDisplayStandId());
+        return stand instanceof ItemDisplay display ? display.getItemStack() : null;
     }
 
     /**

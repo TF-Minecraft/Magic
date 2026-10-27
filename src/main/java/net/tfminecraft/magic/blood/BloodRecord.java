@@ -31,6 +31,12 @@ public final class BloodRecord {
     private long nextFinalAt;
     /** A failed sacrifice whose backlash waits for the mage to come online. */
     private boolean pendingBacklash;
+    /** The path's artefacts handed out so far, one id per place (see {@link BloodArtefacts}). */
+    private List<String> artefacts = new ArrayList<>();
+    /** Ids of the artefacts sunk into the altar's pool of blood. */
+    private List<String> sunk = new ArrayList<>();
+    /** Blood in the altar's pool once the path is complete; null until then (a full pool). */
+    private Double pool;
 
     /**
      * One character sacrificed at the altar. rank: the victim's closeness rank when taken (1 = closest),
@@ -67,6 +73,15 @@ public final class BloodRecord {
         }
         if (finalTargets == null) {
             finalTargets = new ArrayList<>();
+        }
+        if (artefacts == null) {
+            artefacts = new ArrayList<>();
+        }
+        if (sunk == null) {
+            sunk = new ArrayList<>();
+        }
+        if (pool != null && (pool.isNaN() || pool < 0)) {
+            pool = 0.0;
         }
         if (whisper < 0 || Double.isNaN(whisper)) {
             whisper = 0;
@@ -210,10 +225,28 @@ public final class BloodRecord {
         this.pendingBacklash = pendingBacklash;
     }
 
+    public List<String> getArtefacts() {
+        return artefacts;
+    }
+
+    public List<String> getSunk() {
+        return sunk;
+    }
+
+    /** The pool's blood, or null while it was never measured (full). */
+    public Double getPool() {
+        return pool;
+    }
+
+    public void setPool(Double pool) {
+        this.pool = pool == null ? null : Math.max(0, pool);
+    }
+
     /** True when the record carries nothing worth keeping on disk. */
     public boolean isEmpty() {
         return stage == BloodStage.NONE && path == BloodPath.NONE && whisper <= 0
                 && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
-                && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash;
+                && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash
+                && artefacts.isEmpty() && sunk.isEmpty() && pool == null;
     }
 }

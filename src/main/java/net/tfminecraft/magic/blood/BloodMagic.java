@@ -32,6 +32,9 @@ public final class BloodMagic {
         if (plugin.getServer().getPluginManager().isPluginEnabled("MMOCore")) {
             plugin.getServer().getPluginManager().registerEvents(new MmoClassRewards(), plugin);
         }
+        if (plugin.getServer().getPluginManager().isPluginEnabled("MythicLib")) {
+            plugin.getServer().getPluginManager().registerEvents(new BloodSpellGate(), plugin);
+        }
         MagicTickService.register(BloodMagic::tick);
         CarryService.startTicking(plugin);
         AltarCandles.startTicking(plugin);
@@ -74,6 +77,7 @@ public final class BloodMagic {
         }
         if (context.everyMinutes(1)) {
             AltarCorruption.ambient();
+            BloodPool.tick();
             BloodNotes.tick(System.currentTimeMillis());
             StolenClues.tick();
         }

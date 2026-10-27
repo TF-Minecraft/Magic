@@ -183,8 +183,12 @@ public final class AltarService {
         String character = currentCharacter(player);
         boolean owner = character != null && character.equalsIgnoreCase(altar.getOwnerCharacter());
         BloodFx.play(owner ? "altar_touch_owner" : "altar_touch_stranger", altar.center(), player);
-        WhisperService.tell(player, owner ? "blood.altar.touch." + stageKey(BloodRecords.get(character))
-                : "blood.altar.stranger_touch");
+        BloodRecord record = owner ? BloodRecords.get(character) : null;
+        String key = stageKey(record);
+        if (record != null && record.getStage() == BloodStage.ASCENDED) {
+            key += "_" + BloodPool.state(record);
+        }
+        WhisperService.tell(player, owner ? "blood.altar.touch." + key : "blood.altar.stranger_touch");
     }
 
     /** The stage (and, once chosen, the path) a line is written for: animal, choice, hunt, final_true... */

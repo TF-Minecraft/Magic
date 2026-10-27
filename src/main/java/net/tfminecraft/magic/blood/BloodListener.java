@@ -40,6 +40,7 @@ import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureBreakEvent;
 import net.tfminecraft.interactiblefurniture.events.FurnitureInteractEvent;
 import net.tfminecraft.interactiblefurniture.events.FurniturePlaceEvent;
+import net.tfminecraft.interactiblefurniture.events.FurnitureSlotItemTakeEvent;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
 import net.tfminecraft.rpcharacters.chat.CharacterChatEvent;
@@ -75,6 +76,14 @@ public final class BloodListener implements Listener {
             Player carried = CarryService.carried(player);
             if (carried != null && BloodItems.is(held, BloodItemKind.BLOOD_KNIFE)) {
                 layDown(player, carried);
+                return;
+            }
+            if (BloodArtefacts.is(held)) {
+                BloodArtefacts.Sink sunk = BloodArtefacts.sink(player, altar, held);
+                player.getInventory().setItemInMainHand(held.getAmount() > 0 ? held : null);
+                WhisperService.tell(player, "blood.artefact.sink." + sunk.name().toLowerCase(Locale.ROOT));
+                BloodFx.play(sunk == BloodArtefacts.Sink.NOT_YOURS ? "altar_touch_stranger" : "artefact_sunk",
+                        altar.center(), player);
                 return;
             }
             AltarService.touch(player, altar);
@@ -152,6 +161,19 @@ public final class BloodListener implements Listener {
         }
     }
 
+    /** Only the character an artefact is bound to may take it off a pedestal. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSlotTake(FurnitureSlotItemTakeEvent event) {
+        if (!BloodArtefacts.is(event.getItem())) {
+            return;
+        }
+        String character = AltarService.currentCharacter(event.getPlayer());
+        if (character == null || !character.equalsIgnoreCase(BloodItems.owner(event.getItem()))) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Messages.get("blood.artefact.not_yours"));
+        }
+    }
+
     /** Sitting on the altar with /sit is how its owner meditates there; the stone answers. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMount(EntityMountEvent event) {
@@ -183,10 +205,12 @@ public final class BloodListener implements Listener {
         }
     }
 
-    /** A dead owner's blood armour crumbles when someone tries to pick it up. */
+    /** A dead owner's blood armour and artefacts crumble when someone tries to pick them up. */
     @EventHandler(ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
-        if (BloodArmour.crumbles(event.getItem().getItemStack())) {
+        ItemStack stack = event.getItem().getItemStack();
+        if (BloodArmour.crumbles(stack)
+                || BloodArtefacts.is(stack) && AltarService.isDead(BloodItems.owner(stack))) {
             event.setCancelled(true);
             BloodFx.play("armour_crumbles", event.getItem().getLocation());
             event.getItem().remove();
@@ -352,6 +376,7 @@ public final class BloodListener implements Listener {
         AnimalRiteService.releaseFor(event.getPlayer().getUniqueId());
         QuestionService.forget(event.getPlayer().getUniqueId());
         CarryService.drop(event.getPlayer().getUniqueId());
+        BloodSpellGate.forget(event.getPlayer().getUniqueId());
         BloodPerms.clear(event.getPlayer());
     }
 
@@ -365,6 +390,7 @@ public final class BloodListener implements Listener {
         BondService.load(character);
         BloodBoons.apply(event.getPlayer());
         ClassRewards.applySoon(event.getPlayer());
+        BloodArtefacts.syncSoon(event.getPlayer());
         BloodPerms.refresh(event.getPlayer());
         FinalService.check(event.getPlayer());
     }

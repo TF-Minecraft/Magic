@@ -72,7 +72,8 @@ public final class BloodItems {
         return kind != null && kind == kind(item);
     }
 
-    private static String read(ItemStack item, NamespacedKey key) {
+    /** A string the item keeps under the key, or null. */
+    static String read(ItemStack item, NamespacedKey key) {
         if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
             return null;
         }

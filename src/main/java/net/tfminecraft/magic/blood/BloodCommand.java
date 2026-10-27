@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -16,14 +17,15 @@ import net.tfminecraft.tlibs.character.CharacterInfo;
 import net.tfminecraft.tlibs.character.Characters;
 
 /**
- * Staff tools: /magic blood &lt;list|info|stage|path|give|whisper|voice|target|bonds|altar|reset&gt;.
+ * Staff tools: /magic blood &lt;list|info|stage|path|give|whisper|voice|target|bonds|altar|pool|reset&gt;.
  * Player targets must be online on the character being edited; altars can also be named by id.
  */
 public final class BloodCommand {
 
     static final List<String> SUBCOMMANDS = List.of(
-            "list", "info", "stage", "path", "give", "whisper", "voice", "target", "bonds", "altar", "reset");
+            "list", "info", "stage", "path", "give", "whisper", "voice", "target", "bonds", "altar", "pool", "reset");
     private static final List<String> TARGET_ACTIONS = List.of("list", "reroll", "set", "skip");
+    private static final String ARTEFACTS = "artefacts";
     private static final List<String> ALTAR_ACTIONS = List.of("info", "tp", "refresh", "purify");
 
     private BloodCommand() {}
@@ -41,6 +43,7 @@ public final class BloodCommand {
             case "target" -> target(sender, args);
             case "bonds" -> withTarget(sender, args, 3, (player, character) -> bonds(sender, player));
             case "altar" -> altar(sender, args);
+            case "pool" -> pool(sender, args);
             case "reset" -> withTarget(sender, args, 3, (player, character) -> reset(sender, player, character));
             default -> sender.sendMessage(Messages.get("blood.admin.usage"));
         }
@@ -95,6 +98,46 @@ public final class BloodCommand {
                 "finals", String.valueOf(record.getFinalsDone()),
                 "progress", String.valueOf(BloodProgress.of(record)),
                 "altar", altar != null ? altar.blockKey() + " L" + altar.getLevel() : "-"));
+        if (!BloodArtefacts.ids(record).isEmpty()) {
+            poolLine(sender, player, record);
+        }
+    }
+
+    private static void poolLine(CommandSender sender, Player player, BloodRecord record) {
+        double resonance = BloodPool.resonance(record);
+        sender.sendMessage(Messages.get("blood.admin.pool", "player", player.getName(),
+                "pool", String.format(Locale.ROOT, "%.1f", BloodPool.level(record)),
+                "capacity", String.format(Locale.ROOT, "%.0f", PoolConfig.capacity()),
+                "draining", String.valueOf(record.getStage() == BloodStage.ASCENDED),
+                "resonance", String.format(Locale.ROOT, "%.1f", resonance),
+                "tier", String.valueOf(PoolConfig.band(resonance)),
+                "sunk", String.valueOf(BloodArtefacts.sunk(record)),
+                "total", String.valueOf(BloodArtefacts.ids(record).size())));
+    }
+
+    /** pool &lt;player&gt; shows the pool and blood resonance; pool &lt;player&gt; &lt;amount&gt; sets the pool. */
+    private static void pool(CommandSender sender, String[] args) {
+        if (args.length != 3 && args.length != 4) {
+            sender.sendMessage(Messages.get("blood.admin.usage"));
+            return;
+        }
+        withTarget(sender, Arrays.copyOf(args, 3), 3, (player, character) -> {
+            BloodRecord record = BloodRecords.get(character);
+            if (record == null) {
+                sender.sendMessage(Messages.get("blood.admin.no_record", "player", player.getName(), "character", character));
+                return;
+            }
+            if (args.length == 4) {
+                try {
+                    record.setPool(Math.min(PoolConfig.capacity(), Double.parseDouble(args[3])));
+                } catch (NumberFormatException ex) {
+                    sender.sendMessage(Messages.get("values.invalid_amount"));
+                    return;
+                }
+                saved(sender, record);
+            }
+            poolLine(sender, player, record);
+        });
     }
 
     private static void stage(CommandSender sender, Player player, String character, String raw) {
@@ -108,6 +151,7 @@ public final class BloodCommand {
         saved(sender, record);
         AltarService.refreshFor(character);
         ClassRewards.apply(player);
+        BloodArtefacts.sync(player);
         sender.sendMessage(Messages.get("blood.admin.stage_set", "player", player.getName(), "stage", stage.name()));
     }
 
@@ -122,11 +166,17 @@ public final class BloodCommand {
         saved(sender, record);
         BloodPerms.refresh(player);
         ClassRewards.apply(player);
+        BloodArtefacts.sync(player);
         AltarService.refreshFor(character);
         sender.sendMessage(Messages.get("blood.admin.path_set", "player", player.getName(), "path", path.name()));
     }
 
     private static void give(CommandSender sender, Player player, String character, String raw) {
+        if (raw.equalsIgnoreCase(ARTEFACTS)) {
+            sender.sendMessage(Messages.get("blood.admin.artefacts_given", "player", player.getName(),
+                    "count", String.valueOf(BloodArtefacts.regive(player))));
+            return;
+        }
         BloodItemKind kind = BloodItemKind.parse(raw);
         if (kind == null) {
             sender.sendMessage(Messages.get("blood.admin.bad_item"));
@@ -315,7 +365,8 @@ public final class BloodCommand {
             return switch (sub) {
                 case "stage" -> lower(BloodStage.values());
                 case "path" -> lower(BloodPath.values());
-                case "give" -> Arrays.stream(BloodItemKind.values()).map(BloodItemKind::key).toList();
+                case "give" -> Stream.concat(Arrays.stream(BloodItemKind.values()).map(BloodItemKind::key),
+                        Stream.of(ARTEFACTS)).toList();
                 case "altar" -> altarTargets();
                 case "target" -> TARGET_ACTIONS;
                 default -> List.of();

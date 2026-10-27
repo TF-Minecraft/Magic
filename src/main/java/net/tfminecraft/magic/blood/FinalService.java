@@ -43,6 +43,7 @@ public final class FinalService {
         refill(mage, record);
         BloodRecords.save(record);
         ClassRewards.apply(mage);
+        BloodArtefacts.sync(mage);
         name(mage, record);
         Magic.plugin.getLogger().info("[Magic] Character " + record.getCharacterId() + " began the final sacrifices: "
                 + record.getFinalTargets());
@@ -117,6 +118,7 @@ public final class FinalService {
         if (record.getFinalsDone() >= HuntConfig.finalCount()) {
             record.setStage(BloodStage.ASCENDED);
             record.getFinalTargets().clear();
+            record.setPool(PoolConfig.capacity());
             WhisperService.tell(mage, "blood.final.ascended");
             BloodFx.play("ascended", mage.getLocation(), mage);
         } else {
@@ -127,6 +129,7 @@ public final class FinalService {
         BloodRecords.save(record);
         BloodBoons.apply(mage);
         ClassRewards.apply(mage);
+        BloodArtefacts.sync(mage);
         if (record.getStage() == BloodStage.FINAL) {
             name(mage, record);
         }

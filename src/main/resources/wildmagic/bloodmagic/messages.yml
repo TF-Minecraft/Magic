@@ -39,8 +39,15 @@ blood:
       hunt: "{stone}The stone is cold where you touch it, and hungry. It wants the ones you know"
       final_devotee: "{stone}The stone purrs under your hand like something fed. Your father is pleased with you"
       final_true: "{stone}The stone is quiet under your palm. Quiet like you"
-      ascended_devotee: "{stone}The stone is as warm as a heart. Somewhere far below, your father sleeps, content"
-      ascended_true: "{stone}Nothing moves under your hand. Nothing needs to, anymore"
+      # Once the path is complete, the touch tells how full the altar's pool of blood is.
+      ascended_devotee_full: "{stone}The stone is as warm as a heart. Somewhere far below, your father sleeps, content"
+      ascended_devotee_half: "{stone}The pool is lower than it was. Far below, your father stirs, hungry"
+      ascended_devotee_low: "{stone}Only a little blood is left in the pool. Your father is waiting, child"
+      ascended_devotee_dry: "{stone}The pool is dry and the stone is cold. Your father will not wait long"
+      ascended_true_full: "{stone}The pool is full. Nothing moves under your hand. Nothing needs to, yet"
+      ascended_true_half: "{stone}The pool has sunk. You can feel the hunger starting"
+      ascended_true_low: "{stone}Barely any blood is left in the pool. You need someone soon"
+      ascended_true_dry: "{stone}The pool is dry. Everything you took is slipping away"
     sit_stranger: "#8c8c8c§oThe stone is cold under you. You cannot shake the feeling that it would rather you stood"
 
     stranger_touch: "#8c8c8c§oCold carved stone, dark in the seams. The longer you look at it, the less you want to touch it"
@@ -176,6 +183,23 @@ blood:
 
     failed_self: "Someone else got to them first. Everything I put into them, wasted"
 
+  # The path's artefacts and the altar's pool of blood.
+  artefact:
+    given: "{stone}Gifts wait on the pedestals around the stone. Sink them into its pool of blood"
+    replaced: "{stone}Something new waits on a pedestal by the stone. Sink it into the pool"
+    not_yours: "#8c8c8c§oIt will not leave the pedestal for you"
+    sink:
+      sunk: "{stone}It sinks into the pool without a ripple, and the blood grows warmer"
+      all_sunk: "{stone}The last of them sinks. The pool is whole, and so are you"
+      not_yours: "#8c8c8c§oThe pool will not take it from you"
+      stale: "#8c8c8c§oIt crumbles to dried blood before it touches the pool"
+      already: "#8c8c8c§oThe pool already holds one like it. This one crumbles in your hand"
+  pool:
+    fed: "{stone}The pool drinks them down and rises. You feel it in your hands again"
+    thinned: "{stone}Your blood runs thinner. Something you could call on, you no longer can"
+    dry: "{stone}The pool is dry. Feed it, or lose what it gave you"
+    too_thin: "#8c8c8c§oYour blood runs too thin for that"
+
   class:
 
     rewarded: "#8c8c8c§oSomething new stirs in your blood. Your skills have changed (/skills)"
@@ -214,7 +238,7 @@ blood:
 
   admin:
 
-    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife> | whisper <player> [amount] | voice <player> | target <player> <list|reroll|skip|set <name>> | bonds <player> | altar <info|tp|refresh|purify> <player|altar id> | reset <player>"
+    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife|artefacts> | whisper <player> [amount] | voice <player> | target <player> <list|reroll|skip|set <name>> | bonds <player> | altar <info|tp|refresh|purify> <player|altar id> | pool <player> [amount] | reset <player>"
 
     no_record: "#aaaaaa{player} ({character}) has no blood path."
 
@@ -235,6 +259,8 @@ blood:
     path_set: "#55ff55{player} is now on path {path}."
 
     given: "#55ff55Gave {player} a bound {item}."
+    artefacts_given: "#55ff55Gave {player} {count} artefact(s) that are not in the pool yet."
+    pool: "#d10202{player} #aaaaaapool #ffffff{pool}/{capacity} #aaaaaa(draining #ffffff{draining}#aaaaaa), blood resonance #ffffff{resonance} #aaaaaa(tier #ffffff{tier}#aaaaaa), artefacts in the pool #ffffff{sunk}/{total}"
 
     reset: "#55ff55{player}'s blood path was cleared and any altar purified."
 

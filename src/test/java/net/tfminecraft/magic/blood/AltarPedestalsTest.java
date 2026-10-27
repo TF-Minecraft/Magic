@@ -198,6 +198,79 @@ class AltarPedestalsTest {
     assertEquals(1, AltarPedestals.leftovers().size());
   }
 
+
+  Furniture pedestal(BloodAltar altar, FurnitureType type, boolean loaded,
+      net.tfminecraft.interactiblefurniture.furniture.PlacedSlot active) {
+    Furniture furniture = mock(Furniture.class);
+    UUID id = loaded ? fx.world.spawn(new Location(fx.world, 0, 10, 0), ItemDisplay.class).getUniqueId() : UUID.randomUUID();
+    when(furniture.getEntityId()).thenReturn(id);
+    when(furniture.getType()).thenReturn(type);
+    when(furniture.getActiveSlot("item")).thenReturn(java.util.Optional.ofNullable(active));
+    when(furniture.getOrCreatePlacedSlot("item"))
+        .thenReturn(mock(net.tfminecraft.interactiblefurniture.furniture.PlacedSlot.class));
+    placed.put(id, furniture);
+    altar.getPedestals().add(id.toString());
+    return furniture;
+  }
+
+  net.tfminecraft.interactiblefurniture.furniture.PlacedSlot showing(ItemStack item, UUID stand) {
+    var slot = mock(net.tfminecraft.interactiblefurniture.furniture.PlacedSlot.class);
+    when(slot.getCurrentItem()).thenReturn(item);
+    when(slot.getDisplayStandId()).thenReturn(stand);
+    return slot;
+  }
+
+  @Test
+  void artefactsGoInPlaceOfTheOneTheyFollowOrOnTheFirstFreePedestal() {
+    BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodRecord record = BloodRecords.getOrCreate(BloodFixture.id("mage"), "o");
+    record.setStage(BloodStage.FINAL);
+    record.setPath(BloodPath.DEVOTEE);
+    ItemStack fresh = BloodArtefacts.create(record, "devotee:5");
+    var nested = mock(net.tfminecraft.interactiblefurniture.furniture.SlotDefinition.class);
+    when(nested.isFurnitureSlot()).thenReturn(true);
+    var slot = mock(net.tfminecraft.interactiblefurniture.furniture.SlotDefinition.class);
+    when(slot.getId()).thenReturn("item");
+    Map<String, net.tfminecraft.interactiblefurniture.furniture.SlotDefinition> slots = new java.util.LinkedHashMap<>();
+    slots.put("nested", nested);
+    slots.put("item", slot);
+    FurnitureType type = mock(FurnitureType.class);
+    when(type.getSlots()).thenReturn(slots);
+    FurnitureType nestedOnly = mock(FurnitureType.class);
+    when(nestedOnly.getSlots()).thenReturn(Map.of("nested", nested));
+    BloodAltar altar = BloodAltar.create("a", "o", fx.pocket(0, 10, 0), 0f, 1L);
+    altar.getPedestals().add(UUID.randomUUID().toString());
+    pedestal(altar, null, true, null);
+    pedestal(altar, nestedOnly, true, null);
+    pedestal(altar, type, false, null);
+    Furniture other = pedestal(altar, type, true, showing(BloodArtefacts.create(record, "devotee:0"), null));
+    pedestal(altar, type, true, showing(null, null));
+    pedestal(altar, type, true, showing(null, UUID.randomUUID()));
+    ItemDisplay stand = fx.world.spawn(new Location(fx.world, 0, 10, 0), ItemDisplay.class);
+    stand.setItemStack(BloodArtefacts.create(record, "devotee:2"));
+    Furniture standing = pedestal(altar, type, true, showing(null, stand.getUniqueId()));
+    Furniture free = pedestal(altar, type, true, null);
+    Furniture later = pedestal(altar, type, true, null);
+
+    assertTrue(AltarPedestals.offer(altar, fresh, null));
+    verify(free.getOrCreatePlacedSlot("item")).spawnDisplayStand(any(), eq(fresh), any(), isNull());
+    verify(manager).persistFurniture(free);
+    verify(later, never()).getOrCreatePlacedSlot(any());
+    assertTrue(AltarPedestals.offer(altar, fresh, "devotee:2"));
+    verify(standing).removeActiveSlot("item");
+    verify(standing.getOrCreatePlacedSlot("item")).spawnDisplayStand(any(), eq(fresh), any(), isNull());
+    assertTrue(AltarPedestals.offer(altar, fresh, "devotee:0"));
+    verify(other).removeActiveSlot("item");
+    assertTrue(AltarPedestals.offer(altar, fresh, "devotee:7"), "Nothing to replace: the first free one");
+
+    BloodAltar full = BloodAltar.create("b", "o", fx.pocket(5, 10, 5), 0f, 1L);
+    pedestal(full, type, true, showing(fresh, null));
+    assertFalse(AltarPedestals.offer(full, fresh, "devotee:1"));
+    assertFalse(AltarPedestals.offer(full, null, null));
+    when(plugin.getFurnitureManager()).thenReturn(null);
+    assertFalse(AltarPedestals.offer(full, fresh, null));
+  }
+
   @Test
   void withoutThePedestalTypeOrFurniturePluginNothingIsPlaced() {
     Block center = fx.pocket(0, 10, 0);

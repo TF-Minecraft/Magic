@@ -163,3 +163,39 @@ classes:
 permissions:
   devotee: [magic.blood.bloodsworn, magic.wild]
   "true": magic.blood.sanguinar
+
+# The pool of blood in the altar and the blood resonance it holds up: what keeps the blood classes'
+# spells working. Placeholder values.
+pool:
+  # The pool stays full until the path is complete. Then the artefacts sunk in it drink it, this much
+  # per hour the character is played (offline time never counts).
+  capacity: 100
+  drain_per_hour: 0.5
+  # Blood resonance never sinks below this, so the lowest tier always works.
+  floor: 5
+  # Once the path is complete, a person sacrificed on the altar (same rules as the hunt's victims)
+  # fills the pool by how close they were to the mage (rank 1 = closest; strangers have no bond).
+  # Animals never refill it.
+  refill:
+    people:
+      stranger: 40
+      default: 40
+      ranks:
+        - { up_to: 10, amount: 100 }
+        - { up_to: 25, amount: 60 }
+  # Blood resonance with every one of the path's artefacts in the pool (each one gives an equal share),
+  # by final sacrifices done; an ascended mage has the last entry. The pool's level caps it.
+  worth:
+    devotee: { 0: 20 }
+    "true": { 0: 20, 1: 35, 2: 55, 3: 75, 4: 80, 5: 95 }
+  # Blood resonance each spell tier needs: 1 Minor, 2 Lesser, 3 Greater, 4 Ascendant, 5 Exalted,
+  # 6 Transcendent.
+  tiers: { 1: 5, 2: 15, 3: 30, 4: 50, 5: 70, 6: 90 }
+  # The blood spells by tier (MythicLib skill ids). Spells not listed are never refused.
+  spells:
+    1: [BLOODSWORN_BLOOD_BOLT, BLOODSWORN_OPEN_VEINS, BLOODSWORN_BLOOD_KISS, BLOODSWORN_CRIMSON_STEP]
+    2: [BLOODSWORN_BLOOD_BOIL, BLOODSWORN_BLOODBEND, BLOODSWORN_MARK_OF_THE_BLOOD_FATHER, BLOODSWORN_CHALICE_OF_BLOOD]
+    3: [SANGUINAR_EXSANGUINATE, SANGUINAR_OSSUARY]
+    4: [SANGUINAR_SANGUINE_POOL, SANGUINAR_HEMOPLAGUE]
+    5: [SANGUINAR_BLOOD_MOON, SANGUINAR_SANGUINE_CHAINS]
+    6: [SANGUINAR_RED_HARVEST, SANGUINAR_CRIMSON_TIDE]

@@ -324,6 +324,27 @@ class HuntAndFinalsTest {
     assertEquals(BloodStage.ASCENDED, record.getStage());
     assertEquals("blood.final.ascended", mage.nextMessage());
     assertTrue(record.getFinalTargets().isEmpty());
+    assertEquals(100, record.getPool(), "Ascension starts with a full pool");
+  }
+
+  @Test
+  void onceThePathIsCompletePeopleRefillThePoolByCloseness() {
+    record.setStage(BloodStage.ASCENDED);
+    record.setPool(10.0);
+    PlayerMock stranger = victim("stranger");
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, stranger));
+    runRite();
+    assertEquals(50, record.getPool());
+    assertEquals("blood.pool.fed", mage.nextMessage());
+    assertEquals(BloodStage.ASCENDED.name(), record.getSacrifices().get(0).stage());
+    assertEquals(CharacterRiteService.Bind.REPEAT, CharacterRiteService.bind(mage, stranger));
+    PlayerMock dearest = victim("dearest");
+    talks.put(BloodFixture.id("dearest"), 40);
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, dearest));
+    runRite();
+    assertEquals(100, record.getPool(), "The closest fill it to the brim");
+    bridge.when(() -> RpCharactersBridge.playtimeSeconds(any())).thenReturn(0L);
+    assertEquals(CharacterRiteService.Bind.TOO_NEW, CharacterRiteService.bind(mage, victim("fresh")));
   }
 
   @Test
