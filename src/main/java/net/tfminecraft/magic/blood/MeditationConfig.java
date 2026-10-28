@@ -52,7 +52,6 @@ public final class MeditationConfig {
     private static int chargeTicks;
     private static Cue heartbeat;
     private static Cue music;
-    private static Cue room;
     private static Cue charge;
 
     static {
@@ -78,7 +77,6 @@ public final class MeditationConfig {
         chargeTicks = 160;
         heartbeat = Cue.NONE;
         music = Cue.NONE;
-        room = Cue.NONE;
         charge = Cue.NONE;
     }
 
@@ -103,7 +101,6 @@ public final class MeditationConfig {
         chargeTicks = Math.max(20, meditation.getInt("charge_ticks", 160));
         heartbeat = cue(meditation.getConfigurationSection("sounds.heartbeat"));
         music = cue(meditation.getConfigurationSection("sounds.music"));
-        room = cue(meditation.getConfigurationSection("sounds.room"));
         charge = cue(meditation.getConfigurationSection("sounds.charge"));
     }
 
@@ -187,11 +184,6 @@ public final class MeditationConfig {
     /** The meditation's music, looped while the mage meditates. */
     public static Cue music() {
         return music;
-    }
-
-    /** Ambience the altar's owner hears inside its room, looped. */
-    public static Cue room() {
-        return room;
     }
 
     /** The cue while an artefact charges in the pool. */

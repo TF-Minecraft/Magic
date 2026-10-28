@@ -63,7 +63,6 @@ class MeditationTest {
   @AfterEach
   void cleanup() {
     BloodMeditation.clear();
-    BloodAmbience.clear();
     pedestals.close();
     fx.close();
   }
@@ -120,7 +119,7 @@ class MeditationTest {
     assertEquals(BloodMeditation.Begin.STARTED, BloodMeditation.start(mage, altar));
     assertTrue(BloodMeditation.isMeditating(mage.getUniqueId()));
     assertEquals(BloodMeditation.Begin.BUSY, BloodMeditation.start(mage, altar));
-    mage.assertSoundHeard("ambient.crimson_forest.loop");
+    mage.assertSoundHeard("tfmc_blood:meditate.chant");
     assertFalse(BloodMeditation.swing(bare));
   }
 
@@ -258,7 +257,7 @@ class MeditationTest {
     assertTrue(drops() <= 4);
     mage.clearSounds();
     tick(600);
-    mage.assertSoundHeard("ambient.crimson_forest.loop");
+    mage.assertSoundHeard("tfmc_blood:meditate.chant");
     assertTrue(drops() <= 4, "Never more than drops.max at once");
 
     Files.writeString(temp.resolve("m.yml"), String.join("\n",
@@ -278,46 +277,10 @@ class MeditationTest {
   }
 
   @Test
-  void theRoomHumsForItsOwnerOnlyAndHushesForMeditation() throws Exception {
-    long now = 1_000_000;
-    BloodAmbience.tick(now);
-    mage.assertSoundHeard("ambient.soul_sand_valley.loop");
-    mage.clearSounds();
-    BloodAmbience.tick(now + 1000);
-    assertTrue(mage.getHeardSounds().isEmpty(), "Still playing");
-    BloodAmbience.tick(now + 31_000);
-    mage.assertSoundHeard("ambient.soul_sand_valley.loop");
-    PlayerMock stranger = fx.player("stranger");
-    BloodAmbience.tick(now + 32_000);
-    assertTrue(stranger.getHeardSounds().isEmpty());
-    mage.teleport(new Location(fx.world, 40.5, 11, 0.5));
-    BloodAmbience.tick(now + 33_000);
-    BloodAmbience.tick(now + 34_000);
-    mage.teleport(new Location(fx.world, 0.5, 11, 0.5));
-    BloodAmbience.tick(now + 35_000);
-    sit(mage);
-    place(record, "devotee:0", 2.5);
-    BloodMeditation.start(mage, altar);
-    BloodAmbience.tick(now + 36_000);
-    BloodAmbience.pause(mage);
-    BloodMeditation.clear();
-    BloodAmbience.tick(now + 37_000);
-    BloodAmbience.forget(mage.getUniqueId());
-
-    Files.writeString(temp.resolve("r.yml"), "enabled: true\nmeditation: { sounds: { room: { sound: r.s } } }\n");
-    BloodConfig.load(temp.resolve("r.yml").toFile(), fx.logger);
-    mage.clearSounds();
-    BloodAmbience.tick(now + 40_000);
-    BloodAmbience.tick(now + 400_000);
-    assertEquals(1, mage.getHeardSounds().stream().filter(sound -> sound.getSound().equals("r.s")).count(),
-        "No length: it plays once");
-    Files.writeString(temp.resolve("q.yml"), "enabled: true\n");
-    BloodConfig.load(temp.resolve("q.yml").toFile(), fx.logger);
-    mage.clearSounds();
-    BloodAmbience.tick(now + 500_000);
-    assertTrue(mage.getHeardSounds().isEmpty());
+  void quietCuesPlayNothing() {
     MeditationConfig.Cue.NONE.play(mage);
     MeditationConfig.Cue.NONE.stop(mage);
+    assertTrue(mage.getHeardSounds().isEmpty());
   }
 
   @Test

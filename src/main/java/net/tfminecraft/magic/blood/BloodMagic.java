@@ -65,7 +65,6 @@ public final class BloodMagic {
             ambient();
         }
         WhisperService.tick(context);
-        BloodAmbience.tick(System.currentTimeMillis());
         AnimalRiteService.tick();
         QuestionService.tick();
         CharacterRiteService.tick();
@@ -124,7 +123,6 @@ public final class BloodMagic {
         CarryService.clear();
         BloodMeditation.clear();
         BloodCharging.clear();
-        BloodAmbience.clear();
         CharacterRiteService.clear();
         BondService.clear();
         AnimalRiteService.releaseAll();

@@ -383,7 +383,6 @@ public final class BloodListener implements Listener {
         CarryService.drop(event.getPlayer().getUniqueId());
         BloodSpellGate.forget(event.getPlayer().getUniqueId());
         BloodMeditation.stop(event.getPlayer().getUniqueId());
-        BloodAmbience.forget(event.getPlayer().getUniqueId());
         BloodPerms.clear(event.getPlayer());
     }
 

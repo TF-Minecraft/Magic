@@ -105,7 +105,6 @@ public final class BloodMeditation {
         }
         Session session = new Session(player.getUniqueId(), record.getCharacterId(), altar.getId(), ticks);
         SESSIONS.put(player.getUniqueId(), session);
-        BloodAmbience.pause(player);
         playMusic(player, session);
         return Begin.STARTED;
     }
