@@ -47,6 +47,13 @@ class BloodMagicTest {
       record.setStage(BloodStage.ANIMAL);
       store.save(record);
 
+      // A chunk loaded before the plugin (spawn, force-loaded) still holds a purified altar's display.
+      Block old = fx.pocket(6, 10, 0);
+      old.setType(Material.BARRIER);
+      old.getRelative(org.bukkit.block.BlockFace.UP).setType(Material.LIGHT);
+      var ghost = fx.world.spawn(old.getLocation().add(0.5, 0.5, 0.5), org.bukkit.entity.ItemDisplay.class);
+      ghost.getPersistentDataContainer().set(AltarDisplays.key(), org.bukkit.persistence.PersistentDataType.STRING, "purified");
+
       try (var chars = mockStatic(Characters.class)) {
         chars.when(Characters::available).thenReturn(true);
         chars.when(() -> Characters.info(any())).thenReturn(java.util.Optional.empty());
@@ -55,6 +62,9 @@ class BloodMagicTest {
         assertEquals(BloodStage.ANIMAL, BloodRecords.get(owner).getStage());
         fx.server.getScheduler().performOneTick();
         assertEquals(Material.BARRIER, target.getType());
+        assertFalse(ghost.isValid());
+        assertEquals(Material.AIR, old.getType());
+        assertEquals(Material.AIR, old.getRelative(org.bukkit.block.BlockFace.UP).getType());
 
         BloodMagic.tick(MagicTickContext.between(0, 59));
         BloodMagic.tick(MagicTickContext.between(1, 2));

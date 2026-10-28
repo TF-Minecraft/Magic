@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
@@ -70,7 +71,11 @@ public final class AltarDisplays {
         return ItemRef.buildOrFallback(BloodConfig.model(level), Material.CHISELED_STONE_BRICKS);
     }
 
-    /** Removes tagged displays that belong to no altar, or are not the altar's current display. */
+    /**
+     * Removes tagged displays that belong to no altar, or are not the altar's current display. One whose
+     * altar is gone (a world that came back from before a purify, after a shutdown that never saved it)
+     * also takes the altar block and glow left under it, unless another altar stands there.
+     */
     public static void removeStrays(Collection<? extends Entity> entities) {
         for (Entity entity : entities) {
             String id = entity.getPersistentDataContainer().get(key(), PersistentDataType.STRING);
@@ -78,9 +83,23 @@ public final class AltarDisplays {
                 continue;
             }
             BloodAltar altar = BloodAltars.byId(id);
+            if (altar == null) {
+                clearLeftovers(entity.getLocation().getBlock());
+            }
             if (altar == null || !entity.getUniqueId().equals(altar.getDisplayId())) {
                 entity.remove();
             }
+        }
+    }
+
+    private static void clearLeftovers(Block block) {
+        if (block.getType() != BloodConfig.altarBlock() || BloodAltars.at(block) != null) {
+            return;
+        }
+        block.setType(Material.AIR, false);
+        Block glow = block.getRelative(BlockFace.UP);
+        if (glow.getType() == Material.LIGHT) {
+            glow.setType(Material.AIR, false);
         }
     }
 

@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -43,9 +45,15 @@ public final class BloodMagic {
         plugin.getServer().getScheduler().runTask(plugin, BloodMagic::settle);
     }
 
-    /** First tick after enable: purify altars of owners who died while we were down, redraw the rest. */
+    /**
+     * First tick after enable: purify altars of owners who died while we were down, clear strays from
+     * chunks that loaded before this plugin did (spawn and force-loaded ones), redraw the rest.
+     */
     static void settle() {
         AltarService.sweepDead();
+        for (World world : Bukkit.getWorlds()) {
+            AltarDisplays.removeStrays(world.getEntitiesByClass(ItemDisplay.class));
+        }
         for (BloodAltar altar : BloodAltars.all()) {
             AltarService.refresh(altar);
         }

@@ -170,6 +170,17 @@ class AltarServiceTest {
       assertFalse(orphan.isValid());
       assertTrue(untagged.isValid());
       assertTrue(Bukkit.getEntity(second).isValid());
+      assertEquals(Material.BARRIER, target.getType(), "The live altar under an orphan keeps its block");
+      Block bare = fx.pocket(4, 10, 0);
+      ItemDisplay lone = fx.world.spawn(bare.getLocation(), ItemDisplay.class);
+      lone.getPersistentDataContainer().set(AltarDisplays.key(), PersistentDataType.STRING, "gone");
+      Block glowless = fx.pocket(4, 10, 3);
+      glowless.setType(Material.BARRIER);
+      ItemDisplay dim = fx.world.spawn(glowless.getLocation(), ItemDisplay.class);
+      dim.getPersistentDataContainer().set(AltarDisplays.key(), PersistentDataType.STRING, "gone");
+      AltarDisplays.removeStrays(List.of(lone, dim));
+      assertEquals(Material.AIR, bare.getType(), "Nothing to clear under it");
+      assertEquals(Material.AIR, glowless.getType());
 
       BloodAltar elsewhere = BloodAltar.create("x", "o", target, 0f, 1L);
       var world = BloodAltar.class.getDeclaredField("world");
