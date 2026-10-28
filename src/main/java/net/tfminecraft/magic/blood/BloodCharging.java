@@ -127,11 +127,14 @@ public final class BloodCharging {
             double t = (double) elapsed / total;
             double height = t < 0.3 ? ABOVE + (SUNK - ABOVE) * (t / 0.3)
                     : t < 0.75 ? SUNK : SUNK + (RISEN - SUNK) * ((t - 0.75) / 0.25);
-            Location at = charging.base().clone().add(0, height, 0);
-            at.setYaw((float) (elapsed * 6 % 360));
-            charging.display().teleport(at);
+            // Moved every other tick; the client glides between (teleport duration 2).
+            if (elapsed % 2 == 0) {
+                Location at = charging.base().clone().add(0, height, 0);
+                at.setYaw((float) (elapsed * 6 % 360));
+                charging.display().teleport(at);
+            }
             if (elapsed % 4 == 0) {
-                at.getWorld().spawnParticle(Particle.DUST, charging.base(), 6, 0.25, 0.05, 0.25, 0,
+                charging.base().getWorld().spawnParticle(Particle.DUST, charging.base(), 6, 0.25, 0.05, 0.25, 0,
                         new Particle.DustOptions(Color.fromRGB(0x8a0303), 1.2f));
             }
             if (elapsed % 20 == 10 && t < 0.75) {

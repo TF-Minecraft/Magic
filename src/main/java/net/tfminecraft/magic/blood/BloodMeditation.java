@@ -185,7 +185,7 @@ public final class BloodMeditation {
         ItemDisplay display = from.getWorld().spawn(from, ItemDisplay.class, spawned -> {
             spawned.setItemStack(ItemRef.buildOrFallback(MeditationConfig.dropItem(), Material.REDSTONE));
             spawned.setPersistent(false);
-            spawned.setTeleportDuration(1);
+            spawned.setTeleportDuration(2);
         });
         session.drops.add(new Drop(BloodArtefacts.id(source.item()), display, from, ticks));
         scale(session, MeditationConfig.flareScale());
@@ -218,10 +218,13 @@ public final class BloodMeditation {
                 drop.display.remove();
                 continue;
             }
-            double t = Math.min(1, (double) age / travel);
-            Vector path = to.toVector().subtract(drop.from.toVector()).multiply(t);
-            Location at = drop.from.clone().add(path).add(0, Math.sin(Math.PI * t) * 0.8, 0);
-            drop.display.teleport(at);
+            // Moved every other tick; the client glides between (teleport duration 2).
+            if (age % 2 == 0) {
+                double t = Math.min(1, (double) age / travel);
+                Vector path = to.toVector().subtract(drop.from.toVector()).multiply(t);
+                Location at = drop.from.clone().add(path).add(0, Math.sin(Math.PI * t) * 0.8, 0);
+                drop.display.teleport(at);
+            }
         }
     }
 
