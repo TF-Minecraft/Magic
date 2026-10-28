@@ -156,6 +156,30 @@ class HuntAndFinalsTest {
   }
 
   @Test
+  void bondFlushesWriteOffTheMainThreadAndAFailedWriteIsReported() {
+    PlayerMock friend = victim("friend");
+    String friendId = BloodFixture.id("friend");
+    BondService.writer = BondService.BACKGROUND;
+    try {
+      BondService.sample();
+      BondService.flush();
+      BondService.clear();
+      assertTrue(Files.exists(temp.resolve("bonds-root/bonds/" + mageId + ".json")), "Written by the bonds thread");
+      BloodStore failing = spy(new BloodStore(temp.resolve("failing").toFile(), fx.logger));
+      doThrow(new IllegalStateException("disk gone")).when(failing).saveBonds(any(), any());
+      BondService.init(failing);
+      BondService.add(mageId, friendId, 1);
+      BondService.flush();
+      BondService.clear();
+      verify(failing).warn(argThat(line -> line.contains("Failed to write the bonds of " + mageId)));
+    } finally {
+      BondService.writer = Runnable::run;
+      BondService.init(new BloodStore(temp.resolve("bonds-root").toFile(), fx.logger));
+    }
+    assertNotNull(friend);
+  }
+
+  @Test
   void rankingWeighsTalksTimeAndQualifiedHeirsButNotOwnAccountsOrTheDead() {
     String talker = offline("Talker", CharacterStatus.ALIVE, Instant.EPOCH);
     String sitter = offline("Sitter", CharacterStatus.ALIVE, Instant.EPOCH);

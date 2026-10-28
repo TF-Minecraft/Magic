@@ -50,6 +50,7 @@ final class BloodFixture implements AutoCloseable {
     BloodAltars.init(store);
     AltarPedestals.init(store);
     AltarRegions.setQuery(location -> java.util.List.of());
+    BondService.writer = Runnable::run;
   }
 
   /** MockBukkit cannot build display entities through World.spawn; this world can. */

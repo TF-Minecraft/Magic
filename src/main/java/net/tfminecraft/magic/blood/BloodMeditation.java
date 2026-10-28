@@ -30,8 +30,8 @@ import net.tfminecraft.magic.util.ItemRef;
  * and drifts to the mage. Catching a drop (a swing at it) draws that artefact's charge into blood
  * resonance: much on the beat, when every drop swells, and little off it, which also costs the mage
  * some of their own blood. Drops left alone fall back. It ends when the mage stands up or walks off,
- * when the artefacts are dry, or when resonance is as high as the artefacts allow. Its music and the
- * heartbeat are heard by the mage alone.
+ * when the artefacts are dry, or when resonance is as high as the artefacts allow, and only then is
+ * the record written. Its music and the heartbeat are heard by the mage alone.
  */
 public final class BloodMeditation {
 
@@ -252,7 +252,6 @@ public final class BloodMeditation {
                 BloodPool.cap(record) - record.getResonance())));
         record.setCharge(drop.id, record.getCharge(drop.id) - drawn);
         record.setResonance(record.getResonance() + drawn);
-        BloodRecords.save(record);
         session.drops.remove(drop);
         Location at = drop.display.getLocation();
         drop.display.remove();
@@ -304,6 +303,9 @@ public final class BloodMeditation {
             drop.display.remove();
         }
         session.drops.clear();
+        if (record != null) {
+            BloodRecords.save(record);
+        }
         if (altar != null && record != null) {
             AltarPedestals.restyle(altar, item -> BloodArtefacts.styled(record, item));
         }

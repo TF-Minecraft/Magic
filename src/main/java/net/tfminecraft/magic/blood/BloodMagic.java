@@ -73,6 +73,7 @@ public final class BloodMagic {
         }
         if (context.everyMinutes(10)) {
             BondService.flush();
+            BloodPool.flush();
             for (Player player : Bukkit.getOnlinePlayers()) {
                 FinalService.check(player);
             }
@@ -123,6 +124,7 @@ public final class BloodMagic {
         CarryService.clear();
         BloodMeditation.clear();
         BloodCharging.clear();
+        BloodPool.flush();
         CharacterRiteService.clear();
         BondService.clear();
         AnimalRiteService.releaseAll();

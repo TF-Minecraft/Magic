@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -34,6 +37,18 @@ public final class BondService {
     private static final Map<String, Map<String, Integer>> MINUTES = new HashMap<>();
     private static final Set<String> DIRTY = new HashSet<>();
     private static BloodStore store;
+    /**
+     * The periodic flush writes every changed character's file, which on a full server is dozens at
+     * once: they go to this thread, in order, so the main thread never waits on the disk (tests run
+     * them in place).
+     */
+    static final Executor BACKGROUND = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "Magic blood bonds");
+        thread.setDaemon(true);
+        return thread;
+    });
+    static Executor writer = BACKGROUND;
+    private static CompletableFuture<Void> writing = CompletableFuture.completedFuture(null);
 
     private BondService() {}
 
@@ -43,9 +58,10 @@ public final class BondService {
         store = source;
     }
 
-    /** Writes pending changes and forgets everything. */
+    /** Writes pending changes, waits for them, and forgets everything. */
     public static void clear() {
         flush();
+        writing.join();
         MINUTES.clear();
         store = null;
     }
@@ -104,11 +120,17 @@ public final class BondService {
         }
     }
 
-    /** Writes every changed character's bonds. */
+    /** Writes every changed character's bonds, off the main thread (copies taken now). */
     public static void flush() {
-        if (store != null) {
+        BloodStore target = store;
+        if (target != null) {
             for (String key : DIRTY) {
-                store.saveBonds(key, MINUTES.get(key));
+                Map<String, Integer> copy = new HashMap<>(MINUTES.get(key));
+                writing = writing.thenRunAsync(() -> target.saveBonds(key, copy), writer)
+                        .exceptionally(failure -> {
+                            target.warn("[Magic] Failed to write the bonds of " + key + ": " + failure.getMessage());
+                            return null;
+                        });
             }
         }
         DIRTY.clear();

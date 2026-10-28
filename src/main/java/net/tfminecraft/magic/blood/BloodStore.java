@@ -164,6 +164,10 @@ public final class BloodStore {
         return out;
     }
 
+    void warn(String message) {
+        log.warning(message);
+    }
+
     public boolean saveBonds(String characterId, Map<String, Integer> minutes) {
         return write(new File(bonds, characterId + ".json"), GSON.toJson(minutes, BOND_MAP));
     }

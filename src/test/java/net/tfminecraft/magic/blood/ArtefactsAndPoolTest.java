@@ -516,6 +516,21 @@ class ArtefactsAndPoolTest {
     record.setResonance(5.0001);
     BloodPool.tick();
     assertEquals(5, record.getResonance(), "Never below the floor");
+
+    // A small fade waits for the ten-minute flush; a record reset meanwhile is not written back.
+    record.setResonance(60);
+    BloodPool.tick();
+    BloodStore disk = new BloodStore(new File(fx.data.toFile(), "blood"), fx.logger);
+    assertTrue(disk.loadRecords().stream().filter(r -> r.getCharacterId().equals(mageId)).findFirst()
+        .orElseThrow().getResonance() > 89, "Still what was written when the tier slipped");
+    BloodPool.flush();
+    assertTrue(disk.loadRecords().stream().anyMatch(r -> r.getCharacterId().equals(mageId) && r.getResonance() > 59));
+    BloodPool.tick();
+    BloodRecords.delete(mageId);
+    BloodPool.flush();
+    assertTrue(disk.loadRecords().stream().noneMatch(r -> r.getCharacterId().equals(mageId)), "Stays deleted");
+    record = fx.record("mage", BloodStage.ASCENDED);
+    record.setPath(BloodPath.TRUE);
     record.setStage(BloodStage.FINAL);
     record.setResonance(50);
     BloodPool.tick();

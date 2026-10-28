@@ -1,5 +1,8 @@
 package net.tfminecraft.magic.blood;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -12,6 +15,9 @@ import org.bukkit.entity.Player;
  * lowest spells always work.
  */
 public final class BloodPool {
+
+    /** Records whose resonance faded since they were last written; saved with {@link #flush}. */
+    private static final Set<BloodRecord> FADED = new LinkedHashSet<>();
 
     private BloodPool() {}
 
@@ -76,11 +82,28 @@ public final class BloodPool {
             }
             int before = PoolConfig.band(resonance(record));
             record.setResonance(Math.max(PoolConfig.floor(), record.getResonance() * (1 - share)));
-            BloodRecords.save(record);
             if (PoolConfig.band(resonance(record)) < before) {
+                FADED.remove(record);
+                BloodRecords.save(record);
                 WhisperService.tell(player, "blood.pool.thinned");
+            } else {
+                FADED.add(record);
             }
         }
+    }
+
+    /**
+     * Writes the records whose resonance only faded a little since they were saved (every ten minutes
+     * and on shutdown, so the minute tick never touches the disk unless a tier slipped).
+     */
+    static void flush() {
+        for (BloodRecord record : FADED) {
+            // A record reset or forgotten since is not written back.
+            if (BloodRecords.get(record.getCharacterId()) == record) {
+                BloodRecords.save(record);
+            }
+        }
+        FADED.clear();
     }
 
     /** A person died on the altar after the path was complete: their blood fills the pool by closeness. */
