@@ -352,6 +352,24 @@ class HuntAndFinalsTest {
   }
 
   @Test
+  void theVictimHearsTheirDeathComeOnLineByLine() {
+    PlayerMock stranger = victim("stranger");
+    assertEquals(CharacterRiteService.Bind.OK, CharacterRiteService.bind(mage, stranger));
+    List<String> heard = new java.util.ArrayList<>();
+    for (int second = 1; second <= 10; second++) {
+      now.addAndGet(1000L);
+      CharacterRiteService.tick();
+    }
+    String line;
+    while ((line = stranger.nextMessage()) != null) {
+      heard.add(line);
+    }
+    assertEquals(List.of("blood.rite.dread", "blood.rite.dying.1", "blood.rite.dying.2", "blood.rite.dying.3",
+        "blood.rite.dying.4", "blood.rite.dying.last"),
+        heard.stream().filter(said -> said.startsWith("blood.rite.d")).toList());
+  }
+
+  @Test
   void onceThePathIsCompletePeopleRefillThePoolByCloseness() {
     record.setStage(BloodStage.ASCENDED);
     record.setPool(10.0);

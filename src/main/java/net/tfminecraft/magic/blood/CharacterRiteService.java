@@ -51,6 +51,10 @@ public final class CharacterRiteService {
             int points, int rank, long endsAt) {}
 
     private static final Map<UUID, Rite> RITES = new HashMap<>();
+    /** The victim hears their own death in this many lines, spread over the rite (blood.rite.dying.N). */
+    static final int DYING_LINES = 4;
+    /** How many of those lines each victim has heard. */
+    private static final Map<UUID, Integer> NARRATED = new HashMap<>();
     private static final Set<String> SACRIFICING = new HashSet<>();
     private static final double LEAVE_SLACK = 4;
     private static final double ESCAPE = 2.5;
@@ -235,8 +239,12 @@ public final class CharacterRiteService {
             Location top = altar != null ? altar.center() : null;
             if (!holds(mage, victim, rite, top)) {
                 it.remove();
+                NARRATED.remove(rite.victim());
                 if (mage != null) {
                     mage.sendMessage(Messages.get("blood.rite.broken"));
+                }
+                if (victim != null) {
+                    victim.sendMessage(Messages.get("blood.rite.spared"));
                 }
                 if (top != null) {
                     BloodFx.play("rite_broken", top);
@@ -245,6 +253,7 @@ public final class CharacterRiteService {
             }
             if (now < rite.endsAt()) {
                 BloodFx.play("rite_beat", top, victim);
+                narrate(victim, rite, now);
                 continue;
             }
             it.remove();
@@ -252,7 +261,21 @@ public final class CharacterRiteService {
         }
     }
 
+    /** The victim hears their death come on, a line at a time as the rite runs. */
+    private static void narrate(Player victim, Rite rite, long now) {
+        long total = HuntConfig.riteSeconds() * 1000L;
+        long elapsed = total - (rite.endsAt() - now);
+        int due = (int) Math.min(DYING_LINES, elapsed * (DYING_LINES + 1) / total);
+        int heard = NARRATED.getOrDefault(rite.victim(), 0);
+        for (int line = heard + 1; line <= due; line++) {
+            victim.sendMessage(Messages.get("blood.rite.dying." + line));
+        }
+        NARRATED.put(rite.victim(), Math.max(heard, due));
+    }
+
     private static void complete(Player mage, Player victim, Rite rite, BloodAltar altar) {
+        NARRATED.remove(rite.victim());
+        victim.sendMessage(Messages.get("blood.rite.dying.last"));
         String key = rite.victimCharacter().toLowerCase(Locale.ROOT);
         SACRIFICING.add(key);
         boolean died;
@@ -299,6 +322,7 @@ public final class CharacterRiteService {
     /** Ends every rite without a death, e.g. on shutdown. */
     public static void clear() {
         RITES.clear();
+        NARRATED.clear();
         SACRIFICING.clear();
     }
 

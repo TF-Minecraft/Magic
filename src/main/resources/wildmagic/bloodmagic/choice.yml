@@ -46,5 +46,6 @@ choice:
     sealed:
       - god: "...So be it. You will find the quiet very cold, child."
       - self: "Finally. Just me."
-  # Permanent injuries a devotee keeps as the mark of what they gave.
-  devotee_injuries: 2
+  # The permanent injury a devotee keeps as the mark of what they gave: an RPCharacters trait that only
+  # this gives (blank for none). A character bearing it has no mana: Magic takes away all max mana.
+  devotee_trait: manaless

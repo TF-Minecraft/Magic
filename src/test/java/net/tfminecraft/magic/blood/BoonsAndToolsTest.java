@@ -101,6 +101,34 @@ class BoonsAndToolsTest {
   }
 
   @Test
+  void theDevoteesMarkTakesAllManaWhileTheCharacterBearsIt() throws Exception {
+    MockBukkit.createMockPlugin("MythicLib");
+    List<List<?>> made = new java.util.ArrayList<>();
+    try (MockedStatic<MMOPlayerData> players = mockStatic(MMOPlayerData.class);
+        MockedConstruction<StatModifier> modifiers = mockConstruction(StatModifier.class,
+            (modifier, context) -> made.add(context.arguments()));
+        MockedStatic<RpCharactersBridge> bridge = mockStatic(RpCharactersBridge.class)) {
+      record.setFinalsDone(0);
+      bridge.when(() -> RpCharactersBridge.hasTrait(mage, "manaless")).thenReturn(true);
+      BloodBoons.apply(mage);
+      assertTrue(made.isEmpty(), "No MythicLib data yet");
+      MMOPlayerData data = mock(MMOPlayerData.class);
+      StatMap map = mock(StatMap.class);
+      when(data.getStatMap()).thenReturn(map);
+      when(map.getInstances()).thenReturn(List.of());
+      players.when(() -> MMOPlayerData.getOrNull(mage)).thenReturn(data);
+      BloodBoons.apply(mage);
+      assertEquals(List.of(List.of(MythicBoons.KEY, "MAX_MANA", -100.0,
+          io.lumine.mythic.lib.player.modifier.ModifierType.RELATIVE)), made);
+      verify(modifiers.constructed().get(0)).register(data);
+      java.nio.file.Files.writeString(temp.resolve("off.yml"), "enabled: true\nchoice:\n  devotee_trait: ''\n");
+      BloodConfig.load(temp.resolve("off.yml").toFile(), fx.logger);
+      BloodBoons.apply(mage);
+      assertEquals(1, made.size(), "No mark configured: mana stays");
+    }
+  }
+
+  @Test
   void staffTargetAndBondTools() {
     ConsoleCommandSenderMock console = (ConsoleCommandSenderMock) fx.server.getConsoleSender();
     UUID friend = UUID.randomUUID();

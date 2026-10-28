@@ -21,7 +21,7 @@ public final class ChoiceConfig {
     /** The words that mean an answer, and what the voices say around it. */
     public record Answer(List<String> words, List<Line> confirm, List<Line> sealed) {}
 
-    private static int devoteeInjuries;
+    private static String devoteeTrait;
     private static int answerSeconds;
     private static int lineSeconds;
     private static String music;
@@ -43,7 +43,7 @@ public final class ChoiceConfig {
     private ChoiceConfig() {}
 
     static void reset() {
-        devoteeInjuries = 2;
+        devoteeTrait = "manaless";
         answerSeconds = 90;
         lineSeconds = 4;
         music = "";
@@ -74,7 +74,7 @@ public final class ChoiceConfig {
     static void load(ConfigurationSection choice, ConfigurationSection classes, ConfigurationSection armour) {
         reset();
         if (choice != null) {
-            devoteeInjuries = Math.max(0, choice.getInt("devotee_injuries", 2));
+            devoteeTrait = choice.getString("devotee_trait", "manaless").trim();
             answerSeconds = Math.max(5, choice.getInt("answer_seconds", 90));
             lineSeconds = Math.max(1, choice.getInt("line_seconds", 4));
             music = choice.getString("music.sound", "").trim();
@@ -194,8 +194,12 @@ public final class ChoiceConfig {
         return musicLoopSeconds;
     }
 
-    public static int devoteeInjuries() {
-        return devoteeInjuries;
+    /**
+     * The permanent injury (an RPCharacters trait) a devotee keeps as the mark of what they gave; blank
+     * for none. A character with it has no mana (see {@link BloodBoons}).
+     */
+    public static String devoteeTrait() {
+        return devoteeTrait;
     }
 
     /** The hidden MMOCore class a path unlocks, or null. */

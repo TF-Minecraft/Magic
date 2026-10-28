@@ -5,9 +5,12 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import net.tfminecraft.magic.integration.RpCharactersBridge;
+
 /**
  * Stat boons earned by final sacrifices, added through MythicLib while the mage's character is
- * played. Without MythicLib nothing is applied. MythicLib types stay in {@link MythicBoons}.
+ * played, and the devotee's mark (ChoiceConfig.devoteeTrait): a character bearing it has no mana.
+ * Without MythicLib nothing is applied. MythicLib types stay in {@link MythicBoons}.
  */
 public final class BloodBoons {
 
@@ -24,12 +27,14 @@ public final class BloodBoons {
         }
         MythicBoons.clear(player);
         BloodRecord record = BloodRecords.get(AltarService.currentCharacter(player));
-        if (record == null) {
-            return;
-        }
-        Map<String, Double> boons = HuntConfig.boonsUpTo(record.getPath(), record.getFinalsDone());
+        Map<String, Double> boons = record != null
+                ? HuntConfig.boonsUpTo(record.getPath(), record.getFinalsDone()) : Map.of();
         if (!boons.isEmpty()) {
             MythicBoons.add(player, boons);
+        }
+        String mark = ChoiceConfig.devoteeTrait();
+        if (!mark.isBlank() && RpCharactersBridge.hasTrait(player, mark)) {
+            MythicBoons.noMana(player);
         }
     }
 

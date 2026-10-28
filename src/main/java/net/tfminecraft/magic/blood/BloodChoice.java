@@ -31,19 +31,16 @@ public final class BloodChoice {
         String character = record.getCharacterId();
         record.setPath(path);
         if (path == BloodPath.DEVOTEE) {
-            int marks = 0;
-            for (int i = 0; i < ChoiceConfig.devoteeInjuries(); i++) {
-                if (RpCharactersBridge.applyPermanentInjury(player)) {
-                    marks++;
-                }
-            }
+            String mark = ChoiceConfig.devoteeTrait();
+            boolean marked = !mark.isBlank() && RpCharactersBridge.applyTrait(player, mark);
             ClassUnlockBridge.assign(player, ChoiceConfig.classFor(BloodPath.DEVOTEE));
             BloodArmour.give(player, BloodPath.DEVOTEE, character);
             WhisperService.tell(player, "blood.choice.devoted");
             BloodFx.play("devoted", player.getLocation(), player);
             FinalService.begin(player, record);
+            BloodBoons.apply(player);
             Magic.plugin.getLogger().info("[Magic] Character " + character + " gave themself to the god ("
-                    + marks + " permanent injuries)");
+                    + (marked ? "marked " + mark : "no mark") + ")");
         } else {
             record.setStage(BloodStage.HUNT);
             BloodRecords.save(record);

@@ -145,6 +145,16 @@ blood:
 
     dread: "#8a0303§oCold stone under your back. A blade above you. And below, something old and patient opens its mouth"
 
+    # What the victim on the altar hears while the rite runs (dying.1 to dying.4, spread over the
+    # rite), as it ends (dying.last), or if it breaks before then (spared).
+    dying:
+      1: "#8a0303§oThe blade opens you. Warmth runs out of you and into the stone, and the stone drinks"
+      2: "#8a0303§oYour fingers go cold first, then your hands. You can hear your heart, loud, and slowing"
+      3: "#8a0303§oThe light shrinks to a point above you. Somewhere below, something swallows"
+      4: "#8a0303§oYou cannot feel the stone any more. You cannot feel anything at all"
+      last: "#5c0202§oYour heart beats once more, and the stone keeps it"
+    spared: "#8c8c8c§oThe blade lifts away. Whatever waited below sinks back into the stone, unfed"
+
     broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"
 
     refused: "#8c8c8c§oThe stone will not take them"

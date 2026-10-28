@@ -64,7 +64,7 @@ class ChoiceTest {
     FakeUnlocks.answer = true;
     FakeUnlocks.last = null;
     bridge = mockStatic(RpCharactersBridge.class);
-    bridge.when(() -> RpCharactersBridge.applyPermanentInjury(any())).thenReturn(true);
+    bridge.when(() -> RpCharactersBridge.applyTrait(any(), any())).thenReturn(true);
   }
 
   @AfterEach
@@ -119,7 +119,7 @@ class ChoiceTest {
     assertEquals(91, ChoiceConfig.musicLoopSeconds());
     assertTrue(ChoiceConfig.answer(BloodPath.DEVOTEE).words().contains("i kneel"));
     assertEquals(2, ChoiceConfig.answer(BloodPath.TRUE).sealed().size());
-    assertEquals(2, ChoiceConfig.devoteeInjuries());
+    assertEquals("manaless", ChoiceConfig.devoteeTrait());
     assertEquals("bloodsworn", ChoiceConfig.classFor(BloodPath.DEVOTEE));
     assertEquals("sanguinar", ChoiceConfig.classFor(BloodPath.TRUE));
     assertNull(ChoiceConfig.classFor(BloodPath.NONE));
@@ -129,12 +129,12 @@ class ChoiceTest {
 
   @Test
   void missingSectionsFallBack() throws Exception {
-    Files.writeString(temp.resolve("e.yml"), String.join("\n", "enabled: true", "choice:", "  devotee_injuries: -3",
+    Files.writeString(temp.resolve("e.yml"), String.join("\n", "enabled: true", "choice:", "  devotee_trait: ' '",
         "  answer_seconds: 1", "  line_seconds: 0", "  music: { sound: ' x:y ', category: nope, volume: -1 }",
         "  ask: [plain, { god: ' ' }, { who: hi }, { god: a, self: b }, { self: mine }]",
         "classes:", "  devotee: ' '", "  'true': [x]", ""));
     BloodConfig.load(temp.resolve("e.yml").toFile(), fx.logger);
-    assertEquals(0, ChoiceConfig.devoteeInjuries());
+    assertEquals("", ChoiceConfig.devoteeTrait());
     assertEquals(5, ChoiceConfig.answerSeconds());
     assertEquals(1, ChoiceConfig.lineSeconds());
     assertEquals("x:y", ChoiceConfig.music());
@@ -272,7 +272,7 @@ class ChoiceTest {
       when(api.getArmorMerger().merge(any(), any(), anyString())).thenAnswer(i -> i.getArgument(0));
       assertTrue(BloodChoice.answer(mage, BloodPath.DEVOTEE));
     }
-    bridge.verify(() -> RpCharactersBridge.applyPermanentInjury(mage), times(2));
+    bridge.verify(() -> RpCharactersBridge.applyTrait(mage, "manaless"));
     assertEquals(BloodPath.DEVOTEE, record.getPath());
     assertEquals(BloodStage.FINAL, record.getStage());
     assertEquals("bloodsworn", FakeUnlocks.last);
@@ -285,20 +285,31 @@ class ChoiceTest {
 
   @Test
   void refusingKeepsTheClassAndStartsTheHunt() {
-    bridge.when(() -> RpCharactersBridge.applyPermanentInjury(any())).thenReturn(false);
     assertFalse(BloodChoice.answer(mage, BloodPath.NONE));
     assertTrue(BloodChoice.answer(mage, BloodPath.TRUE));
     assertEquals(BloodStage.HUNT, record.getStage());
     assertNull(FakeUnlocks.last);
     assertEquals("blood.choice.refused", mage.nextMessage());
-    bridge.verify(() -> RpCharactersBridge.applyPermanentInjury(any()), never());
+    bridge.verify(() -> RpCharactersBridge.applyTrait(any(), any()), never());
   }
 
   @Test
-  void injuriesThatFailAreCounted() {
-    bridge.when(() -> RpCharactersBridge.applyPermanentInjury(any())).thenReturn(false);
+  void aMarkThatCannotBeGivenOrIsSwitchedOffStillLetsTheDevoteeKneel() throws Exception {
+    bridge.when(() -> RpCharactersBridge.applyTrait(any(), any())).thenReturn(false);
     assertTrue(BloodChoice.answer(mage, BloodPath.DEVOTEE));
     assertEquals(BloodStage.FINAL, record.getStage());
+    java.nio.file.Path copy = temp.resolve("nomark");
+    java.nio.file.Files.createDirectories(copy);
+    for (java.io.File part : new java.io.File("src/main/resources/wildmagic/bloodmagic").listFiles()) {
+      java.nio.file.Files.copy(part.toPath(), copy.resolve(part.getName()));
+    }
+    java.nio.file.Files.writeString(copy.resolve("zz-nomark.yml"), "choice:\n  devotee_trait: ''\n");
+    BloodConfig.load(copy.toFile(), fx.logger);
+    record.setPath(BloodPath.NONE);
+    record.setStage(BloodStage.CHOICE);
+    bridge.clearInvocations();
+    assertTrue(BloodChoice.answer(mage, BloodPath.DEVOTEE));
+    bridge.verify(() -> RpCharactersBridge.applyTrait(any(), any()), never());
   }
 
   @Test

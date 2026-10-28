@@ -10,8 +10,11 @@ import org.bukkit.entity.Player;
 import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.rpcharacters.RPCharacters;
 import net.tfminecraft.rpcharacters.identity.DisplayIdentityService;
+import net.tfminecraft.rpcharacters.loaders.TraitLoader;
+import net.tfminecraft.rpcharacters.objects.trait.Trait;
 import net.tfminecraft.rpcharacters.permadeath.PermadeathService;
 import net.tfminecraft.rpcharacters.permadeath.PermakillCause;
+import net.tfminecraft.rpcharacters.utils.TraitChangeService;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeRegistry;
 import net.tfminecraft.magic.artifact.sacrifice.SacrificeTierDef;
 import net.tfminecraft.tlibs.character.CharacterSession;
@@ -103,10 +106,36 @@ public final class RpCharactersBridge {
         return character != null && PermadeathService.applyRandomInjury(player, character);
     }
 
-    /** Gives the player's active character a random permanent injury; false without one. */
-    public static boolean applyPermanentInjury(Player player) {
+    /**
+     * Gives the player's active character this trait (a permanent injury, say) with its message, unless
+     * it already has it; false without an active character or for an unknown trait.
+     */
+    public static boolean applyTrait(Player player, String traitId) {
         RPCharacter character = getActiveCharacter(player);
-        return character != null && PermadeathService.applyRandomPermanentInjury(player, character);
+        Trait trait = traitId != null ? TraitLoader.getByString(traitId) : null;
+        if (character == null || trait == null) {
+            return false;
+        }
+        if (!hasTrait(character, traitId)) {
+            TraitChangeService.addTrait(player, character, trait);
+            TraitChangeService.sendGainedMessage(player, trait);
+        }
+        return true;
+    }
+
+    /** Whether the player's active character has this trait. */
+    public static boolean hasTrait(Player player, String traitId) {
+        RPCharacter character = getActiveCharacter(player);
+        return character != null && traitId != null && hasTrait(character, traitId);
+    }
+
+    private static boolean hasTrait(RPCharacter character, String traitId) {
+        for (Trait trait : character.getTraits()) {
+            if (trait.getId().equalsIgnoreCase(traitId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
