@@ -46,6 +46,8 @@ class ChargeEdgeCoverageTest extends GearCoverageSupport {
   void identifiersRejectEmptyMetadataMalformedIdsAndZeroTiers() {
     var noMeta = mock(ItemStack.class);
     when(noMeta.getType()).thenReturn(Material.STONE);
+    var emptyData = new ItemStack(Material.STONE).getPersistentDataContainer();
+    when(noMeta.getPersistentDataContainer()).thenReturn(emptyData);
     assertFalse(ArtifactIds.hasKey(noMeta));
     assertFalse(ArtifactIds.hasKey(new ItemStack(Material.AIR)));
     assertFalse(ChargeIds.isCharge(noMeta));
