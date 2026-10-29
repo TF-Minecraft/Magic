@@ -10,12 +10,12 @@ public final class ArtifactIds {
 
     private ArtifactIds() {}
 
+    // The item scan runs this on every slot: read the key through the stack's data view, not a full meta copy.
     public static boolean hasKey(ItemStack stack) {
-        if (stack == null || stack.getType().isAir() || !stack.hasItemMeta()) {
+        if (stack == null || stack.getType().isAir()) {
             return false;
         }
-        ItemMeta meta = stack.getItemMeta();
-        return meta.getPersistentDataContainer().has(
+        return stack.getPersistentDataContainer().has(
                 ArtifactKeys.artifactId(), PersistentDataType.STRING);
     }
 
