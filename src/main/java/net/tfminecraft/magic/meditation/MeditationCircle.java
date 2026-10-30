@@ -351,7 +351,11 @@ public final class MeditationCircle {
         World world = sitLocation.getWorld();
 
         int[][] offsets = ringOffsets();
-        List<Furniture> candidates = collectNearby(world, cx, cz);
+        List<Furniture> candidates = nearbyPedestals(world, cx, cz);
+        // Every post takes a pedestal of its own, so fewer pedestals than posts never make a ring.
+        if (candidates.size() < offsets.length) {
+            return null;
+        }
         List<Furniture> matched = new ArrayList<>();
         for (int[] offset : offsets) {
             Furniture found = matchAt(candidates, cx + offset[0], cy, cz + offset[1], matched);
@@ -391,10 +395,7 @@ public final class MeditationCircle {
         Furniture best = null;
         double bestDist = 0.75;
         for (Furniture furniture : candidates) {
-            if (already.contains(furniture) || furniture.isCarried()) {
-                continue;
-            }
-            if (!MeditationCache.pedestalId.equalsIgnoreCase(furniture.getId())) {
+            if (already.contains(furniture)) {
                 continue;
             }
             Location anchor = furniture.getOriginBlockLocation().orElse(furniture.getLoc());
@@ -415,7 +416,8 @@ public final class MeditationCircle {
         return best;
     }
 
-    private static List<Furniture> collectNearby(World world, int cx, int cz) {
+    /** The pedestals, not carried, in the sit's chunk and the eight around it. */
+    private static List<Furniture> nearbyPedestals(World world, int cx, int cz) {
         List<Furniture> out = new ArrayList<>();
         InteractibleFurniture plugin = InteractibleFurniture.getInstance();
         int chunkX = cx >> 4;
@@ -426,7 +428,11 @@ public final class MeditationCircle {
                     continue; // an unloaded chunk holds no live furniture; never load one here
                 }
                 Chunk chunk = world.getChunkAt(chunkX + dx, chunkZ + dz);
-                out.addAll(plugin.getFurnitureManager().getFurnitureInChunk(chunk));
+                for (Furniture furniture : plugin.getFurnitureManager().getFurnitureInChunk(chunk)) {
+                    if (!furniture.isCarried() && MeditationCache.pedestalId.equalsIgnoreCase(furniture.getId())) {
+                        out.add(furniture);
+                    }
+                }
             }
         }
         return out;
