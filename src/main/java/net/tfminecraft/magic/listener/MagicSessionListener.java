@@ -62,7 +62,7 @@ public final class MagicSessionListener implements Listener {
         clearActivities(player, outgoing, true);
     }
     private void clearActivities(Player player, net.tfminecraft.tlibs.character.CharacterSession outgoing, boolean clearGear) {
-        Object holder = player.getOpenInventory().getTopInventory().getHolder();
+        Object holder = player.getOpenInventory().getTopInventory().getHolder(false);
         MeditationService.cancel(player);
         SacrificeRiteService.cancelForPlayer(player.getUniqueId());
         var captured = outgoing == null ? null : net.tfminecraft.magic.gear.ownership.GearCharacterBridge.token(outgoing);
@@ -88,7 +88,7 @@ public final class MagicSessionListener implements Listener {
     }
     private void clearStaleGear(Player player) {
         GearOrbService.finishStaleForPlayer(player.getUniqueId()); GearChargeService.clearStale(player);
-        if (player.getOpenInventory().getTopInventory().getHolder() instanceof net.tfminecraft.magic.gear.gui.GearMenuHolder gear && !gear.current(player)) player.closeInventory();
+        if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof net.tfminecraft.magic.gear.gui.GearMenuHolder gear && !gear.current(player)) player.closeInventory();
         if (OpenStationManager.get(player) == null) {
             OpenStationManager.clear(player); SelectedPartsManager.clear(player); TypeSelectionManager.clear(player);
         }

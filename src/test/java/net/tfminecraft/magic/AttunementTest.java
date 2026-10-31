@@ -24,7 +24,7 @@ class AttunementTest {
 
   @BeforeEach
   void setup() {
-    server = MockBukkit.mock();
+    server = MockBukkit.mock(new HolderLookupServerMock());
     server.addSimpleWorld("display");
     Magic.plugin = mock(Magic.class);
     when(Magic.plugin.namespace()).thenReturn("magic");
@@ -207,7 +207,7 @@ class AttunementTest {
     var chest = server.createInventory(null, 9);
     assertFalse(ArtifactCarePlaces.accepted(null, item));
     assertFalse(ArtifactCarePlaces.accepted(chest, item));
-    assertTrue(ArtifactCarePlaces.accepted(player.getInventory(), item));
+    assertTrue(ArtifactCarePlaces.accepted(HolderLookupServerMock.withHolderLookup(player.getInventory()), item));
     ArtifactDisplayIndex.add(item);
     assertTrue(ArtifactCarePlaces.accepted(chest, item));
   }

@@ -26,7 +26,7 @@ abstract class GearCoverageSupport {
 
   @BeforeEach
   void setupGear() throws Exception {
-    server = MockBukkit.mock();
+    server = MockBukkit.mock(new HolderLookupServerMock());
     Magic.plugin = mock(Magic.class, RETURNS_DEEP_STUBS);
     when(Magic.plugin.getName()).thenReturn("Magic");
     when(Magic.plugin.namespace()).thenReturn("magic");

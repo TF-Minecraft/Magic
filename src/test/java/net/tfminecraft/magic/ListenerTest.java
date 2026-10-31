@@ -28,7 +28,7 @@ class ListenerTest {
 
   @BeforeEach
   void setup() {
-    server = MockBukkit.mock();
+    server = MockBukkit.mock(new HolderLookupServerMock());
     Magic.plugin = mock(Magic.class, RETURNS_DEEP_STUBS);
     when(Magic.plugin.getServer()).thenReturn(server);
     when(Magic.plugin.isEnabled()).thenReturn(true);

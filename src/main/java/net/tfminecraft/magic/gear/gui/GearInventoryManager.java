@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -177,10 +178,11 @@ public final class GearInventoryManager implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (event.getInventory().getHolder() instanceof GearMenuHolder holder && !holder.current(player)) {
+        InventoryHolder menu = event.getInventory().getHolder(false);
+        if (menu instanceof GearMenuHolder holder && !holder.current(player)) {
             event.setCancelled(true); return;
         }
-        if (event.getInventory().getHolder() instanceof AssemblyHolder) {
+        if (menu instanceof AssemblyHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack current = event.getCurrentItem();
@@ -211,7 +213,7 @@ public final class GearInventoryManager implements Listener {
             }
             return;
         }
-        if (event.getInventory().getHolder() instanceof TypeSelectionHolder) {
+        if (menu instanceof TypeSelectionHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack clicked = event.getCurrentItem();
@@ -236,7 +238,7 @@ public final class GearInventoryManager implements Listener {
             }
             return;
         }
-        if (event.getInventory().getHolder() instanceof PartSelectionHolder holder) {
+        if (menu instanceof PartSelectionHolder holder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) return;
             ItemStack clicked = event.getCurrentItem();

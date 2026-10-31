@@ -55,7 +55,7 @@ public final class ResonanceGuiManager implements Listener {
     public void refreshOpenInventories() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             Inventory top = player.getOpenInventory().getTopInventory();
-            if (!(top.getHolder() instanceof ResonanceGuiHolder holder)) {
+            if (!(top.getHolder(false) instanceof ResonanceGuiHolder holder)) {
                 continue;
             }
             ResonanceSession session = currentSession(player, holder);
@@ -72,7 +72,7 @@ public final class ResonanceGuiManager implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (!(event.getView().getTopInventory().getHolder() instanceof ResonanceGuiHolder holder)) {
+        if (!(event.getView().getTopInventory().getHolder(false) instanceof ResonanceGuiHolder holder)) {
             return;
         }
         event.setCancelled(true);
@@ -128,14 +128,14 @@ public final class ResonanceGuiManager implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof ResonanceGuiHolder)) {
+        if (!(event.getView().getTopInventory().getHolder(false) instanceof ResonanceGuiHolder)) {
             return;
         }
         event.setCancelled(true);
     }
 
     public void close(Player player) {
-        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ResonanceGuiHolder) {
+        if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof ResonanceGuiHolder) {
             player.closeInventory();
         }
     }

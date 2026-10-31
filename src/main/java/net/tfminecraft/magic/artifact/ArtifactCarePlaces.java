@@ -19,7 +19,7 @@ public final class ArtifactCarePlaces {
         if (ArtifactDisplayIndex.isDisplayed(ArtifactIds.read(stack))) {
             return true;
         }
-        InventoryHolder holder = inventory.getHolder();
+        InventoryHolder holder = inventory.getHolder(false);
         return holder instanceof Player || holder instanceof ItemFrame;
     }
 }
