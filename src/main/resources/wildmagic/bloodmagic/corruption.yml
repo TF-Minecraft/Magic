@@ -1,0 +1,37 @@
+# How the altar changes the room around it.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# How the altar changes the room. Every change is remembered and undone when the altar is purified.
+corruption:
+  # Per altar level: reach in blocks and the most blocks it may have changed in total.
+  levels:
+    0: { radius: 2, max_blocks: 4 }
+    1: { radius: 3, max_blocks: 8 }
+    2: { radius: 3, max_blocks: 14 }
+    3: { radius: 4, max_blocks: 28 }
+    4: { radius: 5, max_blocks: 45 }
+    5: { radius: 6, max_blocks: 70 }
+  blocks_per_sacrifice: 3
+  ambient_every_minutes: 30
+  # Blocks the slow spread changes each time.
+  ambient_blocks: 1
+  # Solid blocks with a face in the open turn into one of "to" (repeat an entry to weigh it).
+  # Every block placed here counts toward a bloodmagic shrine (artifacts/shrines.yml).
+  convert:
+    - { min_level: 0, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF], to: [REDSTONE_ORE] }
+    - { min_level: 0, from: [DEEPSLATE, COBBLED_DEEPSLATE], to: [DEEPSLATE_REDSTONE_ORE] }
+    - { min_level: 1, from: [STONE, COBBLESTONE, STONE_BRICKS, MOSSY_COBBLESTONE, CRACKED_STONE_BRICKS, REDSTONE_ORE], to: [NETHERRACK, NETHERRACK, CRACKED_NETHER_BRICKS] }
+    - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, DEEPSLATE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, NETHERRACK] }
+    - { min_level: 3, from: [DIRT, COARSE_DIRT, ROOTED_DIRT, NETHERRACK, STONE, DEEPSLATE], to: [CRIMSON_NYLIUM] }
+    - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, NETHER_WART_BLOCK, CHISELED_NETHER_BRICKS] }
+  # The room turns outward from the altar in connected patches (blocks touching what it already turned
+  # win). Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
+  # one. Candles only ever stand on the spots right in front of the pedestals; elsewhere a rule's other
+  # blocks are used, and a candle-only rule waits for one of those spots.
+  decorate:
+    - { min_level: 0, at: floor, to: [REDSTONE_WIRE, REDSTONE_WIRE, RED_CANDLE] }
+    - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
+    - { min_level: 2, at: floor, to: [RED_CANDLE] }
+    - { min_level: 3, at: ceiling, to: [WEEPING_VINES] }
+    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, CRIMSON_FUNGUS] }
+    - { min_level: 4, at: floor, to: [NETHER_WART_BLOCK, RED_CANDLE] }

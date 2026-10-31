@@ -20,7 +20,7 @@ admin:
 
   no_permission: "#ff5555You do not have permission to use this command."
 
-  usage: "#aaaaaaUsage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh>"
+  usage: "#aaaaaaUsage: /magic <player|resonance|equilibrium|castmode|gear|artifact|rune|weapon|reload|open|fillchest|shrine|refresh|blood>"
 
 values:
   save_failed: "#ff5555Could not save this Magic edit. The character values were restored; check console."

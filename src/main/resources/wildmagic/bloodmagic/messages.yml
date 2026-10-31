@@ -1,0 +1,318 @@
+# Every Blood Magic chat text: reactions, the rite, the voice naming a final target, notes.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# Blood path. Hidden content: keep these lines vague and never quote them on the wiki.
+blood:
+
+  corruption:
+    unbreakable: "{stone}The stone pulses warm under your tool. It belongs to the altar now"
+  altar:
+
+    placed: "#8c8c8c§oThe stone settles into the dark as if it had always been there. Somewhere below, something sighs"
+
+    not_yours: "#8c8c8c§oThe stone is cold and heavy in your hands. It will not be laid down by you"
+
+    inert: "#8c8c8c§oIt is only a stone. Nothing listens to it yet"
+
+    already: "#8c8c8c§oYou already keep a stone. It would not share you"
+
+    unbreakable: "#8c8c8c§oYour tools ring off the stone without leaving a scratch"
+    # The pedestals the altar set out around itself will not be picked up, carried or broken.
+    pedestal_bound: "#8c8c8c§oThe pedestal will not leave the stone's side"
+    # Placing or breaking anything in an altar's chamber (staff with magic.blood.bypass may).
+    room_locked: "#8c8c8c§oThe chamber belongs to the stone. It will not be changed by your hand"
+
+    # Sitting on the altar (/sit) to meditate; right-clicking it gives owner_touch / stranger_touch.
+    # Lines starting {stone} follow whoever speaks to the mage now (the god's colours, or after refusing
+    # him their own self's); touch.* and sit.* are said to the altar's owner, by stage and path.
+    sit:
+      animal: "{stone}You sit on the stone. It is warm beneath you, and it is listening"
+      choice: "{stone}You sit on the stone and feel it hold its breath. It is waiting for you to speak"
+      hunt: "{stone}You sit on the cold stone and let it count the names with you"
+      final_devotee: "{stone}You sit on the stone and it hums beneath you, patient, full of your father"
+      final_true: "{stone}You sit on the stone. It is as still as you are now"
+      ascended_devotee: "{stone}You sit on the stone, and for a moment you hear him breathing, far below"
+      ascended_true: "{stone}You sit in the quiet you made. It fits you well"
+    touch:
+      animal: "{stone}The stone is warm under your palm, like skin. You feel it breathe"
+      choice: "{stone}The stone thrums under your hand. It is waiting for an answer"
+      hunt: "{stone}The stone is cold where you touch it, and hungry. It wants the ones you know"
+      final_devotee: "{stone}The stone purrs under your hand like something fed. Your father is pleased with you"
+      final_true: "{stone}The stone is quiet under your palm. Quiet like you"
+      # Once the path is complete, the touch tells how full the altar's pool of blood is.
+      ascended_devotee_full: "{stone}The stone is as warm as a heart. Somewhere far below, your father sleeps, content"
+      ascended_devotee_half: "{stone}The pool is lower than it was. Far below, your father stirs, hungry"
+      ascended_devotee_low: "{stone}Only a little blood is left in the pool. Your father is waiting, child"
+      ascended_devotee_dry: "{stone}The pool is dry and the stone is cold. Your father will not wait long"
+      ascended_true_full: "{stone}The pool is full. Nothing moves under your hand. Nothing needs to, yet"
+      ascended_true_half: "{stone}The pool has sunk. You can feel the hunger starting"
+      ascended_true_low: "{stone}Barely any blood is left in the pool. You need someone soon"
+      ascended_true_dry: "{stone}The pool is dry. Everything you took is slipping away"
+    sit_stranger: "#8c8c8c§oThe stone is cold under you. You cannot shake the feeling that it would rather you stood"
+
+    stranger_touch: "#8c8c8c§oCold carved stone, dark in the seams. The longer you look at it, the less you want to touch it"
+
+    place:
+
+      world: "#8c8c8c§oNot here. The ground itself refuses it"
+
+      occupied: "#8c8c8c§oThere is no room for the stone here"
+
+      no_floor: "#8c8c8c§oIt needs firm rock beneath it"
+
+      sky: "#8c8c8c§oNot under the open sky. It must never see the sun"
+
+      shallow: "#8c8c8c§oNot deep enough. Take it further down, under more rock"
+
+      room_too_much: "#8c8c8c§oThe stone wants a chamber of its own: open floor {size} by {size}, {height} high, with it in the middle. Too much rock is in the way here"
+      room_blocked: "#8c8c8c§oThe stone wants a chamber of its own, {size} by {size} and {height} high, but something here will not make way: water, a chest, another stone, or claimed ground"
+      room_shallow: "#8c8c8c§oCarving its chamber here would open the rock to the sky. Go deeper"
+      room_sealed: "#8c8c8c§oOnce laid, its chamber cannot be changed. Leave it a way out first: an opening two blocks high in a wall"
+      region: "#8c8c8c§oThis ground is claimed and watched. Find somewhere forgotten"
+
+  animal:
+
+    bind:
+
+      ok: "{stone}The beast goes rigid on the stone. Its heart hammers against the blade. Now"
+
+      not_stage: "#8c8c8c§oThe stone wants nothing from it. Not yet"
+
+      not_knife: "#8c8c8c§oThis blade means nothing to the stone. Use the plain knife"
+
+      no_altar: "#8c8c8c§oThere is no stone to lay it on"
+
+      not_species: "#8c8c8c§oThe stone does not hunger for that"
+
+      # Lines starting {god} or {self} are said in that voice's colours (voices.yml colors).
+      known: "{god}I have tasted that kind already, child. Bring me another"
+
+      cooldown: "{god}Not yet, child. The stone is still drinking the last one"
+
+      not_stolen: "{god}Not that one. A gift that costs nothing is no gift. Take what others keep"
+
+      too_far: "{god}Too far. Lead it down to the stone"
+
+      busy: "{god}One at a time. Finish what lies on the stone"
+
+    spoiled: "#8c8c8c§oThe blood runs into the dirt, wasted. The stone did not drink"
+    # The rite: the cut, halfway through the bleeding, and stepping away before it is over.
+    cut: "{stone}The blade opens it. The blood runs down into the grooves of the stone, and the stone begins to drink. Stay"
+    draining: "{stone}The heartbeat under your hand slows. The stone is warm now, almost hot"
+    left: "#8c8c8c§oYou stepped away. The blood runs cold across the floor, wasted. The stone did not drink"
+
+    escaped: "#8c8c8c§oThe beast thrashes free of the stone and bolts into the dark"
+
+    accepted: "{stone}The stone drinks. When you take your hand away, it is warmer than before"
+
+    complete: "{stone}Seven kinds. The stone is red to its heart, and something cold and winding rests in your hand that was not there before"
+
+    note: "#aaaaaa§oSomething has taken {animal} from the pen. The rope was cut clean, and faint drag marks lead off to the {direction}"
+
+    note_lost: "#aaaaaa§oSomething has taken {animal} from the pen. The rope was cut clean, and no one saw a thing"
+
+  rite:
+
+    bind:
+
+      ok: "{stone}You haul them onto the stone. It is already warm. Already waiting"
+
+      not_stage: "#8c8c8c§oThe stone does not want them. Not yet"
+
+      not_knife: "#8c8c8c§oThat blade will not open the way. Use the one the stone gave you"
+
+      no_altar: "#8c8c8c§oThere is no stone to lay them on"
+
+      no_character: "#8c8c8c§oThere is nothing in them to take"
+
+      not_down: "#8c8c8c§oThey still fight. Bring them down first"
+
+      too_far: "#8c8c8c§oThe stone is too far. Crouch, take hold of them, and drag them closer"
+
+      too_new: "#8c8c8c§oThin, new blood. The stone would spit it out"
+
+      repeat: "#8c8c8c§oThat blood is still drying on the stone. Find someone else"
+
+      reserved: "{self}Not them. Not yet. They are for later"
+
+      waiting: "#8c8c8c§oThe stone sulks over what was stolen from it. It will take no one yet"
+
+      not_target: "#8c8c8c§oNot this one. You know whose name it whispered"
+
+      busy: "#8c8c8c§oOne at a time"
+
+      blocked: "#8c8c8c§oStone lies between them and the altar. Drag them to it"
+
+    dread: "#8a0303§oCold stone under your back. A blade above you. And below, something old and patient opens its mouth"
+
+    # What the victim on the altar hears while the rite runs (dying.1 to dying.4, spread over the
+    # rite), as it ends (dying.last), or if it breaks before then (spared).
+    dying:
+      1: "#8a0303§oThe blade opens you. Warmth runs out of you and into the stone, and the stone drinks"
+      2: "#8a0303§oYour fingers go cold first, then your hands. You can hear your heart, loud, and slowing"
+      3: "#8a0303§oThe light shrinks to a point above you. Somewhere below, something swallows"
+      4: "#8a0303§oYou cannot feel the stone any more. You cannot feel anything at all"
+      last: "#5c0202§oYour heart beats once more, and the stone keeps it"
+    spared: "#8c8c8c§oThe blade lifts away. Whatever waited below sinks back into the stone, unfed"
+
+    broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"
+
+    refused: "#8c8c8c§oThe stone will not take them"
+
+    taken: "{stone}It is done. You feel heavier, and stronger, and very far from who you were"
+
+  carry:
+
+    start: "{stone}You take hold of them. Heavy, limp and warm. The stone is waiting"
+
+    dragged: "#8c8c8c§oHands on you. You are being dragged over the ground, and you cannot stop it"
+
+    released: "#8c8c8c§oYou let them fall"
+
+    broken: "#8c8c8c§oYour grip slips. They are out of your hands"
+
+  hunt:
+
+    complete: "{stone}Seven measures of blood. Something in you closes like a fist. The stone knows your name now, and no father gave it"
+
+  final:
+
+    named_god: "I have chosen, child. {target}. Bring me {target}"
+
+    named_self: "{target}. It has to be {target}. I think I always knew"
+
+    nobody_god: "No one is close enough to you yet. Love someone, child. Then bring them to your father"
+
+    nobody_self: "There is no one close enough yet. I will have to let someone in"
+
+    taken: "{stone}A hollow opens where they used to be, and something cold flows in to fill it"
+
+    ascended: "{stone}The last of them is gone. Nothing holds you now. Nothing ever will again"
+
+    failed_god: "Someone else spilled what was mine, and you let them. You will bleed for it, child"
+
+    failed_self: "Someone else got to them first. Everything I put into them, wasted"
+
+  # The path's artefacts and the altar's pool of blood.
+  artefact:
+    given: "{stone}Gifts wait on the pedestals around the stone. Sink them into its pool of blood"
+    replaced: "{stone}Something new waits on a pedestal by the stone. Sink it into the pool"
+    not_yours: "#8c8c8c§oIt will not leave the pedestal for you"
+    # Right-clicking the altar with an artefact: it charges in the pool.
+    charge:
+      started: "{stone}It sinks into the pool without a ripple, and the blood begins to warm it"
+      not_yours: "#8c8c8c§oThe pool will not take it from you"
+      stale: "#8c8c8c§oIt crumbles to dried blood before it touches the pool"
+      full: "#8c8c8c§oIt is already full. The pool has nothing more to give it"
+      dry: "{stone}The pool is dry. It has nothing left to give"
+      busy: "#8c8c8c§oThe pool is already holding something. Wait for it to rise"
+      done: "{stone}It rises from the pool, warm and glowing. Set it back on its pedestal"
+    returned: "{stone}What you left in the pool has risen. It waits in your hands"
+  # Meditating on the altar (sit on it) among its charged artefacts.
+  meditate:
+    start:
+      started: "{stone}The stone's heart beats under you. Catch what it gives you, in time with it"
+      not_ready: "#8c8c8c§oThe stone is quiet. It has nothing to share with you yet"
+      dry: "{stone}The artefacts are dry. Charge them in the pool first"
+      full: "{stone}Your blood is as full as the artefacts can make it"
+      busy: "#8c8c8c§oYou are already listening to it"
+    end:
+      stood: "#8c8c8c§oThe heartbeat fades as you rise"
+      dry: "{stone}The artefacts are drained. The heartbeat slows and stops"
+      full: "{stone}Your blood is full. The stone lets you go"
+  pool:
+    fed: "{stone}The pool drinks them down and rises. You feel it in your hands again"
+    thinned: "{stone}Your blood runs thinner. Something you could call on, you no longer can"
+    too_thin: "#8c8c8c§oYour blood runs too thin for that"
+
+  class:
+
+    rewarded: "#8c8c8c§oSomething new stirs in your blood. Your skills have changed (/skills)"
+
+  choice:
+
+    # After the answer is sealed. prompt: once the question is asked (answer aloud, in roleplay).
+    prompt: "#8c8c8c§oSpeak aloud: kneel to him, or refuse him"
+    devoted: "{god}Something of you stays on the stone, and something of the Blood Father comes with you. It hurts. It will always hurt"
+
+    refused: "{self}Lorvear falls silent. For the first time in weeks you are alone with your own thoughts. You are almost sure they are your own"
+
+  armour:
+
+    refuses: "#8c8c8c§oIt will not sit on you. It knows whose blood it was made for"
+
+    crumbles: "#8c8c8c§oIt crumbles to rust and dried blood in your hands"
+
+  direction:
+
+    north: "north"
+
+    northeast: "north-east"
+
+    east: "east"
+
+    southeast: "south-east"
+
+    south: "south"
+
+    southwest: "south-west"
+
+    west: "west"
+
+    northwest: "north-west"
+
+  admin:
+
+    usage: "#aaaaaaUsage: /magic blood list | info <player> | stage <player> <stage> | path <player> <path> | give <player> <altar|ritual_knife|blood_knife|artefacts> | whisper <player> [amount] | voice <player> | target <player> <list|reroll|skip|set <name>> | bonds <player> | altar <info|tp|refresh|purify> <player|altar id> | pool <player> [amount] | reset <player>"
+
+    no_record: "#aaaaaa{player} ({character}) has no blood path."
+
+    info: "#d10202{player} #aaaaaa({character}) stage #ffffff{stage}#aaaaaa, path #ffffff{path}#aaaaaa, whisper #ffffff{whisper}#aaaaaa, species #ffffff{species_count}/7 #555555[{species}]#aaaaaa, hunt #ffffff{hunt}#aaaaaa, finals #ffffff{finals}#aaaaaa, progress #ffffff{progress}#aaaaaa, altar #ffffff{altar}"
+
+    list_header: "#d10202Blood altars: #ffffff{count}"
+
+    list_line: "#aaaaaa- #ffffff{id} #aaaaaacharacter #ffffff{character} #aaaaaaat #ffffff{where} #aaaaaalevel #ffffff{level}"
+
+    bad_stage: "#ff5555Unknown stage. Use one of: {stages}"
+
+    bad_path: "#ff5555Unknown path. Use one of: {paths}"
+
+    bad_item: "#ff5555Unknown item. Use altar, ritual_knife or blood_knife."
+
+    stage_set: "#55ff55{player} is now at stage {stage}."
+
+    path_set: "#55ff55{player} is now on path {path}."
+
+    given: "#55ff55Gave {player} a bound {item}."
+    artefacts_given: "#55ff55Gave {player} a copy of each of their {count} artefact(s)."
+    pool: "#d10202{player} #aaaaaapool #ffffff{pool}/{capacity} #aaaaaa(path complete #ffffff{draining}#aaaaaa), blood resonance #ffffff{resonance} #aaaaaa(tier #ffffff{tier}#aaaaaa), artefacts charged #ffffff{charged}/{total}"
+
+    reset: "#55ff55{player}'s blood path was cleared and any altar purified."
+
+    no_altar: "#ff5555No altar found for {target}."
+
+    altar_refreshed: "#55ff55Altar refreshed at level {level}."
+
+    altar_purified: "#55ff55Altar at {where} purified."
+
+    tp_unavailable: "#ff5555Only in-game staff can teleport, and the altar's world must be loaded."
+
+    whispered: "#55ff55The voices now speak to {player}. The first line comes within a minute."
+
+    already_whispered: "#ff5555{player} already hears the voices."
+
+    whisper_added: "#55ff55{player}'s whisper meter is now {value} (voices woke: {woke})."
+
+    no_voices: "#ff5555{player} does not hear any voices."
+
+    voiced: "#55ff55{player} heard the next line."
+
+    not_final: "#ff5555{player} is not at the final sacrifices."
+
+    no_character_named: "#ff5555No living character is called {name}."
+
+    targets: "#d10202{player} #aaaaaafinals done #ffffff{done}#aaaaaa, targets #ffffff{targets}"
+
+    bonds_header: "#d10202{player} #aaaaaahas bonds with #ffffff{count} #aaaaaacharacter(s):"
+
+    bonds_line: "#aaaaaa{rank}. #ffffff{name} #555555({score})"

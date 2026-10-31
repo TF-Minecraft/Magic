@@ -22,6 +22,7 @@ import net.tfminecraft.magic.artifact.sacrifice.SacrificeRiteService;
 import net.tfminecraft.magic.artifact.shrine.ShrineChargeService;
 import net.tfminecraft.magic.attunement.ArtifactDisplayIndex;
 import net.tfminecraft.magic.attunement.AuraLog;
+import net.tfminecraft.magic.blood.BloodMagic;
 import net.tfminecraft.magic.listener.ArtifactFillChestListener;
 import net.tfminecraft.magic.listener.ArtifactListener;
 import net.tfminecraft.magic.listener.CastDriftListener;
@@ -157,6 +158,7 @@ public class Magic extends JavaPlugin {
             MagicTickService.register(ctx -> SpellModifierApplyService.syncChangedOnline(
                     resonanceGuiManager.getSessionManager()));
         }
+        BloodMagic.start(this);
         MagicTickService.start();
         getServer().getScheduler().runTask(this, ArtifactDisplayIndex::rebuildFromSaved);
         getServer().getScheduler().runTask(this, GearStationStore::load);
@@ -197,6 +199,7 @@ public class Magic extends JavaPlugin {
         shutdownStep("fill chests", ArtifactFillChestService::clearAll);
         shutdownStep("shrine charges", ShrineChargeService::clearAll);
         shutdownStep("sacrifice rites", SacrificeRiteService::clearAll);
+        shutdownStep("blood magic", BloodMagic::stop);
         shutdownStep("spell modifiers", () -> {
             if (isMmoStackPresent()) {
                 SpellModifierApplyService.clearAll();
@@ -277,6 +280,7 @@ public class Magic extends JavaPlugin {
         ok &= chargesLoader.loadSafe(new File(getDataFolder(), "charges.yml"));
         ok &= gearLoader.loadFolder(new File(getDataFolder(), "gear"));
         ok &= ArtifactConfigLoader.loadFolder(new File(getDataFolder(), "artifacts"));
+        ok &= BloodMagic.loadConfig(getDataFolder(), getLogger());
         AuraLog.configure(Cache.loggingEnabled, Cache.wipeLog, getDataFolder());
         if (ok) {
             getLogger().info("[Magic] Configs loaded.");
@@ -304,6 +308,7 @@ public class Magic extends JavaPlugin {
         mkdir("artifacts");
         mkdir("gear");
         mkdir("data/characters");
+        mkdir("data/bloodmagic/characters");
     }
 
     private void mkdir(String relativePath) {
@@ -320,6 +325,16 @@ public class Magic extends JavaPlugin {
             "gui.yml",
             "skills.yml",
             "charges.yml",
+            "wildmagic/bloodmagic/settings.yml",
+            "wildmagic/bloodmagic/items.yml",
+            "wildmagic/bloodmagic/voices.yml",
+            "wildmagic/bloodmagic/animals.yml",
+            "wildmagic/bloodmagic/corruption.yml",
+            "wildmagic/bloodmagic/choice.yml",
+            "wildmagic/bloodmagic/armour.yml",
+            "wildmagic/bloodmagic/artefacts.yml",
+            "wildmagic/bloodmagic/fx.yml",
+            "wildmagic/bloodmagic/messages.yml",
             "gear/archetypes.yml",
             "gear/part-types.yml",
             "gear/parts.yml",

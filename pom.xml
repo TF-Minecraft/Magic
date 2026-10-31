@@ -13,7 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.proc>full</maven.compiler.proc>
         <interactiblefurniture.version>0.2.0</interactiblefurniture.version>
-        <rpcharacters.version>2.16.0</rpcharacters.version>
+        <rpcharacters.version>2.31.0</rpcharacters.version>
         <tlibs.version>2.6.0</tlibs.version>
     </properties>
 
@@ -88,6 +88,16 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- NBT-API's NBT class references authlib; mocking it in tests needs the type. -->
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>authlib</artifactId>
+            <version>7.0.61</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion>
+            </exclusions>
+        </dependency>
         <!-- TLibs' ItemSkinPreserver needs NBTAPI types; the NBTAPI plugin provides them at runtime. -->
         <dependency>
             <groupId>local</groupId>
@@ -143,12 +153,34 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Optional at runtime: softdepend in plugin.yml. Blood altars refuse WorldGuard regions. -->
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- WorldGuard references metrics classes omitted from its published POM. -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>enginehub</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+        <repository>
+            <id>minecraft-libraries</id>
+            <url>https://libraries.minecraft.net/</url>
         </repository>
     </repositories>
 
