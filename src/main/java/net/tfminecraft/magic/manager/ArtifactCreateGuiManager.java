@@ -58,7 +58,7 @@ public final class ArtifactCreateGuiManager implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (!(event.getView().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder holder)) {
+        if (!(event.getView().getTopInventory().getHolder(false) instanceof ArtifactCreateGuiHolder holder)) {
             return;
         }
         event.setCancelled(true);
@@ -152,7 +152,7 @@ public final class ArtifactCreateGuiManager implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getView().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder)) {
+        if (!(event.getView().getTopInventory().getHolder(false) instanceof ArtifactCreateGuiHolder)) {
             return;
         }
         event.setCancelled(true);
@@ -163,7 +163,7 @@ public final class ArtifactCreateGuiManager implements Listener {
         if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
-        if (!(event.getView().getTopInventory().getHolder() instanceof ArtifactCreateGuiHolder holder)) {
+        if (!(event.getView().getTopInventory().getHolder(false) instanceof ArtifactCreateGuiHolder holder)) {
             return;
         }
         sessions.remove(player.getUniqueId(), holder.getSession());

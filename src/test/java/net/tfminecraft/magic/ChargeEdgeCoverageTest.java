@@ -69,7 +69,7 @@ class ChargeEdgeCoverageTest extends GearCoverageSupport {
     assertFalse(Artifact.create().isCharge());
     assertFalse(Charge.fromItem(chargeItem()).isArtifact());
     var inventory = mock(Inventory.class);
-    when(inventory.getHolder())
+    when(inventory.getHolder(false))
         .thenReturn(mock(InventoryHolder.class, withSettings().extraInterfaces(ItemFrame.class)));
     assertTrue(ArtifactCarePlaces.accepted(inventory, s));
     ArtifactDisplayIndex.add(s);
