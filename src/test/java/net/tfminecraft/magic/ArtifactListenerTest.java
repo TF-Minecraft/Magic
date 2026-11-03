@@ -349,6 +349,58 @@ class ArtifactListenerTest {
   }
 
   @Test
+  void manyPickupsInOneTickRefreshTheLoreOnceAndALaterPickupRefreshesAgain() {
+    var listener = new ArtifactListener();
+    var player = server.addPlayer();
+    var other = server.addPlayer();
+    try (var lore = mockStatic(VesselLore.class)) {
+      for (int i = 0; i < 5; i++) {
+        listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      }
+      listener.onPickup(new EntityPickupItemEvent(other, mock(Item.class), 0));
+      lore.verifyNoInteractions();
+      server.getScheduler().performOneTick();
+      lore.verify(() -> VesselLore.updateInventory(player));
+      lore.verify(() -> VesselLore.updateInventory(other));
+      listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      server.getScheduler().performOneTick();
+      lore.verify(() -> VesselLore.updateInventory(player), times(2));
+      lore.verify(() -> VesselLore.updateInventory(other));
+    }
+  }
+
+  @Test
+  void aSkippedRefreshStillLetsTheNextPickupQueueOne() {
+    var listener = new ArtifactListener();
+    var player = server.addPlayer();
+    var provider = new CharacterTestSupport();
+    provider.start(player, "Alice");
+    try (var lore = mockStatic(VesselLore.class)) {
+      listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      provider.start(player, "Bob");
+      server.getScheduler().performOneTick();
+      lore.verifyNoInteractions();
+      listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      server.getScheduler().performOneTick();
+      lore.verify(() -> VesselLore.updateInventory(player));
+    } finally {
+      provider.unregister();
+    }
+  }
+
+  @Test
+  void pickupsQueueNothingWhileThePluginIsNotRunning() {
+    var listener = new ArtifactListener();
+    var player = server.addPlayer();
+    try (var lore = mockStatic(VesselLore.class)) {
+      Magic.plugin = null;
+      listener.onPickup(new EntityPickupItemEvent(player, mock(Item.class), 0));
+      server.getScheduler().performOneTick();
+      lore.verifyNoInteractions();
+    }
+  }
+
+  @Test
   void deferredShrineWorkKeepsTheWorldItemButDropsAnOfflineOrStaleActor() {
     var listener = new ArtifactListener();
     var player = server.addPlayer();

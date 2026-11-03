@@ -1,5 +1,9 @@
 package net.tfminecraft.magic.listener;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -184,12 +188,28 @@ public final class ArtifactListener implements Listener {
         ArtifactDisplayIndex.ensureChunk(event.getChunk());
     }
 
+    /** Players with a lore refresh already queued for the next tick. */
+    private final Set<UUID> pendingLore = new HashSet<>();
+
+    /**
+     * Refreshes the inventory's aura and charge lore on the next tick, once per player however
+     * many items they picked up this tick. One refresh is the same as several: ArtifactLore.apply
+     * and ChargeLore.apply strip their own lore block and rebuild it from the item's data, so a
+     * second run in the same tick gives the same item. The queued mark is cleared by its own task
+     * even when SessionGuard skips the refresh (player gone or character switched), so the next
+     * pickup always queues again.
+     */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPickup(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player)) {
+        if (!(event.getEntity() instanceof Player player) || Magic.plugin == null) {
+            return;
+        }
+        UUID id = player.getUniqueId();
+        if (!pendingLore.add(id)) {
             return;
         }
         SessionGuard.runLater(player, () -> VesselLore.updateInventory(player));
+        Magic.plugin.getServer().getScheduler().runTask(Magic.plugin, () -> pendingLore.remove(id));
     }
 
     @EventHandler
