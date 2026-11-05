@@ -10,6 +10,8 @@ import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.artifact.Artifact;
 import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.ArtifactKeys;
+import net.tfminecraft.magic.artifact.ArtifactLore;
+import net.tfminecraft.magic.charge.ChargeIds;
 import net.tfminecraft.magic.charge.ChargeDef;
 import net.tfminecraft.magic.charge.ChargeKeys;
 import net.tfminecraft.magic.charge.ChargeLore;
@@ -17,10 +19,12 @@ import net.tfminecraft.magic.charge.ChargeRegistry;
 import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
@@ -94,15 +98,31 @@ class VesselLoreTest {
   void itemsNoWriterTouchesComeBackUnreadAndUnchanged() {
     var plain = withLore("Only lore");
     var before = plain.clone();
-    try (var charge = mockStatic(ChargeLore.class)) {
+    try (var ids = mockStatic(ChargeIds.class);
+        var charge = mockStatic(ChargeLore.class);
+        var artifact = mockStatic(ArtifactLore.class)) {
       assertSame(plain, VesselLore.updateItem(plain));
+      ids.verifyNoInteractions();
       charge.verifyNoInteractions();
+      artifact.verifyNoInteractions();
+      // Lore an artifact could be read back from still goes to the artifact writer.
+      var slashed = withLore("Ten / twenty");
+      artifact.when(() -> ArtifactLore.updateItem(slashed)).thenReturn(slashed);
+      assertSame(slashed, VesselLore.updateItem(slashed));
+      artifact.verify(() -> ArtifactLore.updateItem(slashed));
     }
     assertEquals(before, plain);
-    // Lore an artifact could be read back from still goes to the artifact writer, which leaves this one alone.
-    var slashed = withLore("Ten / twenty");
-    assertSame(slashed, VesselLore.updateItem(slashed));
-    assertEquals(withLore("Ten / twenty"), slashed);
+  }
+
+  @Test
+  void itemsWithoutMetaAreSkippedLikeBothWritersSkipThem() {
+    // On Paper the item factory calls an item without meta equal to no meta at all; MockBukkit's never does.
+    var factory = mock(ItemFactory.class);
+    when(factory.equals(any(), isNull())).thenReturn(true);
+    try (var bukkit = mockStatic(Bukkit.class, CALLS_REAL_METHODS)) {
+      bukkit.when(Bukkit::getItemFactory).thenReturn(factory);
+      assertFalse(VesselLore.mayHaveVesselLore(withKey(ChargeKeys.chargeTier())));
+    }
   }
 
   @Test
