@@ -1,5 +1,6 @@
 package net.tfminecraft.magic.artifact.aura;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -33,15 +34,19 @@ public final class VesselLore {
     }
 
     /**
-     * False only for an item neither lore writer touches, found from one copy of its meta. A charge has its tier key
-     * or matches a charge item (ChargeIds.isCharge); an artifact has aura data (AuraData.fromPersistentData) or aura
-     * lines its lore can be read back from, and each of those has a "/" (ArtifactLore.readAura). For anything else
-     * both writers leave the item exactly as it was, so it isn't read again for each of them.
+     * False only for an item neither lore writer touches, found from one copy of its meta. Both writers skip an item
+     * without meta (hasItemMeta). A charge has its tier key or matches a charge item (ChargeIds.isCharge); an artifact
+     * has aura data (AuraData.fromPersistentData) or aura lines its lore can be read back from, and each of those has
+     * a "/" (ArtifactLore.readAura). For anything else both writers leave the item exactly as it was, so it isn't
+     * read again for each of them.
      */
     // Keep the existing legacy text representation, formatting, and exact-string comparisons.
     @SuppressWarnings("deprecation")
     static boolean mayHaveVesselLore(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
+        if (Bukkit.getItemFactory().equals(meta, null)) {
+            return false;
+        }
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         if (pdc.has(ArtifactKeys.auraCap()) || pdc.has(ArtifactKeys.auraFill()) || pdc.has(ArtifactKeys.auraData())
                 || pdc.has(ChargeKeys.chargeTier()) || ChargeRegistry.match(stack) != null) {

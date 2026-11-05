@@ -7,15 +7,19 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import net.tfminecraft.magic.Cache;
 import net.tfminecraft.magic.Magic;
+import net.tfminecraft.magic.artifact.Artifact;
+import net.tfminecraft.magic.artifact.ArtifactIds;
 import net.tfminecraft.magic.artifact.ArtifactKeys;
 import net.tfminecraft.magic.charge.ChargeDef;
 import net.tfminecraft.magic.charge.ChargeKeys;
 import net.tfminecraft.magic.charge.ChargeLore;
 import net.tfminecraft.magic.charge.ChargeRegistry;
 import net.tfminecraft.magic.charge.TierBands;
+import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.registry.ElementRegistry;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -65,6 +69,11 @@ class VesselLoreTest {
   @Test
   void onlyItemsWithVesselKeysAChargeMatchOrSlashedLoreAreLookedAt() {
     assertFalse(VesselLore.mayHaveVesselLore(new ItemStack(Material.STONE)));
+    var named = new ItemStack(Material.STONE);
+    var meta = named.getItemMeta();
+    meta.setDisplayName("Named stone");
+    named.setItemMeta(meta);
+    assertFalse(VesselLore.mayHaveVesselLore(named));
     assertFalse(VesselLore.mayHaveVesselLore(withLore("Only lore", "A sword, well kept")));
     assertTrue(VesselLore.mayHaveVesselLore(withLore("Only lore", "Fire 3 / 10")));
     assertTrue(VesselLore.mayHaveVesselLore(withKey(ArtifactKeys.auraCap())));
@@ -72,6 +81,9 @@ class VesselLoreTest {
     assertTrue(VesselLore.mayHaveVesselLore(withKey(ArtifactKeys.auraData())));
     assertTrue(VesselLore.mayHaveVesselLore(withKey(ChargeKeys.chargeTier())));
     var shard = new ItemStack(Material.AMETHYST_SHARD);
+    var shardMeta = shard.getItemMeta();
+    shardMeta.setDisplayName("Charge");
+    shard.setItemMeta(shardMeta);
     try (var registry = mockStatic(ChargeRegistry.class)) {
       registry.when(() -> ChargeRegistry.match(shard)).thenReturn(new ChargeDef(1, "v.AMETHYST_SHARD", 20));
       assertTrue(VesselLore.mayHaveVesselLore(shard));
@@ -111,5 +123,26 @@ class VesselLoreTest {
     verify(inventory).setItem(6, offHand);
     verify(inventory, times(2)).setItem(anyInt(), any());
     assertEquals(current, blank, "the blank charge got its lore");
+  }
+
+  @Test
+  void anArtifactInTheInventoryGetsItsAuraLoreAndOnlyItsSlotIsSet() {
+    ElementRegistry.register(new ElementDef("fire", new YamlConfiguration()));
+    var artifact = new ItemStack(Material.STONE);
+    ArtifactIds.writeNew(artifact);
+    var aura = Artifact.create();
+    aura.setCap("fire", 10);
+    aura.setFill("fire", 5);
+    aura.persistPdc(artifact);
+    var player = mock(Player.class);
+    var inventory = mock(PlayerInventory.class);
+    when(player.getInventory()).thenReturn(inventory);
+    when(inventory.getStorageContents()).thenReturn(new ItemStack[] {new ItemStack(Material.DIRT), artifact});
+    when(inventory.getArmorContents()).thenReturn(new ItemStack[0]);
+    when(inventory.getExtraContents()).thenReturn(new ItemStack[0]);
+    VesselLore.updateInventory(player);
+    verify(inventory).setItem(1, artifact);
+    verify(inventory, times(1)).setItem(anyInt(), any());
+    assertTrue(artifact.getItemMeta().getLore().stream().anyMatch(line -> line.contains("/")));
   }
 }
