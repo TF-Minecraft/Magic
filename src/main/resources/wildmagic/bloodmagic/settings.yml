@@ -1,0 +1,234 @@
+# Blood Magic (Magic's hidden blood path), wildmagic/bloodmagic. Hidden content: never on the wiki.
+# This folder holds everything the path uses, one topic per file: settings (this file: the switch,
+# the altar, where it may stand, the hunt, bonds, finals, hidden classes, path permissions), items,
+# voices, animals, corruption, choice, armour, fx and messages. Every .yml here but messages.yml is
+# merged into one config, so a section may live in any of them.
+# The jar does not overwrite existing live copies: copy new keys by hand after updates.
+# The god is Lorvear, the first vampire, the Blood Father. The blade and class names are placeholders.
+
+enabled: true
+
+altar:
+  # The altar is a barrier block (unbreakable, piston and blast proof) with a display on it.
+  block: BARRIER
+  # Altar look per level. Level rises with the owner's progress (see levels below).
+  # model is a TLibs item path shown by the display entity.
+  models:
+    0: ia.tfmc_blood:altar_0
+    1: ia.tfmc_blood:altar_1
+    2: ia.tfmc_blood:altar_2
+    3: ia.tfmc_blood:altar_3
+    4: ia.tfmc_blood:altar_4
+    5: ia.tfmc_blood:altar_5
+  display_scale: 1.0
+  # Progress needed for each altar level. Animal sacrifices count 1 each,
+  # the god's question +1, hunt points 1 each, final sacrifices 2 each.
+  levels:
+    1: 2
+    2: 5
+    3: 8
+    4: 12
+    5: 18
+
+placement:
+  # Worlds where an altar may stand. Empty = every world.
+  worlds: []
+  # Underground: no sky light at the altar and at least min_cover solid blocks above it.
+  require_underground: true
+  min_cover: 3
+  cover_scan_height: 48
+  # Refuse any WorldGuard region except the ids listed here (needs WorldGuard).
+  deny_regions: true
+  allowed_regions: []
+  # The altar is also a meditation circle, sat on in the middle of the eight pedestals (config.yml
+  # meditation.cardinal_offset / diagonal_offset, 4 and 3). Placing it lays its chamber: open floor out
+  # to the farthest pedestal on every side (9 by 9 by default), height blocks high, and the floor, the
+  # walls around it and the ceiling relaid in the template blocks so every chamber starts the same.
+  # Openings in the walls and ceiling (the way in) stay open. If more than max_changes blocks would be
+  # carved or filled, or the room would hit or open onto water or lava, a container, unbreakable blocks,
+  # another altar, claimed ground or open sky, the stone refuses and tells the player the size it needs.
+  # Then the chamber, out to the corruption's farthest reach, is locked: nobody but staff
+  # (magic.blood.bypass) may place, break or hang anything there. The room stays when the altar is purified.
+  room:
+    enabled: true
+    height: 3
+    max_changes: 150
+    # Blocks the chamber is laid in (repeat an entry to weigh it). Keep them blocks the corruption turns
+    # (corruption.yml convert) so the room still reddens. An empty list leaves that part as it was.
+    # candles: { block: <candle>, count: 1-4 } stands a lit cluster in each floor corner (none by default:
+    # candles come with the corruption and on the altar itself; red ones count toward a bloodmagic shrine).
+    # altar_light: the stone glows (an unseen light just above it). light: hidden light in the four top
+    # corners. Levels 0-15, 0 for none.
+    template:
+      floor: [STONE_BRICKS, STONE_BRICKS, STONE_BRICKS, CRACKED_STONE_BRICKS, STONE]
+      walls: [STONE, STONE, STONE, COBBLESTONE, ANDESITE]
+      ceiling: [STONE, STONE, STONE, COBBLESTONE]
+      altar_light: 7
+      light: 0
+  # How often (minutes) altars of dead owners are checked and purified.
+  purify_check_minutes: 10
+
+hunt:
+  # True path: points of character sacrifices needed for the True class.
+  points_required: 7
+  # A knocked-out character this close to the altar can be dragged onto it with the blood knife.
+  drag_range: 8
+  # Seconds the rite takes. Once it starts, the character dies for good when it ends.
+  rite_seconds: 10
+  # Sneak and right-click a knocked-out character with the blood knife to drag the body along behind you.
+  # Right-click your altar (or the body) with the knife to lay it on the altar; sneak-click the body to let go.
+  carry:
+    enabled: true
+    # Blocks the body trails behind you.
+    distance: 1.2
+    # Slowness level while dragging (0 = none).
+    slowness: 1
+    # The drag breaks if the body ends up further away than this (teleports, pearls).
+    break_distance: 6
+  victims:
+    # Characters of the same account never count. These keep fresh alts out too.
+    min_playtime_hours: 10
+    min_age_days: 7
+    # The same player (any of their characters) may not be taken twice in a row.
+    no_repeat_player: true
+  # Hunt points by how close the victim was (rank 1 = closest). The closest finals.count are kept
+  # for the final sacrifices and cannot be taken in the hunt. Strangers (no bond at all) are worth "stranger".
+  points:
+    stranger: 1
+    default: 1
+    ranks:
+      - { up_to: 10, points: 3 }
+      - { up_to: 25, points: 2 }
+
+# Hidden closeness between characters. Never shown to players.
+bonds:
+  # Every sample, characters within near_radius of each other add the sample's minutes together.
+  sample_minutes: 5
+  near_radius: 16
+  # Score = conversation_weight x counted RP exchanges (RPCharacters) + hour_weight x hours near each other.
+  conversation_weight: 3.0
+  hour_weight: 2.0
+  # A will heir adds this, only if the heir is another player's character the two really spent time with.
+  heir_bonus: 40
+  heir_min_hours: 10
+  heir_min_conversations: 20
+
+# The final sacrifices: the closest characters, named one at a time from least close to closest.
+finals:
+  count: 5
+  # A named target that dies any other lethal way: backlash and this wait before the next is named.
+  fail_cooldown_hours: 72
+  # A named target not seen for this long is quietly replaced.
+  inactive_days: 21
+  # MythicLib stat boons per final sacrifice (they add up). Placeholder values. Only the true path
+  # gets boons (fran); a path left out here gets none.
+  boons:
+    "true":
+      1: { MAX_HEALTH: 2 }
+      2: { MAX_HEALTH: 2 }
+      3: { MAX_HEALTH: 2 }
+      4: { SPELL_DAMAGE: 4 }
+      5: { MAX_HEALTH: 4 }
+  # What each final sacrifice gives the path's class (see classes: below), on top of the boons.
+  # Worked out again from the sacrifices every time, so a change here also reaches characters part
+  # way through; an ascended character gets every listed reward.
+  #   skill_points: added to the class's own skill-point pool, which RPCharacters keeps apart from
+  #                 the character's other classes (placeholder amounts, balance later)
+  #   slots: MMOCore skill slots it opens
+  #   spells: MMOCore class skills it unlocks
+  class_rewards:
+    devotee:
+      1: { skill_points: 2 }
+      2: { skill_points: 2, slots: [3] }
+      3: { skill_points: 2 }
+      4: { skill_points: 2, slots: [4] }
+      5: { skill_points: 2 }
+    "true":
+      1: { slots: [2], spells: [SANGUINAR_EXSANGUINATE, SANGUINAR_OSSUARY] }
+      2: { slots: [3], spells: [SANGUINAR_SANGUINE_POOL, SANGUINAR_HEMOPLAGUE] }
+      3: { slots: [4], spells: [SANGUINAR_BLOOD_MOON] }
+      4: { slots: [5], spells: [SANGUINAR_SANGUINE_CHAINS] }
+      5: { slots: [6], spells: [SANGUINAR_RED_HARVEST, SANGUINAR_CRIMSON_TIDE] }
+
+# Hidden MMOCore classes (options.display: false). Players never pick them: RPCharacters puts the
+# character into the devotee class when it kneels and into the true class when its hunt is done, and
+# binds it there (/class refuses; staff release with /rpcharacter admin releaseclass).
+classes:
+  devotee: bloodsworn
+  "true": sanguinar
+
+# Permissions a character on each path holds while it is played (one or a list), e.g. to see the
+# hidden Wild Mage Sets skin category (magic.wild) and the path's skins in it. They follow the
+# character: another character of the same player has none.
+permissions:
+  devotee: [magic.blood.bloodsworn, magic.wild]
+  "true": magic.blood.sanguinar
+
+# The pool of blood in the altar and the blood resonance it feeds: what keeps the blood classes'
+# spells working. Artefacts charge in the pool (right-click the altar with one); meditating on the
+# altar among the charged ones draws their charge into blood resonance. Placeholder values.
+pool:
+  # The pool stays full and charging is free until the path is complete. Then each point of charge
+  # costs blood_per_point of the pool's blood.
+  capacity: 100
+  blood_per_point: 2
+  # Once the path is complete, blood resonance loses this share (percent) of itself per hour the
+  # character is played (offline time never counts), so the highest tiers need topping up soonest.
+  decay_percent_per_hour: 1
+  # Blood resonance never sinks below this, so the lowest tier always works.
+  floor: 5
+  # Once the path is complete, a person sacrificed on the altar (same rules as the hunt's victims)
+  # fills the pool by how close they were to the mage (rank 1 = closest; strangers have no bond).
+  # Animals never refill it.
+  refill:
+    people:
+      stranger: 40
+      default: 40
+      ranks:
+        - { up_to: 10, amount: 100 }
+        - { up_to: 25, amount: 60 }
+  # The most blood resonance the path's artefacts can give (each one holds an equal share of charge),
+  # by final sacrifices done; an ascended mage has the last entry.
+  worth:
+    devotee: { 0: 20 }
+    "true": { 0: 20, 1: 35, 2: 55, 3: 75, 4: 80, 5: 95 }
+  # Blood resonance each spell tier needs: 1 Minor, 2 Lesser, 3 Greater, 4 Ascendant, 5 Exalted,
+  # 6 Transcendent.
+  tiers: { 1: 5, 2: 15, 3: 30, 4: 50, 5: 70, 6: 90 }
+  # The blood spells by tier (MythicLib skill ids). Spells not listed are never refused.
+  spells:
+    1: [BLOODSWORN_BLOOD_BOLT, BLOODSWORN_OPEN_VEINS, BLOODSWORN_BLOOD_KISS, BLOODSWORN_CRIMSON_STEP]
+    2: [BLOODSWORN_BLOOD_BOIL, BLOODSWORN_BLOODBEND, BLOODSWORN_MARK_OF_THE_BLOOD_FATHER, BLOODSWORN_CHALICE_OF_BLOOD]
+    3: [SANGUINAR_EXSANGUINATE, SANGUINAR_OSSUARY]
+    4: [SANGUINAR_SANGUINE_POOL, SANGUINAR_HEMOPLAGUE]
+    5: [SANGUINAR_BLOOD_MOON, SANGUINAR_SANGUINE_CHAINS]
+    6: [SANGUINAR_RED_HARVEST, SANGUINAR_CRIMSON_TIDE]
+
+# Wild magic meditation: sit on your altar among its charged artefacts. With each heartbeat a drop of
+# blood rises from one and drifts to you; swing at a drop to catch it. A catch within window_ticks of
+# a beat (every drop swells then) draws on_beat_draw charge into blood resonance; off the beat it draws
+# off_beat_draw and costs off_beat_health of your own health (never the last point). Drops left alone
+# fall back after linger_beats. Charging an artefact in the pool takes charge_ticks.
+meditation:
+  beat_ticks: 30
+  window_ticks: 6
+  on_beat_draw: 3
+  off_beat_draw: 1
+  off_beat_health: 1
+  hit_range: 6
+  hit_radius: 0.6
+  charge_ticks: 160
+  drops:
+    item: v.redstone
+    scale: 0.3
+    flare_scale: 0.55
+    travel_beats: 2
+    linger_beats: 2
+    max: 4
+  # Private sounds: sound (vanilla or resource pack key), volume, pitch, seconds (how long it runs
+  # before it loops; 0 plays it once). music loops while meditating, charge plays as an artefact goes
+  # into the pool. The tfmc_blood sounds are in the server pack (ServerAssets).
+  sounds:
+    heartbeat: { sound: entity.warden.heartbeat, volume: 0.9, pitch: 0.7 }
+    music: { sound: tfmc_blood:meditate.chant, volume: 0.7, pitch: 1.0, seconds: 24 }
+    charge: { sound: tfmc_blood:rite.charge, volume: 0.8, pitch: 1.0 }

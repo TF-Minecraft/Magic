@@ -1,0 +1,20 @@
+# The bound armour each path receives.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# Bound, unbreakable armour. Devotees get theirs at the question; the true path when the hunt is done.
+# Each piece is a TLibs item path (the stats), optionally with an ia. look put over it:
+#   - m.type.id    or    - { item: m.type.id, look: ia.namespace:id }
+# A piece's name may use {victim}: the true path's armour is made from the hunt's victims, the most
+# important (most points, then closest) on the first named piece and so on down; with fewer victims
+# than pieces the names start over from the top. Without victims the item keeps its own name.
+armour:
+  devotee:
+    - { item: m.mage_armors.bloodsworn_helmet, look: ia.tfmc_blood:bloodsworn_helmet }
+    - { item: m.mage_armors.bloodsworn_chestplate, look: ia.tfmc_blood:bloodsworn_chestplate }
+    - { item: m.mage_armors.bloodsworn_leggings, look: ia.tfmc_blood:bloodsworn_leggings }
+    - { item: m.mage_armors.bloodsworn_boots, look: ia.tfmc_blood:bloodsworn_boots }
+  "true":
+    - { item: m.mage_armors.sanguinar_helmet, look: ia.tfmc_blood:sanguinar_helmet, name: "#5c0202{victim} Skull" }
+    - { item: m.mage_armors.sanguinar_chestplate, look: ia.tfmc_blood:sanguinar_chestplate, name: "#5c0202{victim} Ribcage" }
+    - { item: m.mage_armors.sanguinar_leggings, look: ia.tfmc_blood:sanguinar_leggings, name: "#5c0202{victim} Hide" }
+    - { item: m.mage_armors.sanguinar_boots, look: ia.tfmc_blood:sanguinar_boots, name: "#5c0202{victim} Bones" }

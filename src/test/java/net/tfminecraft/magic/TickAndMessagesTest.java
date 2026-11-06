@@ -90,6 +90,38 @@ class TickAndMessagesTest {
   }
 
   @Test
+  void moduleMessagesLayOverTheMainFile() throws Exception {
+    when(Magic.plugin.getResource("messages.yml")).thenReturn(null);
+    when(Magic.plugin.getResource("mod/messages.yml")).thenAnswer(i -> new ByteArrayInputStream(
+        "blood:\n  bundled: Bundled blood\n  live: Bundled live\n".getBytes(StandardCharsets.UTF_8)));
+    for (String field : new String[] {"config", "bundled"}) {
+      var f = Messages.class.getDeclaredField(field);
+      f.setAccessible(true);
+      f.set(null, null);
+    }
+    Path mod = temp.resolve("mod.yml");
+    Files.writeString(mod, "blood:\n  live: Live blood\nshared: Module\n");
+    Messages.overlay(mod.toFile(), "mod/messages.yml");
+    assertEquals("Live blood", Messages.getRaw("blood.live"));
+    assertEquals("Bundled blood", Messages.getRaw("blood.bundled"));
+
+    Path main = temp.resolve("messages.yml");
+    Files.writeString(main, "shared: Main\nmain: Main\n");
+    Messages.load(main.toFile());
+    Messages.overlay(mod.toFile(), "mod/messages.yml");
+    assertEquals("Module", Messages.getRaw("shared"));
+    assertEquals("Main", Messages.getRaw("main"));
+    assertEquals("Bundled blood", Messages.getRaw("blood.bundled"));
+
+    Path broken = temp.resolve("broken.yml");
+    Files.writeString(broken, "blood: [unclosed\n");
+    Messages.overlay(broken.toFile(), "none.yml");
+    Messages.overlay(null, "none.yml");
+    Messages.overlay(temp.resolve("absent.yml").toFile(), "none.yml");
+    assertEquals("Live blood", Messages.getRaw("blood.live"));
+  }
+
+  @Test
   void messagesLoadLiveOverrideAndBundledFallbackWithPlaceholders() throws Exception {
     String resource = "fallback: 'Bundled {name}'\nblank: ''\nlive: Bundled\n";
     when(Magic.plugin.getResource("messages.yml"))
