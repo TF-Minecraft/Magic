@@ -43,7 +43,7 @@ voices:
     colors:
       start: ["#6b1f1f", "#561515"]
       end: ["#aa0000", "#d10202", "#e80505"]
-    sound: minecraft:ambient.cave
+    sound: tfmc_blood:father
     pitch: 0.5
     lines:
       whispered:
@@ -96,7 +96,7 @@ voices:
     colors:
       start: ["#d8d2e0", "#bdb6c9"]
       end: ["#8a0303", "#5c0202", "#4a0a14"]
-    sound: minecraft:entity.warden.heartbeat
+    sound: tfmc_blood:heart
     pitch: 1.2
     lines:
       animal:

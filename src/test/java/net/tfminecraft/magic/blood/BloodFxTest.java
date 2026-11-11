@@ -61,7 +61,12 @@ class BloodFxTest {
       assertEquals(moments.getMapList(moment).size(), loaded.size(), moment);
       for (BloodFx.Layer layer : loaded) {
         if (layer.sound() != null) {
-          assertNotNull(Registry.SOUNDS.get(NamespacedKey.fromString(layer.sound())), moment + " " + layer.sound());
+          if (layer.sound().startsWith("minecraft:")) {
+            assertNotNull(Registry.SOUNDS.get(NamespacedKey.fromString(layer.sound())), moment + " " + layer.sound());
+          } else {
+            // Resource pack events (ServerAssets tfmc_blood sounds.json).
+            assertTrue(layer.sound().startsWith("tfmc_blood:"), moment + " " + layer.sound());
+          }
         }
         layers++;
       }

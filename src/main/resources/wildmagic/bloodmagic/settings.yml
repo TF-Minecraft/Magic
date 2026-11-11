@@ -229,6 +229,6 @@ meditation:
   # before it loops; 0 plays it once). music loops while meditating, charge plays as an artefact goes
   # into the pool. The tfmc_blood sounds are in the server pack (ServerAssets).
   sounds:
-    heartbeat: { sound: entity.warden.heartbeat, volume: 0.9, pitch: 0.7 }
+    heartbeat: { sound: tfmc_blood:heart, volume: 0.9, pitch: 0.7 }
     music: { sound: tfmc_blood:meditate.chant, volume: 0.7, pitch: 1.0, seconds: 24 }
     charge: { sound: tfmc_blood:rite.charge, volume: 0.8, pitch: 1.0 }

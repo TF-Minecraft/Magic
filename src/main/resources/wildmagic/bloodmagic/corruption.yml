@@ -20,10 +20,10 @@ corruption:
   convert:
     - { min_level: 0, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF], to: [REDSTONE_ORE] }
     - { min_level: 0, from: [DEEPSLATE, COBBLED_DEEPSLATE], to: [DEEPSLATE_REDSTONE_ORE] }
-    - { min_level: 1, from: [STONE, COBBLESTONE, STONE_BRICKS, MOSSY_COBBLESTONE, CRACKED_STONE_BRICKS, REDSTONE_ORE], to: [NETHERRACK, NETHERRACK, CRACKED_NETHER_BRICKS] }
-    - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, DEEPSLATE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, NETHERRACK] }
-    - { min_level: 3, from: [DIRT, COARSE_DIRT, ROOTED_DIRT, NETHERRACK, STONE, DEEPSLATE], to: [CRIMSON_NYLIUM] }
-    - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, NETHER_WART_BLOCK, CHISELED_NETHER_BRICKS] }
+    - { min_level: 1, from: [STONE, COBBLESTONE, STONE_BRICKS, MOSSY_COBBLESTONE, CRACKED_STONE_BRICKS, REDSTONE_ORE], to: [CRACKED_NETHER_BRICKS, NETHER_BRICKS] }
+    - { min_level: 2, from: [STONE, COBBLESTONE, STONE_BRICKS, DEEPSLATE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [NETHER_BRICKS, CRACKED_NETHER_BRICKS] }
+    - { min_level: 3, from: [DIRT, COARSE_DIRT, ROOTED_DIRT, NETHERRACK, CRIMSON_NYLIUM, STONE, DEEPSLATE], to: [CRIMSON_HYPHAE] }
+    - { min_level: 4, from: [NETHER_BRICKS, CRACKED_NETHER_BRICKS, STONE_BRICKS, STONE], to: [RED_NETHER_BRICKS, NETHER_WART_BLOCK] }
   # The room turns outward from the altar in connected patches (blocks touching what it already turned
   # win). Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
   # one. Candles only ever stand on the spots right in front of the pedestals; elsewhere a rule's other
@@ -33,5 +33,4 @@ corruption:
     - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
     - { min_level: 2, at: floor, to: [RED_CANDLE] }
     - { min_level: 3, at: ceiling, to: [WEEPING_VINES] }
-    - { min_level: 3, at: floor, to: [CRIMSON_ROOTS, CRIMSON_FUNGUS] }
     - { min_level: 4, at: floor, to: [NETHER_WART_BLOCK, RED_CANDLE] }

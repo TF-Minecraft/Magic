@@ -45,7 +45,7 @@ class WhisperConfigTest {
     var god = WhisperConfig.voice(WhisperConfig.Speaker.GOD);
     assertEquals(9, god.lines(BloodStage.WHISPERED).size());
     assertTrue(god.lines(BloodStage.HUNT).isEmpty());
-    assertEquals("minecraft:ambient.cave", god.sound());
+    assertEquals("tfmc_blood:father", god.sound());
     assertEquals(0.5f, god.pitch());
     assertFalse(WhisperConfig.voice(WhisperConfig.Speaker.SELF).lines(BloodStage.HUNT).isEmpty());
   }

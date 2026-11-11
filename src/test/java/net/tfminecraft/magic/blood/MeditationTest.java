@@ -132,7 +132,7 @@ class MeditationTest {
     assertEquals(0, drops());
     tick(1);
     assertEquals(1, drops(), "The first beat sends a drop");
-    mage.assertSoundHeard("entity.warden.heartbeat");
+    mage.assertSoundHeard("tfmc_blood:heart");
     tick(4);
     assertTrue(BloodMeditation.swing(mage), "Nothing in reach yet: the swing does nothing");
     assertEquals(0, record.getResonance());
