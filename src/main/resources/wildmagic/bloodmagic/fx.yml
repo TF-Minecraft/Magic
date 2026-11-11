@@ -61,8 +61,7 @@ fx:
       - { sound: block.stone.hit, volume: 0.6, pitch: 0.6 }
       - { sound: ambient.soul_sand_valley.mood, volume: 0.3, pitch: 1.6, private: true }
     # Every 3 seconds while someone is within 24 blocks, by altar level (level 0 stays silent).
-    # Played every 3 s while someone is near; chance and jitter keep the drips from ticking like a clock.
-    # Only the level 5 heart keeps a steady beat.
+    # Chance and jitter keep the drips from ticking like a clock; only the level 5 heart keeps a steady beat.
     altar_ambient_1:
       - { particle: FALLING_DUST, block: redstone_block, count: 1, spread: [0.35, 0, 0.35], y: 0.45, chance: 0.7, jitter: 50 }
     altar_ambient_2:
