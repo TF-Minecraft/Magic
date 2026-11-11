@@ -4,7 +4,7 @@
 # voices, animals, corruption, choice, armour, fx and messages. Every .yml here but messages.yml is
 # merged into one config, so a section may live in any of them.
 # The jar does not overwrite existing live copies: copy new keys by hand after updates.
-# The god is Lorvear, the first vampire, the Blood Father. The blade and class names are placeholders.
+# The god is Lorveor, the first vampire, the Bloodfather. The blade and class names are placeholders.
 
 enabled: true
 

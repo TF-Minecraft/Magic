@@ -131,7 +131,7 @@ class ArtefactsAndPoolTest {
     assertEquals(8, ArtefactConfig.devotee().size());
     assertEquals(8, ArtefactConfig.hunt().size());
     assertEquals(5, ArtefactConfig.finals().size());
-    assertEquals(List.of("§7§oA small gift from the Blood Father.", "§7§oIt only wakes in the pool of blood."),
+    assertEquals(List.of("§7§oA small gift from the Bloodfather.", "§7§oIt only wakes in the pool of blood."),
         ArtefactConfig.devotee().get(0).lore());
     assertEquals("§7§oAll that is left of them.", ArtefactConfig.finals().get(0).lore().get(0));
   }

@@ -8,9 +8,9 @@ blood:
     unbreakable: "{stone}The stone pulses warm under your tool. It belongs to the altar now"
   altar:
 
-    placed: "#8c8c8c§oThe stone settles into the dark as if it had always been there. Somewhere below, something sighs"
+    placed: "#8c8c8c§oThe stone settles into the dark as if it had always been there. Far away, something old turns to look at you"
 
-    not_yours: "#8c8c8c§oThe stone is cold and heavy in your hands. It will not be laid down by you"
+    not_yours: "#8c8c8c§oThe stone is cold and heavy in your hands. It will not let you lay it down"
 
     inert: "#8c8c8c§oIt is only a stone. Nothing listens to it yet"
 
@@ -29,9 +29,9 @@ blood:
       animal: "{stone}You sit on the stone. It is warm beneath you, and it is listening"
       choice: "{stone}You sit on the stone and feel it hold its breath. It is waiting for you to speak"
       hunt: "{stone}You sit on the cold stone and let it count the names with you"
-      final_devotee: "{stone}You sit on the stone and it hums beneath you, patient, full of your father"
+      final_devotee: "{stone}You sit on the stone and it hums beneath you, patient. Far away, your father is listening"
       final_true: "{stone}You sit on the stone. It is as still as you are now"
-      ascended_devotee: "{stone}You sit on the stone, and for a moment you hear him breathing, far below"
+      ascended_devotee: "{stone}You sit on the stone. For a moment you hear him breathing, from very far away, and you are not alone"
       ascended_true: "{stone}You sit in the quiet you made. It fits you well"
     touch:
       animal: "{stone}The stone is warm under your palm, like skin. You feel it breathe"
@@ -40,8 +40,8 @@ blood:
       final_devotee: "{stone}The stone purrs under your hand like something fed. Your father is pleased with you"
       final_true: "{stone}The stone is quiet under your palm. Quiet like you"
       # Once the path is complete, the touch tells how full the altar's pool of blood is.
-      ascended_devotee_full: "{stone}The stone is as warm as a heart. Somewhere far below, your father sleeps, content"
-      ascended_devotee_half: "{stone}The pool is lower than it was. Far below, your father stirs, hungry"
+      ascended_devotee_full: "{stone}The pool is full, and the stone is as warm as a heart. Far away, your father is pleased"
+      ascended_devotee_half: "{stone}The pool is lower than it was. Far away, your father has noticed"
       ascended_devotee_low: "{stone}Only a little blood is left in the pool. Your father is waiting, child"
       ascended_devotee_dry: "{stone}The pool is dry and the stone is cold. Your father will not wait long"
       ascended_true_full: "{stone}The pool is full. Nothing moves under your hand. Nothing needs to, yet"
@@ -95,17 +95,17 @@ blood:
 
       busy: "{god}One at a time. Finish what lies on the stone"
 
-    spoiled: "#8c8c8c§oThe blood runs into the dirt, wasted. The stone did not drink"
+    spoiled: "#8c8c8c§oThe beast dies off the stone. Its blood sinks into the dirt, and the stone gets none of it"
     # The rite: the cut, halfway through the bleeding, and stepping away before it is over.
     cut: "{stone}The blade opens it. The blood runs down into the grooves of the stone, and the stone begins to drink. Stay"
     draining: "{stone}The heartbeat under your hand slows. The stone is warm now, almost hot"
-    left: "#8c8c8c§oYou stepped away. The blood runs cold across the floor, wasted. The stone did not drink"
+    left: "#8c8c8c§oYou stepped away. The blood cools on the floor where it fell, and the stone goes without"
 
     escaped: "#8c8c8c§oThe beast thrashes free of the stone and bolts into the dark"
 
     accepted: "{stone}The stone drinks. When you take your hand away, it is warmer than before"
 
-    complete: "{stone}Seven kinds. The stone is red to its heart, and something cold and winding rests in your hand that was not there before"
+    complete: "{stone}Seven kinds. The stone is red to its heart. In your hand is a blade that was not there before, warm and winding like a vein"
 
     note: "#aaaaaa§oSomething has taken {animal} from the pen. The rope was cut clean, and faint drag marks lead off to the {direction}"
 
@@ -137,23 +137,23 @@ blood:
 
       waiting: "#8c8c8c§oThe stone sulks over what was stolen from it. It will take no one yet"
 
-      not_target: "#8c8c8c§oNot this one. You know whose name it whispered"
+      not_target: "#8c8c8c§oNot this one. You know whose name it has to be"
 
       busy: "#8c8c8c§oOne at a time"
 
       blocked: "#8c8c8c§oStone lies between them and the altar. Drag them to it"
 
-    dread: "#8a0303§oCold stone under your back. A blade above you. And below, something old and patient opens its mouth"
+    dread: "#8a0303§oThe stone is cold through your clothes. Someone stands over you, breathing hard, a knife in their hand. Beneath you, something else is breathing too."
 
     # What the victim on the altar hears while the rite runs (dying.1 to dying.4, spread over the
     # rite), as it ends (dying.last), or if it breaks before then (spared).
     dying:
-      1: "#8a0303§oThe blade opens you. Warmth runs out of you and into the stone, and the stone drinks"
-      2: "#8a0303§oYour fingers go cold first, then your hands. You can hear your heart, loud, and slowing"
-      3: "#8a0303§oThe light shrinks to a point above you. Somewhere below, something swallows"
-      4: "#8a0303§oYou cannot feel the stone any more. You cannot feel anything at all"
-      last: "#5c0202§oYour heart beats once more, and the stone keeps it"
-    spared: "#8c8c8c§oThe blade lifts away. Whatever waited below sinks back into the stone, unfed"
+      1: "#8a0303§oIt does not hurt the way you thought it would. Only a line of heat, then your own warmth leaving you, and the stone drinking it down."
+      2: "#8a0303§oYour fingers stop answering. Your heart is so loud you are sure they can hear it, each beat coming a little later than the last."
+      3: "#8a0303§oFaces you love drift past, and you cannot keep hold of their names. The ceiling is so far up. Below, something swallows, and sighs"
+      4: "#8a0303§oYou try to call out. Nothing comes. Even the cold is leaving you now"
+      last: "#5c0202§oOne more beat. You feel the stone take it from you, gently, like a coin from a sleeping hand"
+    spared: "#8c8c8c§oHands let go of you. Breath tears back into your chest. Under you the stone cools slowly, like something that has decided to wait"
 
     broken: "#8c8c8c§oThe rite comes apart. The stone goes cold and quiet, sulking"
 
@@ -233,9 +233,9 @@ blood:
 
     # After the answer is sealed. prompt: once the question is asked (answer aloud, in roleplay).
     prompt: "#8c8c8c§oSpeak aloud: kneel to him, or refuse him"
-    devoted: "{god}Something of you stays on the stone, and something of the Blood Father comes with you. It hurts. It will always hurt"
+    devoted: "{god}Something of you stays on the stone, and something of the Bloodfather comes with you. It hurts. It will always hurt"
 
-    refused: "{self}Lorvear falls silent. For the first time in weeks you are alone with your own thoughts. You are almost sure they are your own"
+    refused: "{self}Lorveor falls silent. For the first time in weeks you are alone with your own thoughts. You are almost sure they are your own"
 
   armour:
 

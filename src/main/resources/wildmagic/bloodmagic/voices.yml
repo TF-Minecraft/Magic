@@ -20,7 +20,7 @@ whispers:
     corruption_below: -40
   animal_types: [COW, PIG, SHEEP, CHICKEN, GOAT, RABBIT, HORSE, DONKEY, MULE, LLAMA, CAMEL, MOOSHROOM, WOLF, FOX, CAT, OCELOT, PARROT]
 
-# The two voices. The god is Lorvear, the first vampire, the Blood Father: ancient, regal and paternal,
+# The two voices. The god is Lorveor, the first vampire, the Bloodfather: ancient, regal and paternal,
 # he calls the mage "child". The other voice is the mage's own thoughts: from the knife on it answers
 # him half the time (animal and choice lines), and it is all a mage hears once they refuse him.
 # Keep both inside blood magic: no other gods, orders or schools.
@@ -29,7 +29,7 @@ whispers:
 # Animal-stage voices speak only in the altar's chamber, while it is ready for the next kind and no rite
 # is under way (with no altar standing, they keep quiet). Other stages pick at random.
 # Colours: each voice is a gradient that drifts from colors.start to colors.end over the whole path
-# (kinds, the answer, the hunt, the finals). Lorvear starts dim and grows into the bright Bloodmagic
+# (kinds, the answer, the hunt, the finals). Lorveor starts dim and grows into the bright Bloodmagic
 # reds; the mage's own voice starts pale and clear, as they are, and sinks into dark blood.
 # style is put after every colour (italics). Without colors, style is the whole prefix as before.
 voices:
@@ -47,15 +47,15 @@ voices:
     pitch: 0.5
     lines:
       whispered:
-        - "...there. Under the stone. A heartbeat that is not your own."
-        - "Do not be afraid. It has been so long since anyone listened."
-        - "So much warm blood walks the roads. Spilled in ditches and brawls and childbeds. All of it wasted."
-        - "One called Alaric listened, once, long before your grandfather's grandfather. He wasted nothing."
-        - "Go down, deep, where the sky cannot follow. No banner, no warden's eye. Lay the stone there."
-        - "Bring living beasts down to it. Hold them still with the plain knife, and let the stone drink."
-        - "Not beasts of your own. A gift that costs nothing is no gift. Take them from another's pen while the keeper sleeps."
-        - "Seven kinds, one each day and no sooner. I can wait. I have waited longer than your kingdoms have had names."
-        - "Look in your pack. Someone has been generous. Do not make them regret it."
+        - "...there you are. I felt the blood you spilled, child, from very far away. Anyone else would look away. I leaned closer."
+        - "Hush. Do not look over your shoulder. No one else can hear me. No one has, for such a long time."
+        - "Men bleed every day, child. In brawls, in ditches, in birthing beds. And all of it sinks into the mud, and no one thinks to catch it."
+        - "There was a man called Alaric Thorme, long before your grandfather's grandfather. He heard me as you do. He never let a drop go to waste."
+        - "Go down, child. Deeper than the roots, where the sky cannot peer in, where no banner flies and no warden walks. Lay the stone there."
+        - "Then bring it beasts, warm and living. Hold them still with the plain knife. Be gentle, they will not understand. And let the stone drink."
+        - "Not your own beasts, child. A gift that costs you nothing is worth nothing. Take them from another's pen at night, while its keeper sleeps."
+        - "Seven kinds, child. One each day and no sooner, for hunger must be taught patience. I have waited since before your kingdoms had names."
+        - "Look in your pack. I have left you something. Heavy, yes, but you will carry it. You have always carried more than they knew."
       # By kinds given: the lines under the highest number reached.
       animal:
         0:
@@ -73,22 +73,22 @@ voices:
           - "Your hands are steadier than they were. I noticed. I notice everything you give me."
           - "You hold the knife the way I used to. Do you feel it? We are becoming alike."
         5:
-          - "Each kind you bring wakes a little more of me. Soon you will feel me waking too."
+          - "Each kind you bring draws me a little closer, child. Soon you will feel me at your shoulder."
           - "Almost seven, child. The stone is nearly red to its heart, and so are you."
-          - "When the last one bleeds, come down to me. I will have a gift for you, and a question."
+          - "When the last one bleeds, stay by the stone. I will have a gift for you, and a question."
       choice:
-        - "Seven kinds have bled. Come down to the stone, and bring the winding blade. Your father has a question."
+        - "Seven kinds have bled. Go down to the stone, and bring the winding blade. Your father has a question."
         - "The stone is red to its heart. Kneel at it with the blade in your hand, child."
         - "Do not keep me waiting. Nothing that lives has kept me waiting for long."
       final:
-        - "You are my child now, and so are they. I will tell you which of them."
+        - "You are my child now, and those you love are mine too. I will tell you which of them."
         - "I have chosen for you. You need not think any more. Only go to the stone."
         - "Do you remember their laugh? Remember it on the stone. It makes them sweeter."
         - "They trust you. That is what makes it holy."
         - "The grave is greedy, and the dead are cold. I prefer them warm, and given freely by someone they loved."
         - "Every drop you give me, I remember. Every drop, I repay."
       ascended:
-        - "All of them, given. Sleep now, my child. Your father will wake you when he is hungry."
+        - "All of them, given. Rest now, my child. Your father will call when he wants more."
         - "You walk among them and none of them know. You are more mine than Alaric ever was."
         - "Let them send their hunters. I have outlived every one of them."
   self:
@@ -129,7 +129,7 @@ voices:
         - "Listen past his voice. Underneath it there is a quiet. The quiet is honest."
       hunt:
         - "I don't need a father to tell me what I want."
-        - "Lorvear went quiet. Let him sulk under his stone. I can hear myself think."
+        - "Lorveor went quiet. Let him sulk, wherever he is. I can hear myself think."
         - "Strangers are cheap. The ones I know are worth more. I knew that before anyone told me."
         - "Nobody notices one more empty chair. Not at first."
         - "Seven measures. I keep counting, even when I pretend I'm not."

@@ -20,11 +20,11 @@ choice:
     volume: 0.8
     loop_seconds: 91
   ask:
-    - god: "Seven kinds have bled on my stone, and you did not look away."
-    - god: "Alaric stood where you stand. He knelt, and I carried him through three hundred winters."
-    - god: "Kneel to me, child. Leave a piece of yourself on this stone, and you will never walk alone again."
-    - self: "Or don't. Everything he gives, he owns. I could take all of it, and owe no one."
-    - god: "Speak, child. Aloud, so the stone hears it. Will you kneel?"
+    - god: "Seven kinds have bled on my stone. You held each one while it went still, child, and you never once looked away."
+    - god: "Alaric stood where you stand, with the same red hands. He knelt, and I carried him through three hundred winters."
+    - god: "Kneel to me, child. Leave one small piece of yourself on this stone, mine to keep, and you will never be alone in the dark again."
+    - self: "Or stand. Everything he gives, he keeps a hand on. I could take it all for myself, and owe nothing to anyone. Not even him."
+    - god: "Now speak, child, aloud, so the stone can hear you. Will you kneel to your father, or will you refuse him?"
   unclear:
     - god: "Plainly, child. Kneel, or refuse me."
   walked_away:

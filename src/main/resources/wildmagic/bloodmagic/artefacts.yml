@@ -8,7 +8,7 @@
 # Each entry: { item: TLibs path, name, lore: [lines] }; without lore the path's shared lore is used.
 artefacts:
   devotee_lore:
-    - "§7§oA small gift from the Blood Father."
+    - "§7§oA small gift from the Bloodfather."
     - "§7§oIt only wakes in the pool of blood."
   devotee:
     - { item: ia.tfmc_magic:oseni_ring_147, name: "#8a0303Clotted Ring" }
