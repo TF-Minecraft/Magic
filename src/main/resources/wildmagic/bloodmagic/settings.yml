@@ -219,7 +219,8 @@ meditation:
   hit_radius: 0.6
   charge_ticks: 160
   drops:
-    item: v.redstone
+    # The drop's look (a TLibs item path): the server pack's blood teardrop; redstone if it is missing.
+    item: ia.tfmc_blood:meditation_drop
     scale: 0.3
     flare_scale: 0.55
     travel_beats: 2
