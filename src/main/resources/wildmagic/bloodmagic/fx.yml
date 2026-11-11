@@ -6,7 +6,8 @@
 #   particle: <Bukkit Particle> (count, spread: n or [x, y, z], speed, y offset, color/to/size for dust,
 #     block for BLOCK/FALLING_DUST/BLOCK_CRUMBLE, item for ITEM, value for SCULK_CHARGE/SHRIEK)
 #   shape: point | ring | column | spiral (radius, points, height); delay: ticks; private: true = only the
-#   player the moment is about sees or hears it. A moment with no entry plays nothing.
+#   player the moment is about sees or hears it; chance: 0-1 how often the layer plays (default 1);
+#   jitter: up to this many extra ticks of random wait. A moment with no entry plays nothing.
 # Look: red and black for the stone, the blood and the mage; amber embers (#fcac03 cooling to #5c0202)
 # only for Lorveor, so they vanish for good once a mage refuses him. Heartbeats by pitch: the stone's
 # slow heart 0.5-0.6, a living victim's 0.9-1.0, the mage's own 1.2.
@@ -60,29 +61,31 @@ fx:
       - { sound: block.stone.hit, volume: 0.6, pitch: 0.6 }
       - { sound: ambient.soul_sand_valley.mood, volume: 0.3, pitch: 1.6, private: true }
     # Every 3 seconds while someone is within 24 blocks, by altar level (level 0 stays silent).
+    # Played every 3 s while someone is near; chance and jitter keep the drips from ticking like a clock.
+    # Only the level 5 heart keeps a steady beat.
     altar_ambient_1:
-      - { particle: FALLING_DUST, block: redstone_block, count: 1, spread: [0.35, 0, 0.35], y: 0.45 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 1, spread: [0.35, 0, 0.35], y: 0.45, chance: 0.7, jitter: 50 }
     altar_ambient_2:
-      - { particle: FALLING_DUST, block: redstone_block, count: 2, spread: [0.4, 0, 0.4], y: 0.45 }
-      - { particle: DUST, color: "#4a0000", size: 1.2, count: 3, spread: 0.3, y: 0.7 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 2, spread: [0.4, 0, 0.4], y: 0.45, jitter: 50 }
+      - { particle: DUST, color: "#4a0000", size: 1.2, count: 3, spread: 0.3, y: 0.7, chance: 0.6, jitter: 40 }
     altar_ambient_3:
-      - { particle: FALLING_DUST, block: redstone_block, count: 3, spread: [0.45, 0, 0.45], y: 0.45 }
-      - { particle: DUST, color: "#4a0000", size: 1.4, count: 4, spread: 0.35, y: 0.8 }
-      - { particle: CRIMSON_SPORE, count: 6, spread: 1.5, y: 0.8 }
-      - { sound: block.pointed_dripstone.drip_lava, volume: 0.4, pitch: 0.6 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 3, spread: [0.45, 0, 0.45], y: 0.45, jitter: 50 }
+      - { particle: DUST, color: "#4a0000", size: 1.4, count: 4, spread: 0.35, y: 0.8, chance: 0.6, jitter: 40 }
+      - { particle: CRIMSON_SPORE, count: 6, spread: 1.5, y: 0.8, jitter: 30 }
+      - { sound: block.pointed_dripstone.drip_lava, volume: 0.4, pitch: 0.6, chance: 0.4, jitter: 50 }
     altar_ambient_4:
-      - { particle: FALLING_DUST, block: redstone_block, count: 4, spread: [0.45, 0, 0.45], y: 0.45 }
-      - { particle: DUST_COLOR_TRANSITION, color: "#8a0303", to: "#1a0000", size: 1.4, shape: ring, radius: 0.75, points: 10, y: 0.6 }
-      - { particle: CRIMSON_SPORE, count: 10, spread: 2.0, y: 1.0 }
-      - { sound: block.pointed_dripstone.drip_lava, volume: 0.5, pitch: 0.5 }
-      - { sound: "tfmc_blood:heart", volume: 0.25, pitch: 0.6, delay: 20 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 4, spread: [0.45, 0, 0.45], y: 0.45, jitter: 50 }
+      - { particle: DUST_COLOR_TRANSITION, color: "#8a0303", to: "#1a0000", size: 1.4, shape: ring, radius: 0.75, points: 10, y: 0.6, chance: 0.5, jitter: 30 }
+      - { particle: CRIMSON_SPORE, count: 10, spread: 2.0, y: 1.0, jitter: 30 }
+      - { sound: block.pointed_dripstone.drip_lava, volume: 0.5, pitch: 0.5, chance: 0.5, jitter: 50 }
+      - { sound: "tfmc_blood:heart", volume: 0.25, pitch: 0.6, delay: 20, chance: 0.5 }
     altar_ambient_5:
-      - { particle: FALLING_DUST, block: redstone_block, count: 6, spread: [0.5, 0, 0.5], y: 0.45 }
-      - { particle: DUST_COLOR_TRANSITION, color: "#c40c0c", to: "#1a0000", size: 1.6, shape: spiral, radius: 0.7, height: 1.6, points: 24, y: 0.4 }
-      - { particle: DUST, color: "#4a0000", size: 1.2, count: 2, spread: 0.3, y: 0.7 }
-      - { particle: CRIMSON_SPORE, count: 16, spread: 2.5, y: 1.0 }
+      - { particle: FALLING_DUST, block: redstone_block, count: 6, spread: [0.5, 0, 0.5], y: 0.45, jitter: 50 }
+      - { particle: DUST_COLOR_TRANSITION, color: "#c40c0c", to: "#1a0000", size: 1.6, shape: spiral, radius: 0.7, height: 1.6, points: 24, y: 0.4, chance: 0.5, jitter: 30 }
+      - { particle: DUST, color: "#4a0000", size: 1.2, count: 2, spread: 0.3, y: 0.7, chance: 0.6, jitter: 40 }
+      - { particle: CRIMSON_SPORE, count: 16, spread: 2.5, y: 1.0, jitter: 30 }
       - { sound: "tfmc_blood:heart", volume: 0.5, pitch: 0.5 }
-      - { sound: ambient.crimson_forest.additions, volume: 0.4, pitch: 0.6, delay: 30 }
+      - { sound: ambient.crimson_forest.additions, volume: 0.4, pitch: 0.6, delay: 30, chance: 0.3, jitter: 20 }
     corruption:
       - { sound: block.honey_block.slide, volume: 0.5, pitch: 0.5 }
       - { particle: DUST_COLOR_TRANSITION, color: "#8a0303", to: "#1a0000", size: 1.2, count: 4, spread: 0.4 }

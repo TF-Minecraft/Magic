@@ -14,6 +14,7 @@ import java.util.function.UnaryOperator;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
@@ -36,10 +37,12 @@ class MeditationTest {
   MockedStatic<AltarPedestals> pedestals;
   final List<AltarPedestals.Shown> shown = new ArrayList<>();
   int restyled;
+  long now = 1_000_000L;
 
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
+    BloodMeditation.clock = () -> now;
     BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
     mage = fx.player("mage");
     mageId = BloodFixture.id("mage");
@@ -63,6 +66,7 @@ class MeditationTest {
   @AfterEach
   void cleanup() {
     BloodMeditation.clear();
+    BloodMeditation.clock = System::currentTimeMillis;
     pedestals.close();
     fx.close();
   }
@@ -80,6 +84,7 @@ class MeditationTest {
 
   void tick(int times) {
     for (int i = 0; i < times; i++) {
+      now += 50;
       BloodMeditation.tick();
     }
   }
@@ -133,7 +138,13 @@ class MeditationTest {
     tick(1);
     assertEquals(1, drops(), "The first beat sends a drop");
     mage.assertSoundHeard("tfmc_blood:heart");
+    ItemDisplay drop = fx.world.getEntitiesByClass(ItemDisplay.class).iterator().next();
+    assertEquals(Display.Billboard.CENTER, drop.getBillboard(), "Faces the mage");
+    assertEquals(15, drop.getBrightness().getBlockLight(), "and glows in a dark chamber");
+    assertEquals(MeditationConfig.flareScale(), drop.getTransformation().getScale().x(), 1e-6, "Born on the beat, swollen");
     tick(4);
+    assertEquals(MeditationConfig.dropScale(), drop.getTransformation().getScale().x(), 1e-6, "Eases back after the beat");
+    assertEquals(BloodMeditation.EASE_TICKS, drop.getInterpolationDuration());
     assertTrue(BloodMeditation.swing(mage), "Nothing in reach yet: the swing does nothing");
     assertEquals(0, record.getResonance());
     // Two beats later the first drop waits in front of the mage; caught between beats.
@@ -253,6 +264,12 @@ class MeditationTest {
     BloodMeditation.start(mage, altar);
     tick(30);
     assertEquals(1, drops());
+    ItemDisplay first = fx.world.getEntitiesByClass(ItemDisplay.class).iterator().next();
+    tick(26);
+    assertEquals(MeditationConfig.dropScale(), first.getTransformation().getScale().x(), 1e-6);
+    tick(1);
+    assertEquals(MeditationConfig.flareScale(), first.getTransformation().getScale().x(), 1e-6, "Swells up to the next beat");
+    assertEquals(BloodMeditation.SWELL_TICKS, first.getInterpolationDuration());
     tick(120);
     assertTrue(drops() <= 4);
     mage.clearSounds();

@@ -76,6 +76,31 @@ class BloodFxTest {
   }
 
   @Test
+  void chanceAndJitterKeepTimedMomentsFromTickingLikeAClock() throws Exception {
+    Files.writeString(temp.resolve("odds.yml"), String.join("\n", "enabled: true", "fx:", "  moments:", "    odds:",
+        "      - { sound: a.never, chance: 0 }", "      - { sound: a.later, jitter: 5 }", ""));
+    BloodConfig.load(temp.resolve("odds.yml").toFile(), fx.logger);
+    World world = mock(World.class);
+    Player near = mock(Player.class);
+    when(near.getLocation()).thenReturn(new Location(world, 0, 0, 0));
+    when(world.getPlayers()).thenReturn(List.of(near));
+    for (int i = 0; i < 20; i++) {
+      BloodFx.play("odds", new Location(world, 0, 0, 0));
+    }
+    fx.server.getScheduler().performTicks(6);
+    verify(near, never()).playSound(any(Location.class), eq("minecraft:a.never"), anyFloat(), anyFloat());
+    verify(near, times(20)).playSound(any(Location.class), eq("minecraft:a.later"), anyFloat(), anyFloat());
+
+    // The shipped altar ambience drips at random moments; only the level 5 heart keeps a steady beat.
+    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    assertTrue(BloodFx.moment("altar_ambient_3").stream().allMatch(layer -> layer.jitter() > 0));
+    BloodFx.Layer heart = BloodFx.moment("altar_ambient_5").stream()
+        .filter(layer -> "tfmc_blood:heart".equals(layer.sound())).findFirst().orElseThrow();
+    assertEquals(1, heart.chance());
+    assertEquals(0, heart.jitter());
+  }
+
+  @Test
   void layersReadEveryField() {
     BloodFx.Layer sound = layer(Map.of("sound", "entity.warden.heartbeat", "volume", 0.5, "pitch", 2, "delay", 4,
         "private", true));
@@ -102,6 +127,14 @@ class BloodFxTest {
     assertEquals(0, smoke.delay());
     assertFalse(smoke.personal());
     assertEquals(BloodFx.Shape.POINT, layer(Map.of("particle", "SMOKE", "shape", "cube")).shape());
+    BloodFx.Layer odds = layer(Map.of("particle", "SMOKE", "chance", 0.3, "jitter", 40));
+    assertEquals(0.3, odds.chance());
+    assertEquals(40, odds.jitter());
+    assertEquals(1, layer(Map.of("particle", "SMOKE")).chance());
+    assertEquals(0, layer(Map.of("particle", "SMOKE")).jitter());
+    assertEquals(1, layer(Map.of("particle", "SMOKE", "chance", 4)).chance());
+    assertEquals(0, layer(Map.of("particle", "SMOKE", "chance", -1, "jitter", -5)).chance());
+    assertEquals(0, layer(Map.of("particle", "SMOKE", "jitter", -5)).jitter());
     assertEquals(1, layer(Map.of("particle", "SMOKE")).count());
 
     BloodFx.Layer spread = layer(Map.of("particle", "SMOKE", "spread", List.of(1, 2, 3)));

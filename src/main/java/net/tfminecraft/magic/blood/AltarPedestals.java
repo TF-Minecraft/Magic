@@ -11,13 +11,17 @@ import java.util.function.UnaryOperator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Transformation;
+import org.joml.Vector3f;
 
 import net.tfminecraft.interactiblefurniture.InteractibleFurniture;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
@@ -28,6 +32,7 @@ import net.tfminecraft.interactiblefurniture.loaders.FurnitureLoader;
 import net.tfminecraft.interactiblefurniture.manager.FurnitureManager;
 import net.tfminecraft.interactiblefurniture.manager.handlers.FurniturePlacementHandler;
 import net.tfminecraft.interactiblefurniture.manager.handlers.InteractionHandler;
+import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.meditation.MeditationCache;
 import net.tfminecraft.magic.util.PedestalFx;
 
@@ -35,9 +40,15 @@ import net.tfminecraft.magic.util.PedestalFx;
  * The altar sets out its own meditation ring: an InteractibleFurniture pedestal on every free spot
  * (open, on solid floor) at the meditation offsets around it. Those pedestals belong to the altar:
  * nobody can pick them up, carry them off or break them, and they go when it is purified (whatever
- * sits on them drops). Spots that are taken are left for the player's own pedestals.
+ * sits on them drops). Spots that are taken are left for the player's own pedestals. They are all
+ * placed at once, but each comes up out of the floor in turn, a little higher in pitch than the last.
  */
 public final class AltarPedestals {
+
+    /** Ticks between one pedestal rising and the next, and how long each takes to come up. */
+    static final long RISE_GAP = 5;
+    static final int RISE_TICKS = 8;
+    private static final float RISE_DEPTH = 1f;
 
     /** Pedestals of purified altars that were not loaded then; they go when their chunk loads. */
     private static final Set<String> LEFTOVERS = new LinkedHashSet<>();
@@ -115,10 +126,38 @@ public final class AltarPedestals {
             InteractionHandler.spawnInteraction(furniture);
             manager.persistFurniture(furniture);
             altar.getPedestals().add(display.getUniqueId().toString());
-            spot.getWorld().playSound(at, Sound.BLOCK_ANCIENT_DEBRIS_PLACE, 0.8f, 0.7f);
+            rise(display, at, floor.getBlockData(), count);
             count++;
         }
         return count;
+    }
+
+    /**
+     * The pedestal starts sunk in the floor and comes up after order * RISE_GAP ticks, with a scrape
+     * that climbs in pitch and a little dust from the floor. Only the look moves: it is already placed.
+     */
+    private static void rise(ItemDisplay display, Location at, BlockData floor, int order) {
+        Transformation set = display.getTransformation();
+        Runnable up = () -> {
+            if (!display.isValid()) {
+                return;
+            }
+            if (set != null) {
+                display.setInterpolationDelay(0);
+                display.setInterpolationDuration(RISE_TICKS);
+                display.setTransformation(set);
+            }
+            at.getWorld().playSound(at, Sound.BLOCK_ANCIENT_DEBRIS_PLACE, 0.8f, 0.6f + 0.08f * order);
+            at.getWorld().spawnParticle(Particle.BLOCK, at.clone().add(0, 0.1, 0), 10, 0.3, 0.05, 0.3, 0, floor);
+        };
+        if (set == null || Magic.plugin == null) {
+            up.run();
+            return;
+        }
+        display.setTransformation(new Transformation(new Vector3f(set.getTranslation()).add(0, -RISE_DEPTH, 0),
+                set.getLeftRotation(), set.getScale(), set.getRightRotation()));
+        // At least two ticks, so the client has the sunk pedestal before it starts to move.
+        Magic.plugin.getServer().getScheduler().runTaskLater(Magic.plugin, up, 2 + RISE_GAP * order);
     }
 
     /**

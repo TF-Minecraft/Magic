@@ -30,7 +30,7 @@ final class BloodFixture implements AutoCloseable {
 
   BloodFixture(Path data) {
     this.data = data;
-    server = MockBukkit.mock();
+    server = MockBukkit.mock(new SoundServer());
     world = new DisplayWorld(server);
     world.setName("cave");
     server.addWorld(world);
@@ -53,6 +53,67 @@ final class BloodFixture implements AutoCloseable {
     BondService.writer = Runnable::run;
   }
 
+  /** A server whose players can hear sounds bound to an entity (the blood music follows the mage). */
+  static final class SoundServer extends ServerMock {
+    private int made;
+
+    @Override
+    public PlayerMock addPlayer() {
+      return addPlayer("Player" + made);
+    }
+
+    @Override
+    public PlayerMock addPlayer(String name) {
+      made++;
+      PlayerMock player = new SoundPlayer(this, name, UUID.nameUUIDFromBytes(("player:" + name + ":" + made).getBytes()));
+      addPlayer(player);
+      return player;
+    }
+  }
+
+  /** MockBukkit does not implement playSound bound to an entity; this player hears it where the entity is. */
+  static final class SoundPlayer extends PlayerMock {
+    SoundPlayer(ServerMock server, String name, UUID id) {
+      super(server, name, id);
+    }
+
+    @Override
+    public void playSound(org.bukkit.entity.Entity entity, String sound, org.bukkit.SoundCategory category,
+        float volume, float pitch) {
+      playSound(entity.getLocation(), sound, category, volume, pitch);
+    }
+  }
+
+  /** An item display that also keeps its billboard and brightness, which MockBukkit leaves unimplemented. */
+  static final class Display extends org.mockbukkit.mockbukkit.entity.ItemDisplayMock {
+    private org.bukkit.entity.Display.Billboard billboard = org.bukkit.entity.Display.Billboard.FIXED;
+    private org.bukkit.entity.Display.Brightness brightness;
+
+    Display(ServerMock server, UUID id) {
+      super(server, id);
+    }
+
+    @Override
+    public void setBillboard(org.bukkit.entity.Display.Billboard billboard) {
+      this.billboard = billboard;
+    }
+
+    @Override
+    public org.bukkit.entity.Display.Billboard getBillboard() {
+      return billboard;
+    }
+
+    @Override
+    public void setBrightness(org.bukkit.entity.Display.Brightness brightness) {
+      this.brightness = brightness;
+    }
+
+    @Override
+    public org.bukkit.entity.Display.Brightness getBrightness() {
+      return brightness;
+    }
+  }
+
   /** MockBukkit cannot build display entities through World.spawn; this world can. */
   static final class DisplayWorld extends WorldMock {
     private final ServerMock server;
@@ -69,7 +130,7 @@ final class BloodFixture implements AutoCloseable {
       if (type != org.bukkit.entity.ItemDisplay.class) {
         return super.spawn(location, type, function, reason);
       }
-      var display = new org.mockbukkit.mockbukkit.entity.ItemDisplayMock(server, UUID.randomUUID());
+      var display = new Display(server, UUID.randomUUID());
       display.setLocation(location);
       server.registerEntity(display);
       T typed = type.cast(display);

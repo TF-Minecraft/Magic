@@ -1,6 +1,8 @@
 package net.tfminecraft.magic.blood;
 
+import java.util.Locale;
 
+import org.bukkit.SoundCategory;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -12,26 +14,26 @@ import org.bukkit.entity.Player;
 public final class MeditationConfig {
 
     /**
-     * A sound only its player hears: key (vanilla or a resource pack's), volume, pitch, and how long
-     * it runs before a loop plays it again (0: it plays once).
+     * A sound only its player hears: key (vanilla or a resource pack's), volume, pitch, how long it
+     * runs before a loop plays it again (0: it plays once), and the client volume slider it follows.
      */
-    public record Cue(String sound, float volume, float pitch, int seconds) {
-        static final Cue NONE = new Cue("", 0, 1, 0);
+    public record Cue(String sound, float volume, float pitch, int seconds, SoundCategory category) {
+        static final Cue NONE = new Cue("", 0, 1, 0, SoundCategory.MASTER);
 
         boolean isSet() {
             return !sound.isBlank();
         }
 
-        /** Plays the sound to the player alone, where they stand. */
+        /** Plays the sound to the player alone; it moves with them. */
         void play(Player player) {
             if (isSet()) {
-                player.playSound(player.getLocation(), sound, volume, pitch);
+                player.playSound(player, sound, category, volume, pitch);
             }
         }
 
         void stop(Player player) {
             if (isSet()) {
-                player.stopSound(sound);
+                player.stopSound(sound, category);
             }
         }
     }
@@ -99,17 +101,28 @@ public final class MeditationConfig {
         dropScale = (float) Math.max(0.05, meditation.getDouble("drops.scale", 0.3));
         flareScale = (float) Math.max(dropScale, meditation.getDouble("drops.flare_scale", 0.55));
         chargeTicks = Math.max(20, meditation.getInt("charge_ticks", 160));
-        heartbeat = cue(meditation.getConfigurationSection("sounds.heartbeat"));
-        music = cue(meditation.getConfigurationSection("sounds.music"));
-        charge = cue(meditation.getConfigurationSection("sounds.charge"));
+        heartbeat = cue(meditation.getConfigurationSection("sounds.heartbeat"), SoundCategory.MASTER);
+        // The music shares the records slider with the rite and question music: one slider for all of it.
+        music = cue(meditation.getConfigurationSection("sounds.music"), SoundCategory.RECORDS);
+        charge = cue(meditation.getConfigurationSection("sounds.charge"), SoundCategory.MASTER);
     }
 
-    private static Cue cue(ConfigurationSection section) {
+    private static Cue cue(ConfigurationSection section, SoundCategory fallback) {
         if (section == null) {
             return Cue.NONE;
         }
+        SoundCategory category = fallback;
+        String named = section.getString("category", "");
+        if (named != null && !named.isBlank()) {
+            try {
+                category = SoundCategory.valueOf(named.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                category = fallback;
+            }
+        }
         return new Cue(section.getString("sound", "").trim(), (float) Math.max(0, section.getDouble("volume", 1)),
-                (float) Math.max(0.5, Math.min(2, section.getDouble("pitch", 1))), Math.max(0, section.getInt("seconds", 0)));
+                (float) Math.max(0.5, Math.min(2, section.getDouble("pitch", 1))), Math.max(0, section.getInt("seconds", 0)),
+                category);
     }
 
     /** Ticks between heartbeats. */

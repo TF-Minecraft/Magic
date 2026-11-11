@@ -187,7 +187,7 @@ public final class QuestionService {
         if (ChoiceConfig.music().isEmpty()) {
             return;
         }
-        player.playSound(player.getLocation(), ChoiceConfig.music(), ChoiceConfig.musicCategory(),
+        player.playSound(player, ChoiceConfig.music(), ChoiceConfig.musicCategory(),
                 ChoiceConfig.musicVolume(), 1f);
         session.musicAgainAt = ChoiceConfig.musicLoopSeconds() > 0 ? now + ChoiceConfig.musicLoopSeconds() * 1000L : 0;
     }

@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.LongSupplier;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -31,7 +33,9 @@ import net.tfminecraft.magic.util.ItemRef;
  * resonance: much on the beat, when every drop swells, and little off it, which also costs the mage
  * some of their own blood. Drops left alone fall back. It ends when the mage stands up or walks off,
  * when the artefacts are dry, or when resonance is as high as the artefacts allow, and only then is
- * the record written. Its music and the heartbeat are heard by the mage alone.
+ * the record written. Its music and the heartbeat are heard by the mage alone; the music follows them
+ * and loops by the wall clock, so a lagging server does not cut the track short or leave a gap.
+ * The drops face the mage, glow in the dark and swell smoothly to their largest on the beat.
  */
 public final class BloodMeditation {
 
@@ -64,6 +68,7 @@ public final class BloodMeditation {
         final String altarId;
         final long started;
         final List<Drop> drops = new ArrayList<>();
+        /** Wall-clock millis when the music starts again. */
         long nextMusic;
 
         Session(UUID player, String character, String altarId, long started) {
@@ -75,6 +80,10 @@ public final class BloodMeditation {
     }
 
     private static final double LEAVE_DISTANCE = 3;
+    /** Ticks the drops take to swell up to the beat, and the longest they take to ease back. */
+    static final int SWELL_TICKS = 3;
+    static final int EASE_TICKS = 10;
+    static LongSupplier clock = System::currentTimeMillis;
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
     private static long ticks;
     private static BukkitTask task;
@@ -140,13 +149,16 @@ public final class BloodMeditation {
             }
             long age = ticks - session.started;
             int beat = MeditationConfig.beatTicks();
-            if (age % beat == 0) {
+            long phase = age % beat;
+            if (phase == 0) {
                 beat(player, session, altar, record);
-            } else if (age % beat == 4) {
-                scale(session, MeditationConfig.dropScale());
+            } else if (phase == beat - SWELL_TICKS) {
+                scale(session, MeditationConfig.flareScale(), SWELL_TICKS);
+            } else if (phase == SWELL_TICKS) {
+                scale(session, MeditationConfig.dropScale(), Math.min(EASE_TICKS, beat - 2 * SWELL_TICKS));
             }
             drift(player, session);
-            if (MeditationConfig.music().seconds() > 0 && ticks >= session.nextMusic) {
+            if (MeditationConfig.music().seconds() > 0 && clock.getAsLong() >= session.nextMusic) {
                 playMusic(player, session);
             }
             if (record.getResonance() >= BloodPool.cap(record)) {
@@ -168,16 +180,15 @@ public final class BloodMeditation {
     private static void playMusic(Player player, Session session) {
         MeditationConfig.music().play(player);
         int seconds = MeditationConfig.music().seconds();
-        session.nextMusic = seconds > 0 ? ticks + seconds * 20L : Long.MAX_VALUE;
+        session.nextMusic = seconds > 0 ? clock.getAsLong() + seconds * 1000L : Long.MAX_VALUE;
     }
 
-    /** A heartbeat: the drops swell, and a new one rises from a charged artefact if there is room. */
+    /** A heartbeat (the drops have swelled up to it): a new drop rises from a charged artefact if there is room. */
     private static void beat(Player player, Session session, BloodAltar altar, BloodRecord record) {
         MeditationConfig.heartbeat().play(player);
         List<AltarPedestals.Shown> charged = session.drops.size() < MeditationConfig.maxDrops()
                 ? charged(altar, record) : List.of();
         if (charged.isEmpty()) {
-            scale(session, MeditationConfig.flareScale());
             return;
         }
         AltarPedestals.Shown source = charged.get(ThreadLocalRandom.current().nextInt(charged.size()));
@@ -186,16 +197,25 @@ public final class BloodMeditation {
             spawned.setItemStack(ItemRef.buildOrFallback(MeditationConfig.dropItem(), Material.REDSTONE));
             spawned.setPersistent(false);
             spawned.setTeleportDuration(2);
+            // Turned to the mage and lit as if in daylight, so it reads in a dark chamber.
+            spawned.setBillboard(Display.Billboard.CENTER);
+            spawned.setBrightness(new Display.Brightness(15, 15));
+            spawned.setTransformation(sized(MeditationConfig.flareScale()));
         });
         session.drops.add(new Drop(BloodArtefacts.id(source.item()), display, from, ticks));
-        scale(session, MeditationConfig.flareScale());
     }
 
-    private static void scale(Session session, float size) {
+    /** Every drop grows or shrinks to the size, gliding there over the given ticks. */
+    private static void scale(Session session, float size, int over) {
         for (Drop drop : session.drops) {
-            drop.display.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
-                    new Vector3f(size, size, size), new AxisAngle4f()));
+            drop.display.setInterpolationDelay(0);
+            drop.display.setInterpolationDuration(over);
+            drop.display.setTransformation(sized(size));
         }
+    }
+
+    private static Transformation sized(float size) {
+        return new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(size, size, size), new AxisAngle4f());
     }
 
     /** Where the drops gather: a little in front of the mage's chest. */

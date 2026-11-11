@@ -161,7 +161,8 @@ public final class AnimalRiteService {
         BloodFx.play("animal_cut", event.getEntity().getLocation(), mage);
         WhisperService.tell(mage, "blood.animal.cut");
         if (!AnimalConfig.music().isEmpty()) {
-            mage.playSound(mage.getLocation(), AnimalConfig.music(), AnimalConfig.musicCategory(), AnimalConfig.musicVolume(), 1f);
+            // Bound to the mage, so it follows them if they step about the stone.
+            mage.playSound(mage, AnimalConfig.music(), AnimalConfig.musicCategory(), AnimalConfig.musicVolume(), 1f);
         }
     }
 

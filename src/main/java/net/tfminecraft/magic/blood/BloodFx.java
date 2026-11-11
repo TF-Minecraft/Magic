@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 import org.bukkit.Color;
@@ -22,7 +23,9 @@ import net.tfminecraft.magic.Magic;
  * Sounds and particles for the blood path, by moment (fx.moments in the wildmagic/bloodmagic config). Each moment is a
  * list of layers played together or after a delay: a sound, or particles in a shape (point, ring,
  * column, spiral). Private layers reach only the player the moment is about; an effect never breaks
- * the rite that plays it.
+ * the rite that plays it. A layer with a chance plays only that often, and one with a jitter waits a
+ * random extra 0 to jitter ticks, so a moment played on a timer (the altar's ambience) does not tick
+ * like a clock.
  */
 public final class BloodFx {
 
@@ -30,7 +33,7 @@ public final class BloodFx {
 
     record Layer(String sound, float volume, float pitch, Particle particle, Object data, int count,
             double spreadX, double spreadY, double spreadZ, double speed, double y, Shape shape, double radius,
-            int points, double height, long delay, boolean personal) {}
+            int points, double height, long delay, boolean personal, double chance, long jitter) {}
 
     private static final Map<String, List<Layer>> MOMENTS = new HashMap<>();
     private static boolean enabled;
@@ -103,10 +106,15 @@ public final class BloodFx {
             if (layer.personal() && viewer == null) {
                 continue;
             }
+            ThreadLocalRandom random = ThreadLocalRandom.current();
+            if (layer.chance() < 1 && random.nextDouble() >= layer.chance()) {
+                continue;
+            }
+            long delay = layer.delay() + (layer.jitter() > 0 ? random.nextLong(layer.jitter() + 1) : 0);
             Location spot = at.clone();
-            if (layer.delay() > 0) {
+            if (delay > 0) {
                 Magic.plugin.getServer().getScheduler().runTaskLater(Magic.plugin,
-                        () -> run(moment, layer, spot, viewer), layer.delay());
+                        () -> run(moment, layer, spot, viewer), delay);
             } else {
                 run(moment, layer, spot, viewer);
             }
@@ -211,7 +219,8 @@ public final class BloodFx {
                 (int) Math.max(0, number(raw, "count", 1)), spread[0], spread[1], spread[2], number(raw, "speed", 0),
                 number(raw, "y", 0), shape, number(raw, "radius", 1), (int) Math.max(1, number(raw, "points", 16)),
                 number(raw, "height", 1), (long) Math.max(0, number(raw, "delay", 0)),
-                Boolean.TRUE.equals(raw.get("private")));
+                Boolean.TRUE.equals(raw.get("private")), Math.max(0, Math.min(1, number(raw, "chance", 1))),
+                (long) Math.max(0, number(raw, "jitter", 0)));
     }
 
     private static final Object UNSUPPORTED = new Object();

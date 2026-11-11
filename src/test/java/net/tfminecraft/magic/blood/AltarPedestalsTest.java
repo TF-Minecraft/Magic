@@ -101,6 +101,14 @@ class AltarPedestalsTest {
 
     assertEquals(5, AltarPedestals.place(altar, center));
     assertEquals(5, altar.getPedestals().size());
+    // Placed at once, but each comes up out of the floor in turn.
+    ItemDisplay last = (ItemDisplay) fx.server.getEntity(UUID.fromString(altar.getPedestals().get(4)));
+    assertEquals(-1f, last.getTransformation().getTranslation().y(), 1e-6, "Sunk in the floor at first");
+    fx.server.getScheduler().performTicks(1 + AltarPedestals.RISE_GAP * 4);
+    assertEquals(-1f, last.getTransformation().getTranslation().y(), 1e-6, "Still waiting its turn");
+    fx.server.getScheduler().performTicks(1);
+    assertEquals(0f, last.getTransformation().getTranslation().y(), 1e-6, "Then it rises");
+    assertEquals(AltarPedestals.RISE_TICKS, last.getInterpolationDuration());
     assertEquals(5, placed.size());
     verify(manager, times(5)).persistFurniture(any());
     interaction.verify(() -> InteractionHandler.spawnInteraction(any()), times(5));
