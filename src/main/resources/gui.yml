@@ -72,8 +72,8 @@ equilibrium:
 
 focus_lore: "{color:label_muted}Mental points {color:label_body}{current}/{max}"
 
-# Spell modifier lines in /resonance. "Now" lines are resonance x balance, the same
-# numbers a cast gets; "At" lines are one curve on its own at its peak.
+# Spell modifier lines in /resonance. "Now" lines are resonance x balance x weapon
+# alignment, the same numbers a cast gets; "At" lines are one curve on its own at its peak.
 # {value} is the amount, {school} the school's coloured name.
 modifiers:
   at_resonance: "{color:label_muted}At {value} Resonance:"
@@ -84,6 +84,8 @@ modifiers:
   source_resonance: "{color:label_body}Resonance {value}: "
   source_tranquility: "{color:tranquility}Tranquility {value}: "
   source_corruption: "{color:corruption}Corruption {value}: "
+  # Only shown while gear alignment is enabled and the held weapon adds to that school.
+  source_weapon: "{color:label_body}Weapon: "
   your_tranquility: "{color:label_muted}Your Tranquility {value}:"
   your_corruption: "{color:label_muted}Your Corruption {value}:"
   no_tranquility: "{color:label_muted}You have no Tranquility."

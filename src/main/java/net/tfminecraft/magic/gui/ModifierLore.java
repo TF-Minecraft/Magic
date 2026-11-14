@@ -3,6 +3,8 @@ package net.tfminecraft.magic.gui;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.inventory.ItemStack;
+
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.model.ElementDef;
 import net.tfminecraft.magic.modifier.ModifierTriple;
@@ -14,8 +16,9 @@ import net.tfminecraft.magic.util.MagicText;
 
 /**
  * Spell modifier lines for the resonance menu. Every "now" figure is the same
- * resonance x balance product a cast uses, and each tooltip names the parts it is
- * made of, so a player can tell their current numbers from the curve peaks.
+ * resonance x balance x weapon alignment product a cast uses, and each tooltip
+ * names the parts it is made of, so a player can tell their current numbers from
+ * the curve peaks.
  */
 public final class ModifierLore {
 
@@ -25,7 +28,7 @@ public final class ModifierLore {
 
     private ModifierLore() {}
 
-    public static List<String> linesForElement(ElementDef element, ResonanceSession session) {
+    public static List<String> linesForElement(ElementDef element, ResonanceSession session, ItemStack weapon) {
         List<String> lines = new ArrayList<>();
         if (element == null) {
             return lines;
@@ -34,7 +37,7 @@ public final class ModifierLore {
         double equilibrium = equilibrium(session);
         ModifierTriple fromResonance = SpellModifiers.resonance(element.getId(), resonance);
         lines.add(GuiText.format(GuiCache.modifierNow.replace("{school}", MagicText.elementName(element))));
-        lines.add(row("", now(element, session)));
+        lines.add(row("", now(element, session, weapon)));
         lines.add(GuiText.format(GuiCache.modifierMadeOf));
         lines.add(row(withValue(GuiCache.modifierSourceResonance, resonance), fromResonance));
         if (equilibrium > 0.0) {
@@ -44,16 +47,21 @@ public final class ModifierLore {
                     withValue(GuiCache.modifierSourceCorruption, Math.abs(equilibrium)),
                     SpellModifiers.drift(equilibrium)));
         }
+        ModifierTriple fromWeapon = SpellModifiers.alignment(weapon, element.getId());
+        if (!fromWeapon.isZero()) {
+            lines.add(row(GuiCache.modifierSourceWeapon, fromWeapon));
+        }
         lines.add(GuiText.format(withValue(GuiCache.modifierAtResonance, 100.0)));
         lines.add(row("", SpellModifiers.resonanceAt100(element.getId())));
         return lines;
     }
 
-    public static List<String> linesForSurge(ResonanceSession session, List<ElementDef> schools) {
+    public static List<String> linesForSurge(ResonanceSession session, List<ElementDef> schools, ItemStack weapon) {
         double equilibrium = equilibrium(session);
         return balanceLines(
                 session,
                 schools,
+                weapon,
                 equilibrium < 0.0,
                 Math.abs(equilibrium),
                 GuiCache.modifierYourCorruption,
@@ -63,11 +71,12 @@ public final class ModifierLore {
                 SpellModifiers.surgeAt60());
     }
 
-    public static List<String> linesForFlow(ResonanceSession session, List<ElementDef> schools) {
+    public static List<String> linesForFlow(ResonanceSession session, List<ElementDef> schools, ItemStack weapon) {
         double equilibrium = equilibrium(session);
         return balanceLines(
                 session,
                 schools,
+                weapon,
                 equilibrium > 0.0,
                 equilibrium,
                 GuiCache.modifierYourTranquility,
@@ -85,6 +94,7 @@ public final class ModifierLore {
     private static List<String> balanceLines(
             ResonanceSession session,
             List<ElementDef> schools,
+            ItemStack weapon,
             boolean onThisSide,
             double amount,
             String yourTemplate,
@@ -106,18 +116,23 @@ public final class ModifierLore {
             for (ElementDef school : schools) {
                 lines.add(row(
                         GuiCache.modifierSchoolRow.replace("{school}", MagicText.elementName(school)),
-                        now(school, session)));
+                        now(school, session, weapon)));
             }
         }
         return lines;
     }
 
-    /** The modifiers a cast of this school gets right now: resonance x balance. */
-    static ModifierTriple now(ElementDef element, ResonanceSession session) {
+    /**
+     * The modifiers a cast of this school gets right now, combined in the same order
+     * as SpellModifierApplyService: resonance x balance, then the held weapon's alignment.
+     */
+    static ModifierTriple now(ElementDef element, ResonanceSession session, ItemStack weapon) {
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
         return SpellModifiers.combine(
-                SpellModifiers.resonance(element.getId(), resonance),
-                SpellModifiers.drift(equilibrium(session)));
+                SpellModifiers.combine(
+                        SpellModifiers.resonance(element.getId(), resonance),
+                        SpellModifiers.drift(equilibrium(session))),
+                SpellModifiers.alignment(weapon, element.getId()));
     }
 
     private static double equilibrium(ResonanceSession session) {

@@ -148,6 +148,7 @@ public final class GuiLoader implements LoaderInterface {
         GuiCache.modifierSourceTranquility = section.getString(
                 "source_tranquility", GuiCache.modifierSourceTranquility);
         GuiCache.modifierSourceCorruption = section.getString("source_corruption", GuiCache.modifierSourceCorruption);
+        GuiCache.modifierSourceWeapon = section.getString("source_weapon", GuiCache.modifierSourceWeapon);
         GuiCache.modifierYourTranquility = section.getString("your_tranquility", GuiCache.modifierYourTranquility);
         GuiCache.modifierYourCorruption = section.getString("your_corruption", GuiCache.modifierYourCorruption);
         GuiCache.modifierNoTranquility = section.getString("no_tranquility", GuiCache.modifierNoTranquility);

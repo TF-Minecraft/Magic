@@ -124,17 +124,19 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     invoke(
         ResonanceGuiBuilder.class,
         "buildElementItem",
-        new Class[] {ElementDef.class, ResonanceSession.class},
+        new Class[] {ElementDef.class, ResonanceSession.class, ItemStack.class},
         ElementRegistry.getById("fire"),
+        null,
         null);
     invoke(
         ResonanceGuiBuilder.class,
         "buildCastModeItem",
-        new Class[] {CastModeDef.class, boolean.class, ResonanceSession.class, List.class},
+        new Class[] {CastModeDef.class, boolean.class, ResonanceSession.class, List.class, ItemStack.class},
         new CastModeDef("other", "v.PAPER", "Other", List.of()),
         false,
         session,
-        List.of());
+        List.of(),
+        null);
   }
 
   @Test
@@ -251,7 +253,7 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
 
   @Test
   void schoolLoreNamesItsPartsAndKeepsThePeakResonanceOnly() {
-    assertTrue(ModifierLore.linesForElement(null, null).isEmpty());
+    assertTrue(ModifierLore.linesForElement(null, null, null).isEmpty());
     var seithr = seithr();
     var session = new ResonanceSession();
     session.setResonance("seithr", 98.61);
@@ -265,10 +267,10 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             " Tranquility 63.35: Mana -12.67%  Cooldown -3.17%  Damage +15.84%",
             "At 100 Resonance:",
             " Mana -20%  Cooldown -15%  Damage +20%"),
-        plain(ModifierLore.linesForElement(seithr, session)));
+        plain(ModifierLore.linesForElement(seithr, session, null)));
     session.setResonance("seithr", 3.2);
     session.setEquilibrium(-27.8);
-    var corrupted = plain(ModifierLore.linesForElement(seithr, session));
+    var corrupted = plain(ModifierLore.linesForElement(seithr, session, null));
     assertEquals(" Mana +11.1%  Cooldown +5.3%  Damage -9.44%", corrupted.get(1));
     assertEquals(" Corruption 27.8: Mana -6.42%  Cooldown -11.42%  Damage +11.42%", corrupted.get(4));
     session.setResonance("seithr", 50);
@@ -281,10 +283,10 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             " Resonance 50: Mana 0%  Cooldown +2.5%  Damage 0%",
             "At 100 Resonance:",
             " Mana -20%  Cooldown -15%  Damage +20%"),
-        plain(ModifierLore.linesForElement(seithr, session)));
+        plain(ModifierLore.linesForElement(seithr, session, null)));
     assertEquals(
         " Mana +20%  Cooldown +20%  Damage -20%",
-        plain(ModifierLore.linesForElement(seithr, null)).get(1));
+        plain(ModifierLore.linesForElement(seithr, null, null)).get(1));
   }
 
   @Test
@@ -298,7 +300,7 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             SpellModifiers.combine(
                 SpellModifiers.resonance("seithr", 98.61), SpellModifiers.drift(63.35)),
             SpellModifiers.alignment((net.tfminecraft.magic.gear.WeaponRequirement) null, "seithr"));
-    var shown = plain(ModifierLore.linesForElement(seithr, session)).get(1);
+    var shown = plain(ModifierLore.linesForElement(seithr, session, null)).get(1);
     assertEquals(
         " Mana "
             + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.mana())
@@ -310,13 +312,45 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
   }
 
   @Test
+  void anAlignedWeaponJoinsTheNowRowsAndGetsItsOwnSource() throws Exception {
+    var seithr = seithr();
+    var weapon = new ItemStack(Material.STICK);
+    var session = new ResonanceSession();
+    session.setResonance("seithr", 98.61);
+    session.setEquilibrium(63.35);
+    try (var modifiers = mockStatic(SpellModifiers.class, CALLS_REAL_METHODS)) {
+      modifiers
+          .when(() -> SpellModifiers.alignment(weapon, "seithr"))
+          .thenReturn(new ModifierTriple(0.0, 0.05, -0.04));
+      var cast =
+          SpellModifiers.combine(
+              SpellModifiers.combine(
+                  SpellModifiers.resonance("seithr", 98.61), SpellModifiers.drift(63.35)),
+              SpellModifiers.alignment(weapon, "seithr"));
+      var expected =
+          " Mana "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.mana())
+              + "  Cooldown "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.cooldown())
+              + "  Damage "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.damage());
+      var school = plain(ModifierLore.linesForElement(seithr, session, weapon));
+      assertEquals(expected, school.get(1));
+      assertEquals(" Weapon: Mana 0%  Cooldown -4%  Damage +5%", school.get(5));
+      assertEquals("At 100 Resonance:", school.get(6));
+      var flow = plain(ModifierLore.linesForFlow(session, List.of(seithr), weapon));
+      assertEquals(" Seithr:" + expected, flow.get(5));
+    }
+  }
+
+  @Test
   void balanceLoreShowsYourAmountThePeakAndEachSchoolOnlyOnYourSide() {
     var seithr = seithr();
     var fire = ElementRegistry.getById("fire");
     var session = new ResonanceSession();
     session.setResonance("seithr", 98.61);
     session.setEquilibrium(63.35);
-    var flow = plain(ModifierLore.linesForFlow(session, List.of(seithr, fire)));
+    var flow = plain(ModifierLore.linesForFlow(session, List.of(seithr, fire), null));
     assertEquals(
         List.of(
             "Your Tranquility 63.35:",
@@ -333,18 +367,18 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             "You have no Corruption.",
             "At 60 Corruption:",
             " Mana -10%  Cooldown -15%  Damage +15%"),
-        plain(ModifierLore.linesForSurge(session, List.of(seithr))));
+        plain(ModifierLore.linesForSurge(session, List.of(seithr), null)));
     session.setResonance("seithr", 3.2);
     session.setEquilibrium(-27.8);
-    var surge = plain(ModifierLore.linesForSurge(session, List.of(seithr)));
+    var surge = plain(ModifierLore.linesForSurge(session, List.of(seithr), null));
     assertEquals("Your Corruption 27.8:", surge.get(0));
     assertEquals(" Mana -6.42%  Cooldown -11.42%  Damage +11.42%", surge.get(1));
     assertEquals(" Seithr: Mana +11.1%  Cooldown +5.3%  Damage -9.44%", surge.get(5));
-    assertEquals("You have no Tranquility.", plain(ModifierLore.linesForFlow(session, List.of(seithr))).get(0));
-    assertEquals(4, ModifierLore.linesForSurge(session, List.of()).size());
-    assertEquals(4, ModifierLore.linesForSurge(session, null).size());
-    assertEquals(3, ModifierLore.linesForSurge(null, null).size());
-    assertEquals(3, ModifierLore.linesForFlow(null, List.of(seithr)).size());
+    assertEquals("You have no Tranquility.", plain(ModifierLore.linesForFlow(session, List.of(seithr), null)).get(0));
+    assertEquals(4, ModifierLore.linesForSurge(session, List.of(), null).size());
+    assertEquals(4, ModifierLore.linesForSurge(session, null, null).size());
+    assertEquals(3, ModifierLore.linesForSurge(null, null, null).size());
+    assertEquals(3, ModifierLore.linesForFlow(null, List.of(seithr), null).size());
   }
 
   @Test
@@ -375,8 +409,9 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             invoke(
                 ResonanceGuiBuilder.class,
                 "buildElementItem",
-                new Class[] {ElementDef.class, ResonanceSession.class},
+                new Class[] {ElementDef.class, ResonanceSession.class, ItemStack.class},
                 element,
+                null,
                 null);
     assertNotNull(item.getItemMeta().getLore());
   }

@@ -57,6 +57,7 @@ public final class GuiCache {
     public static String modifierSourceResonance = "{color:label_body}Resonance {value}: ";
     public static String modifierSourceTranquility = "{color:tranquility}Tranquility {value}: ";
     public static String modifierSourceCorruption = "{color:corruption}Corruption {value}: ";
+    public static String modifierSourceWeapon = "{color:label_body}Weapon: ";
     public static String modifierYourTranquility = "{color:label_muted}Your Tranquility {value}:";
     public static String modifierYourCorruption = "{color:label_muted}Your Corruption {value}:";
     public static String modifierNoTranquility = "{color:label_muted}You have no Tranquility.";
