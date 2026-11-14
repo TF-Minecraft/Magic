@@ -31,6 +31,7 @@ public final class BloodMagic {
         AltarPedestals.init(store);
         BondService.init(store);
         plugin.getServer().getPluginManager().registerEvents(new BloodListener(), plugin);
+        EvilPlayWhispers.register(plugin);
         if (plugin.getServer().getPluginManager().isPluginEnabled("MMOCore")) {
             plugin.getServer().getPluginManager().registerEvents(new MmoClassRewards(), plugin);
         }

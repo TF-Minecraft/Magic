@@ -63,6 +63,7 @@ public final class WhisperConfig {
     private static double animalKill = 2;
     private static double aloneOrNightMultiplier = 2;
     private static double characterKill = 15;
+    private static double robbery = 4;
     private static double corruption = 1;
     private static double corruptionBelow = -40;
     private static Set<EntityType> animals = Set.of();
@@ -86,6 +87,7 @@ public final class WhisperConfig {
         animalKill = 2;
         aloneOrNightMultiplier = 2;
         characterKill = 15;
+        robbery = 4;
         corruption = 1;
         corruptionBelow = -40;
         animals = Set.of();
@@ -112,6 +114,7 @@ public final class WhisperConfig {
             animalKill = Math.max(0, whispers.getDouble("sources.animal_kill", 2));
             aloneOrNightMultiplier = Math.max(1, whispers.getDouble("sources.alone_or_night_multiplier", 2));
             characterKill = Math.max(0, whispers.getDouble("sources.character_kill", 15));
+            robbery = Math.max(0, whispers.getDouble("sources.robbery", 4));
             corruption = Math.max(0, whispers.getDouble("sources.corruption", 1));
             corruptionBelow = whispers.getDouble("sources.corruption_below", -40);
             Set<EntityType> types = new HashSet<>();
@@ -222,6 +225,11 @@ public final class WhisperConfig {
 
     public static double characterKill() {
         return characterKill;
+    }
+
+    /** An evil RP session started by robbing, pickpocketing, lockpicking or grave looting. */
+    public static double robbery() {
+        return robbery;
     }
 
     public static double corruption() {

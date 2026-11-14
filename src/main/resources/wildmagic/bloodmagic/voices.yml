@@ -13,8 +13,11 @@ whispers:
     animal_kill: 2.0
     # Animal kills count this many times more at night or with nobody near.
     alone_or_night_multiplier: 2.0
-    # A character you killed died for good.
+    # A character you killed died for good (permanent kills only; knockouts never count).
     character_kill: 15.0
+    # An evil RP session started by robbing, pickpocketing, lockpicking or looting a locked grave
+    # (RPCharacters' evil RP play event, from Thievery). Once per session, so it can't be farmed.
+    robbery: 4.0
     # Every ten minutes while your equilibrium is at or below corruption_below.
     corruption: 1.0
     corruption_below: -40
