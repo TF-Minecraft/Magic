@@ -37,6 +37,7 @@ import net.tfminecraft.magic.artifact.generate.ArtifactRoll;
 import net.tfminecraft.magic.artifact.generate.ArtifactRoller;
 import net.tfminecraft.magic.artifact.shrine.ShrineChargeService;
 import net.tfminecraft.magic.attunement.AuraLog;
+import net.tfminecraft.magic.blood.BloodCommand;
 import net.tfminecraft.magic.gear.GearRefresher;
 import net.tfminecraft.magic.gear.RuneKeybind;
 import net.tfminecraft.magic.model.ElementDef;
@@ -49,7 +50,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = List.of(
             "reload", "open", "artifact", "fillchest", "resonance", "shrine", "refresh",
-            "player", "equilibrium", "castmode", "gear");
+            "player", "equilibrium", "castmode", "gear", "blood");
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -84,6 +85,9 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if ("gear".equalsIgnoreCase(args[0])) {
             return HeldValuesCommand.execute(sender, args);
+        }
+        if ("blood".equalsIgnoreCase(args[0])) {
+            return BloodCommand.execute(sender, args);
         }
 
         if ("reload".equalsIgnoreCase(args[0])) {
@@ -697,7 +701,7 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
                 options.add("rune");
             }
             if (admin) {
-                options.addAll(isPlayer ? SUBCOMMANDS : List.of("reload", "artifact", "resonance", "player", "equilibrium", "castmode"));
+                options.addAll(isPlayer ? SUBCOMMANDS : List.of("reload", "artifact", "resonance", "player", "equilibrium", "castmode", "blood"));
             }
             return filterPrefix(options, args[0]);
         }
@@ -727,6 +731,9 @@ public final class MagicCommand implements CommandExecutor, TabCompleter {
         }
         if ("gear".equalsIgnoreCase(args[0])) {
             return isPlayer ? filterPrefix(HeldValuesCommand.complete(args), args[args.length - 1]) : Collections.emptyList();
+        }
+        if ("blood".equalsIgnoreCase(args[0])) {
+            return filterPrefix(BloodCommand.complete(args), args[args.length - 1]);
         }
         if (!isPlayer && List.of("open", "refresh", "rune", "fillchest", "shrine").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Collections.emptyList();
