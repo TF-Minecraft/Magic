@@ -6,7 +6,7 @@ whispers:
   threshold: 30
   decay_per_hour: 1.0
   # Characters with one of these RPCharacters traits fill the meter faster (the evil fast route).
-  fast_traits: [heretic]
+  fast_traits: [occultist]
   fast_multiplier: 3.0
   sources:
     # Killing a listed animal with a blade.

@@ -17,4 +17,4 @@ armour:
     - { item: m.mage_armors.sanguinar_helmet, look: ia.tfmc_blood:sanguinar_helmet, name: "#5c0202Skull of {victim}" }
     - { item: m.mage_armors.sanguinar_chestplate, look: ia.tfmc_blood:sanguinar_chestplate, name: "#5c0202Ribcage of {victim}" }
     - { item: m.mage_armors.sanguinar_leggings, look: ia.tfmc_blood:sanguinar_leggings, name: "#5c0202Hide of {victim}" }
-    - { item: m.mage_armors.sanguinar_boots, look: ia.tfmc_blood:sanguinar_boots, name: "#5c0202Bones of {victim}" }
+    - { item: m.mage_armors.sanguinar_boots, look: ia.tfmc_blood:sanguinar_boots, name: "#5c0202Shinbones of {victim}" }
