@@ -142,6 +142,19 @@ public final class GuiLoader implements LoaderInterface {
         GuiCache.modifierAtResonance = section.getString("at_resonance", GuiCache.modifierAtResonance);
         GuiCache.modifierAtCorruption = section.getString("at_corruption", GuiCache.modifierAtCorruption);
         GuiCache.modifierAtTranquility = section.getString("at_tranquility", GuiCache.modifierAtTranquility);
+        GuiCache.modifierNow = section.getString("now", GuiCache.modifierNow);
+        GuiCache.modifierMadeOf = section.getString("made_of", GuiCache.modifierMadeOf);
+        GuiCache.modifierSourceResonance = section.getString("source_resonance", GuiCache.modifierSourceResonance);
+        GuiCache.modifierSourceTranquility = section.getString(
+                "source_tranquility", GuiCache.modifierSourceTranquility);
+        GuiCache.modifierSourceCorruption = section.getString("source_corruption", GuiCache.modifierSourceCorruption);
+        GuiCache.modifierSourceWeapon = section.getString("source_weapon", GuiCache.modifierSourceWeapon);
+        GuiCache.modifierYourTranquility = section.getString("your_tranquility", GuiCache.modifierYourTranquility);
+        GuiCache.modifierYourCorruption = section.getString("your_corruption", GuiCache.modifierYourCorruption);
+        GuiCache.modifierNoTranquility = section.getString("no_tranquility", GuiCache.modifierNoTranquility);
+        GuiCache.modifierNoCorruption = section.getString("no_corruption", GuiCache.modifierNoCorruption);
+        GuiCache.modifierSchoolsNow = section.getString("schools_now", GuiCache.modifierSchoolsNow);
+        GuiCache.modifierSchoolRow = section.getString("school_row", GuiCache.modifierSchoolRow);
     }
 
     private static boolean loadArtifactCreate(ConfigurationSection section) {

@@ -124,16 +124,19 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     invoke(
         ResonanceGuiBuilder.class,
         "buildElementItem",
-        new Class[] {ElementDef.class, ResonanceSession.class},
+        new Class[] {ElementDef.class, ResonanceSession.class, ItemStack.class},
         ElementRegistry.getById("fire"),
+        null,
         null);
     invoke(
         ResonanceGuiBuilder.class,
         "buildCastModeItem",
-        new Class[] {CastModeDef.class, boolean.class, ResonanceSession.class},
+        new Class[] {CastModeDef.class, boolean.class, ResonanceSession.class, List.class, ItemStack.class},
         new CastModeDef("other", "v.PAPER", "Other", List.of()),
         false,
-        session);
+        session,
+        List.of(),
+        null);
   }
 
   @Test
@@ -229,22 +232,157 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
       assertNotNull(invoke(ResonanceGuiManager.class, "castModeChatLabel", new Class[] {String.class}, mode));
   }
 
+  static ElementDef seithr() {
+    var yaml = new YamlConfiguration();
+    yaml.set("name", "Seithr");
+    yaml.set("slot", 30);
+    yaml.set("resonance.0.mana", 0.20);
+    yaml.set("resonance.0.damage", -0.20);
+    yaml.set("resonance.0.cooldown", 0.20);
+    yaml.set("resonance.100.mana", -0.20);
+    yaml.set("resonance.100.damage", 0.20);
+    yaml.set("resonance.100.cooldown", -0.15);
+    var def = new ElementDef("seithr", yaml);
+    ElementRegistry.register(def);
+    return def;
+  }
+
+  static List<String> plain(List<String> lines) {
+    return lines.stream().map(ChatColor::stripColor).toList();
+  }
+
   @Test
-  void modifierLoreRendersSignedPercentagesAndCurrentAxisOnlyWhenActive() throws Exception {
-    assertTrue(ModifierLore.linesForElement(null, null).isEmpty());
-    var fire = ElementRegistry.getById("fire");
-    assertEquals(8, ModifierLore.linesForElement(fire, null).size());
+  void schoolLoreNamesItsPartsAndKeepsThePeakResonanceOnly() {
+    assertTrue(ModifierLore.linesForElement(null, null, null).isEmpty());
+    var seithr = seithr();
     var session = new ResonanceSession();
+    session.setResonance("seithr", 98.61);
+    session.setEquilibrium(63.35);
+    assertEquals(
+        List.of(
+            "Your Seithr spells now:",
+            " Mana -29.65%  Cooldown -17.22%  Damage +38.36%",
+            "Made of:",
+            " Resonance 98.61: Mana -19.44%  Cooldown -14.51%  Damage +19.44%",
+            " Tranquility 63.35: Mana -12.67%  Cooldown -3.17%  Damage +15.84%",
+            "At 100 Resonance:",
+            " Mana -20%  Cooldown -15%  Damage +20%"),
+        plain(ModifierLore.linesForElement(seithr, session, null)));
+    session.setResonance("seithr", 3.2);
+    session.setEquilibrium(-27.8);
+    var corrupted = plain(ModifierLore.linesForElement(seithr, session, null));
+    assertEquals(" Mana +11.1%  Cooldown +5.3%  Damage -9.44%", corrupted.get(1));
+    assertEquals(" Corruption 27.8: Mana -6.42%  Cooldown -11.42%  Damage +11.42%", corrupted.get(4));
+    session.setResonance("seithr", 50);
     session.setEquilibrium(0);
-    assertEquals(4, ModifierLore.linesForSurge(null).size());
-    assertEquals(4, ModifierLore.linesForFlow(null).size());
-    assertEquals(4, ModifierLore.linesForSurge(session).size());
-    assertEquals(4, ModifierLore.linesForFlow(session).size());
-    session.setEquilibrium(-20);
-    assertEquals(8, ModifierLore.linesForSurge(session).size());
-    session.setEquilibrium(30);
-    assertEquals(8, ModifierLore.linesForFlow(session).size());
-    assertEquals(8, ModifierLore.linesForElement(fire, session).size());
+    assertEquals(
+        List.of(
+            "Your Seithr spells now:",
+            " Mana 0%  Cooldown +2.5%  Damage 0%",
+            "Made of:",
+            " Resonance 50: Mana 0%  Cooldown +2.5%  Damage 0%",
+            "At 100 Resonance:",
+            " Mana -20%  Cooldown -15%  Damage +20%"),
+        plain(ModifierLore.linesForElement(seithr, session, null)));
+    assertEquals(
+        " Mana +20%  Cooldown +20%  Damage -20%",
+        plain(ModifierLore.linesForElement(seithr, null, null)).get(1));
+  }
+
+  @Test
+  void schoolNowLineIsWhatACastGets() throws Exception {
+    var seithr = seithr();
+    var session = new ResonanceSession();
+    session.setResonance("seithr", 98.61);
+    session.setEquilibrium(63.35);
+    var cast =
+        SpellModifiers.combine(
+            SpellModifiers.combine(
+                SpellModifiers.resonance("seithr", 98.61), SpellModifiers.drift(63.35)),
+            SpellModifiers.alignment((net.tfminecraft.magic.gear.WeaponRequirement) null, "seithr"));
+    var shown = plain(ModifierLore.linesForElement(seithr, session, null)).get(1);
+    assertEquals(
+        " Mana "
+            + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.mana())
+            + "  Cooldown "
+            + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.cooldown())
+            + "  Damage "
+            + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.damage()),
+        shown);
+  }
+
+  @Test
+  void anAlignedWeaponJoinsTheNowRowsAndGetsItsOwnSource() throws Exception {
+    var seithr = seithr();
+    var weapon = new ItemStack(Material.STICK);
+    var session = new ResonanceSession();
+    session.setResonance("seithr", 98.61);
+    session.setEquilibrium(63.35);
+    try (var modifiers = mockStatic(SpellModifiers.class, CALLS_REAL_METHODS)) {
+      modifiers
+          .when(() -> SpellModifiers.alignment(weapon, "seithr"))
+          .thenReturn(new ModifierTriple(0.0, 0.05, -0.04));
+      var cast =
+          SpellModifiers.combine(
+              SpellModifiers.combine(
+                  SpellModifiers.resonance("seithr", 98.61), SpellModifiers.drift(63.35)),
+              SpellModifiers.alignment(weapon, "seithr"));
+      var expected =
+          " Mana "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.mana())
+              + "  Cooldown "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.cooldown())
+              + "  Damage "
+              + invoke(ModifierLore.class, "formatPercent", new Class[] {double.class}, cast.damage());
+      var school = plain(ModifierLore.linesForElement(seithr, session, weapon));
+      assertEquals(expected, school.get(1));
+      assertEquals(" Weapon: Mana 0%  Cooldown -4%  Damage +5%", school.get(5));
+      assertEquals("At 100 Resonance:", school.get(6));
+      var flow = plain(ModifierLore.linesForFlow(session, List.of(seithr), weapon));
+      assertEquals(" Seithr:" + expected, flow.get(5));
+    }
+  }
+
+  @Test
+  void balanceLoreShowsYourAmountThePeakAndEachSchoolOnlyOnYourSide() {
+    var seithr = seithr();
+    var fire = ElementRegistry.getById("fire");
+    var session = new ResonanceSession();
+    session.setResonance("seithr", 98.61);
+    session.setEquilibrium(63.35);
+    var flow = plain(ModifierLore.linesForFlow(session, List.of(seithr, fire), null));
+    assertEquals(
+        List.of(
+            "Your Tranquility 63.35:",
+            " Mana -12.67%  Cooldown -3.17%  Damage +15.84%",
+            "At 100 Tranquility:",
+            " Mana -20%  Cooldown -5%  Damage +25%",
+            "Your spells now, with each school's Resonance:",
+            " Seithr: Mana -29.65%  Cooldown -17.22%  Damage +38.36%"),
+        flow.subList(0, 6));
+    assertEquals(7, flow.size());
+    assertTrue(flow.get(6).startsWith(" fire: "));
+    assertEquals(
+        List.of(
+            "You have no Corruption.",
+            "At 60 Corruption:",
+            " Mana -10%  Cooldown -15%  Damage +15%"),
+        plain(ModifierLore.linesForSurge(session, List.of(seithr), null)));
+    session.setResonance("seithr", 3.2);
+    session.setEquilibrium(-27.8);
+    var surge = plain(ModifierLore.linesForSurge(session, List.of(seithr), null));
+    assertEquals("Your Corruption 27.8:", surge.get(0));
+    assertEquals(" Mana -6.42%  Cooldown -11.42%  Damage +11.42%", surge.get(1));
+    assertEquals(" Seithr: Mana +11.1%  Cooldown +5.3%  Damage -9.44%", surge.get(5));
+    assertEquals("You have no Tranquility.", plain(ModifierLore.linesForFlow(session, List.of(seithr), null)).get(0));
+    assertEquals(4, ModifierLore.linesForSurge(session, List.of(), null).size());
+    assertEquals(4, ModifierLore.linesForSurge(session, null, null).size());
+    assertEquals(3, ModifierLore.linesForSurge(null, null, null).size());
+    assertEquals(3, ModifierLore.linesForFlow(null, List.of(seithr), null).size());
+  }
+
+  @Test
+  void modifierLoreRendersSignedPercentagesAndColours() throws Exception {
     for (double value : List.of(-.2, 0., .2)) {
       assertEquals(
           value < 0 ? "-20%" : value > 0 ? "+20%" : "0%",
@@ -259,24 +397,6 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
                 value,
                 higher));
     }
-    assertTrue(
-        ((String)
-                invoke(
-                    ModifierLore.class,
-                    "axisHeader",
-                    new Class[] {String.class, double.class},
-                    null,
-                    12))
-            .contains("12"));
-    var lines = new ArrayList<String>();
-    invoke(
-        ModifierLore.class,
-        "addBlock",
-        new Class[] {List.class, String.class, ModifierTriple.class},
-        lines,
-        "heading",
-        null);
-    assertTrue(lines.isEmpty());
   }
 
   @Test
@@ -289,8 +409,9 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
             invoke(
                 ResonanceGuiBuilder.class,
                 "buildElementItem",
-                new Class[] {ElementDef.class, ResonanceSession.class},
+                new Class[] {ElementDef.class, ResonanceSession.class, ItemStack.class},
                 element,
+                null,
                 null);
     assertNotNull(item.getItemMeta().getLore());
   }

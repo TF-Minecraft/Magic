@@ -18,6 +18,7 @@ import net.tfminecraft.rpcharacters.objects.RPCharacter;
 import net.tfminecraft.rpcharacters.api.CharacterSkull;
 import net.tfminecraft.magic.util.MagicText;
 import net.tfminecraft.magic.GuiCache;
+import net.tfminecraft.magic.gear.GearHand;
 import net.tfminecraft.magic.integration.RpCharactersBridge;
 import net.tfminecraft.magic.model.CastModeDef;
 import net.tfminecraft.magic.model.ElementDef;
@@ -58,13 +59,16 @@ public final class ResonanceGuiBuilder {
             inventory.setItem(slotIndex, innerFiller.clone());
         }
 
+        ItemStack weapon = GearHand.held(player);
+        List<ElementDef> unlocked = new ArrayList<>();
         for (ElementDef element : ElementRegistry.getAll()) {
             int slotIndex = element.getSlot();
             if (slotIndex < 0) {
                 continue;
             }
             if (element.isUnlocked(player)) {
-                inventory.setItem(slotIndex, buildElementItem(element, session));
+                unlocked.add(element);
+                inventory.setItem(slotIndex, buildElementItem(element, session, weapon));
             } else {
                 // Locked schools keep their reserved slot; fill it so the menu shows no gap.
                 ItemStack filler = GridLayout.isBorderSlot(slotIndex) ? borderFiller : innerFiller;
@@ -76,10 +80,10 @@ public final class ResonanceGuiBuilder {
         inventory.setItem(GridLayout.characterHeadSlot(), buildCharacterHead(player, session));
         inventory.setItem(
                 GridLayout.castModeLeftSlot(),
-                buildCastModeItem(GuiCache.castModeLeft, castModeId.equals(GuiCache.castModeLeft.getId()), session));
+                buildCastModeItem(GuiCache.castModeLeft, castModeId.equals(GuiCache.castModeLeft.getId()), session, unlocked, weapon));
         inventory.setItem(
                 GridLayout.castModeRightSlot(),
-                buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session));
+                buildCastModeItem(GuiCache.castModeRight, castModeId.equals(GuiCache.castModeRight.getId()), session, unlocked, weapon));
     }
 
     private static String normalizeCastModeId(String castModeId) {
@@ -158,15 +162,20 @@ public final class ResonanceGuiBuilder {
 
     // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
     @SuppressWarnings({"deprecation"})
-    private static ItemStack buildCastModeItem(CastModeDef mode, boolean selected, ResonanceSession session) {
+    private static ItemStack buildCastModeItem(
+            CastModeDef mode,
+            boolean selected,
+            ResonanceSession session,
+            List<ElementDef> schools,
+            ItemStack weapon) {
         ItemStack item = ItemRef.buildOrFallback(mode.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(GuiText.format(mode.getName()));
         List<String> lore = new ArrayList<>(GuiText.formatLoreLines(mode.getLore()));
         if (mode.getId().equalsIgnoreCase(GuiCache.castModeLeft.getId())) {
-            lore.addAll(ModifierLore.linesForSurge(session));
+            lore.addAll(ModifierLore.linesForSurge(session, schools, weapon));
         } else if (mode.getId().equalsIgnoreCase(GuiCache.castModeRight.getId())) {
-            lore.addAll(ModifierLore.linesForFlow(session));
+            lore.addAll(ModifierLore.linesForFlow(session, schools, weapon));
         }
         if (selected) {
             lore.add(GuiText.format("{color:resonance_high}§lSelected"));
@@ -182,7 +191,7 @@ public final class ResonanceGuiBuilder {
 
     // Preserve the existing additional-tooltip component selection and legacy item text; hiding the whole tooltip is different.
     @SuppressWarnings({"deprecation"})
-    private static ItemStack buildElementItem(ElementDef element, ResonanceSession session) {
+    private static ItemStack buildElementItem(ElementDef element, ResonanceSession session, ItemStack weapon) {
         ItemStack item = ItemRef.buildOrFallback(element.getIcon(), Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(MagicText.elementName(element));
@@ -193,7 +202,7 @@ public final class ResonanceGuiBuilder {
         if (driftLore != null) {
             lore.add(driftLore);
         }
-        lore.addAll(ModifierLore.linesForElement(element, session));
+        lore.addAll(ModifierLore.linesForElement(element, session, weapon));
         meta.setLore(lore);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
