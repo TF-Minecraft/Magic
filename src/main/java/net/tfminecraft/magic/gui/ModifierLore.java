@@ -10,7 +10,13 @@ import net.tfminecraft.magic.modifier.SpellModifiers;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.util.GuiText;
 import net.tfminecraft.magic.util.MagicNumbers;
+import net.tfminecraft.magic.util.MagicText;
 
+/**
+ * Spell modifier lines for the resonance menu. Every "now" figure is the same
+ * resonance x balance product a cast uses, and each tooltip names the parts it is
+ * made of, so a player can tell their current numbers from the curve peaks.
+ */
 public final class ModifierLore {
 
     private static final String MANA_FALLBACK = "#5b9bd4";
@@ -25,54 +31,114 @@ public final class ModifierLore {
             return lines;
         }
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
-        double equilibrium = session != null ? session.getEquilibrium() : 0.0;
-        ModifierTriple now = SpellModifiers.combine(
-                SpellModifiers.resonance(element.getId(), resonance),
-                SpellModifiers.drift(equilibrium));
-        addBlock(lines, axisHeader(GuiCache.modifierAtResonance, resonance), now);
-        addBlock(lines, axisHeader(GuiCache.modifierAtResonance, 100.0), SpellModifiers.resonanceAt100(element.getId()));
-        return lines;
-    }
-
-    public static List<String> linesForSurge(ResonanceSession session) {
-        List<String> lines = new ArrayList<>();
-        double equilibrium = session != null ? session.getEquilibrium() : 0.0;
-        if (equilibrium < 0.0) {
-            addBlock(lines, axisHeader(GuiCache.modifierAtCorruption, Math.abs(equilibrium)), SpellModifiers.drift(equilibrium));
-        }
-        addBlock(lines, axisHeader(GuiCache.modifierAtCorruption, 60.0), SpellModifiers.surgeAt60());
-        return lines;
-    }
-
-    public static List<String> linesForFlow(ResonanceSession session) {
-        List<String> lines = new ArrayList<>();
-        double equilibrium = session != null ? session.getEquilibrium() : 0.0;
+        double equilibrium = equilibrium(session);
+        ModifierTriple fromResonance = SpellModifiers.resonance(element.getId(), resonance);
+        lines.add(GuiText.format(GuiCache.modifierNow.replace("{school}", MagicText.elementName(element))));
+        lines.add(row("", now(element, session)));
+        lines.add(GuiText.format(GuiCache.modifierMadeOf));
+        lines.add(row(withValue(GuiCache.modifierSourceResonance, resonance), fromResonance));
         if (equilibrium > 0.0) {
-            addBlock(lines, axisHeader(GuiCache.modifierAtTranquility, equilibrium), SpellModifiers.drift(equilibrium));
+            lines.add(row(withValue(GuiCache.modifierSourceTranquility, equilibrium), SpellModifiers.drift(equilibrium)));
+        } else if (equilibrium < 0.0) {
+            lines.add(row(
+                    withValue(GuiCache.modifierSourceCorruption, Math.abs(equilibrium)),
+                    SpellModifiers.drift(equilibrium)));
         }
-        addBlock(lines, axisHeader(GuiCache.modifierAtTranquility, 100.0), SpellModifiers.tranquilityAt100());
+        lines.add(GuiText.format(withValue(GuiCache.modifierAtResonance, 100.0)));
+        lines.add(row("", SpellModifiers.resonanceAt100(element.getId())));
         return lines;
     }
 
-    private static void addBlock(List<String> lines, String header, ModifierTriple triple) {
-        if (triple == null) {
-            return;
+    public static List<String> linesForSurge(ResonanceSession session, List<ElementDef> schools) {
+        double equilibrium = equilibrium(session);
+        return balanceLines(
+                session,
+                schools,
+                equilibrium < 0.0,
+                Math.abs(equilibrium),
+                GuiCache.modifierYourCorruption,
+                GuiCache.modifierNoCorruption,
+                GuiCache.modifierAtCorruption,
+                60.0,
+                SpellModifiers.surgeAt60());
+    }
+
+    public static List<String> linesForFlow(ResonanceSession session, List<ElementDef> schools) {
+        double equilibrium = equilibrium(session);
+        return balanceLines(
+                session,
+                schools,
+                equilibrium > 0.0,
+                equilibrium,
+                GuiCache.modifierYourTranquility,
+                GuiCache.modifierNoTranquility,
+                GuiCache.modifierAtTranquility,
+                100.0,
+                SpellModifiers.tranquilityAt100());
+    }
+
+    /**
+     * One cast mode's side of the balance: the player's current amount (or that they
+     * have none), the curve peak, and, while they are on this side, what each unlocked
+     * school casts at right now.
+     */
+    private static List<String> balanceLines(
+            ResonanceSession session,
+            List<ElementDef> schools,
+            boolean onThisSide,
+            double amount,
+            String yourTemplate,
+            String noneTemplate,
+            String peakTemplate,
+            double peak,
+            ModifierTriple atPeak) {
+        List<String> lines = new ArrayList<>();
+        if (onThisSide) {
+            lines.add(GuiText.format(withValue(yourTemplate, amount)));
+            lines.add(row("", SpellModifiers.drift(equilibrium(session))));
+        } else {
+            lines.add(GuiText.format(noneTemplate));
         }
-        lines.add(GuiText.format(header));
-        lines.add(statLine("stat_mana", MANA_FALLBACK, "Mana", triple.mana(), false));
-        lines.add(statLine("stat_cooldown", COOLDOWN_FALLBACK, "Cooldown", triple.cooldown(), false));
-        lines.add(statLine("stat_damage", DAMAGE_FALLBACK, "Damage", triple.damage(), true));
+        lines.add(GuiText.format(withValue(peakTemplate, peak)));
+        lines.add(row("", atPeak));
+        if (onThisSide && schools != null && !schools.isEmpty()) {
+            lines.add(GuiText.format(GuiCache.modifierSchoolsNow));
+            for (ElementDef school : schools) {
+                lines.add(row(
+                        GuiCache.modifierSchoolRow.replace("{school}", MagicText.elementName(school)),
+                        now(school, session)));
+            }
+        }
+        return lines;
     }
 
-    private static String axisHeader(String template, double value) {
-        String raw = template != null ? template : "{color:label_muted}At {value}";
-        return raw.replace("{value}", MagicNumbers.format(value));
+    /** The modifiers a cast of this school gets right now: resonance x balance. */
+    static ModifierTriple now(ElementDef element, ResonanceSession session) {
+        double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
+        return SpellModifiers.combine(
+                SpellModifiers.resonance(element.getId(), resonance),
+                SpellModifiers.drift(equilibrium(session)));
     }
 
-    private static String statLine(
+    private static double equilibrium(ResonanceSession session) {
+        return session != null ? session.getEquilibrium() : 0.0;
+    }
+
+    private static String withValue(String template, double value) {
+        return template.replace("{value}", MagicNumbers.format(value));
+    }
+
+    private static String row(String prefix, ModifierTriple triple) {
+        return GuiText.format(" " + prefix
+                + stat("stat_mana", MANA_FALLBACK, "Mana", triple.mana(), false) + "  "
+                + stat("stat_cooldown", COOLDOWN_FALLBACK, "Cooldown", triple.cooldown(), false) + "  "
+                + stat("stat_damage", DAMAGE_FALLBACK, "Damage", triple.damage(), true));
+    }
+
+    private static String stat(
             String colorKey, String fallbackHex, String label, double decimal, boolean higherIsBetter) {
         String labelHex = GuiCache.color(colorKey, fallbackHex);
-        return GuiText.format(labelHex + label + ": " + percentColor(decimal, higherIsBetter) + formatPercent(decimal));
+        return labelHex + label + " " + percentColor(decimal, higherIsBetter) + formatPercent(decimal);
     }
 
     private static String percentColor(double decimal, boolean higherIsBetter) {

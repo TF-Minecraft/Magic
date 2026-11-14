@@ -72,10 +72,24 @@ equilibrium:
 
 focus_lore: "{color:label_muted}Mental points {color:label_body}{current}/{max}"
 
+# Spell modifier lines in /resonance. "Now" lines are resonance x balance, the same
+# numbers a cast gets; "At" lines are one curve on its own at its peak.
+# {value} is the amount, {school} the school's coloured name.
 modifiers:
-  at_resonance: "{color:label_muted}At {value} Resonance"
-  at_corruption: "{color:label_muted}At {value} Corruption"
-  at_tranquility: "{color:label_muted}At {value} Tranquility"
+  at_resonance: "{color:label_muted}At {value} Resonance:"
+  at_corruption: "{color:label_muted}At {value} Corruption:"
+  at_tranquility: "{color:label_muted}At {value} Tranquility:"
+  now: "{color:label_muted}Your {school}{color:label_muted} spells now:"
+  made_of: "{color:label_muted}Made of:"
+  source_resonance: "{color:label_body}Resonance {value}: "
+  source_tranquility: "{color:tranquility}Tranquility {value}: "
+  source_corruption: "{color:corruption}Corruption {value}: "
+  your_tranquility: "{color:label_muted}Your Tranquility {value}:"
+  your_corruption: "{color:label_muted}Your Corruption {value}:"
+  no_tranquility: "{color:label_muted}You have no Tranquility."
+  no_corruption: "{color:label_muted}You have no Corruption."
+  schools_now: "{color:label_muted}Your spells now, with each school's Resonance:"
+  school_row: "{school}{color:label_muted}: "
 
 artifact_create:
   title: "{color:title}Create artifact"
