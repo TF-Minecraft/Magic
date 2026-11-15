@@ -155,21 +155,27 @@ class WhisperServiceTest {
     player.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
     Cow cow = fx.world.spawn(player.getLocation(), Cow.class);
     Zombie zombie = fx.world.spawn(player.getLocation(), Zombie.class);
+    Cow shot = fx.world.spawn(player.getLocation(), Cow.class);
     keep(cow, UUID.randomUUID());
     keep(zombie, UUID.randomUUID());
+    keep(shot, UUID.randomUUID());
 
-    WhisperService.noteKeepers(cow);
-    WhisperService.noteKeepers(zombie);
+    WhisperService.noteKeepers(player, cow);
+    WhisperService.noteKeepers(player, zombie);
     BloodConfig.setEnabled(false);
-    WhisperService.noteKeepers(cow);
+    WhisperService.noteKeepers(player, cow);
     BloodConfig.setEnabled(true);
+    player.getInventory().setItemInMainHand(new ItemStack(Material.BOW));
+    WhisperService.noteKeepers(player, shot);
+    player.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
     FakeHusbandry.OWNERS.clear();
+    assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(player, shot), "no blade: not noted");
     assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(player, zombie), "unlisted: not noted");
     WhisperService.animalKill(player, cow);
     assertEquals(4, BloodRecords.get(id).getWhisper(), "noted keepers count after Cooking deleted them");
     WhisperService.forgetKeepers(cow);
     assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(player, cow));
-    WhisperService.noteKeepers(cow);
+    WhisperService.noteKeepers(player, cow);
     WhisperService.clear();
     assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(player, cow));
   }

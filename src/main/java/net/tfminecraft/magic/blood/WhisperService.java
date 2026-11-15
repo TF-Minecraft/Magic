@@ -128,11 +128,12 @@ public final class WhisperService {
     }
 
     /**
-     * Remembers a listed animal's keepers as it dies. Cooking deletes them in its own death handler,
-     * which runs before Magic's at the same priority, so this runs at LOWEST.
+     * Remembers the keepers of a listed animal killed with a blade, as it dies. Cooking deletes them in
+     * its own death handler, which runs before Magic's at the same priority, so this runs at LOWEST.
      */
-    public static void noteKeepers(Entity animal) {
-        if (BloodConfig.isEnabled() && WhisperConfig.isAnimal(animal.getType())) {
+    public static void noteKeepers(Player killer, Entity animal) {
+        if (BloodConfig.isEnabled() && WhisperConfig.isAnimal(animal.getType())
+                && blade(killer.getInventory().getItemInMainHand())) {
             KEEPERS_AT_DEATH.put(animal.getUniqueId(), HusbandryOwners.of(animal.getUniqueId()));
         }
     }

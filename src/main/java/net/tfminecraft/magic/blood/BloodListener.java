@@ -379,8 +379,9 @@ public final class BloodListener implements Listener {
     /** LOWEST: before Cooking's death handler deletes the animal's keepers. */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onAnimalDying(EntityDeathEvent event) {
-        if (event.getEntity().getKiller() != null) {
-            WhisperService.noteKeepers(event.getEntity());
+        Player killer = event.getEntity().getKiller();
+        if (killer != null) {
+            WhisperService.noteKeepers(killer, event.getEntity());
         }
     }
 
