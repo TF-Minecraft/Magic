@@ -29,6 +29,7 @@ import org.bukkit.util.Vector;
 import net.tfminecraft.interactiblefurniture.furniture.Furniture;
 import net.tfminecraft.magic.Magic;
 import net.tfminecraft.magic.Messages;
+import net.tfminecraft.magic.blood.BloodAltars;
 import net.tfminecraft.magic.profile.MagicProfileService;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.session.ResonanceSessionManager;
@@ -166,7 +167,9 @@ public final class MeditationService implements Listener {
     }
 
     private void tryStart(Player player) {
-        if (!player.isInsideVehicle()) {
+        // A blood altar's ring holds blood artefacts, and sitting there is blood meditation's
+        // (net.tfminecraft.magic.blood.BloodMeditation): this circle would re-read them every tick.
+        if (!player.isInsideVehicle() || BloodAltars.at(player.getLocation().getBlock()) != null) {
             return;
         }
         CharacterSession identity = Characters.currentSession(player).orElse(null);

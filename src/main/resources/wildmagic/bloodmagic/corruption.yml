@@ -1,0 +1,47 @@
+# How the altar changes the room around it.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# How the altar changes the room. Every change is remembered and undone when the altar is purified.
+corruption:
+  # Per altar level: reach in blocks and the most blocks it may have changed in total. A laid chamber
+  # (9 by 9, 3 high) has about 280 faces: at level 5 the stone owns nearly all of it. Re-turning a block
+  # it already changed (a higher level's colour) never counts against max_blocks.
+  levels:
+    0: { radius: 3, max_blocks: 24 }
+    1: { radius: 4, max_blocks: 60 }
+    2: { radius: 5, max_blocks: 110 }
+    3: { radius: 5, max_blocks: 160 }
+    4: { radius: 6, max_blocks: 220 }
+    5: { radius: 6, max_blocks: 300 }
+  # Blocks changed at once by every sacrifice (animal or person).
+  blocks_per_sacrifice: 15
+  # The slow spread: ambient_blocks blocks every ambient_every_minutes while the altar's chunk is loaded.
+  ambient_every_minutes: 10
+  ambient_blocks: 3
+  # Solid blocks with a face in the open turn into one of "to" (repeat an entry to weigh it). Each level
+  # is redder: veins of redstone, then raw netherrack and cracked bricks, then red bricks, then crimson
+  # flesh and wart. A rule works from min_level to max_level (no max_level = every level above), and the
+  # later rules also take what earlier ones made, so the whole room keeps deepening as the altar rises.
+  # Every block placed here counts toward a bloodmagic shrine (artifacts/shrines.yml).
+  convert:
+    # 0-1: red veins in the stone.
+    - { min_level: 0, max_level: 1, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS], to: [REDSTONE_ORE] }
+    - { min_level: 0, max_level: 1, from: [DEEPSLATE, COBBLED_DEEPSLATE], to: [DEEPSLATE_REDSTONE_ORE] }
+    # 1-2: the stone turns raw and red.
+    - { min_level: 1, max_level: 2, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE], to: [NETHERRACK, NETHERRACK, CRACKED_NETHER_BRICKS] }
+    # 2-3: red brick.
+    - { min_level: 2, max_level: 3, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, NETHERRACK, CRACKED_NETHER_BRICKS], to: [RED_NETHER_BRICKS, RED_NETHER_BRICKS, NETHERRACK] }
+    # 3-5: crimson flesh.
+    - { min_level: 3, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, NETHERRACK, CRACKED_NETHER_BRICKS, RED_NETHER_BRICKS], to: [CRIMSON_HYPHAE, RED_NETHER_BRICKS, NETHER_WART_BLOCK] }
+    # 4-5: bright, wet wart.
+    - { min_level: 4, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, NETHERRACK, CRACKED_NETHER_BRICKS, RED_NETHER_BRICKS, CRIMSON_HYPHAE], to: [NETHER_WART_BLOCK, NETHER_WART_BLOCK, CRIMSON_HYPHAE] }
+  # The room turns outward from the altar in connected patches (blocks touching what it already turned
+  # win). Decorations are never solid, so nothing grows over a doorway or the lanes to the altar. Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
+  # one. Candles only ever stand on the spots right in front of the pedestals; elsewhere a rule's other
+  # blocks are used, and a candle-only rule waits for one of those spots.
+  decorate:
+    - { min_level: 0, max_level: 2, at: floor, to: [REDSTONE_WIRE, REDSTONE_WIRE, RED_CANDLE] }
+    - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
+    - { min_level: 2, at: ceiling, to: [WEEPING_VINES] }
+    - { min_level: 4, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
+    - { min_level: 4, at: ceiling, to: [WEEPING_VINES, WEEPING_VINES] }

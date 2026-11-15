@@ -78,3 +78,32 @@ semantics. `tools/dev-admin-values.cjs` exercises both this plugin and the
 RPCharacters Focus commands on TFMCDev01 through its existing Dev bot helpers.
 It uses only the dedicated `AdminValueProbe` character, removes its temporary
 operator status, resets its test values and clears its test inventory afterward.
+
+## Blood path
+
+Staff tools for the hidden blood magic progression (`bloodmagic.yml`). Player
+targets must be online on the character being edited. Records and altars are
+saved under `data/bloodmagic/`.
+
+```text
+/magic blood list
+/magic blood info <player>
+/magic blood stage <player> <none|whispered|animal|choice|hunt|final|ascended>
+/magic blood path <player> <none|devotee|true>
+/magic blood give <player> <altar|ritual_knife|blood_knife>
+/magic blood whisper <player> [amount]
+/magic blood voice <player>
+/magic blood target <player> <list|reroll|skip|set <character name>>
+/magic blood bonds <player>
+/magic blood altar <info|tp|refresh|purify> <player|altar id>
+/magic blood reset <player>
+```
+
+`whisper` without an amount wakes the voices at once; with an amount it adds to
+the hidden meter. `voice` speaks the next line now. `target` manages the final
+sacrifices: `reroll` drops the named target for a fresh pick, `set` names a living
+character, `skip` counts the named target as done without a death. `bonds` lists
+the character's ten closest bonds with their hidden scores. Altars cannot be
+broken by anyone; `altar purify` removes one and puts back every block it
+corrupted, and an altar purifies itself when its owner character dies. `reset`
+purifies the altar and clears the whole path; items already handed out stay.

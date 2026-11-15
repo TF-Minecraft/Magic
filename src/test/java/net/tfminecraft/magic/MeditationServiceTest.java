@@ -137,6 +137,21 @@ class MeditationServiceTest {
   }
 
   @Test
+  void aBloodAltarSeatIsLeftToBloodMeditation() {
+    var altar = net.tfminecraft.magic.blood.BloodAltar.create("mage", "o", player.getLocation().getBlock(), 0f, 1L);
+    net.tfminecraft.magic.blood.BloodAltars.add(altar);
+    try {
+      sit();
+      service.start();
+      tick();
+      assertTrue(created.constructed().isEmpty());
+      detection.verify(() -> MeditationCircle.detect(any()), never());
+    } finally {
+      net.tfminecraft.magic.blood.BloodAltars.remove(altar);
+    }
+  }
+
+  @Test
   void noticesAreDeduplicatedUntilPlayerLeavesAndInvalidCircleCannotStart() {
     service.start();
     tick();

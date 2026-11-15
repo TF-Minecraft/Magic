@@ -1,0 +1,24 @@
+# Items the voices hand to the character.
+# Part of wildmagic/bloodmagic (Magic's hidden blood path). Hidden content: never on the wiki.
+
+# Items the voices hand to the character. TLibs item paths (v., ia., m.).
+# Each item is bound to the character that received it. The ia.tfmc_blood items come from the
+# tfmc_blood ItemsAdder pack (ServerAssets); load it before this config, a missing IA id builds dirt.
+items:
+  altar:
+    path: ia.tfmc_blood:altar_0
+    name: "#bfbfbfWeathered Altar Stone"
+    lore:
+      - "#8c8c8c§oA slab of old carved stone, worn smooth"
+      - "#8c8c8c§oby hands that are long gone."
+      - "#5c5c5c§oIt is heavier than it should be."
+  # Both knives are MMOItems lore weapons (name, lore, stats and look come from MMOItems):
+  # the plain knife shows as Hunting Knife, the blood knife as Ritual Knife.
+  ritual_knife:
+    path: m.lore_weapons.ritual_knife
+    name: ""
+    lore: []
+  blood_knife:
+    path: m.lore_weapons.blood_knife
+    name: ""
+    lore: []

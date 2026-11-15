@@ -4,7 +4,7 @@ name: Magic
 version: ${project.version}
 author: Drefvelin
 depend: [TLibs, ItemsAdder, RPCharacters, InteractibleFurniture]
-softdepend: [MMOItems, MythicLib, MMOCore]
+softdepend: [MMOItems, MythicLib, MMOCore, WorldGuard, Cooking]
 
 commands:
   resonance:
@@ -49,6 +49,9 @@ permissions:
   magic.bloodmagic:
     description: Allows Bloodmagic resonance
     default: false
+  magic.blood.bypass:
+    description: Staff may still place and break blocks in a blood altar's locked chamber (grant per group)
+    default: op
   magic.weapon.give:
     description: Give completed weapons (default give-permission)
     default: op
