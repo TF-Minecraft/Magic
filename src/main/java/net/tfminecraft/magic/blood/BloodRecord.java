@@ -167,6 +167,15 @@ public final class BloodRecord {
         ownAnimalWhisper += amount;
     }
 
+    /** Drops an earlier day's own-animal count, so the record can empty out; true when one was dropped. */
+    public boolean forgetOwnAnimalWhisperBefore(long day) {
+        if (ownAnimalWhisper <= 0 || ownAnimalDay >= day) {
+            return false;
+        }
+        ownAnimalWhisper = 0;
+        return true;
+    }
+
     public void setWhisper(double whisper) {
         this.whisper = Math.max(0, whisper);
     }
@@ -319,6 +328,6 @@ public final class BloodRecord {
                 && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
                 && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash && !pendingNaming
                 && artefacts.isEmpty() && charges.isEmpty() && pending.isEmpty() && resonance <= 0
-                && pool == null;
+                && pool == null && ownAnimalWhisper <= 0;
     }
 }

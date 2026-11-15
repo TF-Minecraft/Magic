@@ -353,6 +353,24 @@ class WhisperServiceTest {
   }
 
   @Test
+  void theDaysCapOutlivesADrainedMeterUntilTheDayIsOver() {
+    PlayerMock player = fx.player("mage");
+    String id = BloodFixture.id("mage");
+    BloodRecord record = BloodRecords.getOrCreate(id, player.getUniqueId().toString());
+    record.addOwnAnimalWhisper(0, 2);
+    record.setWhisper(0.1);
+    BloodRecords.save(record);
+    WhisperService.tick(minute(10));
+    assertEquals(0, record.getWhisper());
+    assertSame(record, BloodRecords.get(id), "kept while today's cap is in use");
+    WhisperService.tick(minute(20));
+    assertSame(record, BloodRecords.get(id));
+    now.addAndGet(86_400_000L);
+    WhisperService.tick(minute(30));
+    assertNull(BloodRecords.get(id), "a new day: the old count goes and the empty record with it");
+  }
+
+  @Test
   void minuteTicksDrainCorruptAndSpeakWhenAloneAndDue() {
     PlayerMock player = fx.player("mage");
     String id = BloodFixture.id("mage");

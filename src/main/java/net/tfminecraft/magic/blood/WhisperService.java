@@ -233,8 +233,16 @@ public final class WhisperService {
             addTo(character, player.getUniqueId().toString(), WhisperConfig.corruption(), player);
         }
         BloodRecord record = BloodRecords.get(character);
-        if (record != null && record.getStage() == BloodStage.NONE && record.getWhisper() > 0) {
+        if (record == null) {
+            return;
+        }
+        // The daily cap's count is kept until its day is over, even with the meter drained to 0.
+        boolean changed = record.forgetOwnAnimalWhisperBefore(Math.floorDiv(clock.getAsLong(), DAY));
+        if (record.getStage() == BloodStage.NONE && record.getWhisper() > 0) {
             record.setWhisper(record.getWhisper() - WhisperConfig.decayPerHour() / 6.0);
+            changed = true;
+        }
+        if (changed) {
             BloodRecords.save(record);
         }
     }

@@ -63,6 +63,11 @@ class BloodDomainTest {
     record.addOwnAnimalWhisper(1, 1);
     assertEquals(1, record.getOwnAnimalWhisper(1));
     assertEquals(0, record.getOwnAnimalWhisper(0));
+    assertFalse(record.isEmpty(), "a used daily cap keeps the record");
+    assertFalse(record.forgetOwnAnimalWhisperBefore(1));
+    assertTrue(record.forgetOwnAnimalWhisperBefore(2));
+    assertFalse(record.forgetOwnAnimalWhisperBefore(3));
+    assertEquals(0, record.getOwnAnimalWhisper(1));
     assertNull(record.getAltarId());
     assertTrue(record.isEmpty());
     whisper.set(record, -1.0);
