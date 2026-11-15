@@ -235,7 +235,8 @@ class RoomLockTest {
     listener.onBucketFill(farScoop);
     verify(farScoop, never()).setCancelled(true);
     EntityPlaceEvent farStand = mock(EntityPlaceEvent.class);
-    when(farStand.getEntity()).thenReturn(fx.world.spawn(outside.getLocation(), ArmorStand.class));
+    ArmorStand farStandEntity = fx.world.spawn(outside.getLocation(), ArmorStand.class);
+    when(farStand.getEntity()).thenReturn(farStandEntity);
     listener.onEntityPlace(farStand);
     verify(farStand, never()).setCancelled(true);
 
