@@ -14,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -309,6 +310,14 @@ public final class BloodListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPistonRetract(BlockPistonRetractEvent event) {
         if (touchesAltar(event.getBlocks())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** Water or lava poured outside never runs into a chamber (it would wash its candles and wire away). */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onLiquidFlow(BlockFromToEvent event) {
+        if (!BloodAltars.all().isEmpty() && AltarRoom.lockedBy(event.getToBlock()) != null) {
             event.setCancelled(true);
         }
     }

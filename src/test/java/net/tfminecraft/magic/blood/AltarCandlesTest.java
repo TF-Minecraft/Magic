@@ -26,7 +26,7 @@ class AltarCandlesTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger));
+    assertTrue(BloodFixture.loadBundled(fx.logger));
     AltarCandles.spawner = (particle, at) -> lit.add(particle);
   }
 

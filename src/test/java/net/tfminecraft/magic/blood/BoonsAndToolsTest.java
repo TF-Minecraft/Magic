@@ -47,7 +47,7 @@ class BoonsAndToolsTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     BondService.init(new BloodStore(temp.resolve("b").toFile(), fx.logger));
     mage = fx.server.addPlayer("Mage");
     fx.characters.start(mage, "mage");

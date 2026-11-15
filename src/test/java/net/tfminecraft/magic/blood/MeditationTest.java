@@ -43,7 +43,7 @@ class MeditationTest {
   void setup() {
     fx = new BloodFixture(temp);
     BloodMeditation.clock = () -> now;
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     mage = fx.player("mage");
     mageId = BloodFixture.id("mage");
     record = fx.record("mage", BloodStage.FINAL);

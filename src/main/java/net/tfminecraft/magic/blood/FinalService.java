@@ -65,6 +65,8 @@ public final class FinalService {
             taken.add(sacrifice.character().toLowerCase(Locale.ROOT));
         }
         List<String> targets = record.getFinalTargets();
+        // The one named already stays named: closeness shifting later never swaps it out from under a rite.
+        String named = targets.isEmpty() ? null : targets.get(0);
         boolean changed = false;
         for (BondService.Ranked ranked : ranking) {
             if (targets.size() >= wanted) {
@@ -81,6 +83,9 @@ public final class FinalService {
         }
         targets.sort(Comparator.comparingInt((String id) -> order.contains(id) ? order.indexOf(id) : order.size())
                 .reversed());
+        if (named != null && targets.remove(named)) {
+            targets.add(0, named);
+        }
         return changed;
     }
 

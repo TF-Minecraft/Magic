@@ -62,7 +62,7 @@ class AltarServiceTest {
       unknown.setItemMeta(meta);
       assertNull(BloodItems.kind(unknown));
 
-      BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+      BloodFixture.loadBundled(fx.logger);
       ItemStack named = BloodItems.create(BloodItemKind.ALTAR, "c1");
       assertTrue(named.getItemMeta().hasDisplayName());
       assertEquals(3, named.getItemMeta().getLore().size());

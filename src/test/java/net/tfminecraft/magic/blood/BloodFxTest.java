@@ -53,7 +53,7 @@ class BloodFxTest {
   void everyBundledEffectIsARealParticleOrSound() {
     YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new File("src/main/resources/wildmagic/bloodmagic/fx.yml"));
     var moments = yaml.getConfigurationSection("fx.moments");
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     assertTrue(BloodFx.isEnabled());
     int layers = 0;
     for (String moment : moments.getKeys(false)) {
@@ -92,7 +92,7 @@ class BloodFxTest {
     verify(near, times(20)).playSound(any(Location.class), eq("minecraft:a.later"), anyFloat(), anyFloat());
 
     // The shipped altar ambience drips at random moments; only the level 5 heart keeps a steady beat.
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     assertTrue(BloodFx.moment("altar_ambient_3").stream().allMatch(layer -> layer.jitter() > 0));
     BloodFx.Layer heart = BloodFx.moment("altar_ambient_5").stream()
         .filter(layer -> "tfmc_blood:heart".equals(layer.sound())).findFirst().orElseThrow();

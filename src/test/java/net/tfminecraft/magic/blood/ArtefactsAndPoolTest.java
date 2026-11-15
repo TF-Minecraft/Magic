@@ -53,7 +53,7 @@ class ArtefactsAndPoolTest {
       @Override public void flush() {}
       @Override public void close() {}
     });
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     mage = fx.player("mage");
     mageId = BloodFixture.id("mage");
     record = fx.record("mage", BloodStage.FINAL);

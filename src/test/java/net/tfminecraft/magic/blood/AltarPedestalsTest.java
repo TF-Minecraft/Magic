@@ -231,7 +231,7 @@ class AltarPedestalsTest {
 
   @Test
   void artefactsGoInPlaceOfTheOneTheyFollowOrOnTheFirstFreePedestal() {
-    BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     BloodRecord record = BloodRecords.getOrCreate(BloodFixture.id("mage"), "o");
     record.setStage(BloodStage.FINAL);
     record.setPath(BloodPath.DEVOTEE);
@@ -282,7 +282,7 @@ class AltarPedestalsTest {
 
   @Test
   void theAltarFindsTheArtefactsOnItsPedestalsAndRestylesThem() {
-    BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     BloodRecord record = BloodRecords.getOrCreate(BloodFixture.id("mage"), "o");
     record.setStage(BloodStage.FINAL);
     record.setPath(BloodPath.DEVOTEE);

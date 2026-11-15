@@ -54,7 +54,7 @@ class ChoiceTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     mage = fx.player("mage");
     id = BloodFixture.id("mage");
     record = fx.record("mage", BloodStage.CHOICE);

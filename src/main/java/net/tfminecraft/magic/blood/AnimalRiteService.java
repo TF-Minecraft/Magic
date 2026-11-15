@@ -1,5 +1,6 @@
 package net.tfminecraft.magic.blood;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +12,15 @@ import java.util.function.LongSupplier;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import java.util.Collection;
 import org.bukkit.NamespacedKey;
@@ -173,6 +178,38 @@ public final class AnimalRiteService {
         }
     }
 
+    /** Everything the animal carried or wore: its inventory, its pack chest and its worn armour. */
+    static List<ItemStack> carried(LivingEntity animal) {
+        List<ItemStack> out = new ArrayList<>();
+        if (animal instanceof InventoryHolder holder) {
+            for (ItemStack item : holder.getInventory().getContents()) {
+                if (item != null && !item.getType().isAir()) {
+                    out.add(item.clone());
+                }
+            }
+        }
+        if (animal instanceof ChestedHorse chested && chested.isCarryingChest()) {
+            out.add(new ItemStack(Material.CHEST));
+        }
+        EntityEquipment equipment = animal.getEquipment();
+        if (equipment != null && !(animal instanceof InventoryHolder)) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (slot == EquipmentSlot.HAND || slot == EquipmentSlot.OFF_HAND) {
+                    continue;
+                }
+                try {
+                    ItemStack item = equipment.getItem(slot);
+                    if (item != null && !item.getType().isAir()) {
+                        out.add(item.clone());
+                    }
+                } catch (IllegalArgumentException | UnsupportedOperationException ex) {
+                    // a slot this animal has no use for
+                }
+            }
+        }
+        return out;
+    }
+
     /**
      * A bound animal died. At the rite's end the stone kills it itself (drained, the offering leaves
      * nothing behind); any other death spills it, wasted.
@@ -181,7 +218,11 @@ public final class AnimalRiteService {
         LivingEntity animal = event.getEntity();
         if (animal.getPersistentDataContainer().has(drainedKey())) {
             if (AnimalConfig.clearDrops()) {
+                // The offering leaves no meat or experience, but what it carried (saddle, armour, a pack
+                // chest and its load) still drops for its owner.
+                List<ItemStack> carried = carried(animal);
                 event.getDrops().clear();
+                event.getDrops().addAll(carried);
                 event.setDroppedExp(0);
             }
             return;

@@ -53,7 +53,7 @@ class BloodConfigTest {
   void bundledFileLoadsEverySection() {
     File bundled = new File("src/main/resources/wildmagic/bloodmagic");
     assertTrue(BloodConfig.load(bundled, log));
-    assertTrue(BloodConfig.isEnabled());
+    assertFalse(BloodConfig.isEnabled(), "The path ships switched off");
     assertEquals("m.lore_weapons.blood_knife", BloodConfig.item(BloodItemKind.BLOOD_KNIFE).path());
     assertFalse(BloodConfig.item(BloodItemKind.ALTAR).lore().isEmpty());
     assertEquals(Material.BARRIER, BloodConfig.altarBlock());

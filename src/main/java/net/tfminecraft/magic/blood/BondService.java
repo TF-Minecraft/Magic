@@ -67,8 +67,14 @@ public final class BondService {
     }
 
     private static Map<String, Integer> of(String character) {
-        return MINUTES.computeIfAbsent(character.toLowerCase(Locale.ROOT),
-                id -> store != null ? store.loadBonds(id) : new HashMap<>());
+        return MINUTES.computeIfAbsent(character.toLowerCase(Locale.ROOT), id -> {
+            if (store == null) {
+                return new HashMap<>();
+            }
+            // A write still queued for this character (it was just unloaded) must land before the read.
+            writing.join();
+            return store.loadBonds(id);
+        });
     }
 
     /** Loads a character's bonds while it is played. */
@@ -79,10 +85,10 @@ public final class BondService {
     /** Saves and drops a character's bonds when it stops being played. */
     public static void unload(String character) {
         String key = character.toLowerCase(Locale.ROOT);
-        if (DIRTY.remove(key) && store != null) {
-            store.saveBonds(key, MINUTES.get(key));
+        Map<String, Integer> minutes = MINUTES.remove(key);
+        if (DIRTY.remove(key) && store != null && minutes != null) {
+            queue(store, key, new HashMap<>(minutes));
         }
-        MINUTES.remove(key);
     }
 
     public static int minutes(String character, String other) {
@@ -125,15 +131,19 @@ public final class BondService {
         BloodStore target = store;
         if (target != null) {
             for (String key : DIRTY) {
-                Map<String, Integer> copy = new HashMap<>(MINUTES.get(key));
-                writing = writing.thenRunAsync(() -> target.saveBonds(key, copy), writer)
-                        .exceptionally(failure -> {
-                            target.warn("[Magic] Failed to write the bonds of " + key + ": " + failure.getMessage());
-                            return null;
-                        });
+                queue(target, key, new HashMap<>(MINUTES.get(key)));
             }
         }
         DIRTY.clear();
+    }
+
+    /** One write on the single background chain, so two writes of a character never overlap. */
+    private static void queue(BloodStore target, String key, Map<String, Integer> copy) {
+        writing = writing.thenRunAsync(() -> target.saveBonds(key, copy), writer)
+                .exceptionally(failure -> {
+                    target.warn("[Magic] Failed to write the bonds of " + key + ": " + failure.getMessage());
+                    return null;
+                });
     }
 
     /** Living characters of other accounts the mage has any bond with, closest first. */

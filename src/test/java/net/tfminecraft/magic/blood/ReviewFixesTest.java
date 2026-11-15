@@ -42,7 +42,7 @@ class ReviewFixesTest {
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     BondService.init(new BloodStore(temp.resolve("bonds").toFile(), fx.logger));
     CharacterRiteService.clock = now::get;
     bridge = mockStatic(RpCharactersBridge.class);

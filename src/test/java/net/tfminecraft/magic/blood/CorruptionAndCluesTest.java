@@ -288,7 +288,7 @@ class CorruptionAndCluesTest {
     assertEquals(new CorruptionConfig.Reach(3, 24), CorruptionConfig.reach(0));
     assertTrue(CorruptionConfig.rules(5).isEmpty());
 
-    assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger));
+    assertTrue(BloodFixture.loadBundled(fx.logger));
     assertEquals(7, AnimalConfig.speciesRequired());
     assertEquals(24 * 3_600_000L, AnimalConfig.cooldownMillis());
     assertEquals(new CorruptionConfig.Reach(5, 110), CorruptionConfig.reach(2));

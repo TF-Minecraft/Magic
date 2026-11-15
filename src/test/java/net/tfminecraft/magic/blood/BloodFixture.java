@@ -171,6 +171,13 @@ final class BloodFixture implements AutoCloseable {
     return pocket(x, y, z);
   }
 
+  /** Loads the bundled blood config and switches the path on (it ships off). */
+  static boolean loadBundled(java.util.logging.Logger log) {
+    boolean ok = BloodConfig.load(new java.io.File("src/main/resources/wildmagic/bloodmagic"), log);
+    BloodConfig.setEnabled(true);
+    return ok;
+  }
+
   static String id(String label) {
     return CharacterTestSupport.id(label);
   }

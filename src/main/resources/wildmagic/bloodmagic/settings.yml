@@ -6,7 +6,8 @@
 # The jar does not overwrite existing live copies: copy new keys by hand after updates.
 # The god is Lorveor, the Bloodfather, first of the Blood of the Oseni (TFMC lore vault).
 
-enabled: true
+# Off until staff switch it on for a server by hand, so a Magic update never opens the path anywhere by itself.
+enabled: false
 
 altar:
   # The altar is a barrier block (unbreakable, piston and blast proof) with a display on it.

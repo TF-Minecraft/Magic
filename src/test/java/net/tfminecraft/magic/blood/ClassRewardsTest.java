@@ -71,7 +71,7 @@ class ClassRewardsTest {
       @Override public void flush() {}
       @Override public void close() {}
     });
-    BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger);
+    BloodFixture.loadBundled(fx.logger);
     mage = fx.player("mage");
     record = fx.record("mage", BloodStage.FINAL);
     record.setPath(BloodPath.DEVOTEE);

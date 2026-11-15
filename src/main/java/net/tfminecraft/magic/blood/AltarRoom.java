@@ -186,9 +186,9 @@ public final class AltarRoom {
                 List.copyOf(candles), glow);
     }
 
-    /** The four outer corners of the chamber at the altar's height, for the claim check. */
+    /** The four outer corners of the locked area at the altar's height, for the claim check. */
     public static List<Block> corners(Block target) {
-        int edge = halfWidth() + 1;
+        int edge = lockRadius();
         return List.of(target.getRelative(edge, 0, edge), target.getRelative(edge, 0, -edge),
                 target.getRelative(-edge, 0, edge), target.getRelative(-edge, 0, -edge));
     }

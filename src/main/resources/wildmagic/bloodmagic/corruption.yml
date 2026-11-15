@@ -36,12 +36,12 @@ corruption:
     # 4-5: bright, wet wart.
     - { min_level: 4, from: [STONE, ANDESITE, DIORITE, GRANITE, TUFF, COBBLESTONE, MOSSY_COBBLESTONE, STONE_BRICKS, CRACKED_STONE_BRICKS, DEEPSLATE, COBBLED_DEEPSLATE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, NETHERRACK, CRACKED_NETHER_BRICKS, RED_NETHER_BRICKS, CRIMSON_HYPHAE], to: [NETHER_WART_BLOCK, NETHER_WART_BLOCK, CRIMSON_HYPHAE] }
   # The room turns outward from the altar in connected patches (blocks touching what it already turned
-  # win). Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
+  # win). Decorations are never solid, so nothing grows over a doorway or the lanes to the altar. Air spots get decorated: at floor = on top of a block it has turned, at ceiling = hanging under
   # one. Candles only ever stand on the spots right in front of the pedestals; elsewhere a rule's other
   # blocks are used, and a candle-only rule waits for one of those spots.
   decorate:
     - { min_level: 0, max_level: 2, at: floor, to: [REDSTONE_WIRE, REDSTONE_WIRE, RED_CANDLE] }
     - { min_level: 1, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
     - { min_level: 2, at: ceiling, to: [WEEPING_VINES] }
-    - { min_level: 4, at: floor, to: [NETHER_WART_BLOCK, RED_CANDLE] }
+    - { min_level: 4, at: floor, to: [RED_CANDLE, REDSTONE_WIRE] }
     - { min_level: 4, at: ceiling, to: [WEEPING_VINES, WEEPING_VINES] }
