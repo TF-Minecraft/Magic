@@ -93,6 +93,10 @@ public final class CorruptionConfig {
         int maxLevel = raw.get("max_level") instanceof Number number ? number.intValue() : Integer.MAX_VALUE;
         Set<Material> from = new HashSet<>(materials(raw.get("from"), log));
         List<Material> to = materials(raw.get("to"), log);
+        if (placement != Placement.CONVERT && to.removeIf(Material::isSolid)) {
+            // A solid decoration could grow over a doorway or the altar's lanes.
+            log.warning("[Magic] blood magic config corruption decoration: solid blocks are never placed, skipped");
+        }
         if (to.isEmpty() || (placement == Placement.CONVERT && from.isEmpty())) {
             log.warning("[Magic] blood magic config corruption rule without usable blocks skipped");
             return null;
