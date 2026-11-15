@@ -78,6 +78,10 @@ class AltarCandlesTest {
     // The altar keeps all four candles to the last level (fx.yml wicks max_level 5).
     assertEquals(4, lit.size());
     lit.clear();
+    altar.setLevel(6);
+    ticks(8);
+    assertTrue(lit.isEmpty(), "Past a wick's max_level it stays dark");
+    altar.setLevel(4);
     AltarCandles.random = new Random() {
       @Override public double nextDouble() { return 0.0; }
     };
