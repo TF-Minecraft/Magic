@@ -78,7 +78,8 @@ class BloodFxTest {
   @Test
   void chanceAndJitterKeepTimedMomentsFromTickingLikeAClock() throws Exception {
     Files.writeString(temp.resolve("odds.yml"), String.join("\n", "enabled: true", "fx:", "  moments:", "    odds:",
-        "      - { sound: a.never, chance: 0 }", "      - { sound: a.later, jitter: 5 }", ""));
+        "      - { sound: a.never, chance: 0 }", "      - { sound: a.later, jitter: 5 }",
+        "      - { sound: a.likely, chance: 0.9999999999999999 }", ""));
     BloodConfig.load(temp.resolve("odds.yml").toFile(), fx.logger);
     World world = mock(World.class);
     Player near = mock(Player.class);
@@ -90,6 +91,8 @@ class BloodFxTest {
     fx.server.getScheduler().performTicks(6);
     verify(near, never()).playSound(any(Location.class), eq("minecraft:a.never"), anyFloat(), anyFloat());
     verify(near, times(20)).playSound(any(Location.class), eq("minecraft:a.later"), anyFloat(), anyFloat());
+    // A chance just under one still plays (the roll lands under it).
+    verify(near, times(20)).playSound(any(Location.class), eq("minecraft:a.likely"), anyFloat(), anyFloat());
 
     // The shipped altar ambience drips at random moments; only the level 5 heart keeps a steady beat.
     BloodFixture.loadBundled(fx.logger);

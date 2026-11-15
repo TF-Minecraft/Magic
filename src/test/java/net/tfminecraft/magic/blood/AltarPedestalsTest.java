@@ -76,6 +76,61 @@ class AltarPedestalsTest {
     fx.close();
   }
 
+  /** The rising scrape is the only sound placing pedestals makes. */
+  long debris(PlayerMock player) {
+    return player.getHeardSounds().size();
+  }
+
+  @Test
+  void aPedestalWithoutATransformationRisesAtOnce() {
+    fx.open(-4, 10, -4, 4, 12, 4);
+    Block center = fx.world.getBlockAt(0, 10, 0);
+    PlayerMock watcher = fx.player("watcher");
+    ItemDisplay flat = mock(ItemDisplay.class);
+    when(flat.getUniqueId()).thenReturn(UUID.randomUUID());
+    when(flat.getLocation()).thenReturn(new Location(fx.world, 4.5, 10, 0.5));
+    when(flat.isValid()).thenReturn(true);
+    placement.when(() -> FurniturePlacementHandler.spawnDisplayEntity(any(), any(), anyFloat(), any()))
+        .thenAnswer(i -> ++spawns == 1 ? flat : null);
+    spawns = 0; // stubbing ran the old answer once
+    BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
+    assertEquals(1, AltarPedestals.place(altar, center));
+    assertEquals(1, debris(watcher), "Nothing to sink, so it comes up straight away");
+    watcher.assertSoundHeard(org.bukkit.Sound.BLOCK_ANCIENT_DEBRIS_PLACE);
+    verify(flat, never()).setTransformation(any());
+  }
+
+  @Test
+  void aPedestalGoneBeforeItsTurnMakesNoSound() {
+    fx.open(-4, 10, -4, 4, 12, 4);
+    Block center = fx.world.getBlockAt(0, 10, 0);
+    PlayerMock watcher = fx.player("watcher");
+    BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
+    assertEquals(7, AltarPedestals.place(altar, center));
+    for (String id : altar.getPedestals()) {
+      fx.server.getEntity(UUID.fromString(id)).remove();
+    }
+    fx.server.getScheduler().performTicks(2 + AltarPedestals.RISE_GAP * 8);
+    assertEquals(0, debris(watcher));
+  }
+
+  @Test
+  void withoutThePluginRunningThePedestalsRiseAtOnce() {
+    fx.open(-4, 10, -4, 4, 12, 4);
+    Block center = fx.world.getBlockAt(0, 10, 0);
+    BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
+    net.tfminecraft.magic.Magic plugin = net.tfminecraft.magic.Magic.plugin;
+    net.tfminecraft.magic.Magic.plugin = null;
+    try {
+      assertEquals(7, AltarPedestals.place(altar, center));
+    } finally {
+      net.tfminecraft.magic.Magic.plugin = plugin;
+    }
+    ItemDisplay last = (ItemDisplay) fx.server.getEntity(UUID.fromString(altar.getPedestals().get(6)));
+    assertEquals(0f, last.getTransformation().getTranslation().y(), 1e-6, "Never sunk: no scheduler to raise it");
+    assertEquals(AltarPedestals.RISE_TICKS, last.getInterpolationDuration());
+  }
+
   @Test
   void theRingFacesTheAltar() {
     assertEquals(0f, AltarPedestals.yaw(0, -4));

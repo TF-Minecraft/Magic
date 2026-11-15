@@ -53,6 +53,11 @@ class VoiceTest {
         VoiceColours.at(List.of("#000000"), List.of("#000000", "#ffffff"), 0.5));
     assertEquals(List.of("#ffffff", "#ffffff"),
         VoiceColours.at(List.of("#000000"), List.of("#ffffff", "#ffffff"), 7));
+    // One stop at each end blends to a single stop.
+    assertEquals(List.of("#808080"), VoiceColours.at(List.of("#000000"), List.of("#ffffff"), 0.5));
+    // A voice with only end colours still speaks in colour.
+    assertTrue(new WhisperConfig.Voice("", "", 1f, java.util.Map.of(), List.of(), List.of("#ff0000"),
+        java.util.Map.of()).coloured());
     String line = VoiceColours.gradient("a b", List.of("#ff0000", "#0000ff"), "§o");
     assertTrue(line.startsWith(ChatColor.of("#ff0000") + "§oa "));
     assertTrue(line.endsWith(ChatColor.of("#0000ff") + "§ob"));

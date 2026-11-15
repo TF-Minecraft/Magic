@@ -239,6 +239,47 @@ class ReviewFixesTest {
   }
 
   @Test
+  void protectionsAtTheChambersCornersCanRefuseTheAltar() {
+    PlayerMock builder = fx.player("builder");
+    String builderId = BloodFixture.id("builder");
+    fx.record("builder", BloodStage.ANIMAL);
+    var plugin = MockBukkit.createMockPlugin("Corners");
+    Block target = fx.room(30, 10, 30);
+    builder.teleport(new Location(fx.world, 30.5, 11, 30.5));
+    for (boolean cancel : new boolean[] {true, false}) {
+      // The altar's own spot is free; only the chamber's corners (checked as stone) are claimed.
+      Listener corners = new Listener() {
+        @EventHandler public void place(BlockPlaceEvent event) {
+          if (event.getItemInHand().getType() == Material.STONE) {
+            if (cancel) {
+              event.setCancelled(true);
+            } else {
+              event.setBuild(false);
+            }
+          }
+        }
+      };
+      fx.server.getPluginManager().registerEvents(corners, plugin);
+      assertEquals("blood.altar.place.region",
+          AltarService.place(builder, BloodItems.create(BloodItemKind.ALTAR, builderId), target));
+      assertNull(BloodAltars.ofCharacter(builderId));
+      org.bukkit.event.HandlerList.unregisterAll(corners);
+    }
+    assertEquals("blood.altar.placed",
+        AltarService.place(builder, BloodItems.create(BloodItemKind.ALTAR, builderId), target));
+  }
+
+  @Test
+  void anAltarInAnUnloadedWorldIsStillPurified() {
+    BloodAltar lost = BloodAltar.create("lost", "o",
+        new org.mockbukkit.mockbukkit.world.WorldMock().getBlockAt(0, 10, 0), 0f, 1L);
+    BloodAltars.add(lost);
+    assertNull(lost.block());
+    AltarService.purify(lost, "test");
+    assertNull(BloodAltars.byId(lost.getId()));
+  }
+
+  @Test
   void corruptionStaysOutOfProtectedLand() {
     BloodAltar altar = BloodAltars.ofCharacter(mageId);
     AltarRegions.setQuery(location -> List.of("town"));

@@ -83,7 +83,9 @@ public final class FinalService {
         }
         targets.sort(Comparator.comparingInt((String id) -> order.contains(id) ? order.indexOf(id) : order.size())
                 .reversed());
-        if (named != null && targets.remove(named)) {
+        if (named != null) {
+            // Still in the list (targets only grow above), so it moves back to the front.
+            targets.remove(named);
             targets.add(0, named);
         }
         return changed;

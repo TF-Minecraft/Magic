@@ -1,5 +1,6 @@
 package net.tfminecraft.magic.blood;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -84,6 +85,20 @@ class EvilPlayWhispersTest {
       Bukkit.getPluginManager().callEvent(new FakePlay(robber, false, false));
       Bukkit.getPluginManager().callEvent(new FakePlay(robber, true, true));
       assertEquals(4, BloodRecords.get(id).getWhisper(), "Resets and unreadable plays add nothing");
+
+      // The listener ignores any other event handed to it.
+      Event other = new Event() {
+        @Override
+        public HandlerList getHandlers() {
+          return FakePlay.getHandlerList();
+        }
+      };
+      for (var registered : FakePlay.getHandlerList().getRegisteredListeners()) {
+        if (registered.getListener() instanceof EvilPlayWhispers) {
+          assertDoesNotThrow(() -> registered.callEvent(other));
+        }
+      }
+      assertEquals(4, BloodRecords.get(id).getWhisper(), "Other events add nothing");
     }
   }
 }

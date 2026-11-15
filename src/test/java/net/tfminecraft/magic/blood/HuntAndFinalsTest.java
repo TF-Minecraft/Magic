@@ -554,6 +554,40 @@ class HuntAndFinalsTest {
   }
 
   @Test
+  void checksOutOfTheVoicesReachLeaveTheBacklashAndTheNamingPending() throws Exception {
+    Files.writeString(temp.resolve("c.yml"), "enabled: true\nfinals:\n  count: 2\n  fail_cooldown_hours: 1\n  inactive_days: 1\n");
+    BloodConfig.load(temp.resolve("c.yml").toFile(), fx.logger);
+    record.setStage(BloodStage.FINAL);
+    mage.teleport(new Location(fx.world, 40.5, 10, 0.5));
+    assertFalse(WhisperService.mayHear(mage, record));
+
+    // The named target died while the mage was away from the stone: the backlash waits for them.
+    String dead = offline("Dead", CharacterStatus.DEAD, Instant.ofEpochMilli(now.get()));
+    record.getFinalTargets().add(dead);
+    FinalService.check(mage);
+    assertTrue(record.getFinalTargets().isEmpty());
+    assertTrue(record.isPendingBacklash());
+    assertEquals(now.get() + 3_600_000L, record.getNextFinalAt());
+    bridge.verify(() -> RpCharactersBridge.applyHealingInjury(mage), never());
+
+    // A new name already waiting to be said stays waiting when the next one changes again.
+    String absent = offline("Absent", CharacterStatus.ALIVE, Instant.ofEpochMilli(now.get() - 2 * 86_400_000L));
+    String fresh = offline("Fresh", CharacterStatus.ALIVE, Instant.ofEpochMilli(now.get()));
+    talks.put(fresh, 4);
+    record.getFinalTargets().add(absent);
+    record.setPendingNaming(true);
+    now.addAndGet(2 * 3_600_000L);
+    while (mage.nextMessage() != null) {
+      // earlier messages are not what this checks
+    }
+    FinalService.check(mage);
+    assertEquals(fresh, record.currentTarget());
+    assertTrue(record.isPendingNaming());
+    assertNull(mage.nextMessage(), "Nobody speaks to a mage out of the voices' reach");
+    bridge.verify(() -> RpCharactersBridge.applyHealingInjury(mage), never());
+  }
+
+  @Test
   void staffCanRerollSetAndSkipTargets() {
     String a = offline("A", CharacterStatus.ALIVE, Instant.ofEpochMilli(now.get()));
     String b = offline("B", CharacterStatus.ALIVE, Instant.ofEpochMilli(now.get()));

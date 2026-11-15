@@ -264,6 +264,71 @@ class ChoiceTest {
   }
 
   @Test
+  void theQuestionEndsWhenTheMageCanNoLongerAnswer() {
+    chamber();
+    QuestionService.start(mage);
+    wait(2);
+    heard();
+    record.setStage(BloodStage.HUNT);
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    assertTrue(heard().contains(ChoiceConfig.walkedAway().text()));
+  }
+
+  @Test
+  void speechOutsideTheGodsWaitIsNotHeard() {
+    chamber();
+    say("I kneel");
+    assertTrue(heard().isEmpty(), "Nothing is being asked yet");
+    QuestionService.start(mage);
+    wait(30);
+    heard();
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    say("I kneel");
+    assertTrue(heard().isEmpty(), "Out of the chamber the god does not hear it");
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    say("I refuse");
+    wait(8);
+    say("I refuse");
+    say("I kneel");
+    wait(20);
+    assertEquals(BloodPath.TRUE, record.getPath(), "Once sealed, a change of heart is not heard");
+  }
+
+  @Test
+  void onlyTheMagesOwnChamberCounts() {
+    chamber();
+    assertTrue(QuestionService.inChamber(mage, BloodAltars.ofCharacter(id).getId()));
+    assertFalse(QuestionService.inChamber(mage, "someone-elses-altar"));
+  }
+
+  @Test
+  void musicWithoutALoopPlaysOnceAndWithoutMusicNothingIsStopped() throws Exception {
+    chamber();
+    Files.writeString(temp.resolve("once.yml"), "enabled: true\nchoice:\n  music: { sound: 'tfmc_blood:x' }\n");
+    BloodConfig.load(temp.resolve("once.yml").toFile(), fx.logger);
+    assertEquals(0, ChoiceConfig.musicLoopSeconds());
+    QuestionService.start(mage);
+    wait(200);
+    assertEquals(1, mage.getHeardSounds().stream().filter(sound -> sound.getSound().equals("tfmc_blood:x")).count());
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+
+    Files.writeString(temp.resolve("quiet.yml"), "enabled: true\nchoice:\n  answer_seconds: 5\n");
+    BloodConfig.load(temp.resolve("quiet.yml").toFile(), fx.logger);
+    assertTrue(ChoiceConfig.music().isEmpty());
+    mage.teleport(new org.bukkit.Location(fx.world, 2.5, 10, 2.5));
+    mage.clearSounds();
+    QuestionService.start(mage);
+    assertTrue(QuestionService.asking(mage.getUniqueId()));
+    mage.teleport(new org.bukkit.Location(fx.world, 40.5, 10, 40.5));
+    wait(1);
+    assertFalse(QuestionService.asking(mage.getUniqueId()));
+    assertTrue(mage.getHeardSounds().stream().noneMatch(sound -> sound.getSound().startsWith("tfmc_blood:x")));
+  }
+
+  @Test
   void devoteesGiveThemselvesAndGetClassAndArmour() {
     try (MockedStatic<TLibs> libs = mockStatic(TLibs.class)) {
       ItemAPI api = mock(ItemAPI.class, RETURNS_DEEP_STUBS);

@@ -22,18 +22,20 @@ class AltarCandlesTest {
   @TempDir Path temp;
   BloodFixture fx;
   final List<Particle> lit = new ArrayList<>();
+  java.util.function.BiConsumer<Particle, Location> original;
 
   @BeforeEach
   void setup() {
     fx = new BloodFixture(temp);
     assertTrue(BloodFixture.loadBundled(fx.logger));
+    original = AltarCandles.spawner;
     AltarCandles.spawner = (particle, at) -> lit.add(particle);
   }
 
   @AfterEach
   void cleanup() {
     AltarCandles.stop();
-    AltarCandles.spawner = (particle, at) -> at.getWorld().spawnParticle(particle, at, 1, 0, 0, 0, 0);
+    AltarCandles.spawner = original;
     AltarCandles.random = new Random();
     fx.close();
   }
@@ -120,5 +122,36 @@ class AltarCandlesTest {
     AltarCandles.startTicking(plugin);
     AltarCandles.stop();
     AltarCandles.stop();
+  }
+
+  @Test
+  void malformedWicksAreSkippedAndNoWicksMeansNoFlames() throws Exception {
+    BloodAltars.add(BloodAltar.create("a", "o", fx.pocket(0, 10, 0), 0f, 1L));
+    fx.player("watcher");
+    Files.writeString(temp.resolve("bad.yml"), String.join("\n", "enabled: true", "fx:", "  candles:",
+        "    every_ticks: 1",
+        "    wicks: [loose, [1, y, 2], [1, 2, z], [1, 2, 3, top]]", ""));
+    assertTrue(BloodConfig.load(temp.resolve("bad.yml").toFile(), fx.logger));
+    AltarCandles.random = new Random() {
+      @Override public double nextDouble() { return 0.99; }
+    };
+    ticks(1);
+    // Only the last wick is whole; a max level that is not a number means every level.
+    assertEquals(List.of(Particle.SMALL_FLAME), lit);
+    lit.clear();
+
+    Files.writeString(temp.resolve("none.yml"), String.join("\n", "enabled: true", "fx:", "  candles:",
+        "    every_ticks: 1", "    wicks: []", ""));
+    assertTrue(BloodConfig.load(temp.resolve("none.yml").toFile(), fx.logger));
+    ticks(4);
+    assertTrue(lit.isEmpty());
+  }
+
+  @Test
+  void theDefaultSpawnerPutsOneParticleAtTheSpot() {
+    org.bukkit.World world = org.mockito.Mockito.mock(org.bukkit.World.class);
+    Location at = new Location(world, 1, 2, 3);
+    original.accept(Particle.SMALL_FLAME, at);
+    org.mockito.Mockito.verify(world).spawnParticle(Particle.SMALL_FLAME, at, 1, 0, 0, 0, 0);
   }
 }

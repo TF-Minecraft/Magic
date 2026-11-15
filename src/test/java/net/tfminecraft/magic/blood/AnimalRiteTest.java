@@ -513,4 +513,105 @@ class AnimalRiteTest {
     assertNull(AnimalRiteService.bindingOf(again.getUniqueId()));
     assertNotNull(eighth);
   }
+  @Test
+  void carriedKeepsTheLoadThePackChestAndWornArmourButNotEmptySlots() {
+    // An animal with an inventory gives what is in it; its equipment is that inventory, so it is not read twice.
+    org.bukkit.entity.Horse horse = org.mockito.Mockito.mock(org.bukkit.entity.Horse.class);
+    org.bukkit.inventory.HorseInventory saddlebag = org.mockito.Mockito.mock(org.bukkit.inventory.HorseInventory.class);
+    org.mockito.Mockito.when(horse.getInventory()).thenReturn(saddlebag);
+    org.mockito.Mockito.when(saddlebag.getContents())
+        .thenReturn(new ItemStack[] {null, new ItemStack(Material.AIR), new ItemStack(Material.SADDLE)});
+    org.bukkit.inventory.EntityEquipment worn = org.mockito.Mockito.mock(org.bukkit.inventory.EntityEquipment.class);
+    org.mockito.Mockito.when(worn.getItem(any())).thenReturn(new ItemStack(Material.DIAMOND_HORSE_ARMOR));
+    org.mockito.Mockito.when(horse.getEquipment()).thenReturn(worn);
+    assertEquals(List.of(new ItemStack(Material.SADDLE)), AnimalRiteService.carried(horse));
+
+    // A pack animal gives its chest back too, but only when it wears one.
+    org.bukkit.entity.Donkey donkey = org.mockito.Mockito.mock(org.bukkit.entity.Donkey.class);
+    org.bukkit.inventory.AbstractHorseInventory pack = org.mockito.Mockito.mock(org.bukkit.inventory.AbstractHorseInventory.class);
+    org.mockito.Mockito.when(donkey.getInventory()).thenReturn(pack);
+    org.mockito.Mockito.when(pack.getContents()).thenReturn(new ItemStack[] {new ItemStack(Material.WHEAT, 3)});
+    assertEquals(List.of(new ItemStack(Material.WHEAT, 3)), AnimalRiteService.carried(donkey));
+    org.mockito.Mockito.when(donkey.isCarryingChest()).thenReturn(true);
+    assertEquals(List.of(new ItemStack(Material.WHEAT, 3), new ItemStack(Material.CHEST)),
+        AnimalRiteService.carried(donkey));
+
+    // Anything else gives its worn armour, never what is in its hands, and skips slots it cannot use.
+    LivingEntity beast = org.mockito.Mockito.mock(LivingEntity.class);
+    org.bukkit.inventory.EntityEquipment gear = org.mockito.Mockito.mock(org.bukkit.inventory.EntityEquipment.class);
+    org.mockito.Mockito.when(beast.getEquipment()).thenReturn(gear);
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.HAND)).thenReturn(new ItemStack(Material.STICK));
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.OFF_HAND)).thenReturn(new ItemStack(Material.STICK));
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.HEAD)).thenReturn(new ItemStack(Material.IRON_HELMET));
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.CHEST)).thenReturn(new ItemStack(Material.AIR));
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.LEGS))
+        .thenThrow(new IllegalArgumentException("no legs"));
+    org.mockito.Mockito.when(gear.getItem(org.bukkit.inventory.EquipmentSlot.BODY))
+        .thenThrow(new UnsupportedOperationException("no body"));
+    assertEquals(List.of(new ItemStack(Material.IRON_HELMET)), AnimalRiteService.carried(beast));
+
+    LivingEntity bare = org.mockito.Mockito.mock(LivingEntity.class);
+    assertTrue(AnimalRiteService.carried(bare).isEmpty(), "No equipment at all gives nothing");
+  }
+
+  @Test
+  void theVoicesWaitWhileARiteIsUnderWay() {
+    mage.teleport(new Location(fx.world, 2.5, 10, 2.5));
+    assertTrue(WhisperService.mayHear(mage, record));
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(mage, animal(Cow.class, UUID.randomUUID())));
+    assertFalse(WhisperService.mayHear(mage, record), "Not while an animal lies bound on the stone");
+  }
+
+  /** A player that runs a hook when its music is stopped (the moment a rite ends). */
+  static final class HookedPlayer extends PlayerMock {
+    Runnable onStop = () -> {};
+
+    HookedPlayer(org.mockbukkit.mockbukkit.ServerMock server) {
+      super(server, "Hooked", UUID.randomUUID());
+    }
+
+    @Override
+    public void playSound(org.bukkit.entity.Entity entity, String sound, org.bukkit.SoundCategory category,
+        float volume, float pitch) {
+      playSound(entity.getLocation(), sound, category, volume, pitch);
+    }
+
+    @Override
+    public void stopSound(String sound, org.bukkit.SoundCategory category) {
+      onStop.run();
+      super.stopSound(sound, category);
+    }
+  }
+
+  @Test
+  void anAltarGoneAsTheRiteEndsTakesNoOffering() {
+    HookedPlayer hooked = new HookedPlayer(fx.server);
+    fx.server.addPlayer(hooked);
+    String hookedId = BloodFixture.id("hooked");
+    fx.characters.start(hooked, "hooked");
+    BloodRecord own = fx.record("hooked", BloodStage.ANIMAL);
+    hooked.teleport(new Location(fx.world, 30.5, 11, 0.5));
+    AltarService.place(hooked, BloodItems.create(BloodItemKind.ALTAR, hookedId), fx.room(30, 10, 0));
+    BloodAltar stone = BloodAltars.ofCharacter(hookedId);
+    assertNotNull(stone);
+    hooked.getInventory().setItemInMainHand(BloodItems.create(BloodItemKind.RITUAL_KNIFE, hookedId));
+    Cow cow = animal(Cow.class, UUID.randomUUID());
+    cow.teleport(new Location(fx.world, 31.5, 10, 0.5));
+    assertEquals(AnimalRiteService.Bind.OK, AnimalRiteService.bind(hooked, cow));
+    var stroke = hit(hooked, cow);
+    AnimalRiteService.onHit(stroke);
+    assertFalse(stroke.isCancelled());
+    hooked.onStop = () -> BloodAltars.remove(stone);
+    for (int second = 0; second <= AnimalConfig.bleedSeconds(); second++) {
+      AnimalRiteService.tick();
+      now.addAndGet(1000L);
+    }
+    assertFalse(AnimalRiteService.isBound(cow.getUniqueId()));
+    assertTrue(own.getSpecies().isEmpty(), "The stone was gone before it could take the animal");
+    assertEquals(0, own.getLastAnimalAt());
+    String said;
+    while ((said = hooked.nextMessage()) != null) {
+      assertNotEquals("blood.animal.accepted", said);
+    }
+  }
 }

@@ -86,7 +86,8 @@ public final class BondService {
     public static void unload(String character) {
         String key = character.toLowerCase(Locale.ROOT);
         Map<String, Integer> minutes = MINUTES.remove(key);
-        if (DIRTY.remove(key) && store != null && minutes != null) {
+        // A dirty character always has its minutes loaded: add() fills both.
+        if (DIRTY.remove(key) && store != null) {
             queue(store, key, new HashMap<>(minutes));
         }
     }

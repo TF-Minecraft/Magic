@@ -151,6 +151,33 @@ class RoomLockTest {
   }
 
   @Test
+  void liquidsNeverRunIntoAChamberAndBlastsSpareItsWalls() {
+    Block target = fx.room(0, 10, 0);
+    int edge = AltarRoom.lockRadius();
+    Block door = fx.world.getBlockAt(edge, 10, 2);
+    Block outside = fx.world.getBlockAt(edge + 1, 10, 2);
+    Block faraway = fx.world.getBlockAt(30, 10, 30);
+    org.bukkit.event.block.BlockFromToEvent beforeAnyAltar = new org.bukkit.event.block.BlockFromToEvent(outside, door);
+    listener.onLiquidFlow(beforeAnyAltar);
+    assertFalse(beforeAnyAltar.isCancelled(), "With no altar anywhere, water runs as it likes");
+
+    BloodAltars.add(BloodAltar.create(BloodFixture.id("mage"), "o", target, 0f, 1L));
+    org.bukkit.event.block.BlockFromToEvent in = new org.bukkit.event.block.BlockFromToEvent(outside, door);
+    listener.onLiquidFlow(in);
+    assertTrue(in.isCancelled(), "Water poured outside stops at the chamber");
+    org.bukkit.event.block.BlockFromToEvent away = new org.bukkit.event.block.BlockFromToEvent(faraway,
+        faraway.getRelative(BlockFace.EAST));
+    listener.onLiquidFlow(away);
+    assertFalse(away.isCancelled());
+
+    // A wall the altar never changed is still the chamber's: a blast leaves it.
+    Block wall = fx.world.getBlockAt(edge, 11, 0);
+    List<Block> blown = new java.util.ArrayList<>(List.of(wall, faraway));
+    listener.onBlockExplode(new org.bukkit.event.block.BlockExplodeEvent(faraway, faraway.getState(), blown, 1f, null));
+    assertEquals(List.of(faraway), blown);
+  }
+
+  @Test
   void theChamberIsLockedToAllButStaff() throws Exception {
     config("corruption:\n  levels:\n    0: { radius: 2, max_blocks: 4 }\n    5: { radius: 7, max_blocks: 70 }\n");
     assertEquals(7, CorruptionConfig.maxRadius());

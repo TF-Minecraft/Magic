@@ -126,6 +126,9 @@ class BloodDomainTest {
     assertNull(r.currentTarget());
     r.setPendingBacklash(true);
     assertFalse(r.isEmpty());
+    r = BloodRecord.create("x", "o");
+    r.setPendingNaming(true);
+    assertFalse(r.isEmpty());
   }
 
   @Test
