@@ -60,8 +60,9 @@ public final class WhisperConfig {
     private static double decayPerHour = 1;
     private static Set<String> fastTraits = Set.of();
     private static double fastMultiplier = 3;
-    private static double animalKill = 2;
-    private static double aloneOrNightMultiplier = 2;
+    private static double animalOthers = 4;
+    private static double animalOwn = 1;
+    private static double animalOwnDailyCap = 2;
     private static double characterKill = 15;
     private static double robbery = 4;
     private static double corruption = 1;
@@ -84,8 +85,9 @@ public final class WhisperConfig {
         decayPerHour = 1;
         fastTraits = Set.of();
         fastMultiplier = 3;
-        animalKill = 2;
-        aloneOrNightMultiplier = 2;
+        animalOthers = 4;
+        animalOwn = 1;
+        animalOwnDailyCap = 2;
         characterKill = 15;
         robbery = 4;
         corruption = 1;
@@ -111,8 +113,16 @@ public final class WhisperConfig {
             }
             fastTraits = Set.copyOf(traits);
             fastMultiplier = Math.max(1, whispers.getDouble("fast_multiplier", 3));
-            animalKill = Math.max(0, whispers.getDouble("sources.animal_kill", 2));
-            aloneOrNightMultiplier = Math.max(1, whispers.getDouble("sources.alone_or_night_multiplier", 2));
+            ConfigurationSection kills = whispers.getConfigurationSection("sources.animal_kills");
+            if (kills != null) {
+                animalOthers = Math.max(0, kills.getDouble("others", 4));
+                animalOwn = Math.max(0, kills.getDouble("own_fast_trait", 1));
+                animalOwnDailyCap = Math.max(0, kills.getDouble("own_daily_cap", 2));
+            } else if (whispers.isSet("sources.animal_kill")) {
+                // The older single value: it now prices other keepers' animals only, and own ones give nothing.
+                animalOthers = Math.max(0, whispers.getDouble("sources.animal_kill"));
+                animalOwn = 0;
+            }
             characterKill = Math.max(0, whispers.getDouble("sources.character_kill", 15));
             robbery = Math.max(0, whispers.getDouble("sources.robbery", 4));
             corruption = Math.max(0, whispers.getDouble("sources.corruption", 1));
@@ -215,12 +225,19 @@ public final class WhisperConfig {
         return fastMultiplier;
     }
 
-    public static double animalKill() {
-        return animalKill;
+    /** Killing an animal another player keeps (before the fast-trait multiplier). */
+    public static double animalOthers() {
+        return animalOthers;
     }
 
-    public static double aloneOrNightMultiplier() {
-        return aloneOrNightMultiplier;
+    /** Killing an animal you keep yourself; fast-trait characters only, never multiplied. */
+    public static double animalOwn() {
+        return animalOwn;
+    }
+
+    /** Most whisper own animals give a character per UTC day; 0 = no cap. */
+    public static double animalOwnDailyCap() {
+        return animalOwnDailyCap;
     }
 
     public static double characterKill() {

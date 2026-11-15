@@ -42,6 +42,9 @@ class BloodDomainTest {
     var line = BloodRecord.class.getDeclaredField("whisperLine");
     line.setAccessible(true);
     line.set(record, -3);
+    var ownAnimal = BloodRecord.class.getDeclaredField("ownAnimalWhisper");
+    ownAnimal.setAccessible(true);
+    ownAnimal.set(record, Double.NaN);
     record.setAltarId(" ");
     record.normalize();
     assertEquals(BloodStage.NONE, record.getStage());
@@ -49,6 +52,17 @@ class BloodDomainTest {
     assertTrue(record.getSpecies().isEmpty());
     assertEquals(0, record.getWhisper());
     assertEquals(0, record.getWhisperLine());
+    assertEquals(0, record.getOwnAnimalWhisper(0));
+    ownAnimal.set(record, -1.0);
+    record.normalize();
+    assertEquals(0, record.getOwnAnimalWhisper(0));
+    record.addOwnAnimalWhisper(0, 1);
+    record.addOwnAnimalWhisper(0, 0.5);
+    assertEquals(1.5, record.getOwnAnimalWhisper(0));
+    assertEquals(0, record.getOwnAnimalWhisper(1));
+    record.addOwnAnimalWhisper(1, 1);
+    assertEquals(1, record.getOwnAnimalWhisper(1));
+    assertEquals(0, record.getOwnAnimalWhisper(0));
     assertNull(record.getAltarId());
     assertTrue(record.isEmpty());
     whisper.set(record, -1.0);

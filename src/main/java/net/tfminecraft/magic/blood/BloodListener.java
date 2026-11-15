@@ -381,7 +381,7 @@ public final class BloodListener implements Listener {
         AnimalRiteService.onDeath(event);
         Player killer = event.getEntity().getKiller();
         if (killer != null) {
-            WhisperService.add(killer, WhisperService.animalKillWeight(killer, event.getEntity()));
+            WhisperService.animalKill(killer, event.getEntity());
         }
     }
 

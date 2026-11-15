@@ -31,8 +31,9 @@ class WhisperConfigTest {
     assertFalse(WhisperConfig.fastTrait(Set.of("thief")));
     assertFalse(WhisperConfig.fastTrait(java.util.Collections.singleton(null)));
     assertEquals(3, WhisperConfig.fastMultiplier());
-    assertEquals(2, WhisperConfig.animalKill());
-    assertEquals(2, WhisperConfig.aloneOrNightMultiplier());
+    assertEquals(4, WhisperConfig.animalOthers());
+    assertEquals(1, WhisperConfig.animalOwn());
+    assertEquals(2, WhisperConfig.animalOwnDailyCap());
     assertEquals(15, WhisperConfig.characterKill());
     assertEquals(1, WhisperConfig.corruption());
     assertEquals(-40, WhisperConfig.corruptionBelow());
@@ -82,8 +83,9 @@ class WhisperConfigTest {
     assertEquals(0, WhisperConfig.decayPerHour());
     assertEquals(1, WhisperConfig.fastMultiplier());
     assertTrue(WhisperConfig.isAnimal(EntityType.COW));
-    assertEquals(0, WhisperConfig.animalKill());
-    assertEquals(1, WhisperConfig.aloneOrNightMultiplier());
+    assertEquals(0, WhisperConfig.animalOthers());
+    assertEquals(0, WhisperConfig.animalOwn());
+    assertEquals(2, WhisperConfig.animalOwnDailyCap());
     assertEquals(0, WhisperConfig.characterKill());
     assertEquals(0, WhisperConfig.corruption());
     assertEquals(1, WhisperConfig.minInterval());
@@ -96,5 +98,31 @@ class WhisperConfigTest {
     Files.writeString(temp.resolve("c.yml"), "voices:\n  interval_minutes: [3]\n");
     BloodConfig.load(temp.resolve("c.yml").toFile(), log);
     assertEquals(10, WhisperConfig.minInterval());
+    assertEquals(4, WhisperConfig.animalOthers());
+    assertEquals(1, WhisperConfig.animalOwn());
+
+    Files.writeString(temp.resolve("d.yml"), String.join("\n",
+        "whispers:",
+        "  sources:",
+        "    animal_kill: 9",
+        "    animal_kills:",
+        "      others: -1",
+        "      own_fast_trait: -1",
+        "      own_daily_cap: -1",
+        ""));
+    BloodConfig.load(temp.resolve("d.yml").toFile(), log);
+    assertEquals(0, WhisperConfig.animalOthers());
+    assertEquals(0, WhisperConfig.animalOwn());
+    assertEquals(0, WhisperConfig.animalOwnDailyCap());
+
+    Files.writeString(temp.resolve("e.yml"), "whispers:\n  sources:\n    animal_kill: 3\n");
+    BloodConfig.load(temp.resolve("e.yml").toFile(), log);
+    assertEquals(3, WhisperConfig.animalOthers());
+    assertEquals(0, WhisperConfig.animalOwn());
+
+    Files.writeString(temp.resolve("f.yml"), "whispers:\n  threshold: 5\n");
+    BloodConfig.load(temp.resolve("f.yml").toFile(), log);
+    assertEquals(4, WhisperConfig.animalOthers());
+    assertEquals(1, WhisperConfig.animalOwn());
   }
 }

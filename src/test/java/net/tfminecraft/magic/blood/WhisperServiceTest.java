@@ -8,6 +8,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -25,6 +26,8 @@ import net.tfminecraft.tlibs.character.Characters;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
@@ -52,6 +55,8 @@ class WhisperServiceTest {
     WhisperService.clear();
     WhisperService.clock = System::currentTimeMillis;
     WhisperService.random = new Random();
+    WhisperService.fastTraitOf = WhisperService::fastTrait;
+    FakeHusbandry.restore();
     fx.close();
   }
 
@@ -96,23 +101,119 @@ class WhisperServiceTest {
     assertFalse(WhisperService.fastTrait("not-a-uuid"));
   }
 
+  static void keep(Entity animal, UUID... accounts) {
+    FakeHusbandry.OWNERS.put(animal.getUniqueId(),
+        Arrays.stream(accounts).map(a -> new FakeHusbandry.Owner(a, null)).toList());
+  }
+
   @Test
-  void animalKillsWeighBladesNightAndSolitude() {
+  void animalKillsCountByWhoKeepsTheAnimal() {
+    FakeHusbandry.use();
     PlayerMock player = fx.player("mage");
+    String id = BloodFixture.id("mage");
+    UUID stranger = UUID.randomUUID();
     Cow cow = fx.world.spawn(player.getLocation(), Cow.class);
+    Cow wild = fx.world.spawn(player.getLocation(), Cow.class);
     Zombie zombie = fx.world.spawn(player.getLocation(), Zombie.class);
-    fx.world.setTime(1000);
-    assertEquals(0, WhisperService.animalKillWeight(player, cow));
+    keep(cow, stranger);
+    keep(zombie, stranger);
+
+    WhisperService.animalKill(player, cow);
+    assertNull(BloodRecords.get(id), "no blade, no whisper");
     player.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
-    assertEquals(0, WhisperService.animalKillWeight(player, zombie));
-    assertEquals(4, WhisperService.animalKillWeight(player, cow));
+    WhisperService.animalKill(player, zombie);
+    BloodConfig.setEnabled(false);
+    WhisperService.animalKill(player, cow);
+    BloodConfig.setEnabled(true);
+    WhisperService.animalKill(player, wild);
+    assertNull(BloodRecords.get(id), "unlisted, off or wild: nothing");
+
+    WhisperService.animalKill(player, cow);
+    assertEquals(4, BloodRecords.get(id).getWhisper(), "another player's animal counts for anyone");
+    keep(cow, stranger, player.getUniqueId());
+    WhisperService.animalKill(player, cow);
+    assertEquals(4, BloodRecords.get(id).getWhisper(), "own animals need the fast trait");
+
+    WhisperService.fastTraitOf = character -> true;
+    for (int i = 0; i < 3; i++) {
+      WhisperService.animalKill(player, cow);
+    }
+    assertEquals(6, BloodRecords.get(id).getWhisper(), "own animals: 1 each, 2 a day, never tripled");
+    now.addAndGet(86_400_000L);
+    WhisperService.animalKill(player, cow);
+    assertEquals(7, BloodRecords.get(id).getWhisper(), "a new day, a new cap");
+    keep(cow, stranger);
+    WhisperService.animalKill(player, cow);
+    assertEquals(19, BloodRecords.get(id).getWhisper(), "another player's animal is tripled");
+  }
+
+  @Test
+  void tamersKeepTheirAnimalsToo() {
+    FakeHusbandry.use();
+    PlayerMock player = fx.player("mage");
+    PlayerMock other = fx.server.addPlayer();
+    Wolf wolf = fx.world.spawn(player.getLocation(), Wolf.class);
+    assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(player, wolf));
+    wolf.setOwner(other);
+    assertEquals(WhisperService.Keeper.OTHERS, WhisperService.keeper(player, wolf));
+    wolf.setOwner(player);
+    assertEquals(WhisperService.Keeper.OWN, WhisperService.keeper(player, wolf));
+    keep(wolf, UUID.randomUUID());
+    assertEquals(WhisperService.Keeper.OWN, WhisperService.keeper(player, wolf));
+  }
+
+  @Test
+  void ownAnimalsNeedACharacterAnOpenMeterAndFollowTheCapSetting() throws Exception {
+    PlayerMock bare = fx.server.addPlayer();
+    WhisperService.fastTraitOf = character -> true;
+    WhisperService.ownAnimal(bare);
+
+    PlayerMock player = fx.player("mage");
+    String id = BloodFixture.id("mage");
+    fx.record("mage", BloodStage.WHISPERED);
+    WhisperService.ownAnimal(player);
+    assertEquals(0, BloodRecords.get(id).getOwnAnimalWhisper(0), "awake: the meter no longer fills");
+
+    WhisperService.fastTraitOf = character -> false;
+    PlayerMock plain = fx.player("plain");
+    WhisperService.ownAnimal(plain);
+    assertNull(BloodRecords.get(BloodFixture.id("plain")), "no fast trait, no record");
+    WhisperService.fastTraitOf = character -> true;
+
+    PlayerMock second = fx.player("second");
+    String secondId = BloodFixture.id("second");
+    Files.writeString(temp.resolve("v.yml"), String.join("\n",
+        "whispers:",
+        "  sources:",
+        "    animal_kills:",
+        "      own_fast_trait: 1.5",
+        "      own_daily_cap: 0",
+        ""));
+    BloodConfig.load(temp.resolve("v.yml").toFile(), fx.logger);
+    BloodConfig.setEnabled(true);
+    for (int i = 0; i < 4; i++) {
+      WhisperService.ownAnimal(second);
+    }
+    assertEquals(6, BloodRecords.get(secondId).getWhisper(), "no cap");
+
+    Files.writeString(temp.resolve("w.yml"), String.join("\n",
+        "whispers:",
+        "  sources:",
+        "    animal_kills:",
+        "      own_fast_trait: 0",
+        ""));
+    BloodConfig.load(temp.resolve("w.yml").toFile(), fx.logger);
+    BloodConfig.setEnabled(true);
+    WhisperService.ownAnimal(second);
+    assertEquals(6, BloodRecords.get(secondId).getWhisper());
+  }
+
+  @Test
+  void bladesAndSolitude() {
+    PlayerMock player = fx.player("mage");
     PlayerMock witness = fx.server.addPlayer();
     witness.teleport(player.getLocation());
-    assertEquals(2, WhisperService.animalKillWeight(player, cow));
-    fx.world.setTime(15000);
-    assertEquals(4, WhisperService.animalKillWeight(player, cow));
-    fx.world.setTime(23500);
-    assertEquals(2, WhisperService.animalKillWeight(player, cow));
+    assertFalse(WhisperService.alone(player));
     witness.teleport(new Location(fx.world, 500, 11, 500));
     assertTrue(WhisperService.alone(player));
 

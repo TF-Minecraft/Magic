@@ -212,6 +212,9 @@ class BloodListenerTest {
       BloodFixture.loadBundled(fx.logger);
       BloodConfig.setEnabled(true);
       var cow = fx.world.spawn(killer.getLocation(), org.bukkit.entity.Cow.class);
+      var tamer = fx.server.addPlayer();
+      var wolf = fx.world.spawn(killer.getLocation(), org.bukkit.entity.Wolf.class);
+      wolf.setOwner(tamer);
       killer.getInventory().setItemInMainHand(new ItemStack(Material.IRON_SWORD));
       listener.onAnimalDeath(new org.bukkit.event.entity.EntityDeathEvent(cow,
           org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
@@ -219,7 +222,11 @@ class BloodListenerTest {
       fx.world.setTime(1000);
       listener.onAnimalDeath(new org.bukkit.event.entity.EntityDeathEvent(cow,
           org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
-      assertEquals(19, BloodRecords.get(killerId).getWhisper());
+      assertEquals(15, BloodRecords.get(killerId).getWhisper(), "a wild cow gives nothing");
+      wolf.setKiller(killer);
+      listener.onAnimalDeath(new org.bukkit.event.entity.EntityDeathEvent(wolf,
+          org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
+      assertEquals(19, BloodRecords.get(killerId).getWhisper(), "another player's wolf counts");
 
       WhisperService.voiceSoon(killer);
       listener.onQuit(new org.bukkit.event.player.PlayerQuitEvent(killer, "bye"));
