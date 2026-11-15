@@ -18,8 +18,8 @@ public final class CorruptionConfig {
     /** How far an altar of a level reaches and how many blocks it may have changed. */
     public record Reach(int radius, int maxBlocks) {}
 
-    /** A conversion of exposed solid blocks, or a decoration placed into air. */
-    public record Rule(int minLevel, Set<Material> from, Placement on, List<Material> to) {}
+    /** A conversion of exposed solid blocks, or a decoration placed into air, used from minLevel to maxLevel. */
+    public record Rule(int minLevel, int maxLevel, Set<Material> from, Placement on, List<Material> to) {}
 
     public enum Placement {
         CONVERT,
@@ -41,11 +41,11 @@ public final class CorruptionConfig {
 
     static void reset() {
         LEVELS.clear();
-        LEVELS.put(0, new Reach(2, 4));
+        LEVELS.put(0, new Reach(3, 24));
         RULES.clear();
-        blocksPerSacrifice = 3;
-        ambientEveryMinutes = 30;
-        ambientBlocks = 1;
+        blocksPerSacrifice = 15;
+        ambientEveryMinutes = 10;
+        ambientBlocks = 3;
     }
 
     static void load(ConfigurationSection section, Logger log) {
@@ -59,19 +59,19 @@ public final class CorruptionConfig {
             for (String key : levels.getKeys(false)) {
                 try {
                     int level = Integer.parseInt(key.trim());
-                    LEVELS.put(level, new Reach(Math.max(1, levels.getInt(key + ".radius", 2)),
-                            Math.max(0, levels.getInt(key + ".max_blocks", 4))));
+                    LEVELS.put(level, new Reach(Math.max(1, levels.getInt(key + ".radius", 3)),
+                            Math.max(0, levels.getInt(key + ".max_blocks", 24))));
                 } catch (NumberFormatException ex) {
                     log.warning("[Magic] blood magic config corruption.levels key '" + key + "' is not a level number");
                 }
             }
             if (LEVELS.isEmpty()) {
-                LEVELS.put(0, new Reach(2, 4));
+                LEVELS.put(0, new Reach(3, 24));
             }
         }
-        blocksPerSacrifice = Math.max(0, section.getInt("blocks_per_sacrifice", 3));
-        ambientEveryMinutes = Math.max(1, section.getInt("ambient_every_minutes", 30));
-        ambientBlocks = Math.max(1, section.getInt("ambient_blocks", 1));
+        blocksPerSacrifice = Math.max(0, section.getInt("blocks_per_sacrifice", 15));
+        ambientEveryMinutes = Math.max(1, section.getInt("ambient_every_minutes", 10));
+        ambientBlocks = Math.max(1, section.getInt("ambient_blocks", 3));
         for (Map<?, ?> raw : section.getMapList("convert")) {
             Rule rule = rule(raw, Placement.CONVERT, log);
             if (rule != null) {
@@ -90,13 +90,14 @@ public final class CorruptionConfig {
 
     private static Rule rule(Map<?, ?> raw, Placement placement, Logger log) {
         int minLevel = raw.get("min_level") instanceof Number number ? number.intValue() : 0;
+        int maxLevel = raw.get("max_level") instanceof Number number ? number.intValue() : Integer.MAX_VALUE;
         Set<Material> from = new HashSet<>(materials(raw.get("from"), log));
         List<Material> to = materials(raw.get("to"), log);
         if (to.isEmpty() || (placement == Placement.CONVERT && from.isEmpty())) {
             log.warning("[Magic] blood magic config corruption rule without usable blocks skipped");
             return null;
         }
-        return new Rule(minLevel, Set.copyOf(from), placement, List.copyOf(to));
+        return new Rule(minLevel, maxLevel, Set.copyOf(from), placement, List.copyOf(to));
     }
 
     private static List<Material> materials(Object raw, Logger log) {
@@ -130,11 +131,11 @@ public final class CorruptionConfig {
         return entry != null ? entry.getValue() : LEVELS.firstEntry().getValue();
     }
 
-    /** Rules an altar of this level may use. */
+    /** Rules an altar of this level may use (a rule with a max_level retires above it). */
     public static List<Rule> rules(int level) {
         List<Rule> out = new ArrayList<>();
         for (Rule rule : RULES) {
-            if (level >= rule.minLevel()) {
+            if (level >= rule.minLevel() && level <= rule.maxLevel()) {
                 out.add(rule);
             }
         }

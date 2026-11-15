@@ -156,26 +156,37 @@ class VoiceTest {
   }
 
   @Test
-  void animalVoicesWaitForTheChamberAndAReadyStone() {
+  void voicesReachTheMageAloneBeforeAnAltarAndOnlyInItsChamberAfter() {
     PlayerMock mage = fx.player("mage");
-    BloodRecord record = fx.record("mage", BloodStage.ANIMAL);
-    // No altar standing: the animal-stage voices keep quiet.
-    assertFalse(WhisperService.atTheStone(mage, record));
+    BloodRecord record = fx.record("mage", BloodStage.WHISPERED);
+    mage.teleport(new Location(fx.world, 40.5, 10, 2.5));
+    // No altar yet: anywhere, as long as nobody else is near.
+    assertTrue(WhisperService.mayHear(mage, record));
+    PlayerMock friend = fx.server.addPlayer("Friend");
+    friend.teleport(new Location(fx.world, 42.5, 10, 2.5));
+    assertFalse(WhisperService.mayHear(mage, record));
+    friend.teleport(new Location(fx.world, 400.5, 10, 2.5));
+    record.setStage(BloodStage.ANIMAL);
+    assertTrue(WhisperService.mayHear(mage, record));
+
     Block center = fx.room(0, 10, 0);
     BloodAltar altar = BloodAltar.create(BloodFixture.id("mage"), "o", center, 0f, 1L);
     BloodAltars.add(altar);
+    // Once it stands, only its chamber: alone outside it is not enough.
+    assertFalse(WhisperService.mayHear(mage, record));
     mage.teleport(new Location(fx.world, 2.5, 10, 2.5));
-    assertTrue(WhisperService.atTheStone(mage, record));
-    mage.teleport(new Location(fx.world, 40.5, 10, 2.5));
-    assertFalse(WhisperService.atTheStone(mage, record));
-    mage.teleport(new Location(fx.world, 2.5, 10, 2.5));
+    assertTrue(WhisperService.mayHear(mage, record));
+    friend.teleport(new Location(fx.world, 1.5, 10, 1.5));
+    assertTrue(WhisperService.mayHear(mage, record), "The chamber is the stone's: company does not matter");
     record.setLastAnimalAt(System.currentTimeMillis());
-    assertFalse(WhisperService.atTheStone(mage, record));
+    assertFalse(WhisperService.mayHear(mage, record), "The animal stage waits for a ready stone");
     record.setLastAnimalAt(1);
-    assertTrue(WhisperService.atTheStone(mage, record));
+    assertTrue(WhisperService.mayHear(mage, record));
     record.setStage(BloodStage.HUNT);
+    record.setLastAnimalAt(System.currentTimeMillis());
+    assertTrue(WhisperService.mayHear(mage, record));
     mage.teleport(new Location(fx.world, 40.5, 10, 2.5));
-    assertTrue(WhisperService.atTheStone(mage, record));
+    assertFalse(WhisperService.mayHear(mage, record));
   }
 
   @Test

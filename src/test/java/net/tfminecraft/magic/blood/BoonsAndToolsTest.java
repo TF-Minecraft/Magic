@@ -196,7 +196,13 @@ class BoonsAndToolsTest {
       listener.onCharacterDeath(new CharacterDeathEvent(new CharacterRef(victim.getUniqueId(), UUID.fromString(target)),
           UUID.randomUUID(), Instant.EPOCH, null, null, "x"));
       assertTrue(record.getFinalTargets().isEmpty());
+      // The victim stands beside the mage and no altar stands: the backlash waits until the mage is alone.
+      bridge.verify(() -> RpCharactersBridge.applyHealingInjury(mage), never());
+      assertTrue(record.isPendingBacklash());
+      victim.teleport(victim.getLocation().add(500, 0, 0));
+      FinalService.check(mage);
       bridge.verify(() -> RpCharactersBridge.applyHealingInjury(mage));
+      assertFalse(record.isPendingBacklash());
     }
 
     BondService.add(mageId, target, 5);

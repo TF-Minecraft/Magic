@@ -120,7 +120,7 @@ finals:
   fail_cooldown_hours: 72
   # A named target not seen for this long is quietly replaced.
   inactive_days: 21
-  # MythicLib stat boons per final sacrifice (they add up). Placeholder values. Only the true path
+  # MythicLib stat boons per final sacrifice (they add up). Only the true path
   # gets boons (fran); a path left out here gets none.
   boons:
     "true":
@@ -133,7 +133,7 @@ finals:
   # Worked out again from the sacrifices every time, so a change here also reaches characters part
   # way through; an ascended character gets every listed reward.
   #   skill_points: added to the class's own skill-point pool, which RPCharacters keeps apart from
-  #                 the character's other classes (placeholder amounts, balance later)
+  #                 the character's other classes
   #   slots: MMOCore skill slots it opens
   #   spells: MMOCore class skills it unlocks
   class_rewards:
@@ -166,7 +166,7 @@ permissions:
 
 # The pool of blood in the altar and the blood resonance it feeds: what keeps the blood classes'
 # spells working. Artefacts charge in the pool (right-click the altar with one); meditating on the
-# altar among the charged ones draws their charge into blood resonance. Placeholder values.
+# altar among the charged ones draws their charge into blood resonance.
 pool:
   # The pool stays full and charging is free until the path is complete. Then each point of charge
   # costs blood_per_point of the pool's blood.

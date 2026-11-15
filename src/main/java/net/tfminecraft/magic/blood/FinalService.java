@@ -88,6 +88,7 @@ public final class FinalService {
     static void name(Player mage, BloodRecord record) {
         String target = record.currentTarget();
         WhisperConfig.Speaker speaker = WhisperService.speaker(record);
+        record.setPendingNaming(false);
         if (target == null) {
             WhisperService.speak(mage, speaker, Messages.getRaw(voiced("blood.final.nobody", speaker)));
             return;
@@ -158,7 +159,7 @@ public final class FinalService {
         record.setPendingBacklash(true);
         Magic.plugin.getLogger().info("[Magic] Character " + record.getCharacterId() + " lost a final target");
         Player mage = online(record);
-        if (mage != null) {
+        if (mage != null && WhisperService.mayHear(mage, record)) {
             backlash(mage, record);
         }
     }
@@ -184,7 +185,11 @@ public final class FinalService {
         if (record == null || record.getStage() != BloodStage.FINAL) {
             return;
         }
-        backlash(mage, record);
+        // The voices strike and speak only where they reach the mage: the chamber, or alone before an altar.
+        boolean hears = WhisperService.mayHear(mage, record);
+        if (hears) {
+            backlash(mage, record);
+        }
         String before = record.currentTarget();
         long now = clock.getAsLong();
         boolean changed = false;
@@ -199,19 +204,27 @@ public final class FinalService {
                 if (gone && target.equals(before) && info.isPresent()) {
                     record.setNextFinalAt(now + HuntConfig.failCooldownMillis());
                     record.setPendingBacklash(true);
-                    backlash(mage, record);
+                    if (hears) {
+                        backlash(mage, record);
+                    }
                 }
             }
         }
         if (now >= record.getNextFinalAt()) {
             changed |= refill(mage, record);
         }
+        String after = record.currentTarget();
+        boolean due = after != null && now >= record.getNextFinalAt();
+        if (due && !after.equals(before) && !record.isPendingNaming()) {
+            record.setPendingNaming(true);
+            changed = true;
+        }
+        if (due && record.isPendingNaming() && hears) {
+            name(mage, record);
+            changed = true;
+        }
         if (changed) {
             BloodRecords.save(record);
-        }
-        String after = record.currentTarget();
-        if (after != null && !after.equals(before) && now >= record.getNextFinalAt()) {
-            name(mage, record);
         }
     }
 

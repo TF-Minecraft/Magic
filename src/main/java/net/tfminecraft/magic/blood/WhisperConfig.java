@@ -67,8 +67,8 @@ public final class WhisperConfig {
     private static double corruption = 1;
     private static double corruptionBelow = -40;
     private static Set<EntityType> animals = Set.of();
-    private static int minInterval = 15;
-    private static int maxInterval = 35;
+    private static int minInterval = 10;
+    private static int maxInterval = 25;
     private static boolean requireAlone = true;
     private static double aloneRadius = 24;
     private static final Map<Speaker, Voice> VOICES = new EnumMap<>(Speaker.class);
@@ -91,8 +91,8 @@ public final class WhisperConfig {
         corruption = 1;
         corruptionBelow = -40;
         animals = Set.of();
-        minInterval = 15;
-        maxInterval = 35;
+        minInterval = 10;
+        maxInterval = 25;
         requireAlone = true;
         aloneRadius = 24;
         VOICES.clear();

@@ -29,16 +29,19 @@ whispers:
 # Keep both inside blood magic: no other gods, orders or schools.
 # whispered lines are said in order and end with the knife and altar. animal lines come in tiers by
 # kinds given (the highest number reached; a plain list instead slides a third of the way along it).
-# Animal-stage voices speak only in the altar's chamber, while it is ready for the next kind and no rite
-# is under way (with no altar standing, they keep quiet). Other stages pick at random.
+# Where they speak: before the mage's altar stands, only when nobody else is near (require_alone);
+# once it stands, only in its chamber. The animal stage also waits there for the stone to be ready for
+# the next kind, with no rite under way. A final target's naming and a failed sacrifice's backlash wait
+# the same way. Other stages pick lines at random.
 # Colours: each voice is a gradient that drifts from colors.start to colors.end over the whole path
 # (kinds, the answer, the hunt, the finals). Lorveor starts dim and grows into the bright Bloodmagic
 # reds; the mage's own voice starts pale and clear, as they are, and sinks into dark blood.
 # style is put after every colour (italics). Without colors, style is the whole prefix as before.
 voices:
-  # Minutes between lines, picked at random in this range.
-  interval_minutes: [15, 35]
-  # Only speak when no other player is within alone_radius blocks.
+  # Minutes between lines, picked at random in this range. A line that falls due elsewhere waits for
+  # the next minute the mage is where the voices reach them.
+  interval_minutes: [10, 25]
+  # Before an altar stands: only speak when no other player is within alone_radius blocks.
   require_alone: true
   alone_radius: 24
   god:

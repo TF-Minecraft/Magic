@@ -32,8 +32,10 @@ public final class BloodRecord {
     private List<String> finalTargets = new ArrayList<>();
     /** No final target is named before this time (after a failed sacrifice). */
     private long nextFinalAt;
-    /** A failed sacrifice whose backlash waits for the mage to come online. */
+    /** A failed sacrifice whose backlash waits for the mage to be where the voices reach them. */
     private boolean pendingBacklash;
+    /** A newly named final target the voices have not told the mage yet (they wait for the chamber). */
+    private boolean pendingNaming;
     /** The path's artefacts handed out so far, one id per place (see {@link BloodArtefacts}). */
     private List<String> artefacts = new ArrayList<>();
     /** Charge each artefact holds (by id), filled in the altar's pool and drawn by meditation. */
@@ -239,6 +241,14 @@ public final class BloodRecord {
         this.pendingBacklash = pendingBacklash;
     }
 
+    public boolean isPendingNaming() {
+        return pendingNaming;
+    }
+
+    public void setPendingNaming(boolean pendingNaming) {
+        this.pendingNaming = pendingNaming;
+    }
+
     public List<String> getArtefacts() {
         return artefacts;
     }
@@ -286,7 +296,7 @@ public final class BloodRecord {
     public boolean isEmpty() {
         return stage == BloodStage.NONE && path == BloodPath.NONE && whisper <= 0
                 && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
-                && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash
+                && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash && !pendingNaming
                 && artefacts.isEmpty() && charges.isEmpty() && pending.isEmpty() && resonance <= 0
                 && pool == null;
     }

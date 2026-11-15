@@ -86,7 +86,7 @@ class WhisperServiceTest {
     try (var chars = mockStatic(Characters.class)) {
       chars.when(() -> Characters.info(any())).thenReturn(Optional.of(new CharacterInfo(
           new CharacterRef(UUID.randomUUID(), UUID.fromString(id)), "N", CharacterStatus.ALIVE, null,
-          Set.of("Heretic"), 0, Instant.EPOCH)));
+          Set.of("Occultist"), 0, Instant.EPOCH)));
       WhisperService.addTo(id, "o", 2, null);
       assertEquals(6, BloodRecords.get(id).getWhisper());
       chars.when(() -> Characters.info(any())).thenReturn(Optional.empty());
@@ -250,7 +250,7 @@ class WhisperServiceTest {
     WhisperService.tick(minute(41));
     Long due = WhisperService.nextVoice(player.getUniqueId());
     assertNotNull(due);
-    assertTrue(due >= now.get() + 15 * 60_000L && due <= now.get() + 35 * 60_000L);
+    assertTrue(due >= now.get() + 10 * 60_000L && due <= now.get() + 25 * 60_000L);
     WhisperService.tick(minute(42));
     assertNull(player.nextMessage());
     now.set(due);

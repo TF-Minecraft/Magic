@@ -118,9 +118,9 @@ class CorruptionAndCluesTest {
     assertTrue(AltarCorruption.candleSpot(center.getRelative(-2, 0, 2), center));
     assertFalse(AltarCorruption.candleSpot(center.getRelative(2, 0, 0), center));
     assertFalse(AltarCorruption.candleSpot(center.getRelative(3, 1, 0), center));
-    CorruptionConfig.Rule candles = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+    CorruptionConfig.Rule candles = new CorruptionConfig.Rule(0, Integer.MAX_VALUE, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
         java.util.List.of(Material.RED_CANDLE));
-    CorruptionConfig.Rule mixed = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+    CorruptionConfig.Rule mixed = new CorruptionConfig.Rule(0, Integer.MAX_VALUE, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
         java.util.List.of(Material.RED_CANDLE, Material.REDSTONE_WIRE));
     assertNull(AltarCorruption.material(candles, center.getRelative(1, 0, 1), center));
     assertEquals(Material.RED_CANDLE, AltarCorruption.material(candles, center.getRelative(2, 0, 2), center));
@@ -151,9 +151,9 @@ class CorruptionAndCluesTest {
   @Test
   void pedestalsAndTheAltarAreNeverDecorated() {
     Block center = room();
-    CorruptionConfig.Rule floor = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
+    CorruptionConfig.Rule floor = new CorruptionConfig.Rule(0, Integer.MAX_VALUE, java.util.Set.of(), CorruptionConfig.Placement.FLOOR,
         java.util.List.of(Material.RED_CANDLE));
-    CorruptionConfig.Rule ceiling = new CorruptionConfig.Rule(0, java.util.Set.of(), CorruptionConfig.Placement.CEILING,
+    CorruptionConfig.Rule ceiling = new CorruptionConfig.Rule(0, Integer.MAX_VALUE, java.util.Set.of(), CorruptionConfig.Placement.CEILING,
         java.util.List.of(Material.WEEPING_VINES));
     Block onStone = center.getRelative(2, 0, 0);
     assertTrue(AltarCorruption.fits(floor, onStone));
@@ -219,7 +219,7 @@ class CorruptionAndCluesTest {
 
   @Test
   void ambientSpreadWaitsItsTurnAndSavesOnlyOnChange() throws Exception {
-    config(String.join("\n", "corruption:", "  ambient_every_minutes: 30", "  levels:",
+    config(String.join("\n", "corruption:", "  ambient_every_minutes: 30", "  ambient_blocks: 1", "  levels:",
         "    0: { radius: 3, max_blocks: 2 }", "  convert:", "    - { min_level: 0, from: [STONE], to: [NETHERRACK] }", ""));
     assertEquals(1, CorruptionConfig.ambientBlocks());
     Block center = room();
@@ -235,6 +235,25 @@ class CorruptionAndCluesTest {
     now.addAndGet(31 * 60_000L);
     AltarCorruption.ambient();
     assertEquals(2, altar.getCorrupted().size());
+  }
+
+  @Test
+  void higherLevelsRetireOldRulesAndKeepReddeningPastTheBlockLimit() throws Exception {
+    config(String.join("\n", "corruption:", "  levels:", "    0: { radius: 3, max_blocks: 6 }", "    2: { radius: 3, max_blocks: 6 }",
+        "  convert:", "    - { min_level: 0, max_level: 1, from: [STONE], to: [REDSTONE_ORE] }",
+        "    - { min_level: 2, from: [STONE, REDSTONE_ORE], to: [NETHER_WART_BLOCK] }", ""));
+    assertEquals(1, CorruptionConfig.rules(1).size());
+    assertEquals(List.of(Material.NETHER_WART_BLOCK), CorruptionConfig.rules(2).get(0).to());
+    Block center = room();
+    BloodAltar altar = BloodAltar.create("c", "o", center, 0f, 1L);
+    assertEquals(6, AltarCorruption.spread(altar, 30), "New blocks stop at the limit");
+    assertTrue(altar.getCorrupted().stream().allMatch(e -> e.placed().equals("REDSTONE_ORE")));
+    assertEquals(0, AltarCorruption.spread(altar, 5), "Nothing left to turn at this level");
+    altar.setLevel(2);
+    AltarCorruption.spread(altar, 200);
+    assertEquals(6, altar.getCorrupted().size(), "Re-turning costs no budget");
+    assertTrue(altar.getCorrupted().stream().allMatch(e -> e.placed().equals("NETHER_WART_BLOCK")));
+    assertTrue(altar.getCorrupted().stream().allMatch(e -> e.original().contains("stone")), "Purifying still puts back the stone");
   }
 
   @Test
@@ -255,7 +274,7 @@ class CorruptionAndCluesTest {
     assertEquals("v.redstone", AnimalConfig.traceModel());
     assertTrue(AnimalConfig.requireStolen());
     assertTrue(AnimalConfig.clearDrops());
-    assertEquals(new CorruptionConfig.Reach(2, 4), CorruptionConfig.reach(9));
+    assertEquals(new CorruptionConfig.Reach(3, 24), CorruptionConfig.reach(9));
     assertEquals(0, CorruptionConfig.blocksPerSacrifice());
     assertEquals(1, CorruptionConfig.ambientEveryMinutes());
     assertEquals(1, CorruptionConfig.rules(0).size());
@@ -266,13 +285,16 @@ class CorruptionAndCluesTest {
     assertEquals(new CorruptionConfig.Reach(5, 9), CorruptionConfig.reach(1));
     assertEquals(new CorruptionConfig.Reach(5, 9), CorruptionConfig.reach(4));
     config("enabled: true\n");
-    assertEquals(new CorruptionConfig.Reach(2, 4), CorruptionConfig.reach(0));
+    assertEquals(new CorruptionConfig.Reach(3, 24), CorruptionConfig.reach(0));
     assertTrue(CorruptionConfig.rules(5).isEmpty());
 
     assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), fx.logger));
     assertEquals(7, AnimalConfig.speciesRequired());
     assertEquals(24 * 3_600_000L, AnimalConfig.cooldownMillis());
-    assertEquals(new CorruptionConfig.Reach(3, 14), CorruptionConfig.reach(2));
+    assertEquals(new CorruptionConfig.Reach(5, 110), CorruptionConfig.reach(2));
+    assertEquals(new CorruptionConfig.Reach(6, 300), CorruptionConfig.reach(5));
+    assertEquals(15, CorruptionConfig.blocksPerSacrifice());
+    assertTrue(CorruptionConfig.rules(5).stream().noneMatch(rule -> rule.to().contains(Material.REDSTONE_ORE)), "Level 5 left the early veins behind");
     assertFalse(CorruptionConfig.rules(4).isEmpty());
   }
 

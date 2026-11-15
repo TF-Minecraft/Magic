@@ -27,7 +27,7 @@ class WhisperConfigTest {
     assertTrue(BloodConfig.load(new File("src/main/resources/wildmagic/bloodmagic"), log));
     assertEquals(30, WhisperConfig.threshold());
     assertEquals(1, WhisperConfig.decayPerHour());
-    assertTrue(WhisperConfig.fastTrait(Set.of("HERETIC")));
+    assertTrue(WhisperConfig.fastTrait(Set.of("OCCULTIST")));
     assertFalse(WhisperConfig.fastTrait(Set.of("thief")));
     assertFalse(WhisperConfig.fastTrait(java.util.Collections.singleton(null)));
     assertEquals(3, WhisperConfig.fastMultiplier());
@@ -38,8 +38,8 @@ class WhisperConfigTest {
     assertEquals(-40, WhisperConfig.corruptionBelow());
     assertTrue(WhisperConfig.isAnimal(EntityType.COW));
     assertFalse(WhisperConfig.isAnimal(EntityType.ZOMBIE));
-    assertEquals(15, WhisperConfig.minInterval());
-    assertEquals(35, WhisperConfig.maxInterval());
+    assertEquals(10, WhisperConfig.minInterval());
+    assertEquals(25, WhisperConfig.maxInterval());
     assertTrue(WhisperConfig.requireAlone());
     assertEquals(24, WhisperConfig.aloneRadius());
     var god = WhisperConfig.voice(WhisperConfig.Speaker.GOD);
@@ -95,6 +95,6 @@ class WhisperConfigTest {
 
     Files.writeString(temp.resolve("c.yml"), "voices:\n  interval_minutes: [3]\n");
     BloodConfig.load(temp.resolve("c.yml").toFile(), log);
-    assertEquals(15, WhisperConfig.minInterval());
+    assertEquals(10, WhisperConfig.minInterval());
   }
 }

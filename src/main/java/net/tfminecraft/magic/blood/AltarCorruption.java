@@ -24,8 +24,10 @@ import org.bukkit.block.data.Ageable;
  * connected patches: of a handful of random candidates, the one nearest the altar that touches what
  * it already turned wins, so the room reddens in veins rather than speckles. Floor and ceiling
  * decorations grow only on blocks it has already turned, and candles stand only on the spots right in
- * front of the pedestals. Every change is journalled on the altar with the block
- * it replaced, and purification puts back any block still as the altar left it.
+ * front of the pedestals. Higher levels turn the room redder: their rules also take what lower levels
+ * made, and re-turning a block costs no budget, so a room at its block limit still deepens. Every
+ * change is journalled on the altar with the block it first replaced, and purification puts back any
+ * block still as the altar left it.
  */
 public final class AltarCorruption {
 
@@ -40,7 +42,10 @@ public final class AltarCorruption {
 
     private AltarCorruption() {}
 
-    /** Changes up to count blocks within the altar level's reach and budget; returns how many changed. */
+    /**
+     * Changes up to count blocks within the altar level's reach; returns how many changed. New blocks
+     * stop at the level's max_blocks, re-turning blocks it already changed never does.
+     */
     public static int spread(BloodAltar altar, int count) {
         Block center = altar.block();
         if (center == null || !center.getWorld().isChunkLoaded(altar.getX() >> 4, altar.getZ() >> 4)) {
@@ -52,15 +57,17 @@ public final class AltarCorruption {
             return 0;
         }
         int made = 0;
-        for (int i = 0; i < count && altar.getCorrupted().size() < reach.maxBlocks(); i++) {
-            if (changeOne(altar, center, reach.radius(), rules)) {
+        for (int i = 0; i < count; i++) {
+            boolean full = altar.getCorrupted().size() >= reach.maxBlocks();
+            if (changeOne(altar, center, reach.radius(), rules, full)) {
                 made++;
             }
         }
         return made;
     }
 
-    private static boolean changeOne(BloodAltar altar, Block center, int radius, List<CorruptionConfig.Rule> rules) {
+    private static boolean changeOne(BloodAltar altar, Block center, int radius, List<CorruptionConfig.Rule> rules,
+            boolean full) {
         int height = Math.min(radius, MAX_HEIGHT_REACH);
         Block above = center.getRelative(BlockFace.UP);
         Set<Long> turned = new HashSet<>();
@@ -75,12 +82,12 @@ public final class AltarCorruption {
                     random.nextInt(2 * height + 1) - height, random.nextInt(2 * radius + 1) - radius);
             if (block.equals(center) || block.equals(above)
                     || !block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)
-                    || AltarRegions.blocked(block.getLocation())) {
+                    || AltarRegions.blocked(block.getLocation()) || (full && !turned(turned, block))) {
                 continue;
             }
             CorruptionConfig.Rule rule = rules.get(random.nextInt(rules.size()));
             Material to = fits(rule, block, turned) ? material(rule, block, center) : null;
-            if (to == null) {
+            if (to == null || to == block.getType()) {
                 continue;
             }
             double score = score(block, center, turned);
