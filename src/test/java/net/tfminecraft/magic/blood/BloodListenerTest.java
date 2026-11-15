@@ -228,6 +228,24 @@ class BloodListenerTest {
           org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>()));
       assertEquals(19, BloodRecords.get(killerId).getWhisper(), "another player's wolf counts");
 
+      FakeHusbandry.use();
+      try {
+        var claimed = fx.world.spawn(killer.getLocation(), org.bukkit.entity.Cow.class);
+        FakeHusbandry.OWNERS.put(claimed.getUniqueId(), java.util.List.of(new FakeHusbandry.Owner(UUID.randomUUID(), null)));
+        var death = new org.bukkit.event.entity.EntityDeathEvent(claimed,
+            org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.GENERIC).build(), new ArrayList<>());
+        listener.onAnimalDying(death);
+        claimed.setKiller(killer);
+        listener.onAnimalDying(death);
+        FakeHusbandry.OWNERS.clear();
+        listener.onAnimalDeath(death);
+        listener.onAnimalDead(death);
+        assertEquals(23, BloodRecords.get(killerId).getWhisper(), "a claimed cow counts though Cooking deleted its keepers");
+        assertEquals(WhisperService.Keeper.WILD, WhisperService.keeper(killer, claimed));
+      } finally {
+        FakeHusbandry.restore();
+      }
+
       WhisperService.voiceSoon(killer);
       listener.onQuit(new org.bukkit.event.player.PlayerQuitEvent(killer, "bye"));
       assertNull(WhisperService.nextVoice(killer.getUniqueId()));

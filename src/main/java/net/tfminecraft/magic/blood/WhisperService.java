@@ -36,6 +36,8 @@ public final class WhisperService {
     private static final long DAY = 86_400_000L;
     private static final long FIRST_VOICE_DELAY = MINUTE;
     private static final Map<UUID, Long> NEXT_VOICE = new HashMap<>();
+    /** Keepers of animals being killed, read before Cooking's death handler deletes them (by animal). */
+    private static final Map<UUID, List<HusbandryOwners.Owner>> KEEPERS_AT_DEATH = new HashMap<>();
 
     static LongSupplier clock = System::currentTimeMillis;
     static Random random = new Random();
@@ -125,10 +127,29 @@ public final class WhisperService {
         }
     }
 
-    /** Cooking's husbandry keepers, and a vanilla tamer, decide whose animal it was. */
+    /**
+     * Remembers a listed animal's keepers as it dies. Cooking deletes them in its own death handler,
+     * which runs before Magic's at the same priority, so this runs at LOWEST.
+     */
+    public static void noteKeepers(Entity animal) {
+        if (BloodConfig.isEnabled() && WhisperConfig.isAnimal(animal.getType())) {
+            KEEPERS_AT_DEATH.put(animal.getUniqueId(), HusbandryOwners.of(animal.getUniqueId()));
+        }
+    }
+
+    /** Drops the keepers noted for a death once it is over. */
+    public static void forgetKeepers(Entity animal) {
+        KEEPERS_AT_DEATH.remove(animal.getUniqueId());
+    }
+
+    /**
+     * Cooking's husbandry keepers (as noted at the death, else read now), and a vanilla tamer,
+     * decide whose animal it was.
+     */
     static Keeper keeper(Player killer, Entity animal) {
         boolean kept = false;
-        for (HusbandryOwners.Owner owner : HusbandryOwners.of(animal.getUniqueId())) {
+        List<HusbandryOwners.Owner> owners = KEEPERS_AT_DEATH.get(animal.getUniqueId());
+        for (HusbandryOwners.Owner owner : owners != null ? owners : HusbandryOwners.of(animal.getUniqueId())) {
             if (owner.account().equals(killer.getUniqueId())) {
                 return Keeper.OWN;
             }
@@ -410,6 +431,7 @@ public final class WhisperService {
 
     public static void clear() {
         NEXT_VOICE.clear();
+        KEEPERS_AT_DEATH.clear();
     }
 
     private static double sessionEquilibrium(Player player) {
