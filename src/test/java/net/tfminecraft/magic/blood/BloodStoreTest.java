@@ -45,6 +45,13 @@ class BloodStoreTest {
     assertTrue(store.save(BloodRecord.create("c1", "o1")));
     assertFalse(new File(characters(), "c1.json").exists());
     assertTrue(store.save(BloodRecord.create("never", "o1")));
+
+    BloodRecord capped = BloodRecord.create("c2", "o1");
+    capped.addOwnAnimalWhisper(7, 2);
+    assertTrue(store.save(capped));
+    BloodRecord back = store.loadRecords().get(0);
+    assertEquals(0, back.getWhisper());
+    assertEquals(2, back.getOwnAnimalWhisper(7), "the day's cap survives a drained meter and a restart");
   }
 
   @Test

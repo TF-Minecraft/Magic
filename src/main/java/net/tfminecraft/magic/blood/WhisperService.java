@@ -7,12 +7,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.Magic;
@@ -31,13 +33,28 @@ import net.tfminecraft.tlibs.character.Characters;
 public final class WhisperService {
 
     private static final long MINUTE = 60_000L;
+    private static final long DAY = 86_400_000L;
     private static final long FIRST_VOICE_DELAY = MINUTE;
     private static final Map<UUID, Long> NEXT_VOICE = new HashMap<>();
+    /** Keepers of animals being killed, read before Cooking's death handler deletes them (by animal). */
+    private static final Map<UUID, List<HusbandryOwners.Owner>> KEEPERS_AT_DEATH = new HashMap<>();
 
     static LongSupplier clock = System::currentTimeMillis;
     static Random random = new Random();
     /** The player's equilibrium, NaN without a resonance session. */
     static ToDoubleFunction<Player> equilibrium = WhisperService::sessionEquilibrium;
+    /** Whether a character has a fast trait (the evil fast route). */
+    static Predicate<String> fastTraitOf = WhisperService::fastTrait;
+
+    /** Who keeps a killed animal, seen from its killer. */
+    enum Keeper {
+        /** Nobody keeps it. */
+        WILD,
+        /** The killer's account is one of its keepers. */
+        OWN,
+        /** Other players keep it, the killer doesn't. */
+        OTHERS
+    }
 
     private WhisperService() {}
 
@@ -54,6 +71,10 @@ public final class WhisperService {
      * before the voices start. Returns true when this woke them.
      */
     public static boolean addTo(String character, String owner, double amount, Player online) {
+        return addTo(character, owner, amount, online, true);
+    }
+
+    private static boolean addTo(String character, String owner, double amount, Player online, boolean multiply) {
         if (!BloodConfig.isEnabled() || amount <= 0) {
             return false;
         }
@@ -61,7 +82,7 @@ public final class WhisperService {
         if (record.getStage() != BloodStage.NONE) {
             return false;
         }
-        double gain = amount * (fastTrait(character) ? WhisperConfig.fastMultiplier() : 1);
+        double gain = amount * (multiply && fastTraitOf.test(character) ? WhisperConfig.fastMultiplier() : 1);
         record.setWhisper(record.getWhisper() + gain);
         boolean woke = record.getWhisper() >= WhisperConfig.threshold();
         if (woke) {
@@ -89,14 +110,81 @@ public final class WhisperService {
         }
     }
 
-    /** Whisper weight for killing a listed animal with a blade, more when alone or at night. */
-    public static double animalKillWeight(Player killer, Entity animal) {
-        if (!WhisperConfig.isAnimal(animal.getType()) || !blade(killer.getInventory().getItemInMainHand())) {
-            return 0;
+    /**
+     * Killing a listed animal with a blade. Another player's animal feeds anyone's meter (fast traits
+     * multiply it as usual); the killer's own only feeds a fast-trait character's, unmultiplied and up
+     * to a daily cap; a wild one never does.
+     */
+    public static void animalKill(Player killer, Entity animal) {
+        if (!BloodConfig.isEnabled() || !WhisperConfig.isAnimal(animal.getType())
+                || !blade(killer.getInventory().getItemInMainHand())) {
+            return;
         }
-        long time = animal.getWorld().getTime();
-        boolean night = time >= 13_000 && time < 23_000;
-        return WhisperConfig.animalKill() * (night || alone(killer) ? WhisperConfig.aloneOrNightMultiplier() : 1);
+        switch (keeper(killer, animal)) {
+            case OTHERS -> add(killer, WhisperConfig.animalOthers());
+            case OWN -> ownAnimal(killer);
+            default -> { }
+        }
+    }
+
+    /**
+     * Remembers the keepers of a listed animal killed with a blade, as it dies. Cooking deletes them in
+     * its own death handler, which runs before Magic's at the same priority, so this runs at LOWEST.
+     */
+    public static void noteKeepers(Player killer, Entity animal) {
+        if (BloodConfig.isEnabled() && WhisperConfig.isAnimal(animal.getType())
+                && blade(killer.getInventory().getItemInMainHand())) {
+            KEEPERS_AT_DEATH.put(animal.getUniqueId(), HusbandryOwners.of(animal.getUniqueId()));
+        }
+    }
+
+    /** Drops the keepers noted for a death once it is over. */
+    public static void forgetKeepers(Entity animal) {
+        KEEPERS_AT_DEATH.remove(animal.getUniqueId());
+    }
+
+    /**
+     * Cooking's husbandry keepers (as noted at the death, else read now), and a vanilla tamer,
+     * decide whose animal it was.
+     */
+    static Keeper keeper(Player killer, Entity animal) {
+        boolean kept = false;
+        List<HusbandryOwners.Owner> owners = KEEPERS_AT_DEATH.get(animal.getUniqueId());
+        for (HusbandryOwners.Owner owner : owners != null ? owners : HusbandryOwners.of(animal.getUniqueId())) {
+            if (owner.account().equals(killer.getUniqueId())) {
+                return Keeper.OWN;
+            }
+            kept = true;
+        }
+        if (animal instanceof Tameable tameable && tameable.getOwnerUniqueId() != null) {
+            if (tameable.getOwnerUniqueId().equals(killer.getUniqueId())) {
+                return Keeper.OWN;
+            }
+            kept = true;
+        }
+        return kept ? Keeper.OTHERS : Keeper.WILD;
+    }
+
+    /** An own animal: fast-trait characters only, never multiplied, no more than the daily cap. */
+    static void ownAnimal(Player killer) {
+        String character = AltarService.currentCharacter(killer);
+        double amount = WhisperConfig.animalOwn();
+        if (character == null || amount <= 0 || !fastTraitOf.test(character)) {
+            return;
+        }
+        String owner = killer.getUniqueId().toString();
+        BloodRecord record = BloodRecords.getOrCreate(character, owner);
+        if (record.getStage() != BloodStage.NONE) {
+            return;
+        }
+        long day = Math.floorDiv(clock.getAsLong(), DAY);
+        double cap = WhisperConfig.animalOwnDailyCap();
+        double gain = cap > 0 ? Math.min(amount, cap - record.getOwnAnimalWhisper(day)) : amount;
+        if (gain <= 0) {
+            return;
+        }
+        record.addOwnAnimalWhisper(day, gain);
+        addTo(character, owner, gain, killer, false);
     }
 
     static boolean blade(ItemStack item) {
@@ -145,8 +233,16 @@ public final class WhisperService {
             addTo(character, player.getUniqueId().toString(), WhisperConfig.corruption(), player);
         }
         BloodRecord record = BloodRecords.get(character);
-        if (record != null && record.getStage() == BloodStage.NONE && record.getWhisper() > 0) {
+        if (record == null) {
+            return;
+        }
+        // The daily cap's count is kept until its day is over, even with the meter drained to 0.
+        boolean changed = record.forgetOwnAnimalWhisperBefore(Math.floorDiv(clock.getAsLong(), DAY));
+        if (record.getStage() == BloodStage.NONE && record.getWhisper() > 0) {
             record.setWhisper(record.getWhisper() - WhisperConfig.decayPerHour() / 6.0);
+            changed = true;
+        }
+        if (changed) {
             BloodRecords.save(record);
         }
     }
@@ -344,6 +440,7 @@ public final class WhisperService {
 
     public static void clear() {
         NEXT_VOICE.clear();
+        KEEPERS_AT_DEATH.clear();
     }
 
     private static double sessionEquilibrium(Player player) {

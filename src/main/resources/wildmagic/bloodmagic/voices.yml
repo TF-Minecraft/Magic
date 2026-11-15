@@ -9,10 +9,15 @@ whispers:
   fast_traits: [occultist]
   fast_multiplier: 3.0
   sources:
-    # Killing a listed animal with a blade.
-    animal_kill: 2.0
-    # Animal kills count this many times more at night or with nobody near.
-    alone_or_night_multiplier: 2.0
+    # Killing a listed animal with a blade. Keepers come from Cooking's husbandry records and a vanilla
+    # tamer; a wild animal (no keeper) never counts.
+    animal_kills:
+      # An animal other players keep and the killer doesn't. Counts for anyone; fast traits multiply it.
+      others: 4.0
+      # An animal the killer's account keeps. Fast-trait characters only, never multiplied.
+      own_fast_trait: 1.0
+      # Most whisper own animals give a character per UTC day (0 = no cap).
+      own_daily_cap: 2.0
     # A character you killed died for good (permanent kills only; knockouts never count).
     character_kill: 15.0
     # An evil RP session started by robbing, pickpocketing, lockpicking or looting a locked grave

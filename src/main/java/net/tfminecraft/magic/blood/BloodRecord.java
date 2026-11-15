@@ -46,6 +46,10 @@ public final class BloodRecord {
     private double resonance;
     /** Blood in the altar's pool once the path is complete; null until then (a full pool). */
     private Double pool;
+    /** The UTC day (days since the epoch) ownAnimalWhisper counts for. */
+    private long ownAnimalDay;
+    /** Whisper gained on ownAnimalDay from killing the character's own animals (the daily cap). */
+    private double ownAnimalWhisper;
 
     /**
      * One character sacrificed at the altar. rank: the victim's closeness rank when taken (1 = closest),
@@ -102,6 +106,9 @@ public final class BloodRecord {
         if (whisper < 0 || Double.isNaN(whisper)) {
             whisper = 0;
         }
+        if (ownAnimalWhisper < 0 || Double.isNaN(ownAnimalWhisper)) {
+            ownAnimalWhisper = 0;
+        }
         whisperLine = Math.max(0, whisperLine);
         huntPoints = Math.max(0, huntPoints);
         finalsDone = Math.max(0, finalsDone);
@@ -144,6 +151,29 @@ public final class BloodRecord {
 
     public double getWhisper() {
         return whisper;
+    }
+
+    /** Whisper own animals gave on this UTC day; 0 for any other day. */
+    public double getOwnAnimalWhisper(long day) {
+        return day == ownAnimalDay ? ownAnimalWhisper : 0;
+    }
+
+    /** Counts whisper from own animals toward this UTC day's cap, starting afresh on a new day. */
+    public void addOwnAnimalWhisper(long day, double amount) {
+        if (day != ownAnimalDay) {
+            ownAnimalDay = day;
+            ownAnimalWhisper = 0;
+        }
+        ownAnimalWhisper += amount;
+    }
+
+    /** Drops an earlier day's own-animal count, so the record can empty out; true when one was dropped. */
+    public boolean forgetOwnAnimalWhisperBefore(long day) {
+        if (ownAnimalWhisper <= 0 || ownAnimalDay >= day) {
+            return false;
+        }
+        ownAnimalWhisper = 0;
+        return true;
     }
 
     public void setWhisper(double whisper) {
@@ -298,6 +328,6 @@ public final class BloodRecord {
                 && species.isEmpty() && altarId == null && huntPoints == 0 && finalsDone == 0
                 && sacrifices.isEmpty() && finalTargets.isEmpty() && !pendingBacklash && !pendingNaming
                 && artefacts.isEmpty() && charges.isEmpty() && pending.isEmpty() && resonance <= 0
-                && pool == null;
+                && pool == null && ownAnimalWhisper <= 0;
     }
 }
