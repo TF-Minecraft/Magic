@@ -225,7 +225,10 @@ public final class BloodListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onLeash(PlayerLeashEntityEvent event) {
-        StolenClues.leashed(event.getEntity());
+        // Nothing is remembered while the path is off (the minute tick that forgets old leads doesn't run then).
+        if (BloodConfig.isEnabled()) {
+            StolenClues.leashed(event.getEntity());
+        }
     }
 
     /** The altar item is never set down as an ordinary block. */

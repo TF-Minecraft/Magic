@@ -299,6 +299,8 @@ public final class BloodCommand {
         }
         BloodRecords.delete(character);
         BloodPerms.refresh(player);
+        // The boons came from the record that is gone now.
+        BloodBoons.apply(player);
         sender.sendMessage(Messages.get("blood.admin.reset", "player", player.getName()));
     }
 

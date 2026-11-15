@@ -262,6 +262,10 @@ class BloodListenerTest {
       listener.onLeash(new org.bukkit.event.entity.PlayerLeashEntityEvent(cow, mage, mage, EquipmentSlot.HAND));
       assertTrue(StolenClues.remembers(cow.getUniqueId()));
       StolenClues.clear();
+      BloodConfig.setEnabled(false);
+      listener.onLeash(new org.bukkit.event.entity.PlayerLeashEntityEvent(cow, mage, mage, EquipmentSlot.HAND));
+      assertFalse(StolenClues.remembers(cow.getUniqueId()), "Leads are not tracked while the path is off");
+      BloodConfig.setEnabled(true);
 
       var trace = fx.world.spawn(mage.getLocation(), ItemDisplay.class);
       trace.getPersistentDataContainer().set(StolenClues.traceKey(), org.bukkit.persistence.PersistentDataType.LONG, 0L);
