@@ -7,7 +7,9 @@ import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.model.ElementDef;
+import net.tfminecraft.magic.modifier.ModifierParameters;
 import net.tfminecraft.magic.modifier.ModifierSet;
+import net.tfminecraft.magic.modifier.ModifierStat;
 import net.tfminecraft.magic.modifier.SpellModifiers;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.util.GuiText;
@@ -149,7 +151,8 @@ public final class ModifierLore {
      * One line. Damage and healing share a column while they match (the default, since
      * support follows damage); duration only shows when something sets it.
      */
-    private static String row(String prefix, ModifierSet modifiers) {
+    private static String row(String prefix, ModifierSet raw) {
+        ModifierSet modifiers = applied(raw);
         StringBuilder line = new StringBuilder(" ").append(prefix)
                 .append(stat("stat_mana", MANA_FALLBACK, "Mana", modifiers.mana(), false)).append("  ")
                 .append(stat("stat_cooldown", COOLDOWN_FALLBACK, "Cooldown", modifiers.cooldown(), false)).append("  ");
@@ -163,6 +166,20 @@ public final class ModifierLore {
             line.append("  ").append(stat("stat_duration", DURATION_FALLBACK, "Duration", modifiers.duration(), true));
         }
         return GuiText.format(line.toString());
+    }
+
+    /** Zeroes any stat that modifier_parameters points at no skill parameter, so rows show what casts get. */
+    static ModifierSet applied(ModifierSet modifiers) {
+        return new ModifierSet(
+                live(ModifierStat.MANA, modifiers),
+                live(ModifierStat.DAMAGE, modifiers),
+                live(ModifierStat.COOLDOWN, modifiers),
+                live(ModifierStat.SUPPORT, modifiers),
+                live(ModifierStat.DURATION, modifiers));
+    }
+
+    private static double live(ModifierStat stat, ModifierSet modifiers) {
+        return ModifierParameters.of(stat).isEmpty() ? 0.0 : modifiers.get(stat);
     }
 
     private static String stat(

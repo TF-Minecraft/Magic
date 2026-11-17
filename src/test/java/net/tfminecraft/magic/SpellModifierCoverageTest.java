@@ -335,6 +335,10 @@ class SpellModifierCoverageTest {
     assertEquals(List.of("shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));
     assertEquals(List.of("cooldown"), ModifierParameters.of(ModifierStat.COOLDOWN));
     verify(logger).warning(contains("'heal'"));
+    config.set("p.damage", List.of("damage"));
+    config.set("p.support", "Heal");
+    ModifierParameters.load(config.getConfigurationSection("p"), null);
+    assertEquals(List.of("heal"), ModifierParameters.of(ModifierStat.SUPPORT));
     config.set("p.support", List.of("shield_power", "shield_power"));
     ModifierParameters.load(config.getConfigurationSection("p"), null);
     assertEquals(List.of("shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));

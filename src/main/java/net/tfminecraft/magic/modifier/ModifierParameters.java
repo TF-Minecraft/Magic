@@ -40,7 +40,7 @@ public final class ModifierParameters {
         Map<ModifierStat, List<String>> loaded = new EnumMap<>(ModifierStat.class);
         Set<String> claimed = new HashSet<>();
         for (ModifierStat stat : ModifierStat.values()) {
-            List<String> raw = section.isSet(stat.key()) ? section.getStringList(stat.key()) : DEFAULTS.get(stat);
+            List<String> raw = raw(section, stat);
             List<String> parameters = new ArrayList<>();
             for (String entry : raw) {
                 if (entry.isBlank()) {
@@ -59,6 +59,17 @@ public final class ModifierParameters {
             loaded.put(stat, Collections.unmodifiableList(parameters));
         }
         current = Collections.unmodifiableMap(loaded);
+    }
+
+    /** A list as written; a single name ({@code support: heal}) counts as a one-entry list. */
+    private static List<String> raw(ConfigurationSection section, ModifierStat stat) {
+        if (!section.isSet(stat.key())) {
+            return DEFAULTS.get(stat);
+        }
+        if (section.isList(stat.key())) {
+            return section.getStringList(stat.key());
+        }
+        return List.of(section.getString(stat.key(), ""));
     }
 
     private static Map<ModifierStat, List<String>> defaults() {

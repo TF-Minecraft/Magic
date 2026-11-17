@@ -328,13 +328,37 @@ class ResonanceGuiCoverageTest extends GearCoverageSupport {
     ElementRegistry.register(cerrith);
     var session = new ResonanceSession();
     session.setResonance("cerrith", 100);
+    // Duration reaches no parameter by default, so it is not shown.
     assertEquals(
-        " Mana -20%  Cooldown -15%  Damage 0%  Healing +10%  Duration +5%",
+        " Mana -20%  Cooldown -15%  Damage 0%  Healing +10%",
         plain(ModifierLore.linesForElement(cerrith, session, null)).get(1));
     session.setResonance("cerrith", 0);
     assertEquals(
         " Mana 0%  Cooldown 0%  Damage -20%  Healing 0%",
         plain(ModifierLore.linesForElement(cerrith, session, null)).get(1));
+    // A stat modifier_parameters turns off shows 0, the same as a cast gets.
+    var config = new YamlConfiguration();
+    config.set("p.support", List.of());
+    config.set("p.duration", List.of());
+    try {
+      ModifierParameters.load(config.getConfigurationSection("p"), null);
+      session.setResonance("cerrith", 50);
+      assertEquals(
+          " Mana -10%  Cooldown -7.5%  Damage -10%  Healing 0%",
+          plain(ModifierLore.linesForElement(cerrith, session, null)).get(1));
+      session.setResonance("cerrith", 100);
+      config.set("p.duration", List.of("duration"));
+      config.set("p.mana", List.of());
+      config.set("p.cooldown", List.of());
+      config.set("p.damage", List.of());
+      config.set("p.support", List.of("heal"));
+      ModifierParameters.load(config.getConfigurationSection("p"), null);
+      assertEquals(
+          " Mana 0%  Cooldown 0%  Damage 0%  Healing +10%  Duration +5%",
+          plain(ModifierLore.linesForElement(cerrith, session, null)).get(1));
+    } finally {
+      ModifierParameters.reset();
+    }
   }
 
   @Test
