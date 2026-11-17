@@ -208,7 +208,7 @@ class SpellDomainTest {
     assertEquals(.15, SpellModifiers.drift(-60).damage());
     assertEquals(.25, SpellModifiers.drift(100).damage());
     assertTrue(SpellModifiers.combine(null, null).isZero());
-    assertEquals(.1, SpellModifiers.combine(new ModifierTriple(0, .1, 0), null).damage(), 1e-10);
+    assertEquals(.1, SpellModifiers.combine(new ModifierSet(0, .1, 0), null).damage(), 1e-10);
     assertTrue(SpellModifiers.alignment((ItemStack) null, "fire").isZero());
     assertTrue(SpellModifiers.alignment((WeaponRequirement) null, "fire").isZero());
     var req = WeaponRequirement.fromItem(new ItemStack(Material.STICK));
@@ -216,7 +216,7 @@ class SpellDomainTest {
     assertTrue(SpellModifiers.alignment(req, "fire").isZero());
     req.mergeAmounts(Map.of("fire", 20.));
     TierBands.register(null, 1, 1);
-    var triple = new ModifierTriple(0, .2, 0);
+    var triple = new ModifierSet(0, .2, 0);
     GearCache.putAlignment(1, triple);
     assertSame(triple, SpellModifiers.alignment(req, "fire"));
     GearCache.alignmentEnabled = false;

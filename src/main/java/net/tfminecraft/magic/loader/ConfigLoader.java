@@ -20,7 +20,8 @@ import net.tfminecraft.magic.attunement.ArtifactCareCache;
 import net.tfminecraft.magic.meditation.MeditationCache;
 import net.tfminecraft.magic.modifier.DriftCache;
 import net.tfminecraft.magic.modifier.KeyframeCurve;
-import net.tfminecraft.magic.modifier.ModifierTriple;
+import net.tfminecraft.magic.modifier.ModifierParameters;
+import net.tfminecraft.magic.modifier.ModifierSet;
 
 public final class ConfigLoader implements LoaderInterface {
 
@@ -75,6 +76,8 @@ public final class ConfigLoader implements LoaderInterface {
             Cache.defaultEquilibrium = config.getDouble(
                     "default_corruption_tranquility", Cache.defaultEquilibrium);
         }
+
+        ModifierParameters.load(config.getConfigurationSection("modifier_parameters"), Magic.plugin.getLogger());
 
         long intervalTicks = config.getLong("tick.interval_ticks", Cache.tickIntervalTicks);
         Cache.tickIntervalTicks = intervalTicks > 0 ? intervalTicks : Cache.tickIntervalTicks;
@@ -205,7 +208,7 @@ public final class ConfigLoader implements LoaderInterface {
             }
             try {
                 net.tfminecraft.magic.gear.GearCache.putAlignment(
-                        Integer.parseInt(key.trim()), ModifierTriple.from(row));
+                        Integer.parseInt(key.trim()), ModifierSet.from(row));
             } catch (NumberFormatException ex) {
                 Magic.plugin.getLogger().warning("[Magic] gear.alignment band '" + key + "' is not a number");
             }

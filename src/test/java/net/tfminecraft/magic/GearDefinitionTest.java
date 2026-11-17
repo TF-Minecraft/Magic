@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 import net.tfminecraft.magic.gear.*;
-import net.tfminecraft.magic.modifier.ModifierTriple;
+import net.tfminecraft.magic.modifier.ModifierSet;
 import org.bukkit.Material;
 import org.junit.jupiter.api.*;
 
@@ -233,17 +233,17 @@ class GearDefinitionTest {
     assertEquals(Material.STICK, GearType.STAFF.getIcon());
     assertEquals("Staff", GearType.STAFF.getDisplayName());
     GearCache.clearAlignment();
-    GearCache.putAlignment(0, ModifierTriple.ZERO);
+    GearCache.putAlignment(0, ModifierSet.ZERO);
     GearCache.putAlignment(1, null);
     assertEquals(0, GearCache.alignmentBands());
-    var triple = new ModifierTriple(.1, .2, .3);
+    var triple = new ModifierSet(.1, .2, .3);
     GearCache.putAlignment(2, triple);
     assertEquals(1, GearCache.alignmentBands());
     GearCache.alignmentEnabled = false;
-    assertSame(ModifierTriple.ZERO, GearCache.alignment(2));
+    assertSame(ModifierSet.ZERO, GearCache.alignment(2));
     GearCache.alignmentEnabled = true;
-    assertSame(ModifierTriple.ZERO, GearCache.alignment(0));
-    assertSame(ModifierTriple.ZERO, GearCache.alignment(1));
+    assertSame(ModifierSet.ZERO, GearCache.alignment(0));
+    assertSame(ModifierSet.ZERO, GearCache.alignment(1));
     assertSame(triple, GearCache.alignment(2));
     var type = new PartTypeDef(" head ", 4);
     assertEquals("head", type.getId());

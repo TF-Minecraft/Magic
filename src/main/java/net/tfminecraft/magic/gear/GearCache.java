@@ -3,7 +3,7 @@ package net.tfminecraft.magic.gear;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import net.tfminecraft.magic.modifier.ModifierTriple;
+import net.tfminecraft.magic.modifier.ModifierSet;
 
 public final class GearCache {
 
@@ -21,7 +21,7 @@ public final class GearCache {
     public static boolean socketRarityPrefix = false;
 
     /** Weapon tier band in the spell's element -> bonus. Never a penalty. */
-    private static final Map<Integer, ModifierTriple> ALIGNMENT = new LinkedHashMap<>();
+    private static final Map<Integer, ModifierSet> ALIGNMENT = new LinkedHashMap<>();
 
     private GearCache() {}
 
@@ -29,18 +29,18 @@ public final class GearCache {
         ALIGNMENT.clear();
     }
 
-    public static void putAlignment(int band, ModifierTriple triple) {
+    public static void putAlignment(int band, ModifierSet triple) {
         if (band > 0 && triple != null) {
             ALIGNMENT.put(band, triple);
         }
     }
 
-    public static ModifierTriple alignment(int band) {
+    public static ModifierSet alignment(int band) {
         if (!alignmentEnabled || band <= 0) {
-            return ModifierTriple.ZERO;
+            return ModifierSet.ZERO;
         }
-        ModifierTriple triple = ALIGNMENT.get(band);
-        return triple == null ? ModifierTriple.ZERO : triple;
+        ModifierSet triple = ALIGNMENT.get(band);
+        return triple == null ? ModifierSet.ZERO : triple;
     }
 
     public static int alignmentBands() {

@@ -52,6 +52,7 @@ class SpellModifierCoverageTest {
 
   @AfterEach
   void cleanup() {
+    ModifierParameters.reset();
     SpellModifierApplyService.clearAll();
     Magic.plugin = null;
     SkillElementRegistry.clear();
@@ -107,6 +108,7 @@ class SpellModifierCoverageTest {
     var data = mock(MMOPlayerData.class);
     when(data.isOnline()).thenReturn(true);
     var handler = mock(SkillHandler.class);
+    when(handler.getParameters()).thenReturn(Set.of("damage"));
     var observed = new ArrayList<List<?>>();
     try (var b = mockStatic(Bukkit.class, CALLS_REAL_METHODS);
         var players = mockStatic(MMOPlayerData.class);
@@ -121,10 +123,10 @@ class SpellModifierCoverageTest {
       SkillElementRegistry.register("fireball", "fire");
       ids.when(() -> SkillIdResolver.handlerForBinding("fireball")).thenReturn(handler);
       mods.when(() -> SpellModifiers.resonance(eq("fire"), anyDouble()))
-          .thenReturn(new ModifierTriple(.1, .2, -.1));
-      mods.when(() -> SpellModifiers.drift(anyDouble())).thenReturn(ModifierTriple.ZERO);
+          .thenReturn(new ModifierSet(.1, .2, -.1));
+      mods.when(() -> SpellModifiers.drift(anyDouble())).thenReturn(ModifierSet.ZERO);
       mods.when(() -> SpellModifiers.alignment(any(WeaponRequirement.class), eq("fire")))
-          .thenReturn(ModifierTriple.ZERO);
+          .thenReturn(ModifierSet.ZERO);
       SpellModifierApplyService.sync(p, session);
       assertEquals(3, made.constructed().size());
       assertEquals("magic-mana-fireball", observed.getFirst().get(0));
@@ -140,7 +142,7 @@ class SpellModifierCoverageTest {
       assertEquals(6, made.constructed().size());
       for (var modifier : made.constructed().subList(0, 3)) verify(modifier).unregister(data);
       mods.when(() -> SpellModifiers.resonance(eq("fire"), anyDouble()))
-          .thenReturn(ModifierTriple.ZERO);
+          .thenReturn(ModifierSet.ZERO);
       SpellModifierApplyService.sync(p, live);
       assertEquals(6, made.constructed().size());
       for (var modifier : made.constructed().subList(3, 6)) verify(modifier).unregister(data);
@@ -224,17 +226,19 @@ class SpellModifierCoverageTest {
     var ctor = planClass.getDeclaredConstructors()[0];
     ctor.setAccessible(true);
     var handler = mock(SkillHandler.class);
-    Object base = ctor.newInstance("skill", handler, .1, .2, .3);
-    Object same = ctor.newInstance("skill", handler, .1, .2, .3);
+    Object base = ctor.newInstance("skill", handler, new ModifierSet(.1, .2, .3, .4, .5));
+    Object same = ctor.newInstance("skill", handler, new ModifierSet(.1, .2, .3, .4, .5));
     assertEquals(base, base);
     assertNotEquals(base, null);
     assertNotEquals(base, "other");
     assertEquals(base, same);
     assertEquals(base.hashCode(), same.hashCode());
-    assertNotEquals(base, ctor.newInstance("other", handler, .1, .2, .3));
-    assertNotEquals(base, ctor.newInstance("skill", handler, .2, .2, .3));
-    assertNotEquals(base, ctor.newInstance("skill", handler, .1, .3, .3));
-    assertNotEquals(base, ctor.newInstance("skill", handler, .1, .2, .4));
+    assertNotEquals(base, ctor.newInstance("other", handler, new ModifierSet(.1, .2, .3, .4, .5)));
+    assertNotEquals(base, ctor.newInstance("skill", handler, new ModifierSet(.2, .2, .3, .4, .5)));
+    assertNotEquals(base, ctor.newInstance("skill", handler, new ModifierSet(.1, .3, .3, .4, .5)));
+    assertNotEquals(base, ctor.newInstance("skill", handler, new ModifierSet(.1, .2, .4, .4, .5)));
+    assertNotEquals(base, ctor.newInstance("skill", handler, new ModifierSet(.1, .2, .3, .5, .5)));
+    assertNotEquals(base, ctor.newInstance("skill", handler, new ModifierSet(.1, .2, .3, .4, .6)));
     var snapshot =
         Class.forName("net.tfminecraft.magic.integration.SpellModifierApplyService$DesiredSnapshot")
             .getDeclaredConstructors()[0];
@@ -248,5 +252,118 @@ class SpellModifierCoverageTest {
     assertNotEquals(first, "other");
     assertNotEquals(first, snapshot.newInstance(new TreeMap<>(Map.of("fire", 1)), List.of(base)));
     assertNotEquals(first, snapshot.newInstance(new TreeMap<>(), List.of()));
+  }
+
+  @Test
+  void healShieldAndBurnFollowTheirStatsOnlyOnSkillsThatDeclareThem() {
+    var p = server.addPlayer();
+    var session = new ResonanceSession();
+    var data = mock(MMOPlayerData.class);
+    when(data.isOnline()).thenReturn(true);
+    var orb = mock(SkillHandler.class);
+    when(orb.getParameters()).thenReturn(Set.of("heal"));
+    var glyph = mock(SkillHandler.class);
+    when(glyph.getParameters()).thenReturn(Set.of("duration", "shield_power", "shield_duration"));
+    var breath = mock(SkillHandler.class);
+    when(breath.getParameters()).thenReturn(Set.of("burnt_damage", "burnt_duration"));
+    var observed = new ArrayList<List<?>>();
+    try (var b = mockStatic(Bukkit.class, CALLS_REAL_METHODS);
+        var players = mockStatic(MMOPlayerData.class);
+        var ids = mockStatic(SkillIdResolver.class);
+        var hands = mockStatic(GearHand.class);
+        var mods = mockStatic(SpellModifiers.class, CALLS_REAL_METHODS);
+        var made = mockConstruction(SkillModifier.class, (m, c) -> observed.add(c.arguments()))) {
+      var pm = mock(PluginManager.class);
+      when(pm.isPluginEnabled(anyString())).thenReturn(true);
+      b.when(Bukkit::getPluginManager).thenReturn(pm);
+      players.when(() -> MMOPlayerData.getOrNull(p)).thenReturn(data);
+      SkillElementRegistry.register("healing_orb", "cerrith");
+      SkillElementRegistry.register("cerrith_glyph", "cerrith");
+      SkillElementRegistry.register("fire_breath", "oseni");
+      ids.when(() -> SkillIdResolver.handlerForBinding("healing_orb")).thenReturn(orb);
+      ids.when(() -> SkillIdResolver.handlerForBinding("cerrith_glyph")).thenReturn(glyph);
+      ids.when(() -> SkillIdResolver.handlerForBinding("fire_breath")).thenReturn(breath);
+      // Full tranquility: damage and support +25%, nothing from resonance.
+      mods.when(() -> SpellModifiers.resonance(anyString(), anyDouble())).thenReturn(ModifierSet.ZERO);
+      mods.when(() -> SpellModifiers.drift(anyDouble()))
+          .thenReturn(new ModifierSet(0, .25, 0, .25, .25));
+      mods.when(() -> SpellModifiers.alignment(any(WeaponRequirement.class), anyString()))
+          .thenReturn(ModifierSet.ZERO);
+      SpellModifierApplyService.sync(p, session);
+      var keys = observed.stream().map(a -> (String) a.get(0)).sorted().toList();
+      assertEquals(
+          List.of(
+              "magic-burnt_damage-fire_breath",
+              "magic-heal-healing_orb",
+              "magic-shield_power-cerrith_glyph"),
+          keys);
+      for (var args : observed) {
+        assertEquals(25., (Double) args.get(3), 1e-8);
+        assertEquals(args.get(0).toString().split("-")[1], args.get(1));
+      }
+
+      // Turning duration on reaches durations the skill declares; turning support off drops heals.
+      var config = new org.bukkit.configuration.file.YamlConfiguration();
+      config.set("modifier_parameters.duration", List.of("duration", "burnt_duration"));
+      config.set("modifier_parameters.support", List.of());
+      ModifierParameters.load(config.getConfigurationSection("modifier_parameters"), null);
+      observed.clear();
+      SpellModifierApplyService.syncOnline(sessionsFor(p, session));
+      keys = observed.stream().map(a -> (String) a.get(0)).sorted().toList();
+      assertEquals(
+          List.of(
+              "magic-burnt_damage-fire_breath",
+              "magic-burnt_duration-fire_breath",
+              "magic-duration-cerrith_glyph"),
+          keys);
+    }
+  }
+
+  @Test
+  void parameterMapKeepsDefaultsForMissingStatsAndGivesEachParameterOneStat() {
+    ModifierParameters.load(null, null);
+    assertEquals(List.of("damage", "burnt_damage"), ModifierParameters.of(ModifierStat.DAMAGE));
+    assertEquals(List.of("heal", "shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));
+    assertEquals(List.of(), ModifierParameters.of(ModifierStat.DURATION));
+    assertEquals(List.of("mana"), ModifierParameters.of(ModifierStat.MANA));
+    var logger = mock(java.util.logging.Logger.class);
+    var config = new org.bukkit.configuration.file.YamlConfiguration();
+    config.set("p.damage", List.of(" Damage ", "", "heal"));
+    config.set("p.support", List.of("heal", "shield_power"));
+    ModifierParameters.load(config.getConfigurationSection("p"), logger);
+    assertEquals(List.of("damage", "heal"), ModifierParameters.of(ModifierStat.DAMAGE));
+    assertEquals(List.of("shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));
+    assertEquals(List.of("cooldown"), ModifierParameters.of(ModifierStat.COOLDOWN));
+    verify(logger).warning(contains("'heal'"));
+    config.set("p.support", List.of("shield_power", "shield_power"));
+    ModifierParameters.load(config.getConfigurationSection("p"), null);
+    assertEquals(List.of("shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));
+    ModifierParameters.reset();
+    assertEquals(List.of("heal", "shield_power"), ModifierParameters.of(ModifierStat.SUPPORT));
+  }
+
+  @Test
+  void baseParametersNeedNoDeclarationAndOthersDo() {
+    var handler = mock(SkillHandler.class);
+    when(handler.getParameters()).thenReturn(null);
+    assertTrue(SpellModifierApplyService.hasParameter(handler, "mana"));
+    assertTrue(SpellModifierApplyService.hasParameter(handler, "cooldown"));
+    assertFalse(SpellModifierApplyService.hasParameter(handler, "heal"));
+    when(handler.getParameters()).thenReturn(Set.of("heal"));
+    assertTrue(SpellModifierApplyService.hasParameter(handler, "heal"));
+    assertFalse(SpellModifierApplyService.hasParameter(handler, "damage"));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ResonanceSessionManager sessionsFor(Player p, ResonanceSession session) {
+    var sessions = mock(ResonanceSessionManager.class);
+    doAnswer(
+            a -> {
+              ((BiConsumer<Player, ResonanceSession>) a.getArgument(0)).accept(p, session);
+              return null;
+            })
+        .when(sessions)
+        .forEachOnlineSession(any());
+    return sessions;
   }
 }
