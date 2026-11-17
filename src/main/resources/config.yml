@@ -28,6 +28,19 @@ equilibrium:
     0:   { mana: 0, damage: 0, cooldown: 0 }
     100: { mana: -0.20, damage: 0.25, cooldown: -0.05 }
 
+# Which skill parameters each spell modifier reaches (resonance in elements.yml, the
+# surge/tranquility curves above, gear.alignment below). Every curve point takes
+# mana, damage, cooldown and optionally support and duration. Support is heal and
+# shield power: a point without it copies its damage. Duration is 0 unless set.
+# A stat left out here keeps the list shown; [] turns it off. Parameters a skill does
+# not declare are skipped.
+modifier_parameters:
+  mana: [mana]
+  cooldown: [cooldown]
+  damage: [damage, burnt_damage]
+  support: [heal, shield_power]
+  duration: []
+
 # School rune MMOItems type ids (item-types.yml) that /magic rune keybind can rebind.
 runes:
   types:

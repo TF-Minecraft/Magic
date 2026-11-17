@@ -47,6 +47,8 @@ colors:
   stat_mana: "#5b9bd4"
   stat_damage: "#c45c4a"
   stat_cooldown: "#7dba6e"
+  stat_support: "#e0c45c"
+  stat_duration: "#b48ad6"
 
 resonance:
   bar_segments: 20

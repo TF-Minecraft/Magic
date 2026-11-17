@@ -17,14 +17,14 @@ class CurveEdgeCoverageTest {
     cfg.set(" .damage", .8);
     assertEquals(1, KeyframeCurve.fromSection(cfg).size());
     assertEquals(0, KeyframeCurve.fromSection(cfg).sample(25).damage());
-    var keys = new TreeMap<Double, ModifierTriple>();
-    keys.put(0., ModifierTriple.ZERO);
-    keys.put(Double.NaN, new ModifierTriple(0, .5, 0));
-    keys.put(Double.POSITIVE_INFINITY, new ModifierTriple(0, .7, 0));
+    var keys = new TreeMap<Double, ModifierSet>();
+    keys.put(0., ModifierSet.ZERO);
+    keys.put(Double.NaN, new ModifierSet(0, .5, 0));
+    keys.put(Double.POSITIVE_INFINITY, new ModifierSet(0, .7, 0));
     assertEquals(1, new KeyframeCurve(keys).size());
     assertEquals(0, new KeyframeCurve(keys).sample(25).damage());
     assertEquals(
-        1, new KeyframeCurve(new TreeMap<>(Map.of(Double.NaN, ModifierTriple.ZERO))).size());
+        1, new KeyframeCurve(new TreeMap<>(Map.of(Double.NaN, ModifierSet.ZERO))).size());
   }
 
   @Test
@@ -34,11 +34,11 @@ class CurveEdgeCoverageTest {
             new TreeMap<>(
                 Map.of(
                     0.,
-                    ModifierTriple.ZERO,
+                    ModifierSet.ZERO,
                     10.,
-                    new ModifierTriple(0, .2, 0),
+                    new ModifierSet(0, .2, 0),
                     20.,
-                    new ModifierTriple(0, .4, 0))));
+                    new ModifierSet(0, .4, 0))));
     assertEquals(.2, curve.sample(10).damage());
     assertEquals(.1, curve.sample(5).damage(), 1e-12);
     assertEquals(0, curve.sample(Double.NaN).damage());

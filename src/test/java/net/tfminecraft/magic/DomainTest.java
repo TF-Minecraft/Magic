@@ -104,8 +104,8 @@ class DomainTest {
 
   @Test
   void modifiersInterpolateMultiplyAndClamp() {
-    var a = new ModifierTriple(.2, -.2, .3);
-    var b = new ModifierTriple(.4, .2, -.1);
+    var a = new ModifierSet(.2, -.2, .3);
+    var b = new ModifierSet(.4, .2, -.1);
     assertSame(a, a.lerp(null, .5));
     assertSame(a, a.lerp(b, 0));
     assertSame(b, a.lerp(b, 1));
@@ -115,19 +115,50 @@ class DomainTest {
     assertEquals(.68, a.combine(b).mana(), 1e-10);
     assertEquals(-.04, a.combine(b).damage(), 1e-10);
     assertEquals(.17, a.combine(b).cooldown(), 1e-10);
-    var clamped = new ModifierTriple(4, -4, -4).clamp();
+    var clamped = new ModifierSet(4, -4, -4).clamp();
     assertEquals(.9, clamped.mana());
     assertEquals(-.9, clamped.damage());
     assertEquals(-.5, clamped.cooldown());
     assertEquals(.2, a.combine(null).mana());
-    assertTrue(ModifierTriple.ZERO.isZero());
+    assertTrue(ModifierSet.ZERO.isZero());
     assertFalse(a.isZero());
-    assertFalse(new ModifierTriple(0, 1, 0).isZero());
-    assertFalse(new ModifierTriple(0, 0, 1).isZero());
-    assertSame(ModifierTriple.ZERO, ModifierTriple.from(null));
+    assertFalse(new ModifierSet(0, 1, 0).isZero());
+    assertFalse(new ModifierSet(0, 0, 0, 1, 0).isZero());
+    assertFalse(new ModifierSet(0, 0, 0, 0, 1).isZero());
+    assertFalse(new ModifierSet(0, 0, 1).isZero());
+    assertFalse(new ModifierSet(1, 0, 0).isZero());
+    // Support follows damage unless set; duration is off unless set.
+    var support = new ModifierSet(.1, .2, .3, .4, .5);
+    assertEquals(-.2, a.support(), 1e-10);
+    assertEquals(0, a.duration(), 1e-10);
+    assertEquals(.1, support.get(ModifierStat.MANA), 1e-10);
+    assertEquals(.2, support.get(ModifierStat.DAMAGE), 1e-10);
+    assertEquals(.3, support.get(ModifierStat.COOLDOWN), 1e-10);
+    assertEquals(.4, support.get(ModifierStat.SUPPORT), 1e-10);
+    assertEquals(.5, support.get(ModifierStat.DURATION), 1e-10);
+    assertEquals("support", ModifierStat.SUPPORT.key());
+    var mid = support.lerp(ModifierSet.ZERO, .5);
+    assertEquals(.2, mid.support(), 1e-10);
+    assertEquals(.25, mid.duration(), 1e-10);
+    var both = support.combine(support);
+    assertEquals(.9, both.support(), 1e-10);
+    assertEquals(.9, both.duration(), 1e-10);
+    var low = new ModifierSet(0, 0, 0, -4, -4).clamp();
+    assertEquals(-.9, low.support());
+    assertEquals(-.9, low.duration());
+    var yaml = new org.bukkit.configuration.file.YamlConfiguration();
+    yaml.set("damage", .25);
+    assertEquals(.25, ModifierSet.from(yaml).support(), 1e-10);
+    assertEquals(0, ModifierSet.from(yaml).duration(), 1e-10);
+    yaml.set("support", 0.0);
+    yaml.set("duration", .1);
+    assertEquals(0, ModifierSet.from(yaml).support(), 1e-10);
+    assertEquals(.1, ModifierSet.from(yaml).duration(), 1e-10);
+    assertFalse(new ModifierSet(0, 0, 1).isZero());
+    assertSame(ModifierSet.ZERO, ModifierSet.from(null));
     var config = new YamlConfiguration();
     config.set("mana", .5);
-    assertEquals(.5, ModifierTriple.from(config).mana());
+    assertEquals(.5, ModifierSet.from(config).mana());
   }
 
   @Test

@@ -14,22 +14,22 @@ public final class SpellModifiers {
 
     private SpellModifiers() {}
 
-    public static ModifierTriple resonance(String elementId, double amount) {
+    public static ModifierSet resonance(String elementId, double amount) {
         ElementDef element = resolve(elementId);
         if (element == null) {
-            return ModifierTriple.ZERO;
+            return ModifierSet.ZERO;
         }
         return element.getResonanceCurve().sample(amount);
     }
 
-    public static ModifierTriple drift(double equilibrium) {
+    public static ModifierSet drift(double equilibrium) {
         if (equilibrium < 0.0) {
             return DriftCache.surge.sample(Math.abs(equilibrium));
         }
         if (equilibrium > 0.0) {
             return DriftCache.tranquility.sample(equilibrium);
         }
-        return ModifierTriple.ZERO;
+        return ModifierSet.ZERO;
     }
 
     /**
@@ -38,46 +38,46 @@ public final class SpellModifiers {
      * contributes nothing rather than a penalty, because a weapon that cannot carry the
      * element refuses the cast outright.
      */
-    public static ModifierTriple alignment(ItemStack weapon, String elementId) {
+    public static ModifierSet alignment(ItemStack weapon, String elementId) {
         if (weapon == null) {
-            return ModifierTriple.ZERO;
+            return ModifierSet.ZERO;
         }
         return alignment(WeaponRequirement.fromItem(weapon), elementId);
     }
 
-    public static ModifierTriple alignment(WeaponRequirement requirement, String elementId) {
+    public static ModifierSet alignment(WeaponRequirement requirement, String elementId) {
         if (requirement == null || !GearCache.alignmentEnabled || resolve(elementId) == null) {
-            return ModifierTriple.ZERO;
+            return ModifierSet.ZERO;
         }
         double fill = requirement.aura().getFill(elementId);
         if (fill <= 0) {
-            return ModifierTriple.ZERO;
+            return ModifierSet.ZERO;
         }
         return GearCache.alignment(TierBands.bandOf(elementId, fill));
     }
 
-    public static ModifierTriple combine(ModifierTriple a, ModifierTriple b) {
+    public static ModifierSet combine(ModifierSet a, ModifierSet b) {
         if (a == null) {
-            a = ModifierTriple.ZERO;
+            a = ModifierSet.ZERO;
         }
         if (b == null) {
-            b = ModifierTriple.ZERO;
+            b = ModifierSet.ZERO;
         }
         return a.combine(b);
     }
 
     /** Batch 2 lore: resonance curve at 100. */
-    public static ModifierTriple resonanceAt100(String elementId) {
+    public static ModifierSet resonanceAt100(String elementId) {
         return resonance(elementId, 100.0);
     }
 
     /** Batch 2 lore: surge curve at 60. */
-    public static ModifierTriple surgeAt60() {
+    public static ModifierSet surgeAt60() {
         return DriftCache.surge.sample(60.0);
     }
 
     /** Batch 2 lore: tranquility curve at 100. */
-    public static ModifierTriple tranquilityAt100() {
+    public static ModifierSet tranquilityAt100() {
         return DriftCache.tranquility.sample(100.0);
     }
 

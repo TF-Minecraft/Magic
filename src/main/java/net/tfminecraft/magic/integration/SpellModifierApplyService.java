@@ -23,7 +23,9 @@ import net.tfminecraft.magic.charge.TierBands;
 import net.tfminecraft.magic.gear.GearCache;
 import net.tfminecraft.magic.gear.GearHand;
 import net.tfminecraft.magic.gear.WeaponRequirement;
-import net.tfminecraft.magic.modifier.ModifierTriple;
+import net.tfminecraft.magic.modifier.ModifierParameters;
+import net.tfminecraft.magic.modifier.ModifierSet;
+import net.tfminecraft.magic.modifier.ModifierStat;
 import net.tfminecraft.magic.modifier.SpellModifiers;
 import net.tfminecraft.magic.registry.SkillElementRegistry;
 import net.tfminecraft.magic.session.ResonanceSession;
@@ -33,6 +35,7 @@ public final class SpellModifierApplyService {
     private static final Map<UUID, AppliedState> applied = new ConcurrentHashMap<>();
     private static final Map<String, SkillHandler<?>> handlers = new ConcurrentHashMap<>();
     private static final Set<String> unknownWarned = ConcurrentHashMap.newKeySet();
+    private static final Set<String> BASE_PARAMETERS = Set.of("mana", "cooldown", "stamina", "timer");
     private static boolean missingLogged;
 
     private SpellModifierApplyService() {}
@@ -124,14 +127,16 @@ public final class SpellModifierApplyService {
         unregisterStored(player, data);
         List<SkillModifier> next = new ArrayList<>();
         for (SkillPlan plan : desired.skills) {
-            if (plan.mana != 0.0) {
-                next.add(register(data, plan.skillId, "mana", plan.handler, plan.mana));
-            }
-            if (plan.cooldown != 0.0) {
-                next.add(register(data, plan.skillId, "cooldown", plan.handler, plan.cooldown));
-            }
-            if (plan.damage != 0.0) {
-                next.add(register(data, plan.skillId, "damage", plan.handler, plan.damage));
+            for (ModifierStat stat : ModifierStat.values()) {
+                double value = plan.modifiers.get(stat);
+                if (value == 0.0) {
+                    continue;
+                }
+                for (String parameter : ModifierParameters.of(stat)) {
+                    if (hasParameter(plan.handler, parameter)) {
+                        next.add(register(data, plan.skillId, parameter, plan.handler, value));
+                    }
+                }
             }
         }
         applied.put(player.getUniqueId(), new AppliedState(session.modifierRevision(), desired, next));
@@ -151,12 +156,12 @@ public final class SpellModifierApplyService {
                 continue;
             }
             String elementId = binding.getValue();
-            ModifierTriple triple = SpellModifiers.combine(
+            ModifierSet modifiers = SpellModifiers.combine(
                     SpellModifiers.combine(
                             SpellModifiers.resonance(elementId, session.getResonance(elementId)),
                             SpellModifiers.drift(equilibrium)),
                     SpellModifiers.alignment(requirement, elementId));
-            skills.add(new SkillPlan(skillId, handler, triple.mana(), triple.cooldown(), triple.damage()));
+            skills.add(new SkillPlan(skillId, handler, modifiers));
         }
         return new DesiredSnapshot(alignmentBands, skills);
     }
@@ -189,6 +194,19 @@ public final class SpellModifierApplyService {
             handlers.put(skillId, resolved);
         }
         return resolved;
+    }
+
+    /**
+     * MythicLib gives every skill mana and cooldown (and stamina and timer) without
+     * listing them; other parameters only exist when the skill declares them, so a heal
+     * modifier is never left on a damage spell.
+     */
+    public static boolean hasParameter(SkillHandler<?> handler, String parameter) {
+        if (BASE_PARAMETERS.contains(parameter)) {
+            return true;
+        }
+        Set<String> declared = handler.getParameters();
+        return declared != null && declared.contains(parameter);
     }
 
     private static SkillModifier register(
@@ -276,21 +294,12 @@ public final class SpellModifierApplyService {
     private static final class SkillPlan {
         private final String skillId;
         private final SkillHandler<?> handler;
-        private final double mana;
-        private final double cooldown;
-        private final double damage;
+        private final ModifierSet modifiers;
 
-        private SkillPlan(
-                String skillId,
-                SkillHandler<?> handler,
-                double mana,
-                double cooldown,
-                double damage) {
+        private SkillPlan(String skillId, SkillHandler<?> handler, ModifierSet modifiers) {
             this.skillId = skillId;
             this.handler = handler;
-            this.mana = mana;
-            this.cooldown = cooldown;
-            this.damage = damage;
+            this.modifiers = modifiers;
         }
 
         @Override
@@ -301,15 +310,24 @@ public final class SpellModifierApplyService {
             if (!(obj instanceof SkillPlan other)) {
                 return false;
             }
-            return Objects.equals(skillId, other.skillId)
-                    && Double.compare(mana, other.mana) == 0
-                    && Double.compare(cooldown, other.cooldown) == 0
-                    && Double.compare(damage, other.damage) == 0;
+            if (!Objects.equals(skillId, other.skillId)) {
+                return false;
+            }
+            for (ModifierStat stat : ModifierStat.values()) {
+                if (Double.compare(modifiers.get(stat), other.modifiers.get(stat)) != 0) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(skillId, mana, cooldown, damage);
+            int hash = Objects.hashCode(skillId);
+            for (ModifierStat stat : ModifierStat.values()) {
+                hash = 31 * hash + Double.hashCode(modifiers.get(stat));
+            }
+            return hash;
         }
     }
 }

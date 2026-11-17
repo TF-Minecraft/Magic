@@ -3,6 +3,9 @@
 # Row 3 (third from bottom): Cerrith, Seithr, Oseni, Mitlan
 # Row 4 (second from bottom): Shadowmancy, Necromancy, Bloodmagic
 # Special schools (rows 2 and 4) stay hidden until the player holds magic.<id>.
+# Resonance points take mana, damage and cooldown, plus optional support (heal and
+# shield power; copies damage when left out) and duration. See modifier_parameters
+# in config.yml.
 
 cerrith:
   name: "Cerrith"

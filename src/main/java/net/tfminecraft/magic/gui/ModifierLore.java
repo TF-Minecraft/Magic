@@ -7,7 +7,9 @@ import org.bukkit.inventory.ItemStack;
 
 import net.tfminecraft.magic.GuiCache;
 import net.tfminecraft.magic.model.ElementDef;
-import net.tfminecraft.magic.modifier.ModifierTriple;
+import net.tfminecraft.magic.modifier.ModifierParameters;
+import net.tfminecraft.magic.modifier.ModifierSet;
+import net.tfminecraft.magic.modifier.ModifierStat;
 import net.tfminecraft.magic.modifier.SpellModifiers;
 import net.tfminecraft.magic.session.ResonanceSession;
 import net.tfminecraft.magic.util.GuiText;
@@ -25,6 +27,8 @@ public final class ModifierLore {
     private static final String MANA_FALLBACK = "#5b9bd4";
     private static final String DAMAGE_FALLBACK = "#c45c4a";
     private static final String COOLDOWN_FALLBACK = "#7dba6e";
+    private static final String SUPPORT_FALLBACK = "#e0c45c";
+    private static final String DURATION_FALLBACK = "#b48ad6";
 
     private ModifierLore() {}
 
@@ -35,7 +39,7 @@ public final class ModifierLore {
         }
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
         double equilibrium = equilibrium(session);
-        ModifierTriple fromResonance = SpellModifiers.resonance(element.getId(), resonance);
+        ModifierSet fromResonance = SpellModifiers.resonance(element.getId(), resonance);
         lines.add(GuiText.format(GuiCache.modifierNow.replace("{school}", MagicText.elementName(element))));
         lines.add(row("", now(element, session, weapon)));
         lines.add(GuiText.format(GuiCache.modifierMadeOf));
@@ -47,7 +51,7 @@ public final class ModifierLore {
                     withValue(GuiCache.modifierSourceCorruption, Math.abs(equilibrium)),
                     SpellModifiers.drift(equilibrium)));
         }
-        ModifierTriple fromWeapon = SpellModifiers.alignment(weapon, element.getId());
+        ModifierSet fromWeapon = SpellModifiers.alignment(weapon, element.getId());
         if (!fromWeapon.isZero()) {
             lines.add(row(GuiCache.modifierSourceWeapon, fromWeapon));
         }
@@ -101,7 +105,7 @@ public final class ModifierLore {
             String noneTemplate,
             String peakTemplate,
             double peak,
-            ModifierTriple atPeak) {
+            ModifierSet atPeak) {
         List<String> lines = new ArrayList<>();
         if (onThisSide) {
             lines.add(GuiText.format(withValue(yourTemplate, amount)));
@@ -126,7 +130,7 @@ public final class ModifierLore {
      * The modifiers a cast of this school gets right now, combined in the same order
      * as SpellModifierApplyService: resonance x balance, then the held weapon's alignment.
      */
-    static ModifierTriple now(ElementDef element, ResonanceSession session, ItemStack weapon) {
+    static ModifierSet now(ElementDef element, ResonanceSession session, ItemStack weapon) {
         double resonance = session != null ? session.getResonance(element.getId()) : 0.0;
         return SpellModifiers.combine(
                 SpellModifiers.combine(
@@ -143,11 +147,39 @@ public final class ModifierLore {
         return template.replace("{value}", MagicNumbers.format(value));
     }
 
-    private static String row(String prefix, ModifierTriple triple) {
-        return GuiText.format(" " + prefix
-                + stat("stat_mana", MANA_FALLBACK, "Mana", triple.mana(), false) + "  "
-                + stat("stat_cooldown", COOLDOWN_FALLBACK, "Cooldown", triple.cooldown(), false) + "  "
-                + stat("stat_damage", DAMAGE_FALLBACK, "Damage", triple.damage(), true));
+    /**
+     * One line. Damage and healing share a column while they match (the default, since
+     * support follows damage); duration only shows when something sets it.
+     */
+    private static String row(String prefix, ModifierSet raw) {
+        ModifierSet modifiers = applied(raw);
+        StringBuilder line = new StringBuilder(" ").append(prefix)
+                .append(stat("stat_mana", MANA_FALLBACK, "Mana", modifiers.mana(), false)).append("  ")
+                .append(stat("stat_cooldown", COOLDOWN_FALLBACK, "Cooldown", modifiers.cooldown(), false)).append("  ");
+        if (Double.compare(modifiers.damage(), modifiers.support()) == 0) {
+            line.append(stat("stat_damage", DAMAGE_FALLBACK, "Damage & Healing", modifiers.damage(), true));
+        } else {
+            line.append(stat("stat_damage", DAMAGE_FALLBACK, "Damage", modifiers.damage(), true)).append("  ")
+                    .append(stat("stat_support", SUPPORT_FALLBACK, "Healing", modifiers.support(), true));
+        }
+        if (Math.abs(modifiers.duration()) >= 0.0000001) {
+            line.append("  ").append(stat("stat_duration", DURATION_FALLBACK, "Duration", modifiers.duration(), true));
+        }
+        return GuiText.format(line.toString());
+    }
+
+    /** Zeroes any stat that modifier_parameters points at no skill parameter, so rows show what casts get. */
+    static ModifierSet applied(ModifierSet modifiers) {
+        return new ModifierSet(
+                live(ModifierStat.MANA, modifiers),
+                live(ModifierStat.DAMAGE, modifiers),
+                live(ModifierStat.COOLDOWN, modifiers),
+                live(ModifierStat.SUPPORT, modifiers),
+                live(ModifierStat.DURATION, modifiers));
+    }
+
+    private static double live(ModifierStat stat, ModifierSet modifiers) {
+        return ModifierParameters.of(stat).isEmpty() ? 0.0 : modifiers.get(stat);
     }
 
     private static String stat(
