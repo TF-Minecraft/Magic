@@ -170,6 +170,40 @@ class GearRefresherCoverageTest extends GearMmoCoverageSupport {
   }
 
   @Test
+  void templateClassOrHandChangesRebuildAnOtherwiseCurrentWeapon() {
+    var item = managed();
+    MockBukkit.createMockPlugin("MMOItems");
+    MockBukkit.createMockPlugin("MythicLib");
+    var built = item();
+    var nbtItem = mock(NBTItem.class);
+    try (var nbt = mockStatic(NBTItem.class);
+        var stats = mockStatic(GearStatApplicator.class);
+        var model = mockStatic(GearModelResolver.class);
+        var skin = mockStatic(GearSkin.class, i -> i.getArgument(1));
+        var lore = mockStatic(WeaponLore.class);
+        var sync = mockStatic(GearTemplateSync.class);
+        var items =
+            mockConstruction(
+                LiveMMOItem.class,
+                (m, c) -> {
+                  var builder = mock(ItemStackBuilder.class);
+                  when(m.newBuilder()).thenReturn(builder);
+                  when(builder.build()).thenReturn(built);
+                })) {
+      nbt.when(() -> NBTItem.get(any(ItemStack.class))).thenReturn(nbtItem);
+      model
+          .when(() -> GearModelResolver.apply(any(), any(), any()))
+          .thenAnswer(i -> i.getArgument(0));
+      lore.when(() -> WeaponLore.updateItem(any())).thenAnswer(i -> i.getArgument(0));
+      sync.when(() -> GearTemplateSync.isOutdated(item)).thenReturn(false);
+      assertNull(GearRefresher.refreshIfOutdated(item, null));
+      sync.when(() -> GearTemplateSync.isOutdated(item)).thenReturn(true);
+      assertSame(built, GearRefresher.refreshIfOutdated(item, null));
+      sync.verify(() -> GearTemplateSync.apply(items.constructed().getFirst(), nbtItem));
+    }
+  }
+
+  @Test
   void incompatibleGemsAreHeldAndFailuresNeverReplaceOriginals() {
     MockBukkit.createMockPlugin("MMOItems");
     MockBukkit.createMockPlugin("MythicLib");

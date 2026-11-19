@@ -22,7 +22,8 @@ import net.tfminecraft.magic.Magic;
 /**
  * Brings a crafted weapon back in line with the live gear config.
  *
- * Socket colours, part stats and the name are rewritten from the stamped parts. Runes already
+ * Socket colours, part stats and the name are rewritten from the stamped parts, and the class
+ * list and two-handed flag follow the weapon's MMOItems template. Runes already
  * in the weapon are merged into the new layout; any that no longer fit are held by
  * {@link GearBrokenMarker} instead of being dropped.
  */
@@ -56,7 +57,7 @@ public final class GearRefresher {
         }
 
         if (!force && !GearProvenance.isOutdated(stack) && !RuneRefresher.isOutdated(stack)
-                && !GearName.isOutdated(stack)) {
+                && !GearName.isOutdated(stack) && !GearTemplateSync.isOutdated(stack)) {
             int live = MajorityTierResolver.resolve(GearProvenance.resolveParts(stack));
             if (live > 0 && GearProvenance.majorityOf(stack) != live) {
                 ItemStack clone = stack.clone();
@@ -113,7 +114,8 @@ public final class GearRefresher {
     private static ItemStack rewrite(ItemStack stack, List<String> colours, String name,
             List<GemstoneData> orphaned, Map<UUID, Integer> runeRevisions) {
         try {
-            LiveMMOItem mmo = new LiveMMOItem(NBTItem.get(stack));
+            NBTItem nbt = NBTItem.get(stack);
+            LiveMMOItem mmo = new LiveMMOItem(nbt);
             List<GemstoneData> existing = new ArrayList<>();
             if (mmo.hasData(ItemStats.GEM_SOCKETS)) {
                 StatData data = mmo.getData(ItemStats.GEM_SOCKETS);
@@ -131,6 +133,7 @@ public final class GearRefresher {
             }
             mmo.setData(ItemStats.GEM_SOCKETS, next);
             GearStatApplicator.apply(mmo, GearProvenance.resolveParts(stack));
+            GearTemplateSync.apply(mmo, nbt);
             GearName.write(mmo, name);
             runeRevisions.putAll(RuneRefresher.refresh(mmo, stack));
             ItemStack built = mmo.newBuilder().build();
