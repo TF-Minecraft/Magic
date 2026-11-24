@@ -340,13 +340,24 @@ public final class GearStationStore {
     }
 
     /**
-     * When a chunk loads, a saved station with no furniture drops its weapon. A station
-     * that is still there keeps a single display, including one left behind in an
-     * unloaded chunk.
+     * Runs once a chunk's entities are loaded: Paper loads them after the chunk itself, so
+     * this is the first point where a station's displays can be seen. A saved station with
+     * no furniture drops its weapon. A station that is still there keeps a single display.
+     * Displays of stations that are gone, including untagged ones from older versions, are
+     * removed.
      */
     public static void reconcile(Chunk chunk) {
         if (loading || chunk == null) {
             return;
+        }
+        Map<String, List<ItemDisplay>> found = new LinkedHashMap<>();
+        for (Entity entity : chunk.getEntities()) {
+            if (entity instanceof ItemDisplay display) {
+                String owner = stationOf(display);
+                if (owner != null) {
+                    found.computeIfAbsent(owner, ignored -> new ArrayList<>()).add(display);
+                }
+            }
         }
         List<String> keys = new ArrayList<>();
         for (String stationKey : OCCUPIED.keySet()) {
@@ -370,15 +381,77 @@ public final class GearStationStore {
                 abandon(location);
                 continue;
             }
-            UUID displayId = ensureDisplay(location, occupancy.getItem(), occupancy.displayId);
+            UUID displayId = keepOne(location, occupancy, found.getOrDefault(stationKey, List.of()));
             if (!displayId.equals(occupancy.displayId)) {
                 occupancy.displayId = displayId;
                 changed = true;
             }
         }
+        found.forEach((stationKey, displays) -> {
+            if (!OCCUPIED.containsKey(stationKey)) {
+                removeLeftovers(stationKey, displays);
+            }
+        });
         if (changed) {
             save();
         }
+    }
+
+    /** Keeps the station's saved display (or the first one found), removes extra copies, spawns one if none. */
+    private static UUID keepOne(Location location, Occupancy occupancy, List<ItemDisplay> displays) {
+        ItemDisplay keep = displays.isEmpty() ? null : displays.get(0);
+        for (ItemDisplay display : displays) {
+            if (display.getUniqueId().equals(occupancy.displayId)) {
+                keep = display;
+            }
+        }
+        if (keep == null) {
+            return spawnDisplay(location, occupancy.getItem());
+        }
+        int extra = 0;
+        for (ItemDisplay display : displays) {
+            if (display != keep) {
+                display.remove();
+                extra++;
+            }
+        }
+        if (extra > 0) {
+            Magic.plugin.getLogger().warning("[Magic] Removed " + extra + " extra displays at gear station " + key(location) + ".");
+        }
+        keep.setItemStack(occupancy.getItem());
+        mark(keep, location);
+        return keep.getUniqueId();
+    }
+
+    /** Displays of a station that no longer exists. An abandoned station has already removed its own. */
+    private static void removeLeftovers(String stationKey, List<ItemDisplay> displays) {
+        int removed = 0;
+        for (ItemDisplay display : displays) {
+            if (display.isValid()) {
+                display.remove();
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            Magic.plugin.getLogger().warning("[Magic] Removed " + removed + " leftover displays at gear station "
+                    + stationKey + " (no station there).");
+        }
+    }
+
+    /**
+     * The station a display belongs to: its tag, or for an untagged station display from an
+     * older version its position (1.15 above the block centre, no other plugin's data).
+     */
+    private static String stationOf(ItemDisplay display) {
+        String marked = markOf(display);
+        if (marked != null) {
+            return marked;
+        }
+        if (!isGearDisplay(display) || !display.getPersistentDataContainer().isEmpty()) {
+            return null;
+        }
+        Location base = display.getLocation().subtract(0.5, 1.15, 0.5);
+        return base.distanceSquared(base.toBlockLocation()) < 1.0E-4 ? key(base) : null;
     }
 
     /**
@@ -459,6 +532,11 @@ public final class GearStationStore {
         }
         if (!world.isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4)) {
             location.getChunk().load();
+        }
+        if (!location.getChunk().isEntitiesLoaded()) {
+            // Existing displays can't be seen yet; spawning now would add a copy. The
+            // entities-load reconcile keeps or spawns the display.
+            return savedDisplay;
         }
         ItemDisplay existing = displayOrNull(savedDisplay);
         if (existing == null) {
