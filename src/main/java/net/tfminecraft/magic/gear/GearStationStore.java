@@ -388,7 +388,7 @@ public final class GearStationStore {
             }
         }
         found.forEach((stationKey, displays) -> {
-            if (!OCCUPIED.containsKey(stationKey)) {
+            if (!OCCUPIED.containsKey(stationKey) && !savedOccupied(stationKey)) {
                 removeLeftovers(stationKey, displays);
             }
         });
@@ -423,6 +423,19 @@ public final class GearStationStore {
         return keep.getUniqueId();
     }
 
+    /**
+     * A saved row still holds the station (held for review, not loaded yet, or its world was
+     * missing at startup). An unreadable store counts as held, so nothing is removed.
+     */
+    private static boolean savedOccupied(String stationKey) {
+        try {
+            return property().occupied(stationKey);
+        } catch (IOException ex) {
+            warning(ex);
+            return true;
+        }
+    }
+
     /** Displays of a station that no longer exists. An abandoned station has already removed its own. */
     private static void removeLeftovers(String stationKey, List<ItemDisplay> displays) {
         int removed = 0;
@@ -451,7 +464,9 @@ public final class GearStationStore {
             return null;
         }
         Location base = display.getLocation().subtract(0.5, 1.15, 0.5);
-        return base.distanceSquared(base.toBlockLocation()) < 1.0E-4 ? key(base) : null;
+        // Rounded, not floored: y + 1.15 - 1.15 can land just below a whole number.
+        Location block = new Location(base.getWorld(), Math.round(base.getX()), Math.round(base.getY()), Math.round(base.getZ()));
+        return base.distanceSquared(block) < 1.0E-4 ? key(block) : null;
     }
 
     /**

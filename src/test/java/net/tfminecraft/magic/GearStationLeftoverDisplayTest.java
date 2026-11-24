@@ -131,6 +131,54 @@ class GearStationLeftoverDisplayTest extends GearStationCoverageSupport {
         "the adopted display is saved");
   }
 
+  @Test
+  void aStationStillHeldInTheSavedFileKeepsItsDisplay() throws Exception {
+    var location = station();
+    seed(location, item(), null, null);
+    occupied().clear(); // row not loaded (held, failed to load, or before startup load)
+    var display =
+        location.getWorld().getEntitiesByClass(ItemDisplay.class).stream()
+            .filter(Entity::isValid)
+            .findFirst()
+            .orElseThrow();
+
+    GearStationStore.reconcile(location.getChunk());
+
+    assertTrue(display.isValid());
+    assertTrue(logged.isEmpty(), logged.toString());
+  }
+
+  @Test
+  void anUnreadableStoreRemovesNothing() throws Exception {
+    var location = station();
+    var tagged = display(above(location), item(), GearStationStore.key(location));
+    var file = temp.resolve("data/gear-stations.yml");
+    java.nio.file.Files.createDirectories(file.getParent());
+    java.nio.file.Files.writeString(file, "stations: [broken");
+
+    GearStationStore.reconcile(location.getChunk());
+
+    assertTrue(tagged.isValid());
+    assertTrue(logged.stream().noneMatch(line -> line.contains("Removed")), logged.toString());
+  }
+
+  @Test
+  void anOldUntaggedDisplayIsFoundAtAHeightWhereFlooringWouldMissIt() throws Exception {
+    var location = station().clone();
+    location.setY(15);
+    var legacy = display(above(location), gear(), null);
+
+    GearStationStore.reconcile(location.getChunk());
+
+    assertFalse(legacy.isValid());
+    assertTrue(
+        logged.contains(
+            "[Magic] Removed 1 leftover displays at gear station "
+                + GearStationStore.key(location)
+                + " (no station there)."),
+        logged.toString());
+  }
+
   static UUID displayId(GearStationStore.Occupancy occupancy) throws Exception {
     var field = GearStationStore.Occupancy.class.getDeclaredField("displayId");
     field.setAccessible(true);
