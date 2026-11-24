@@ -16,7 +16,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -92,8 +92,9 @@ public final class GearStationListener implements Listener {
         }
     }
 
+    /** Paper loads a chunk's entities after the chunk, so station displays are settled only now. */
     @EventHandler
-    public void onChunkLoad(ChunkLoadEvent event) {
+    public void onEntitiesLoad(EntitiesLoadEvent event) {
         GearStationStore.reconcile(event.getChunk());
     }
 

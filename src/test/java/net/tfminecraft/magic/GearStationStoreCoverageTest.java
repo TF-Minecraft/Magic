@@ -466,6 +466,20 @@ class GearStationStoreCoverageTest extends GearStationCoverageSupport {
             GearKeys.stationDisplay(),
             org.bukkit.persistence.PersistentDataType.STRING,
             GearStationStore.key(loc));
+    var saved = UUID.randomUUID();
+    clearInvocations(world);
+    assertEquals(
+        saved,
+        invoke(
+            GearStationStore.class,
+            "ensureDisplay",
+            new Class[] {Location.class, ItemStack.class, UUID.class},
+            loc,
+            item(),
+            saved),
+        "entities not loaded yet: keep the saved id, spawn nothing");
+    verify(world, never()).getNearbyEntities(any(Location.class), anyDouble(), anyDouble(), anyDouble());
+    when(chunk.isEntitiesLoaded()).thenReturn(true);
     assertEquals(
         display.getUniqueId(),
         invoke(

@@ -16,7 +16,7 @@ import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.*;
@@ -155,7 +155,7 @@ class GearStationListenerCoverageTest extends GearStationCoverageSupport {
     listener.onFurnitureBreak(guarded);
     verify(guarded).setCancelled(true);
     assertFalse(aborts().containsKey("world,5,2,3"));
-    listener.onChunkLoad(new ChunkLoadEvent(loc.getChunk(), false));
+    listener.onEntitiesLoad(new EntitiesLoadEvent(loc.getChunk(), java.util.List.of()));
   }
 
   @Test
