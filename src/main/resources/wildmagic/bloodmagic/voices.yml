@@ -158,3 +158,47 @@ voices:
         - "They would call me evil. They'd be right. And far too late."
         - "Quiet. So quiet. No god, no father. I did it all myself."
         - "...and in the quiet, something old and patient is smiling. It sounds like me."
+
+# Faint hints for fast-trait characters (Occultist) whose voices haven't woken yet. They are the
+# character's own thoughts, in the own voice's first pale colours, and never name the rules or the god.
+# deeds: one line when a deed feeds the meter (and doesn't wake the voices), at most once per
+# deed_cooldown_minutes per kind of deed. riddles: one at random, the first a while after joining
+# (first_riddle_minutes), then every riddle_interval_minutes, each waiting until nobody else is within
+# voices.alone_radius. Minutes count while online; both stop once the voices wake.
+hints:
+  enabled: true
+  style: "§o"
+  colors: ["#d8d2e0", "#bdb6c9"]
+  sound: tfmc_blood:heart
+  pitch: 1.2
+  volume: 0.4
+  deed_cooldown_minutes: 60
+  first_riddle_minutes: [30, 90]
+  riddle_interval_minutes: [120, 240]
+  deeds:
+    # Killed with a blade an animal another player keeps.
+    stolen_animal:
+      - "It wasn't mine, and somehow that made it better. For a moment something far away leaned closer."
+      - "Someone will find their pen one short tomorrow. Why do I feel so warm?"
+    # Killed with a blade an animal they keep themselves.
+    own_animal:
+      - "Only one of my own. Something far away looked up, and then lost interest."
+      - "My own beast. It felt like a small gift. Too small."
+    # A character they killed died for good.
+    character_kill:
+      - "They won't get up again. In the stillness afterwards, something very old drew a long breath."
+      - "A death that stays. The quiet around me listened, and seemed pleased."
+    # Started robbing, pickpocketing, lockpicking or looting a grave.
+    robbery:
+      - "A lock gives, a purse goes light, and something far away smiles at me. I can't explain it."
+      - "Taking what isn't mine shouldn't feel like being noticed. It does."
+    # Their magic's equilibrium sank deep.
+    corruption:
+      - "My magic has soured, and the sourness feels like company."
+  riddles:
+    - "I dreamt of a stone under the earth again. It was dry, and it was waiting. I woke up thirsty."
+    - "A beast from someone else's pen, taken while its keeper sleeps. Why does the thought warm me?"
+    - "Most who fall in a fight get up again. It's the ones who never do that I keep thinking about."
+    - "Locks, purses, graves. Every time I take what isn't mine, the quiet seems to lean closer."
+    - "The scholars write that a True Vampire named Alaric Thorme taught blood magic once. Who taught him?"
+    - "Some nights the quiet feels like it's listening for blood that hasn't been spilled yet."

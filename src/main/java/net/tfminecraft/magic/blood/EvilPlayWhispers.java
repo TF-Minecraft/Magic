@@ -61,6 +61,7 @@ public final class EvilPlayWhispers implements Listener {
         if (character == null) {
             return;
         }
-        WhisperService.addTo(character, player.getUniqueId().toString(), WhisperConfig.robbery(), player);
+        WhisperService.addTo(character, player.getUniqueId().toString(), WhisperConfig.robbery(), player,
+                OccultistHints.Deed.ROBBERY);
     }
 }
