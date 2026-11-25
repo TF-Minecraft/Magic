@@ -135,6 +135,7 @@ public final class BloodConfig {
         RoomTemplate.load(config.getConfigurationSection("placement.room.template"), log);
         huntPointsRequired = Math.max(1, config.getInt("hunt.points_required", 7));
         WhisperConfig.load(config.getConfigurationSection("whispers"), config.getConfigurationSection("voices"), log);
+        OccultistHints.load(config.getConfigurationSection("hints"), log);
         AnimalConfig.load(config.getConfigurationSection("animal"), log);
         CorruptionConfig.load(config.getConfigurationSection("corruption"), log);
         ChoiceConfig.load(config.getConfigurationSection("choice"), config.getConfigurationSection("classes"),
@@ -204,6 +205,7 @@ public final class BloodConfig {
         purifyCheckMinutes = 10;
         huntPointsRequired = 7;
         WhisperConfig.reset();
+        OccultistHints.reset();
         AnimalConfig.reset();
         CorruptionConfig.reset();
         ChoiceConfig.reset();

@@ -71,10 +71,19 @@ public final class WhisperService {
      * before the voices start. Returns true when this woke them.
      */
     public static boolean addTo(String character, String owner, double amount, Player online) {
-        return addTo(character, owner, amount, online, true);
+        return addTo(character, owner, amount, online, true, null);
     }
 
-    private static boolean addTo(String character, String owner, double amount, Player online, boolean multiply) {
+    /**
+     * As {@link #addTo(String, String, double, Player)}, for a deed: a fast-trait character online
+     * whose voices it did not wake gets a faint hint about it.
+     */
+    public static boolean addTo(String character, String owner, double amount, Player online, OccultistHints.Deed deed) {
+        return addTo(character, owner, amount, online, true, deed);
+    }
+
+    private static boolean addTo(String character, String owner, double amount, Player online, boolean multiply,
+            OccultistHints.Deed deed) {
         if (!BloodConfig.isEnabled() || amount <= 0) {
             return false;
         }
@@ -82,13 +91,17 @@ public final class WhisperService {
         if (record.getStage() != BloodStage.NONE) {
             return false;
         }
-        double gain = amount * (multiply && fastTraitOf.test(character) ? WhisperConfig.fastMultiplier() : 1);
+        boolean fast = fastTraitOf.test(character);
+        double gain = amount * (multiply && fast ? WhisperConfig.fastMultiplier() : 1);
         record.setWhisper(record.getWhisper() + gain);
         boolean woke = record.getWhisper() >= WhisperConfig.threshold();
         if (woke) {
             awaken(record, online);
         }
         BloodRecords.save(record);
+        if (!woke && fast && deed != null && online != null) {
+            OccultistHints.deed(online, deed);
+        }
         return woke;
     }
 
@@ -121,7 +134,13 @@ public final class WhisperService {
             return;
         }
         switch (keeper(killer, animal)) {
-            case OTHERS -> add(killer, WhisperConfig.animalOthers());
+            case OTHERS -> {
+                String character = AltarService.currentCharacter(killer);
+                if (character != null) {
+                    addTo(character, killer.getUniqueId().toString(), WhisperConfig.animalOthers(), killer,
+                            OccultistHints.Deed.STOLEN_ANIMAL);
+                }
+            }
             case OWN -> ownAnimal(killer);
             default -> { }
         }
@@ -184,7 +203,7 @@ public final class WhisperService {
             return;
         }
         record.addOwnAnimalWhisper(day, gain);
-        addTo(character, owner, gain, killer, false);
+        addTo(character, owner, gain, killer, false, OccultistHints.Deed.OWN_ANIMAL);
     }
 
     static boolean blade(ItemStack item) {
@@ -224,13 +243,15 @@ public final class WhisperService {
             if (record != null && record.getStage() != BloodStage.NONE) {
                 voiceIfDue(player, record);
             }
+            OccultistHints.tick(player, character, record);
         }
     }
 
     private static void tenMinutes(Player player, String character) {
         double eq = equilibrium.applyAsDouble(player);
         if (!Double.isNaN(eq) && eq <= WhisperConfig.corruptionBelow()) {
-            addTo(character, player.getUniqueId().toString(), WhisperConfig.corruption(), player);
+            addTo(character, player.getUniqueId().toString(), WhisperConfig.corruption(), player,
+                    OccultistHints.Deed.CORRUPTION);
         }
         BloodRecord record = BloodRecords.get(character);
         if (record == null) {
@@ -427,6 +448,7 @@ public final class WhisperService {
     /** Forget the player's voice timer, e.g. after a quit or a character switch. */
     public static void forget(UUID player) {
         NEXT_VOICE.remove(player);
+        OccultistHints.forget(player);
     }
 
     /** Lets the next minute tick speak to the player straight away. */
@@ -441,6 +463,7 @@ public final class WhisperService {
     public static void clear() {
         NEXT_VOICE.clear();
         KEEPERS_AT_DEATH.clear();
+        OccultistHints.clear();
     }
 
     private static double sessionEquilibrium(Player player) {

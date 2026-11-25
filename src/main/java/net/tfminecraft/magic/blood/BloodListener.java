@@ -367,7 +367,8 @@ public final class BloodListener implements Listener {
         Player online = Bukkit.getPlayer(killer.ownerId());
         Player current = online != null && character.equalsIgnoreCase(AltarService.currentCharacter(online))
                 ? online : null;
-        WhisperService.addTo(character, killer.ownerId().toString(), WhisperConfig.characterKill(), current);
+        WhisperService.addTo(character, killer.ownerId().toString(), WhisperConfig.characterKill(), current,
+                OccultistHints.Deed.CHARACTER_KILL);
     }
 
     /** HIGHEST: after other damage plugins, so the ritual knife's stroke stays lethal on a bound animal. */
