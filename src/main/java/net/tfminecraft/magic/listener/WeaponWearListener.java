@@ -32,6 +32,10 @@ public final class WeaponWearListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onItemDamage(PlayerItemDamageEvent event) {
         ItemStack item = event.getItem();
+        if (GearProvenance.isDungeonWeapon(item)) {
+            event.setCancelled(true);
+            return;
+        }
         if (!GearProvenance.isGear(item)) {
             return;
         }

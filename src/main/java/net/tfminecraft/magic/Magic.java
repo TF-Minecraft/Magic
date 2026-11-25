@@ -26,6 +26,7 @@ import net.tfminecraft.magic.blood.BloodMagic;
 import net.tfminecraft.magic.listener.ArtifactFillChestListener;
 import net.tfminecraft.magic.listener.ArtifactListener;
 import net.tfminecraft.magic.listener.CastDriftListener;
+import net.tfminecraft.magic.listener.DungeonWeaponListener;
 import net.tfminecraft.magic.listener.GearAlignmentListener;
 import net.tfminecraft.magic.listener.GearRefreshListener;
 import net.tfminecraft.magic.listener.MagicSessionListener;
@@ -123,6 +124,7 @@ public class Magic extends JavaPlugin {
         if (isMmoStackPresent()) {
             getServer().getPluginManager().registerEvents(new ResonanceCastListener(), this);
             getServer().getPluginManager().registerEvents(new WeaponWearListener(), this);
+            getServer().getPluginManager().registerEvents(new DungeonWeaponListener(), this);
             getServer().getPluginManager().registerEvents(new CastDriftListener(), this);
             getServer().getPluginManager().registerEvents(new GearAlignmentListener(), this);
         }
