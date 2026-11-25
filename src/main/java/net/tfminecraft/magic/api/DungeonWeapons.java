@@ -142,6 +142,14 @@ public final class DungeonWeapons {
         }
     }
 
+    /**
+     * Where casting doesn't move a player's Equilibrium (a dungeon run: what a character trains belongs to
+     * the gear they own); null lets every cast move it again.
+     */
+    public static void holdEquilibrium(java.util.function.Predicate<org.bukkit.entity.Player> where) {
+        net.tfminecraft.magic.listener.CastDriftListener.hold(where);
+    }
+
     public static boolean isDungeonWeapon(ItemStack stack) {
         return GearProvenance.isDungeonWeapon(stack);
     }

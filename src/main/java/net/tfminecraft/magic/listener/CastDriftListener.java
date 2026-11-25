@@ -1,5 +1,7 @@
 package net.tfminecraft.magic.listener;
 
+import java.util.function.Predicate;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,6 +19,14 @@ import net.tfminecraft.magic.util.MagicNumbers;
 
 public final class CastDriftListener implements Listener {
 
+    /** Players whose casts leave their Equilibrium alone (in a dungeon run, say). */
+    private static Predicate<Player> held = p -> false;
+
+    /** Where casting doesn't move Equilibrium; null: everywhere it does. */
+    public static void hold(Predicate<Player> where) {
+        held = where == null ? p -> false : where;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSkillCast(SkillCastEvent event) {
         if (Magic.plugin == null) {
@@ -27,7 +37,7 @@ public final class CastDriftListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        if (player == null) {
+        if (player == null || held.test(player)) {
             return;
         }
         double mana = manaSpent(event.getMetadata(), cast);

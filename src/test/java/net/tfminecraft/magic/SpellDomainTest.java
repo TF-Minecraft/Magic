@@ -121,6 +121,10 @@ class SpellDomainTest {
     var session = sessions.getOrCreate(player);
     listener.onSkillCast(event);
     assertEquals(.04, session.getEquilibrium());
+    net.tfminecraft.magic.api.DungeonWeapons.holdEquilibrium(p -> p == player);
+    listener.onSkillCast(event);
+    assertEquals(.04, session.getEquilibrium(), "held in a dungeon run");
+    net.tfminecraft.magic.api.DungeonWeapons.holdEquilibrium(null);
     verify(Magic.plugin).syncSpellModifiers(player, session);
     var metadata = mock(SkillMetadata.class);
     when(event.getMetadata()).thenReturn(metadata);
