@@ -61,21 +61,11 @@ public final class RuneKeybind {
             if (current == null || current.isEmpty()) {
                 return Outcome.of(Result.NO_ABILITIES);
             }
-            List<AbilityData> copies = new ArrayList<>();
-            for (AbilityData old : current.getAbilities()) {
-                if (old == null || old.getAbility() == null) {
-                    continue;
-                }
-                AbilityData copy = new AbilityData(old.getAbility(), trigger);
-                for (String modifier : old.getModifiers()) {
-                    copy.setModifier(modifier, old.getParameter(modifier));
-                }
-                copies.add(copy);
-            }
+            AbilityListData copies = rebind(current, trigger);
             if (copies.isEmpty()) {
                 return Outcome.of(Result.NO_ABILITIES);
             }
-            mmo.setData(ItemStats.ABILITIES, new AbilityListData(copies));
+            mmo.setData(ItemStats.ABILITIES, copies);
             ItemStack rebuilt = mmo.newBuilder().build();
             if (rebuilt == null || rebuilt.getType().isAir()) {
                 return Outcome.of(Result.FAILED);
@@ -85,5 +75,21 @@ public final class RuneKeybind {
         } catch (Exception ex) {
             return Outcome.of(Result.FAILED);
         }
+    }
+
+    /** Copies of a rune's abilities that cast on {@code trigger}. */
+    public static AbilityListData rebind(AbilityListData abilities, TriggerType trigger) {
+        List<AbilityData> copies = new ArrayList<>();
+        for (AbilityData old : abilities.getAbilities()) {
+            if (old == null || old.getAbility() == null) {
+                continue;
+            }
+            AbilityData copy = new AbilityData(old.getAbility(), trigger);
+            for (String modifier : old.getModifiers()) {
+                copy.setModifier(modifier, old.getParameter(modifier));
+            }
+            copies.add(copy);
+        }
+        return new AbilityListData(copies);
     }
 }

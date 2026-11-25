@@ -51,11 +51,11 @@ public final class GearStatApplicator {
         if (mmo == null || !GearItemBuilder.mmoItemsPresent()) {
             return;
         }
-        Set<String> managed = managedIds();
-        if (managed.isEmpty()) {
-            return;
-        }
-        Map<String, Double> totals = sum(parts);
+        write(mmo, managedIds(), sum(parts));
+    }
+
+    /** Clears each listed stat on the weapon, then writes its total (0 when it has none). */
+    public static void write(MMOItem mmo, Set<String> managed, Map<String, Double> totals) {
         for (String statId : managed) {
             ItemStat<?, ?> itemStat = resolve(statId);
             if (itemStat == null) {

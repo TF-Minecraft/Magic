@@ -71,6 +71,11 @@ public final class GearKeys {
         return new NamespacedKey(Magic.plugin, "gear_rune_revisions");
     }
 
+    /** Marks a weapon built by {@link net.tfminecraft.magic.api.DungeonWeapons}. */
+    public static NamespacedKey dungeonWeapon() {
+        return new NamespacedKey(Magic.plugin, "dungeon_weapon");
+    }
+
     /** Marks the ItemDisplay that shows the weapon resting on a gear station. */
     public static NamespacedKey stationDisplay() {
         return new NamespacedKey(Magic.plugin, "gear_station_display");

@@ -244,6 +244,12 @@ public final class GearProvenance {
         return archetypeOf(stack) != null;
     }
 
+    /** A finished weapon from {@link net.tfminecraft.magic.api.DungeonWeapons}; never gear. */
+    public static boolean isDungeonWeapon(ItemStack stack) {
+        return stack != null && stack.hasItemMeta()
+                && stack.getItemMeta().getPersistentDataContainer().has(GearKeys.dungeonWeapon());
+    }
+
     /** True when this weapon's archetype is one the station still offers. */
     public static boolean stationCanCreate(ItemStack stack) {
         return ArchetypeRegistry.get(archetypeOf(stack)) != null;

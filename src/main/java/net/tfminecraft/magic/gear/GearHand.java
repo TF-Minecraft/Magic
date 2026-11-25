@@ -6,7 +6,8 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Finds the mage weapon a player is casting with. Main hand wins; offhand is the
  * fallback so an off-hand focus still counts. Armor is deliberately never consulted:
- * armor runes are passive and must not gate anything.
+ * armor runes are passive and must not gate anything. A dungeon weapon in the main hand is
+ * never gated or worn, so it hides a focus in the offhand.
  */
 public final class GearHand {
 
@@ -30,7 +31,7 @@ public final class GearHand {
 
     /** @return which hand carries the mage weapon, or null when neither hand has gear */
     public static HeldSlot heldSlot(Player player) {
-        if (player == null) {
+        if (player == null || GearProvenance.isDungeonWeapon(player.getInventory().getItemInMainHand())) {
             return null;
         }
         if (GearProvenance.isGear(player.getInventory().getItemInMainHand())) {
